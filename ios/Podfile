@@ -1,0 +1,49 @@
+platform :ios, '15.5'
+
+# Disable CocoaPods analytics to significantly decrease build setup latency
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+# 1. Locate and load Flutter's internal pod configuration engine
+project 'Runner', {
+  'Debug' => :debug,
+  'Profile' => :release,
+  'Release' => :release,
+}
+
+def flutter_root
+  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __dir__)
+  unless File.exist?(generated_xcode_build_settings_path)
+    raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure 'flutter pub get' is executed first"
+  end
+  File.foreach(generated_xcode_build_settings_path) do |line|
+    matches = line.match(/FLUTTER_ROOT\=(.*)/)
+    return matches[1].strip if matches # FIXED: Added index [1] to pull the captured string
+  end
+  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig, then run flutter pub get"
+end
+
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+
+# 2. Main app target build setup
+target 'Runner' do
+  # Crucial for GoogleMaps: Forces static linkage preventing dynamic framework embedding bugs
+  use_frameworks! :linkage => :static
+  
+  # Inject Flutter application engine and pubspec.yaml native plugins
+  flutter_install_all_ios_pods File.dirname(__FILE__)
+
+  # Native CocoaPod dependency
+  pod 'GoogleMaps'
+end
+
+# 3. Post-install hook to optimize deployment targets and architecture stripping
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
+    
+    target.build_configurations.each do |config|
+      # Forces all internal pods to inherit the iOS 15.5 baseline, preventing deployment target mismatches
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.5'
+    end
+  end
+end

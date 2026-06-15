@@ -1,0 +1,5231 @@
+openapi: 3.0.3
+info:
+  title: SHPH API
+  version: 1.0.0
+  description: Serbisyo Hub PH — Service Provider Platform API
+paths:
+  /admin/api/main/documents/:
+    get:
+      operationId: admin_api_main_documents_retrieve
+      tags:
+      - admin
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /admin/api/main/documents/{id}/:
+    get:
+      operationId: admin_api_main_documents_retrieve_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - admin
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /admin/api/main/documents/find/:
+    get:
+      operationId: admin_api_main_documents_find_retrieve
+      tags:
+      - admin
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /admin/api/main/images/:
+    get:
+      operationId: admin_api_main_images_retrieve
+      tags:
+      - admin
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /admin/api/main/images/{id}/:
+    get:
+      operationId: admin_api_main_images_retrieve_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - admin
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /admin/api/main/images/find/:
+    get:
+      operationId: admin_api_main_images_find_retrieve
+      tags:
+      - admin
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /admin/api/main/pages/:
+    get:
+      operationId: admin_api_main_pages_retrieve
+      tags:
+      - admin
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /admin/api/main/pages/{id}/:
+    get:
+      operationId: admin_api_main_pages_retrieve_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - admin
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /admin/api/main/pages/{id}/action/{action_name}/:
+    post:
+      operationId: admin_api_main_pages_action_create
+      parameters:
+      - in: path
+        name: action_name
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - admin
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /admin/api/main/pages/find/:
+    get:
+      operationId: admin_api_main_pages_find_retrieve
+      tags:
+      - admin
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/admin/stats/:
+    get:
+      operationId: api_admin_stats_retrieve
+      description: GET /api/admin/stats/ — dashboard counts for admin (admin only).
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/analytics/interactions/:
+    post:
+      operationId: api_analytics_interactions_create
+      description: POST /analytics/interactions/ — track a user interaction event.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/analytics/provider/:
+    post:
+      operationId: api_analytics_provider_create
+      description: POST /analytics/provider/ — get provider analytics for a given
+        period.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/analytics/revenue/:
+    post:
+      operationId: api_analytics_revenue_create
+      description: POST /analytics/revenue/ — get revenue breakdown for the authenticated
+        provider.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/analytics/services/{service_id}/:
+    post:
+      operationId: api_analytics_services_create
+      description: POST /analytics/services/<id>/ — get metrics for a specific service.
+      parameters:
+      - in: path
+        name: service_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/audit/recent/:
+    get:
+      operationId: api_audit_recent_retrieve
+      description: Get recent API request logs in human-readable format.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/biometric/auth/options/:
+    post:
+      operationId: api_auth_biometric_auth_options_create
+      description: |-
+        POST /api/auth/biometric/auth/options/
+        Public endpoint. Generates WebAuthn authentication options and stores
+        the challenge nonce in Redis.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/auth/biometric/auth/verify/:
+    post:
+      operationId: api_auth_biometric_auth_verify_create
+      description: |-
+        POST /api/auth/biometric/auth/verify/
+        Public endpoint. Verifies the WebAuthn assertion, issues a JWT pair and
+        creates a Redis session.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/auth/biometric/credentials/:
+    get:
+      operationId: api_auth_biometric_credentials_retrieve
+      description: |-
+        GET  /api/auth/biometric/credentials/
+        Returns the list of WebAuthn credentials registered by the authenticated user.
+        The response also includes a `is_current_device` flag based on the User-Agent
+        so the client can highlight the device the user is currently on.
+
+        DELETE /api/auth/biometric/credentials/<credential_id>/
+        Removes a specific credential belonging to the authenticated user.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_auth_biometric_credentials_create
+      description: |-
+        GET  /api/auth/biometric/credentials/
+        Returns the list of WebAuthn credentials registered by the authenticated user.
+        The response also includes a `is_current_device` flag based on the User-Agent
+        so the client can highlight the device the user is currently on.
+
+        DELETE /api/auth/biometric/credentials/<credential_id>/
+        Removes a specific credential belonging to the authenticated user.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: api_auth_biometric_credentials_destroy
+      description: |-
+        GET  /api/auth/biometric/credentials/
+        Returns the list of WebAuthn credentials registered by the authenticated user.
+        The response also includes a `is_current_device` flag based on the User-Agent
+        so the client can highlight the device the user is currently on.
+
+        DELETE /api/auth/biometric/credentials/<credential_id>/
+        Removes a specific credential belonging to the authenticated user.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/auth/biometric/credentials/{id}/:
+    get:
+      operationId: api_auth_biometric_credentials_retrieve_2
+      description: |-
+        GET  /api/auth/biometric/credentials/
+        Returns the list of WebAuthn credentials registered by the authenticated user.
+        The response also includes a `is_current_device` flag based on the User-Agent
+        so the client can highlight the device the user is currently on.
+
+        DELETE /api/auth/biometric/credentials/<credential_id>/
+        Removes a specific credential belonging to the authenticated user.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_auth_biometric_credentials_create_2
+      description: |-
+        GET  /api/auth/biometric/credentials/
+        Returns the list of WebAuthn credentials registered by the authenticated user.
+        The response also includes a `is_current_device` flag based on the User-Agent
+        so the client can highlight the device the user is currently on.
+
+        DELETE /api/auth/biometric/credentials/<credential_id>/
+        Removes a specific credential belonging to the authenticated user.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: api_auth_biometric_credentials_destroy_2
+      description: |-
+        GET  /api/auth/biometric/credentials/
+        Returns the list of WebAuthn credentials registered by the authenticated user.
+        The response also includes a `is_current_device` flag based on the User-Agent
+        so the client can highlight the device the user is currently on.
+
+        DELETE /api/auth/biometric/credentials/<credential_id>/
+        Removes a specific credential belonging to the authenticated user.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/auth/biometric/register/options/:
+    post:
+      operationId: api_auth_biometric_register_options_create
+      description: |-
+        POST /api/auth/biometric/register/options/
+        Requires authentication. Generates WebAuthn registration options and
+        stores the challenge in Redis with a 5-minute TTL.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/biometric/register/verify/:
+    post:
+      operationId: api_auth_biometric_register_verify_create
+      description: |-
+        POST /api/auth/biometric/register/verify/
+        Requires authentication. Verifies the WebAuthn attestation and persists
+        the credential to the database.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/login/:
+    post:
+      operationId: api_auth_login_create
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/auth/logout/:
+    post:
+      operationId: api_auth_logout_create
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/me/:
+    get:
+      operationId: api_auth_me_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_auth_me_create
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/otp/send/:
+    post:
+      operationId: api_auth_otp_send_create
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/otp/send-pin/:
+    post:
+      operationId: api_auth_otp_send_pin_create
+      description: |-
+        Send PIN-based OTP for phone verification.
+        Supports both authenticated users and unauthenticated onboarding flow.
+        For unauthenticated requests, provide user_id in request body.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/auth/otp/verify/:
+    post:
+      operationId: api_auth_otp_verify_create
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/otp/verify-pin/:
+    post:
+      operationId: api_auth_otp_verify_pin_create
+      description: |-
+        Verify PIN-based OTP for phone verification.
+        Supports both authenticated users and unauthenticated onboarding flow.
+        For unauthenticated requests, provide user_id in request body.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/auth/password-reset/:
+    post:
+      operationId: api_auth_password_reset_create
+      description: POST /api/auth/password-reset/ — request a password reset PIN.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/auth/password-reset/confirm/:
+    post:
+      operationId: api_auth_password_reset_confirm_create
+      description: POST /api/auth/password-reset/confirm/ — verify PIN and set new
+        password.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/auth/register/:
+    post:
+      operationId: api_auth_register_create
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/auth/register/initiate/:
+    post:
+      operationId: api_auth_register_initiate_create
+      description: |-
+        POST /auth/register/initiate/ — validate, cache pending data, and send OTP.
+        The user record is NOT created until phone is verified via /register/verify/.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/auth/register/resend/:
+    post:
+      operationId: api_auth_register_resend_create
+      description: POST /auth/register/resend/ — resend OTP for a pending registration.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/auth/register/verify/:
+    post:
+      operationId: api_auth_register_verify_create
+      description: POST /auth/register/verify/ — verify OTP and create the user account.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/auth/sessions/:
+    get:
+      operationId: api_auth_sessions_retrieve
+      description: GET /api/auth/sessions/ — list all active sessions for the current
+        user.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_auth_sessions_create
+      description: GET /api/auth/sessions/ — list all active sessions for the current
+        user.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/sessions/{session_id}/:
+    delete:
+      operationId: api_auth_sessions_destroy
+      description: DELETE /api/auth/sessions/<session_id>/ — revoke a specific session.
+      parameters:
+      - in: path
+        name: session_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/auth/sessions/revoke-all/:
+    delete:
+      operationId: api_auth_sessions_revoke_all_destroy
+      description: DELETE /api/auth/sessions/ — revoke all sessions for the current
+        user.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/auth/social/google/:
+    post:
+      operationId: api_auth_social_google_create
+      description: POST /api/auth/social/google/ — authenticate with a Firebase Google
+        ID token.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/auth/token/refresh/:
+    post:
+      operationId: api_auth_token_refresh_create
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/chat/calls/:
+    get:
+      operationId: api_chat_calls_list
+      description: List video calls for the authenticated user
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedVideoCallList'
+          description: ''
+    post:
+      operationId: api_chat_calls_create
+      description: List video calls for the authenticated user
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VideoCall'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VideoCall'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VideoCall'
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoCall'
+          description: ''
+  /api/chat/calls/{call_id}/accept/:
+    post:
+      operationId: api_chat_calls_accept_create
+      description: POST /api/chat/calls/<id>/accept/ — accept an incoming call
+      parameters:
+      - in: path
+        name: call_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/chat/calls/{call_id}/end/:
+    post:
+      operationId: api_chat_calls_end_create
+      description: POST /api/chat/calls/<id>/end/ — end an active call
+      parameters:
+      - in: path
+        name: call_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/chat/calls/{call_id}/reject/:
+    post:
+      operationId: api_chat_calls_reject_create
+      description: POST /api/chat/calls/<id>/reject/ — reject an incoming call
+      parameters:
+      - in: path
+        name: call_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/chat/calls/initiate/:
+    post:
+      operationId: api_chat_calls_initiate_create
+      description: POST /api/chat/calls/initiate/ — create a call record before signaling
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/chat/threads/:
+    get:
+      operationId: api_chat_threads_list
+      description: List chat threads for the authenticated user
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedChatThreadList'
+          description: ''
+    post:
+      operationId: api_chat_threads_create
+      description: List chat threads for the authenticated user
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatThread'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChatThread'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChatThread'
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatThread'
+          description: ''
+  /api/chat/threads/{id}/:
+    get:
+      operationId: api_chat_threads_retrieve
+      description: Get detailed chat thread with message history
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatThreadDetail'
+          description: ''
+    post:
+      operationId: api_chat_threads_create_2
+      description: Get detailed chat thread with message history
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatThreadDetail'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChatThreadDetail'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChatThreadDetail'
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatThreadDetail'
+          description: ''
+  /api/chat/threads/{thread_id}/messages/:
+    get:
+      operationId: api_chat_threads_messages_list
+      description: List messages in a chat thread
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: path
+        name: thread_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedChatMessageList'
+          description: ''
+    post:
+      operationId: api_chat_threads_messages_create
+      description: List messages in a chat thread
+      parameters:
+      - in: path
+        name: thread_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatMessage'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChatMessage'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChatMessage'
+        required: true
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatMessage'
+          description: ''
+  /api/chat/threads/{thread_id}/messages/{message_id}/delete/:
+    delete:
+      operationId: api_chat_threads_messages_delete_destroy
+      description: Soft-delete a message in a chat thread (sender only)
+      parameters:
+      - in: path
+        name: message_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: thread_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/chat/threads/{thread_id}/messages/{message_id}/edit/:
+    patch:
+      operationId: api_chat_threads_messages_edit_partial_update
+      description: Edit a message in a chat thread (sender only)
+      parameters:
+      - in: path
+        name: message_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: thread_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/chat/threads/{thread_id}/read/:
+    post:
+      operationId: api_chat_threads_read_create
+      description: Mark messages as read in a chat thread
+      parameters:
+      - in: path
+        name: thread_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/chat/threads/{thread_id}/send/:
+    post:
+      operationId: api_chat_threads_send_create
+      description: Send a message in a chat thread
+      parameters:
+      - in: path
+        name: thread_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/chat/threads/{thread_id}/typing/:
+    post:
+      operationId: api_chat_threads_typing_create
+      description: Set typing indicator for a chat thread
+      parameters:
+      - in: path
+        name: thread_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/chat/threads/{thread_id}/upload/:
+    post:
+      operationId: api_chat_threads_upload_create
+      description: POST /api/chat/threads/<thread_id>/upload/ — upload a file attachment
+        for a chat thread.
+      parameters:
+      - in: path
+        name: thread_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/chat/threads/booking/{booking_id}/:
+    get:
+      operationId: api_chat_threads_booking_retrieve
+      description: Get or create a chat thread for a booking
+      parameters:
+      - in: path
+        name: booking_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_chat_threads_booking_create
+      description: Get or create a chat thread for a booking
+      parameters:
+      - in: path
+        name: booking_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/disputes/:
+    get:
+      operationId: api_disputes_list
+      description: |-
+        POST /api/disputes/          — raise a dispute
+        GET  /api/disputes/          — list my disputes
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDisputeList'
+          description: ''
+    post:
+      operationId: api_disputes_create
+      description: |-
+        POST /api/disputes/          — raise a dispute
+        GET  /api/disputes/          — list my disputes
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Dispute'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Dispute'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Dispute'
+        required: true
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dispute'
+          description: ''
+  /api/disputes/{id}/evidence/:
+    post:
+      operationId: api_disputes_evidence_create
+      description: POST /api/disputes/<pk>/evidence/ — attach an image as evidence.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/disputes/admin/:
+    get:
+      operationId: api_disputes_admin_list
+      description: GET /api/disputes/admin/ — list all disputes (admin only).
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDisputeList'
+          description: ''
+    post:
+      operationId: api_disputes_admin_create
+      description: GET /api/disputes/admin/ — list all disputes (admin only).
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Dispute'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Dispute'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Dispute'
+        required: true
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dispute'
+          description: ''
+  /api/disputes/admin/{id}/{action}/:
+    post:
+      operationId: api_disputes_admin_create_2
+      description: POST /api/disputes/admin/<pk>/<action>/ — review/resolve/close
+        a dispute.
+      parameters:
+      - in: path
+        name: action
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/disputes/booking/{booking_id}/:
+    get:
+      operationId: api_disputes_booking_list
+      description: GET /api/disputes/booking/<booking_id>/ — disputes for a specific
+        booking.
+      parameters:
+      - in: path
+        name: booking_id
+        schema:
+          type: string
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDisputeList'
+          description: ''
+    post:
+      operationId: api_disputes_booking_create
+      description: GET /api/disputes/booking/<booking_id>/ — disputes for a specific
+        booking.
+      parameters:
+      - in: path
+        name: booking_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Dispute'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Dispute'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Dispute'
+        required: true
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dispute'
+          description: ''
+  /api/disputes/list/:
+    get:
+      operationId: api_disputes_list_list
+      description: POST /api/disputes/list/ — list my disputes (POST alternative).
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDisputeList'
+          description: ''
+    post:
+      operationId: api_disputes_list_create
+      description: POST /api/disputes/list/ — list my disputes (POST alternative).
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Dispute'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Dispute'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Dispute'
+        required: true
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dispute'
+          description: ''
+  /api/earnings/admin/payouts/:
+    get:
+      operationId: api_earnings_admin_payouts_list
+      description: GET /api/earnings/admin/payouts/ — all payout requests (admin only).
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAdminPayoutRequestList'
+          description: ''
+  /api/earnings/admin/payouts/{id}/{action}/:
+    post:
+      operationId: api_earnings_admin_payouts_create
+      description: POST /api/earnings/admin/payouts/<pk>/<action>/ — approve, complete,
+        or reject a payout.
+      parameters:
+      - in: path
+        name: action
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/earnings/payout/:
+    post:
+      operationId: api_earnings_payout_create
+      description: POST /api/earnings/payout/ — request a payout.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/earnings/payouts/:
+    get:
+      operationId: api_earnings_payouts_list
+      description: GET /api/earnings/payouts/ — current provider's payout request
+        history.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPayoutRequestList'
+          description: ''
+  /api/earnings/summary/:
+    get:
+      operationId: api_earnings_summary_retrieve
+      description: GET /api/earnings/summary/ — provider earnings summary.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_earnings_summary_create
+      description: GET /api/earnings/summary/ — provider earnings summary.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/earnings/transactions/:
+    get:
+      operationId: api_earnings_transactions_list
+      description: GET /api/earnings/transactions/ — paginated transaction history.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEarningsTransactionList'
+          description: ''
+    post:
+      operationId: api_earnings_transactions_create
+      description: GET /api/earnings/transactions/ — paginated transaction history.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EarningsTransaction'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EarningsTransaction'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EarningsTransaction'
+        required: true
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EarningsTransaction'
+          description: ''
+  /api/favorites/:
+    get:
+      operationId: api_favorites_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_favorites_create
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/favorites/{listing_id}/:
+    delete:
+      operationId: api_favorites_destroy
+      parameters:
+      - in: path
+        name: listing_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/favorites/list/:
+    post:
+      operationId: api_favorites_list_create
+      description: POST /api/favorites/list/ — list current user's favorites.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/kyc/admin/:
+    get:
+      operationId: api_kyc_admin_list
+      description: GET /api/kyc/admin/ — list all KYC submissions (admin only).
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAdminKycSubmissionList'
+          description: ''
+    post:
+      operationId: api_kyc_admin_create
+      description: GET /api/kyc/admin/ — list all KYC submissions (admin only).
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminKycSubmission'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdminKycSubmission'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdminKycSubmission'
+        required: true
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminKycSubmission'
+          description: ''
+  /api/kyc/admin/{id}/{action}/:
+    post:
+      operationId: api_kyc_admin_create_2
+      description: POST /api/kyc/admin/<pk>/approve/ or /api/kyc/admin/<pk>/reject/
+      parameters:
+      - in: path
+        name: action
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/kyc/status/:
+    get:
+      operationId: api_kyc_status_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_kyc_status_create
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/kyc/submit/:
+    post:
+      operationId: api_kyc_submit_create
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/locations/barangays/:
+    get:
+      operationId: api_locations_barangays_retrieve
+      description: GET /api/locations/barangays/?city_code=<code> — barangays in city.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/locations/cities/:
+    get:
+      operationId: api_locations_cities_retrieve
+      description: GET /api/locations/cities/?province_code=<code> — cities/municipalities.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/locations/provinces/:
+    get:
+      operationId: api_locations_provinces_retrieve
+      description: GET /api/locations/provinces/ — list all PH provinces (including
+        NCR).
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/logs/:
+    post:
+      operationId: api_logs_create
+      description: Accept batched client-side error logs from the frontend.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/notifications/:
+    get:
+      operationId: api_notifications_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_notifications_create
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/notifications/{id}/:
+    patch:
+      operationId: api_notifications_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/notifications/mark-all-read/:
+    post:
+      operationId: api_notifications_mark_all_read_create
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/notifications/preferences/:
+    get:
+      operationId: api_notifications_preferences_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_notifications_preferences_create
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: api_notifications_preferences_partial_update
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/notifications/preferences/update/:
+    get:
+      operationId: api_notifications_preferences_update_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_notifications_preferences_update_create
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: api_notifications_preferences_update_partial_update
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/notifications/schedule/:
+    get:
+      operationId: api_notifications_schedule_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_notifications_schedule_create
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/notifications/schedule/{id}/:
+    get:
+      operationId: api_notifications_schedule_retrieve_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: api_notifications_schedule_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: api_notifications_schedule_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/notifications/update-pattern/:
+    post:
+      operationId: api_notifications_update_pattern_create
+      description: POST /notifications/update-pattern/ — record a user interaction
+        pattern.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/notifications/user-patterns/:
+    get:
+      operationId: api_notifications_user_patterns_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_notifications_user_patterns_create
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/notifications/user-patterns/{id}/:
+    get:
+      operationId: api_notifications_user_patterns_retrieve_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: api_notifications_user_patterns_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: api_notifications_user_patterns_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/pages/{slug}/:
+    get:
+      operationId: api_pages_retrieve
+      description: Retrieve a CMS content page by its URL slug (e.g. 'terms', 'privacy').
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/payments/booking/{booking_id}/:
+    get:
+      operationId: api_payments_booking_retrieve
+      description: GET /api/payments/booking/<booking_id>/ — get payment status for
+        a booking.
+      parameters:
+      - in: path
+        name: booking_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_payments_booking_create
+      description: GET /api/payments/booking/<booking_id>/ — get payment status for
+        a booking.
+      parameters:
+      - in: path
+        name: booking_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/payments/confirm/:
+    post:
+      operationId: api_payments_confirm_create
+      description: |-
+        POST /api/payments/confirm/
+        Body: { "payment_intent_id": string, "payment_method_id": int }
+        Verifies the PayMongo PaymentIntent status and confirms the local Payment record.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/payments/create-intent/:
+    post:
+      operationId: api_payments_create_intent_create
+      description: |-
+        POST /api/payments/create-intent/
+        Body: { "booking_id": str, "payment_method_id": int }
+        Creates a PayMongo PaymentIntent and returns the client_key for frontend use.
+        Falls back to mock behaviour when PayMongo credentials are not configured.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/payments/webhook/:
+    post:
+      operationId: api_payments_webhook_create
+      description: |-
+        POST /api/payments/webhook/
+        Handles PayMongo webhook events: payment.paid, payment.failed, etc.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/profiles/addresses/:
+    get:
+      operationId: api_profiles_addresses_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAddressList'
+          description: ''
+    post:
+      operationId: api_profiles_addresses_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Address'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Address'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Address'
+        required: true
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+          description: ''
+  /api/profiles/addresses/{id}/:
+    get:
+      operationId: api_profiles_addresses_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+          description: ''
+    put:
+      operationId: api_profiles_addresses_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Address'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Address'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Address'
+        required: true
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+          description: ''
+    patch:
+      operationId: api_profiles_addresses_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAddress'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAddress'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAddress'
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+          description: ''
+    delete:
+      operationId: api_profiles_addresses_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/profiles/addresses/{id}/set-default/:
+    post:
+      operationId: api_profiles_addresses_set_default_create
+      description: |-
+        POST /profiles/addresses/<pk>/set-default/
+        Sets the given address as the user's default, clearing is_default on all others.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/profiles/addresses/list/:
+    get:
+      operationId: api_profiles_addresses_list_list
+      description: POST /api/profiles/addresses/list/ — list user's addresses.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAddressList'
+          description: ''
+    post:
+      operationId: api_profiles_addresses_list_create
+      description: POST /api/profiles/addresses/list/ — list user's addresses.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Address'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Address'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Address'
+        required: true
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+          description: ''
+  /api/providers/{provider_id}/:
+    get:
+      operationId: api_providers_retrieve
+      description: GET /api/providers/<provider_id>/ — public provider profile.
+      parameters:
+      - in: path
+        name: provider_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_providers_create
+      description: GET /api/providers/<provider_id>/ — public provider profile.
+      parameters:
+      - in: path
+        name: provider_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/providers/{provider_id}/listings/:
+    get:
+      operationId: api_providers_listings_list
+      description: GET /api/providers/<provider_id>/listings/ — active listings by
+        a provider.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: path
+        name: provider_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedServiceListingList'
+          description: ''
+    post:
+      operationId: api_providers_listings_create
+      description: GET /api/providers/<provider_id>/listings/ — active listings by
+        a provider.
+      parameters:
+      - in: path
+        name: provider_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceListing'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ServiceListing'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ServiceListing'
+        required: true
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceListing'
+          description: ''
+  /api/providers/me/incentives/:
+    get:
+      operationId: api_providers_me_incentives_retrieve
+      description: GET /api/providers/me/incentives/ — current provider's badge progress.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_providers_me_incentives_create
+      description: GET /api/providers/me/incentives/ — current provider's badge progress.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/recommendations/ai-config/:
+    post:
+      operationId: api_recommendations_ai_config_create
+      description: Return the user's AI configuration.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/recommendations/ai-config/update/:
+    post:
+      operationId: api_recommendations_ai_config_update_create
+      description: Update the user's AI configuration.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/recommendations/content-based/:
+    post:
+      operationId: api_recommendations_content_based_create
+      description: Recommendations based on content match with user preferences.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/recommendations/get-personalized/:
+    post:
+      operationId: api_recommendations_get_personalized_create
+      description: Hybrid personalized recommendations combining multiple signals.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/recommendations/model-weights/:
+    post:
+      operationId: api_recommendations_model_weights_create
+      description: Return dynamic model weights based on user data availability.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/recommendations/nearby/:
+    post:
+      operationId: api_recommendations_nearby_create
+      description: Location-based recommendations.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/recommendations/similar-users/:
+    post:
+      operationId: api_recommendations_similar_users_create
+      description: Find users with similar taste based on shared category interests.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/recommendations/track-interaction/:
+    post:
+      operationId: api_recommendations_track_interaction_create
+      description: Persist a user interaction for recommendation learning.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/recommendations/train-user-model/:
+    post:
+      operationId: api_recommendations_train_user_model_create
+      description: Accept train request and update user preference model from recent
+        interactions.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/recommendations/trending/:
+    post:
+      operationId: api_recommendations_trending_create
+      description: Return trending services based on recent bookings and ratings.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/recommendations/update-preferences/:
+    post:
+      operationId: api_recommendations_update_preferences_create
+      description: Update user recommendation preferences.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/recommendations/user/:
+    post:
+      operationId: api_recommendations_user_create
+      description: 'Collaborative filtering: services liked by users with similar
+        taste.'
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/recommendations/user-preferences/:
+    post:
+      operationId: api_recommendations_user_preferences_create
+      description: Return user recommendation preferences.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/services/availability/:
+    get:
+      operationId: api_services_availability_list
+      description: |-
+        GET /api/services/availability/          — list my availability slots
+        POST /api/services/availability/         — create a new slot
+        GET /api/services/availability/?provider=<id>  — list slots for another provider (read-only)
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProviderAvailabilityList'
+          description: ''
+    post:
+      operationId: api_services_availability_create
+      description: |-
+        GET /api/services/availability/          — list my availability slots
+        POST /api/services/availability/         — create a new slot
+        GET /api/services/availability/?provider=<id>  — list slots for another provider (read-only)
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderAvailability'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProviderAvailability'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProviderAvailability'
+        required: true
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderAvailability'
+          description: ''
+  /api/services/availability/{id}/:
+    get:
+      operationId: api_services_availability_retrieve
+      description: |-
+        GET /api/services/availability/<pk>/
+        PATCH /api/services/availability/<pk>/
+        DELETE /api/services/availability/<pk>/
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderAvailability'
+          description: ''
+    put:
+      operationId: api_services_availability_update
+      description: |-
+        GET /api/services/availability/<pk>/
+        PATCH /api/services/availability/<pk>/
+        DELETE /api/services/availability/<pk>/
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderAvailability'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProviderAvailability'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProviderAvailability'
+        required: true
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderAvailability'
+          description: ''
+    patch:
+      operationId: api_services_availability_partial_update
+      description: |-
+        GET /api/services/availability/<pk>/
+        PATCH /api/services/availability/<pk>/
+        DELETE /api/services/availability/<pk>/
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProviderAvailability'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProviderAvailability'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProviderAvailability'
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderAvailability'
+          description: ''
+    delete:
+      operationId: api_services_availability_destroy
+      description: |-
+        GET /api/services/availability/<pk>/
+        PATCH /api/services/availability/<pk>/
+        DELETE /api/services/availability/<pk>/
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/services/availability/slots/:
+    get:
+      operationId: api_services_availability_slots_retrieve
+      description: |-
+        GET /api/services/availability/slots/?provider=<id>&date=<YYYY-MM-DD>
+        Returns 30-min time slots for a given provider on a given date,
+        based on their ProviderAvailability schedule and existing bookings.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/services/bookings/:
+    get:
+      operationId: api_services_bookings_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedBookingList'
+          description: ''
+    post:
+      operationId: api_services_bookings_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Booking'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Booking'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Booking'
+        required: true
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+          description: ''
+  /api/services/bookings/{id}/:
+    get:
+      operationId: api_services_bookings_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+          description: ''
+    put:
+      operationId: api_services_bookings_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Booking'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Booking'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Booking'
+        required: true
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+          description: ''
+    patch:
+      operationId: api_services_bookings_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBooking'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBooking'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBooking'
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+          description: ''
+  /api/services/bookings/{id}/accept/:
+    post:
+      operationId: api_services_bookings_accept_create
+      description: |-
+        POST /api/services/bookings/<pk>/accept/ — provider accepts a pending booking.
+
+        Pre-existing PATCH /bookings/<pk>/ also accepts a status change now that
+        the serializer enforces transitions, but this endpoint is the canonical
+        one for the provider acceptance UX (clearer semantics, easier to log).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/services/bookings/{id}/location/:
+    patch:
+      operationId: api_services_bookings_location_partial_update
+      description: |-
+        PATCH /api/services/bookings/<pk>/location/
+        Provider pushes their current GPS coordinates while en_route.
+        Body: { "lat": float, "lng": float }
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/services/bookings/{id}/reject/:
+    post:
+      operationId: api_services_bookings_reject_create
+      description: |-
+        POST /api/services/bookings/<pk>/reject/ — provider rejects a pending booking.
+
+        Body: { "reason": "..." }  (reason is appended to notes for audit)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/services/bookings/{id}/reschedule/:
+    post:
+      operationId: api_services_bookings_reschedule_create
+      description: |-
+        POST /api/services/bookings/<pk>/reschedule/
+        Body: { "scheduled_at": "<ISO-8601 datetime>" }
+
+        Validates:
+        - Booking belongs to the requesting user (as client)
+        - Booking is in a reschedulable state (pending or confirmed)
+        - New scheduled_at is in the future
+
+        Saves the new time and fires a signal-based notification to the provider
+        via the existing post_save signal on ServiceBooking.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/services/bookings/{id}/review/:
+    post:
+      operationId: api_services_bookings_review_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Review'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Review'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Review'
+        required: true
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+          description: ''
+  /api/services/bookings/estimate/:
+    post:
+      operationId: api_services_bookings_estimate_create
+      description: |-
+        POST /api/services/bookings/estimate/
+        Body: { "listing_id": int }
+        Returns: { base_price, platform_fee, total, price_unit, listing_title }
+        Platform fee is 10% of base_price.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/services/bookings/list/:
+    get:
+      operationId: api_services_bookings_list_list
+      description: POST /api/services/bookings/list/ — list bookings for authenticated
+        user.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedBookingList'
+          description: ''
+    post:
+      operationId: api_services_bookings_list_create
+      description: POST /api/services/bookings/list/ — list bookings for authenticated
+        user.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Booking'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Booking'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Booking'
+        required: true
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+          description: ''
+  /api/services/categories/:
+    get:
+      operationId: api_services_categories_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCategoryList'
+          description: ''
+  /api/services/listings/:
+    get:
+      operationId: api_services_listings_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedServiceListingList'
+          description: ''
+    post:
+      operationId: api_services_listings_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceListing'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ServiceListing'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ServiceListing'
+        required: true
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceListing'
+          description: ''
+  /api/services/listings/{id}/:
+    get:
+      operationId: api_services_listings_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceListing'
+          description: ''
+    put:
+      operationId: api_services_listings_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceListing'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ServiceListing'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ServiceListing'
+        required: true
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceListing'
+          description: ''
+    patch:
+      operationId: api_services_listings_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedServiceListing'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedServiceListing'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedServiceListing'
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceListing'
+          description: ''
+    delete:
+      operationId: api_services_listings_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/services/listings/{id}/reviews/:
+    get:
+      operationId: api_services_listings_reviews_list
+      description: GET /api/services/listings/<pk>/reviews/ — public reviews for a
+        listing.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedReviewList'
+          description: ''
+  /api/services/listings/{id}/thumbnail/:
+    post:
+      operationId: api_services_listings_thumbnail_create
+      description: POST /api/services/listings/<pk>/thumbnail/ — upload a thumbnail
+        image for a listing.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/services/listings/mine/:
+    get:
+      operationId: api_services_listings_mine_list
+      description: POST /api/services/listings/mine/ — list current provider's listings.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedServiceListingList'
+          description: ''
+    post:
+      operationId: api_services_listings_mine_create
+      description: POST /api/services/listings/mine/ — list current provider's listings.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceListing'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ServiceListing'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ServiceListing'
+        required: true
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceListing'
+          description: ''
+  /api/services/on-demand/:
+    post:
+      operationId: api_services_on_demand_create
+      description: POST /services/on-demand/ — broadcast a job request to nearby providers.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/services/on-demand/{id}/:
+    get:
+      operationId: api_services_on_demand_retrieve
+      description: GET /services/on-demand/<id>/ — poll job status.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/services/on-demand/{id}/accept/:
+    post:
+      operationId: api_services_on_demand_accept_create
+      description: POST /services/on-demand/<id>/accept/ — provider atomically claims
+        the job.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/services/on-demand/{id}/cancel/:
+    post:
+      operationId: api_services_on_demand_cancel_create
+      description: POST /services/on-demand/<id>/cancel/ — client cancels a searching
+        job.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/services/reviews/{id}/reply/:
+    post:
+      operationId: api_services_reviews_reply_create
+      description: |-
+        POST /api/services/reviews/<pk>/reply/
+        Body: { "provider_reply": "..." }
+        Allows the provider of the booking's listing to post a reply to a review.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/users/apply-provider/:
+    post:
+      operationId: api_users_apply_provider_create
+      description: POST /users/apply-provider/ — allow a client-only user to apply
+        as a provider (requires KYC).
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/users/enable-client/:
+    post:
+      operationId: api_users_enable_client_create
+      description: POST /users/enable-client/ — allow a provider-only user to also
+        act as a client.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/users/me/:
+    get:
+      operationId: api_users_me_retrieve
+      description: GET /users/me/ — get current user profile.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_users_me_create
+      description: GET /users/me/ — get current user profile.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/users/me/delete/:
+    delete:
+      operationId: api_users_me_delete_destroy
+      description: DELETE /users/me/delete/ — permanently delete the authenticated
+        user's account.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/users/me/photo/:
+    post:
+      operationId: api_users_me_photo_create
+      description: POST /users/me/photo/ — upload profile photo.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/users/me/update/:
+    patch:
+      operationId: api_users_me_update_partial_update
+      description: PATCH /users/me/ — update current user profile.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/users/notification-preferences/:
+    get:
+      operationId: api_users_notification_preferences_retrieve
+      description: GET/PATCH /users/notification-preferences/ — get or update push
+        notification preference.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_users_notification_preferences_create
+      description: GET/PATCH /users/notification-preferences/ — get or update push
+        notification preference.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: api_users_notification_preferences_partial_update
+      description: GET/PATCH /users/notification-preferences/ — get or update push
+        notification preference.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/users/notifications/register/:
+    post:
+      operationId: api_users_notifications_register_create
+      description: POST /users/notifications/register/ — register push notification
+        token.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/users/notifications/unregister/:
+    post:
+      operationId: api_users_notifications_unregister_create
+      description: POST /users/notifications/unregister/ — unregister push notification
+        token.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/users/payment-methods/:
+    get:
+      operationId: api_users_payment_methods_retrieve
+      description: GET/POST /users/payment-methods/ — list and create payment methods.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_users_payment_methods_create
+      description: GET/POST /users/payment-methods/ — list and create payment methods.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/users/payment-methods/{id}/:
+    delete:
+      operationId: api_users_payment_methods_destroy
+      description: DELETE /users/payment-methods/{id}/ — delete a payment method.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/users/payment-methods/{id}/set-default/:
+    post:
+      operationId: api_users_payment_methods_set_default_create
+      description: |-
+        POST /users/payment-methods/{id}/set-default/
+        Sets the given payment method as the user's default, clearing is_default
+        on all others.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/users/payment-methods/list/:
+    post:
+      operationId: api_users_payment_methods_list_create
+      description: POST /users/payment-methods/list/ — list payment methods (POST
+        alternative).
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+components:
+  schemas:
+    Address:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        label:
+          type: string
+          maxLength: 50
+        street:
+          type: string
+        barangay:
+          type: string
+          maxLength: 100
+        city:
+          type: string
+          maxLength: 100
+        province:
+          type: string
+          maxLength: 100
+        zip_code:
+          type: string
+          maxLength: 10
+        location:
+          type: string
+          nullable: true
+        latitude:
+          type: number
+          format: double
+          writeOnly: true
+          nullable: true
+        longitude:
+          type: number
+          format: double
+          writeOnly: true
+          nullable: true
+        is_default:
+          type: boolean
+      required:
+      - city
+      - id
+      - province
+      - street
+    AdminKycSubmission:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          type: integer
+          readOnly: true
+        user_email:
+          type: string
+          format: email
+          readOnly: true
+        user_name:
+          type: string
+          readOnly: true
+        id_type:
+          type: string
+          maxLength: 50
+        id_front_url:
+          type: string
+          format: uri
+          default: ''
+        id_back_url:
+          type: string
+          format: uri
+          default: ''
+        selfie_url:
+          type: string
+          format: uri
+          default: ''
+        liveness_score:
+          type: number
+          format: double
+          nullable: true
+        submitter_role:
+          $ref: '#/components/schemas/SubmitterRoleEnum'
+        nbi_clearance_url:
+          type: string
+          format: uri
+          default: ''
+        portfolio_url:
+          type: string
+          format: uri
+          default: ''
+        resume_url:
+          type: string
+          format: uri
+          default: ''
+        status:
+          $ref: '#/components/schemas/AdminKycSubmissionStatusEnum'
+        rejection_reason:
+          type: string
+        submitted_at:
+          type: string
+          format: date-time
+          readOnly: true
+        reviewed_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - id
+      - id_type
+      - submitted_at
+      - user
+      - user_email
+      - user_name
+    AdminKycSubmissionStatusEnum:
+      enum:
+      - pending
+      - approved
+      - rejected
+      type: string
+      description: |-
+        * `pending` - Pending Review
+        * `approved` - Approved
+        * `rejected` - Rejected
+    AdminPayoutRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        provider_email:
+          type: string
+          format: email
+          readOnly: true
+        provider_name:
+          type: string
+          readOnly: true
+        payment_method:
+          type: integer
+          nullable: true
+        payment_method_provider:
+          type: string
+          readOnly: true
+        amount:
+          type: number
+          format: double
+          maximum: 100000000
+          minimum: -100000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusA8fEnum'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        processed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - amount
+      - created_at
+      - id
+      - payment_method_provider
+      - processed_at
+      - provider_email
+      - provider_name
+      - status
+    Booking:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        listing:
+          type: integer
+        listing_title:
+          type: string
+          readOnly: true
+        provider_name:
+          type: string
+          readOnly: true
+        provider_photo:
+          type: string
+          readOnly: true
+          default: ''
+        client:
+          type: integer
+          readOnly: true
+        client_id:
+          type: integer
+          readOnly: true
+        provider_id:
+          type: integer
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/BookingStatusEnum'
+        scheduled_date:
+          type: string
+          format: date
+          nullable: true
+        scheduled_time:
+          type: string
+          format: time
+          nullable: true
+        scheduled_at:
+          type: string
+          format: date-time
+          nullable: true
+        notes:
+          type: string
+        agreed_price:
+          type: number
+          format: double
+          maximum: 100000000
+          minimum: -100000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          nullable: true
+        total_price:
+          type: number
+          format: double
+          maximum: 100000000
+          minimum: -100000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          nullable: true
+        provider_lat:
+          type: number
+          format: double
+          maximum: 1000
+          minimum: -1000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          nullable: true
+        provider_lng:
+          type: number
+          format: double
+          maximum: 1000
+          minimum: -1000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          nullable: true
+        has_review:
+          type: string
+          readOnly: true
+        payment_confirmed:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - client
+      - client_id
+      - created_at
+      - has_review
+      - id
+      - listing
+      - listing_title
+      - payment_confirmed
+      - provider_id
+      - provider_name
+      - provider_photo
+    BookingStatusEnum:
+      enum:
+      - inquiry
+      - pending
+      - confirmed
+      - en_route
+      - in_progress
+      - completed
+      - cancelled
+      - disputed
+      type: string
+      description: |-
+        * `inquiry` - Inquiry
+        * `pending` - Pending
+        * `confirmed` - Confirmed
+        * `en_route` - En Route
+        * `in_progress` - In Progress
+        * `completed` - Completed
+        * `cancelled` - Cancelled
+        * `disputed` - Disputed
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        slug:
+          type: string
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        icon:
+          type: string
+          maxLength: 100
+        image:
+          type: string
+          format: uri
+          nullable: true
+        description:
+          type: string
+      required:
+      - id
+      - name
+      - slug
+    ChatMessage:
+      type: object
+      description: Serializer for chat messages
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        thread:
+          type: string
+          format: uuid
+        sender:
+          type: string
+          readOnly: true
+        content:
+          type: string
+        file_attachment:
+          type: string
+          format: uri
+          nullable: true
+          maxLength: 2048
+        file_type:
+          type: string
+          nullable: true
+          maxLength: 50
+        file_type_display:
+          type: string
+          readOnly: true
+        is_deleted:
+          type: boolean
+        edited_at:
+          type: string
+          format: date-time
+          nullable: true
+        reply_to:
+          type: string
+          readOnly: true
+        sticker:
+          type: string
+          nullable: true
+          maxLength: 100
+        is_system_message:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - content
+      - created_at
+      - file_type_display
+      - id
+      - reply_to
+      - sender
+      - thread
+      - updated_at
+    ChatThread:
+      type: object
+      description: Serializer for chat threads
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        booking:
+          type: string
+          nullable: true
+        booking_id:
+          type: string
+          readOnly: true
+        client:
+          type: string
+          readOnly: true
+        provider:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        last_message:
+          type: string
+          readOnly: true
+        unread_count:
+          type: string
+          readOnly: true
+        other_participant:
+          type: string
+          readOnly: true
+      required:
+      - booking_id
+      - client
+      - created_at
+      - id
+      - last_message
+      - other_participant
+      - provider
+      - unread_count
+      - updated_at
+    ChatThreadDetail:
+      type: object
+      description: Detailed serializer for chat threads with full message history
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        booking:
+          type: string
+          nullable: true
+        booking_id:
+          type: string
+          readOnly: true
+        client:
+          type: string
+          readOnly: true
+        provider:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        last_message:
+          type: string
+          readOnly: true
+        unread_count:
+          type: string
+          readOnly: true
+        other_participant:
+          type: string
+          readOnly: true
+        messages:
+          type: string
+          readOnly: true
+      required:
+      - booking_id
+      - client
+      - created_at
+      - id
+      - last_message
+      - messages
+      - other_participant
+      - provider
+      - unread_count
+      - updated_at
+    DayOfWeekEnum:
+      enum:
+      - 0
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      - 6
+      type: integer
+      description: |-
+        * `0` - Monday
+        * `1` - Tuesday
+        * `2` - Wednesday
+        * `3` - Thursday
+        * `4` - Friday
+        * `5` - Saturday
+        * `6` - Sunday
+    Dispute:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        booking:
+          type: string
+        raised_by:
+          type: integer
+          readOnly: true
+        raised_by_name:
+          type: string
+          readOnly: true
+        reason:
+          $ref: '#/components/schemas/ReasonEnum'
+        description:
+          type: string
+        evidence:
+          type: string
+          format: uri
+          nullable: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/DisputeStatusEnum'
+          readOnly: true
+        admin_notes:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        resolved_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - admin_notes
+      - booking
+      - created_at
+      - id
+      - raised_by
+      - raised_by_name
+      - reason
+      - resolved_at
+      - status
+    DisputeStatusEnum:
+      enum:
+      - open
+      - under_review
+      - resolved
+      - closed
+      type: string
+      description: |-
+        * `open` - Open
+        * `under_review` - Under Review
+        * `resolved` - Resolved
+        * `closed` - Closed
+    EarningsTransaction:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        provider:
+          type: integer
+          readOnly: true
+        booking:
+          type: string
+          nullable: true
+        amount:
+          type: number
+          format: double
+          maximum: 100000000
+          minimum: -100000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        type:
+          $ref: '#/components/schemas/TypeEnum'
+        description:
+          type: string
+          maxLength: 255
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - amount
+      - created_at
+      - id
+      - provider
+      - type
+    PaginatedAddressList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Address'
+    PaginatedAdminKycSubmissionList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminKycSubmission'
+    PaginatedAdminPayoutRequestList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminPayoutRequest'
+    PaginatedBookingList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Booking'
+    PaginatedCategoryList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+    PaginatedChatMessageList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+    PaginatedChatThreadList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatThread'
+    PaginatedDisputeList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Dispute'
+    PaginatedEarningsTransactionList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/EarningsTransaction'
+    PaginatedPayoutRequestList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PayoutRequest'
+    PaginatedProviderAvailabilityList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProviderAvailability'
+    PaginatedReviewList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Review'
+    PaginatedServiceListingList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceListing'
+    PaginatedVideoCallList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/VideoCall'
+    PatchedAddress:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        label:
+          type: string
+          maxLength: 50
+        street:
+          type: string
+        barangay:
+          type: string
+          maxLength: 100
+        city:
+          type: string
+          maxLength: 100
+        province:
+          type: string
+          maxLength: 100
+        zip_code:
+          type: string
+          maxLength: 10
+        location:
+          type: string
+          nullable: true
+        latitude:
+          type: number
+          format: double
+          writeOnly: true
+          nullable: true
+        longitude:
+          type: number
+          format: double
+          writeOnly: true
+          nullable: true
+        is_default:
+          type: boolean
+    PatchedBooking:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        listing:
+          type: integer
+        listing_title:
+          type: string
+          readOnly: true
+        provider_name:
+          type: string
+          readOnly: true
+        provider_photo:
+          type: string
+          readOnly: true
+          default: ''
+        client:
+          type: integer
+          readOnly: true
+        client_id:
+          type: integer
+          readOnly: true
+        provider_id:
+          type: integer
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/BookingStatusEnum'
+        scheduled_date:
+          type: string
+          format: date
+          nullable: true
+        scheduled_time:
+          type: string
+          format: time
+          nullable: true
+        scheduled_at:
+          type: string
+          format: date-time
+          nullable: true
+        notes:
+          type: string
+        agreed_price:
+          type: number
+          format: double
+          maximum: 100000000
+          minimum: -100000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          nullable: true
+        total_price:
+          type: number
+          format: double
+          maximum: 100000000
+          minimum: -100000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          nullable: true
+        provider_lat:
+          type: number
+          format: double
+          maximum: 1000
+          minimum: -1000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          nullable: true
+        provider_lng:
+          type: number
+          format: double
+          maximum: 1000
+          minimum: -1000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          nullable: true
+        has_review:
+          type: string
+          readOnly: true
+        payment_confirmed:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedProviderAvailability:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        day_of_week:
+          allOf:
+          - $ref: '#/components/schemas/DayOfWeekEnum'
+          minimum: -2147483648
+          maximum: 2147483647
+        day_of_week_display:
+          type: string
+          readOnly: true
+        start_time:
+          type: string
+          format: time
+        end_time:
+          type: string
+          format: time
+        is_active:
+          type: boolean
+    PatchedServiceListing:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        category:
+          type: integer
+        category_name:
+          type: string
+          readOnly: true
+        provider:
+          type: integer
+          readOnly: true
+        provider_name:
+          type: string
+          readOnly: true
+        provider_photo:
+          type: string
+          readOnly: true
+          default: ''
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        base_price:
+          type: number
+          format: double
+          maximum: 100000000
+          minimum: -100000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        price_unit:
+          type: string
+          maxLength: 50
+        status:
+          $ref: '#/components/schemas/ServiceListingStatusEnum'
+        is_available:
+          type: string
+          readOnly: true
+        _is_available_write:
+          type: boolean
+          writeOnly: true
+          title: is_available
+        rating:
+          type: string
+          readOnly: true
+        thumbnail:
+          type: string
+          format: uri
+          nullable: true
+        images:
+          type: string
+          readOnly: true
+        city:
+          type: string
+          maxLength: 100
+        province:
+          type: string
+          maxLength: 100
+        latitude:
+          type: number
+          format: double
+          maximum: 1000
+          minimum: -1000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          nullable: true
+        longitude:
+          type: number
+          format: double
+          maximum: 1000
+          minimum: -1000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PayoutRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        payment_method:
+          type: integer
+          nullable: true
+        amount:
+          type: number
+          format: double
+          maximum: 100000000
+          minimum: -100000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusA8fEnum'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        processed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - amount
+      - created_at
+      - id
+      - processed_at
+      - status
+    ProviderAvailability:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        day_of_week:
+          allOf:
+          - $ref: '#/components/schemas/DayOfWeekEnum'
+          minimum: -2147483648
+          maximum: 2147483647
+        day_of_week_display:
+          type: string
+          readOnly: true
+        start_time:
+          type: string
+          format: time
+        end_time:
+          type: string
+          format: time
+        is_active:
+          type: boolean
+      required:
+      - day_of_week
+      - day_of_week_display
+      - end_time
+      - id
+      - start_time
+    ReasonEnum:
+      enum:
+      - service_not_rendered
+      - poor_quality
+      - overcharged
+      - no_show
+      - other
+      type: string
+      description: |-
+        * `service_not_rendered` - Service Not Rendered
+        * `poor_quality` - Poor Quality of Service
+        * `overcharged` - Overcharged
+        * `no_show` - Provider No-Show
+        * `other` - Other
+    Review:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        booking:
+          type: string
+          readOnly: true
+        reviewer:
+          type: integer
+          readOnly: true
+        reviewer_name:
+          type: string
+          readOnly: true
+        reviewer_photo:
+          type: string
+          readOnly: true
+          default: ''
+        rating:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        comment:
+          type: string
+        provider_reply:
+          type: string
+        provider_reply_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - booking
+      - created_at
+      - id
+      - provider_reply_at
+      - rating
+      - reviewer
+      - reviewer_name
+      - reviewer_photo
+    ServiceListing:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        category:
+          type: integer
+        category_name:
+          type: string
+          readOnly: true
+        provider:
+          type: integer
+          readOnly: true
+        provider_name:
+          type: string
+          readOnly: true
+        provider_photo:
+          type: string
+          readOnly: true
+          default: ''
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        base_price:
+          type: number
+          format: double
+          maximum: 100000000
+          minimum: -100000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        price_unit:
+          type: string
+          maxLength: 50
+        status:
+          $ref: '#/components/schemas/ServiceListingStatusEnum'
+        is_available:
+          type: string
+          readOnly: true
+        _is_available_write:
+          type: boolean
+          writeOnly: true
+          title: is_available
+        rating:
+          type: string
+          readOnly: true
+        thumbnail:
+          type: string
+          format: uri
+          nullable: true
+        images:
+          type: string
+          readOnly: true
+        city:
+          type: string
+          maxLength: 100
+        province:
+          type: string
+          maxLength: 100
+        latitude:
+          type: number
+          format: double
+          maximum: 1000
+          minimum: -1000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          nullable: true
+        longitude:
+          type: number
+          format: double
+          maximum: 1000
+          minimum: -1000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - base_price
+      - category
+      - category_name
+      - created_at
+      - description
+      - id
+      - images
+      - is_available
+      - provider
+      - provider_name
+      - provider_photo
+      - rating
+      - title
+    ServiceListingStatusEnum:
+      enum:
+      - draft
+      - active
+      - paused
+      - archived
+      type: string
+      description: |-
+        * `draft` - Draft
+        * `active` - Active
+        * `paused` - Paused
+        * `archived` - Archived
+    StatusA8fEnum:
+      enum:
+      - pending
+      - processing
+      - completed
+      - failed
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `processing` - Processing
+        * `completed` - Completed
+        * `failed` - Failed
+    SubmitterRoleEnum:
+      enum:
+      - customer
+      - provider
+      type: string
+      description: |-
+        * `customer` - Customer
+        * `provider` - Provider
+    TypeEnum:
+      enum:
+      - credit
+      - payout
+      type: string
+      description: |-
+        * `credit` - Credit
+        * `payout` - Payout
+    User:
+      type: object
+      description: Minimal user serializer for chat contexts
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        display_name:
+          type: string
+          maxLength: 150
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        photo_url:
+          type: string
+          readOnly: true
+      required:
+      - email
+      - id
+      - photo_url
+    VideoCall:
+      type: object
+      description: Serializer for video calls
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        thread:
+          type: string
+          format: uuid
+          readOnly: true
+        thread_id:
+          type: string
+          format: uuid
+          readOnly: true
+        booking_id:
+          type: string
+          readOnly: true
+        caller:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        callee:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/VideoCallStatusEnum'
+        started_at:
+          type: string
+          format: date-time
+          readOnly: true
+        ended_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        duration:
+          type: integer
+          readOnly: true
+          description: Duration in seconds
+        reason:
+          type: string
+          nullable: true
+          maxLength: 255
+      required:
+      - booking_id
+      - callee
+      - caller
+      - duration
+      - ended_at
+      - id
+      - started_at
+      - thread
+      - thread_id
+    VideoCallStatusEnum:
+      enum:
+      - initiated
+      - accepted
+      - rejected
+      - ended
+      - missed
+      type: string
+      description: |-
+        * `initiated` - Initiated
+        * `accepted` - Accepted
+        * `rejected` - Rejected
+        * `ended` - Ended
+        * `missed` - Missed
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      name: Authorization
+      in: header
