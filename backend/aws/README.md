@@ -17,9 +17,9 @@ This folder contains the deployment artifacts for the SHPH backend service.
 
 2. Push to ECR:
    ```bash
-   aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin 123456789012.dkr.ecr.ap-southeast-2.amazonaws.com
-   docker tag shph-backend:latest 123456789012.dkr.ecr.ap-southeast-2.amazonaws.com/shph-backend:latest
-   docker push 123456789012.dkr.ecr.ap-southeast-2.amazonaws.com/shph-backend:latest
+   aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin 888577050475.dkr.ecr.ap-southeast-2.amazonaws.com
+   docker tag shph-backend:latest 888577050475.dkr.ecr.ap-southeast-2.amazonaws.com/shph-backend:latest
+   docker push 888577050475.dkr.ecr.ap-southeast-2.amazonaws.com/shph-backend:latest
    ```
 
 3. Register the ECS task definition:

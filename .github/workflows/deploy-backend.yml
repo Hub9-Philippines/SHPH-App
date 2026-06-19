@@ -68,7 +68,7 @@ jobs:
       - name: Register ECS task definition
         working-directory: backend
         run: |
-          sed -e "s|123456789012.dkr.ecr.ap-southeast-2.amazonaws.com/shph-backend:latest|${{ steps.login-ecr.outputs.registry }}/shph-backend:latest|" aws/ecs-task-def.json > aws/ecs-task-def-generated.json
+          sed -e "s|888577050475.dkr.ecr.ap-southeast-2.amazonaws.com/shph-backend:latest|${{ steps.login-ecr.outputs.registry }}/shph-backend:latest|" aws/ecs-task-def.json > aws/ecs-task-def-generated.json
           aws ecs register-task-definition --cli-input-json file://aws/ecs-task-def-generated.json
 
       - name: Deploy ECS service
