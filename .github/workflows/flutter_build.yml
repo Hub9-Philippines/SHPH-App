@@ -67,6 +67,8 @@ jobs:
         run: |
           # Ensure Flutter iOS dependencies are available
           flutter precache --ios
+          # Regenerate iOS build settings required by Podfile before CocoaPods runs
+          flutter pub get
           # Ensure Pods are installed
           cd ios
           pod install --repo-update
