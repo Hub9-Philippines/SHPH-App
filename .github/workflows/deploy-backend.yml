@@ -35,6 +35,7 @@ jobs:
           aws-region: ap-southeast-2
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           role-session-name: github-actions
+          audience: sts.amazonaws.com
 
       - name: Login to ECR
         id: login-ecr
