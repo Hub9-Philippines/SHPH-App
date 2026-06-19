@@ -796,6 +796,63 @@
        {
         "Name": "PORT",
         "Value": "4000"
+       },
+       {
+        "Name": "DATABASE_URL",
+        "Value": {
+         "Fn::Join": [
+          "",
+          [
+           "postgresql://{{resolve:secretsmanager:",
+           {
+            "Ref": "DbCredentials798065DE"
+           },
+           ":SecretString:username::}}:{{resolve:secretsmanager:",
+           {
+            "Ref": "DbCredentials798065DE"
+           },
+           ":SecretString:password::}}@",
+           {
+            "Fn::GetAtt": [
+             "ShphPostgresD187D122",
+             "Endpoint.Address"
+            ]
+           },
+           ":",
+           {
+            "Fn::GetAtt": [
+             "ShphPostgresD187D122",
+             "Endpoint.Port"
+            ]
+           },
+           "/shphdb"
+          ]
+         ]
+        }
+       },
+       {
+        "Name": "REDIS_URL",
+        "Value": {
+         "Fn::Join": [
+          "",
+          [
+           "redis://",
+           {
+            "Fn::GetAtt": [
+             "ShphRedis",
+             "RedisEndpoint.Address"
+            ]
+           },
+           ":",
+           {
+            "Fn::GetAtt": [
+             "ShphRedis",
+             "RedisEndpoint.Port"
+            ]
+           }
+          ]
+         ]
+        }
        }
       ],
       "Essential": true,
@@ -829,18 +886,6 @@
        }
       ],
       "Secrets": [
-       {
-        "Name": "DATABASE_URL",
-        "ValueFrom": {
-         "Ref": "DatabaseUrlSecretFA7DE062"
-        }
-       },
-       {
-        "Name": "REDIS_URL",
-        "ValueFrom": {
-         "Ref": "RedisUrlSecretD9C54B0D"
-        }
-       },
        {
         "Name": "JWT_SECRET",
         "ValueFrom": {
@@ -951,26 +996,6 @@
          "ShphTaskDefShphContainerLogGroup4984F25A",
          "Arn"
         ]
-       }
-      },
-      {
-       "Action": [
-        "secretsmanager:GetSecretValue",
-        "secretsmanager:DescribeSecret"
-       ],
-       "Effect": "Allow",
-       "Resource": {
-        "Ref": "DatabaseUrlSecretFA7DE062"
-       }
-      },
-      {
-       "Action": [
-        "secretsmanager:GetSecretValue",
-        "secretsmanager:DescribeSecret"
-       ],
-       "Effect": "Allow",
-       "Resource": {
-        "Ref": "RedisUrlSecretD9C54B0D"
        }
       },
       {
@@ -1105,6 +1130,7 @@
   "ShphAlbServiceLBPublicListenerECSGroup9EEBFCB1": {
    "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
    "Properties": {
+    "HealthCheckPath": "/health",
     "Port": 80,
     "Protocol": "HTTP",
     "TargetGroupAttributes": [
@@ -1146,7 +1172,7 @@
     },
     "DesiredCount": 1,
     "EnableECSManagedTags": false,
-    "HealthCheckGracePeriodSeconds": 60,
+    "HealthCheckGracePeriodSeconds": 600,
     "LaunchType": "FARGATE",
     "LoadBalancers": [
      {

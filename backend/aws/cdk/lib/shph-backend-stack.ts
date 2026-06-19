@@ -145,10 +145,12 @@ export class ShphBackendStack extends Stack {
             logging: new AwsLogDriver({ streamPrefix: 'shph-backend' }),
             environment: {
                 PORT: '4000',
+                // Resolve connection strings natively at deployment using CDK string tokens
+                DATABASE_URL: `postgresql://${dbCredentials.secretValueFromJson('username').toString()}:${dbCredentials.secretValueFromJson('password').toString()}@${dbInstance.instanceEndpoint.hostname}:${dbInstance.instanceEndpoint.port}/shphdb`,
+                REDIS_URL: `redis://${redisCluster.attrRedisEndpointAddress}:${redisCluster.attrRedisEndpointPort}`,
             },
             secrets: {
-                DATABASE_URL: EcsSecret.fromSecretsManager(databaseUrlSecret),
-                REDIS_URL: EcsSecret.fromSecretsManager(redisUrlSecret),
+                // Keep purely sensitive credentials wrapped inside secrets
                 JWT_SECRET: EcsSecret.fromSecretsManager(jwtSecret, 'JWT_SECRET'),
             },
         });
@@ -160,9 +162,6 @@ export class ShphBackendStack extends Stack {
             taskDefinition,
             publicLoadBalancer: true,
             listenerPort: 80,
-            healthCheck: {
-                path: '/health',
-            },
             healthCheckGracePeriod: Duration.minutes(10),
             redirectHTTP: false,
             desiredCount: 1,
@@ -173,6 +172,6 @@ export class ShphBackendStack extends Stack {
             minHealthyPercent: 100,
             loadBalancerName: 'ShphBackendALB',
             serviceName: 'ShphBackendService',
-        });
+        }).targetGroup.configureHealthCheck({ path: '/health' });
     }
 }
