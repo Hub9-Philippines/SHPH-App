@@ -544,11 +544,11 @@
     "aws:cdk:path": "ShphBackendStack/EcsSecurityGroup/Resource"
    }
   },
-  "EcsSecurityGroupfromShphBackendStackShphAlbServiceLBSecurityGroup255B7CCF808ECE9515": {
+  "EcsSecurityGroupfromShphBackendStackShphAlbServiceLBSecurityGroup255B7CCF4000ED3E5BFB": {
    "Type": "AWS::EC2::SecurityGroupIngress",
    "Properties": {
     "Description": "Load balancer to target",
-    "FromPort": 80,
+    "FromPort": 4000,
     "GroupId": {
      "Fn::GetAtt": [
       "EcsSecurityGroup44008BF1",
@@ -562,10 +562,10 @@
       "GroupId"
      ]
     },
-    "ToPort": 80
+    "ToPort": 4000
    },
    "Metadata": {
-    "aws:cdk:path": "ShphBackendStack/EcsSecurityGroup/from ShphBackendStackShphAlbServiceLBSecurityGroup255B7CCF:80"
+    "aws:cdk:path": "ShphBackendStack/EcsSecurityGroup/from ShphBackendStackShphAlbServiceLBSecurityGroup255B7CCF:4000"
    }
   },
   "ShphPostgresSubnetGroup6D8DDDB2": {
@@ -799,7 +799,18 @@
        }
       ],
       "Essential": true,
-      "Image": "nginxdemos/hello",
+      "Image": {
+       "Fn::Join": [
+        "",
+        [
+         "888577050475.dkr.ecr.ap-southeast-2.",
+         {
+          "Ref": "AWS::URLSuffix"
+         },
+         "/shph-backend:latest"
+        ]
+       ]
+      },
       "LogConfiguration": {
        "LogDriver": "awslogs",
        "Options": {
@@ -813,7 +824,7 @@
       "Name": "ShphContainer",
       "PortMappings": [
        {
-        "ContainerPort": 80,
+        "ContainerPort": 4000,
         "Protocol": "tcp"
        }
       ],
@@ -904,6 +915,31 @@
    "Properties": {
     "PolicyDocument": {
      "Statement": [
+      {
+       "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":ecr:ap-southeast-2:888577050475:repository/shph-backend"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": "ecr:GetAuthorizationToken",
+       "Effect": "Allow",
+       "Resource": "*"
+      },
       {
        "Action": [
         "logs:CreateLogStream",
@@ -1021,7 +1057,7 @@
     "aws:cdk:path": "ShphBackendStack/ShphAlbService/LB/SecurityGroup/Resource"
    }
   },
-  "ShphAlbServiceLBSecurityGrouptoShphBackendStackEcsSecurityGroupDC3C67D5809453B6A5": {
+  "ShphAlbServiceLBSecurityGrouptoShphBackendStackEcsSecurityGroupDC3C67D540003599441F": {
    "Type": "AWS::EC2::SecurityGroupEgress",
    "Properties": {
     "Description": "Load balancer to target",
@@ -1031,7 +1067,7 @@
       "GroupId"
      ]
     },
-    "FromPort": 80,
+    "FromPort": 4000,
     "GroupId": {
      "Fn::GetAtt": [
       "ShphAlbServiceLBSecurityGroupBC83368D",
@@ -1039,10 +1075,10 @@
      ]
     },
     "IpProtocol": "tcp",
-    "ToPort": 80
+    "ToPort": 4000
    },
    "Metadata": {
-    "aws:cdk:path": "ShphBackendStack/ShphAlbService/LB/SecurityGroup/to ShphBackendStackEcsSecurityGroupDC3C67D5:80"
+    "aws:cdk:path": "ShphBackendStack/ShphAlbService/LB/SecurityGroup/to ShphBackendStackEcsSecurityGroupDC3C67D5:4000"
    }
   },
   "ShphAlbServiceLBPublicListenerC889AD9E": {
@@ -1115,7 +1151,7 @@
     "LoadBalancers": [
      {
       "ContainerName": "ShphContainer",
-      "ContainerPort": 80,
+      "ContainerPort": 4000,
       "TargetGroupArn": {
        "Ref": "ShphAlbServiceLBPublicListenerECSGroup9EEBFCB1"
       }

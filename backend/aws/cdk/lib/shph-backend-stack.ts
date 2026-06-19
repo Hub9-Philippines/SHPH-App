@@ -123,9 +123,7 @@ export class ShphBackendStack extends Stack {
             ),
         });
 
-        const backendRepository = new Repository(this, 'BackendRepository', {
-            repositoryName: 'shph-backend',
-        });
+        const backendRepository = Repository.fromRepositoryName(this, 'BackendRepository', 'shph-backend');
 
         const cluster = new Cluster(this, 'ShphEcsCluster', {
             vpc,
@@ -162,6 +160,10 @@ export class ShphBackendStack extends Stack {
             taskDefinition,
             publicLoadBalancer: true,
             listenerPort: 80,
+            healthCheck: {
+                path: '/health',
+            },
+            healthCheckGracePeriod: Duration.minutes(10),
             redirectHTTP: false,
             desiredCount: 1,
             assignPublicIp: false,

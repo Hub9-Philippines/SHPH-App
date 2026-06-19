@@ -23,6 +23,10 @@ app.use(helmet());
 app.use(cors());
 app.use(json({ limit: '10mb' }));
 
+app.get('/health', (_req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
+
 app.use('/api/auth', authRouter);
 app.use('/api/users', authenticateJwt, usersRouter);
 app.use('/api/chat', authenticateJwt, chatRouter);
