@@ -1,3 +1,5 @@
+import '/api/bridges/api_row_mapper.dart';
+import '/api/resources/bookings_api.dart';
 import '/backend/supabase/supabase.dart';
 import '/services/logging_service.dart';
 
@@ -7,13 +9,33 @@ class ProBookingsService {
   static final ProBookingsService instance = ProBookingsService._();
 
   final _supabase = Supabase.instance.client;
+  final _bookingsApi = ShphBookingsApi.instance;
 
-  // Get current user ID
   String? get _currentUserId => _supabase.auth.currentUser?.id;
 
+  Future<List<Map<String, dynamic>>> _fetchProviderBookingsFromApi() async {
+    final page = await _bookingsApi.listBookings();
+    return page.results
+        .map((booking) => ApiRowMapper.bookingToRow(booking).data)
+        .toList();
+  }
+
   /// Get pending job requests for the provider
-  /// Status: 'pending' - new job requests awaiting response
   Future<List<Map<String, dynamic>>> getPendingJobRequests() async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final bookings = await _fetchProviderBookingsFromApi();
+        return bookings
+            .where((booking) => booking['status'] == 'pending')
+            .toList();
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API getPendingJobRequests failed, falling back to Supabase: $e',
+          tag: 'ProBookingsService',
+        );
+      }
+    }
+
     try {
       final userId = _currentUserId;
       if (userId == null) {
@@ -40,8 +62,27 @@ class ProBookingsService {
   }
 
   /// Get scheduled/accepted jobs for the provider
-  /// Status: 'accepted', 'in_progress', 'completed'
   Future<List<Map<String, dynamic>>> getScheduledJobs() async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final bookings = await _fetchProviderBookingsFromApi();
+        return bookings
+            .where((booking) {
+              final status = booking['status'] as String?;
+              return status == 'accepted' ||
+                  status == 'confirmed' ||
+                  status == 'in_progress' ||
+                  status == 'completed';
+            })
+            .toList();
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API getScheduledJobs failed, falling back to Supabase: $e',
+          tag: 'ProBookingsService',
+        );
+      }
+    }
+
     try {
       final userId = _currentUserId;
       if (userId == null) {
@@ -235,6 +276,20 @@ class ProBookingsService {
 
   /// Accept a job request
   Future<bool> acceptJob(String bookingId) async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        await _bookingsApi.acceptBooking(bookingId);
+        LoggingService.info('Job accepted via API: $bookingId',
+            tag: 'ProBookingsService');
+        return true;
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API acceptJob failed, falling back to Supabase: $e',
+          tag: 'ProBookingsService',
+        );
+      }
+    }
+
     try {
       await _supabase.from('bookings').update({
         'status': 'accepted',
@@ -253,6 +308,20 @@ class ProBookingsService {
 
   /// Reject a job request
   Future<bool> rejectJob(String bookingId, {String? reason}) async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        await _bookingsApi.rejectBooking(bookingId, reason: reason);
+        LoggingService.info('Job rejected via API: $bookingId',
+            tag: 'ProBookingsService');
+        return true;
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API rejectJob failed, falling back to Supabase: $e',
+          tag: 'ProBookingsService',
+        );
+      }
+    }
+
     try {
       await _supabase.from('bookings').update({
         'status': 'rejected',
@@ -272,6 +341,23 @@ class ProBookingsService {
 
   /// Mark job as completed
   Future<bool> completeJob(String bookingId) async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        await _bookingsApi.updateBooking(
+          bookingId,
+          data: {'status': 'completed'},
+        );
+        LoggingService.info('Job completed via API: $bookingId',
+            tag: 'ProBookingsService');
+        return true;
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API completeJob failed, falling back to Supabase: $e',
+          tag: 'ProBookingsService',
+        );
+      }
+    }
+
     try {
       await _supabase.from('bookings').update({
         'status': 'completed',
@@ -290,6 +376,38 @@ class ProBookingsService {
 
   /// Get booking counts by status
   Future<Map<String, int>> getBookingCounts() async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final bookings = await _fetchProviderBookingsFromApi();
+        int pending = 0;
+        int accepted = 0;
+        int completed = 0;
+
+        for (final booking in bookings) {
+          final status = booking['status'] as String?;
+          if (status == 'pending') pending++;
+          if (status == 'accepted' ||
+              status == 'confirmed' ||
+              status == 'in_progress') {
+            accepted++;
+          }
+          if (status == 'completed') completed++;
+        }
+
+        return {
+          'pending': pending,
+          'accepted': accepted,
+          'completed': completed,
+          'total': bookings.length,
+        };
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API getBookingCounts failed, falling back to Supabase: $e',
+          tag: 'ProBookingsService',
+        );
+      }
+    }
+
     try {
       final userId = _currentUserId;
       if (userId == null) {

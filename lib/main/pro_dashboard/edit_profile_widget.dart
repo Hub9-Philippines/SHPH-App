@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/theme/app_theme.dart';
 import '/services/logging_service.dart';
+import '/services/profiles_service.dart';
 
 class ProEditProfileWidget extends StatefulWidget {
   const ProEditProfileWidget({super.key});
@@ -50,26 +51,20 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
   Future<void> _loadProfile() async {
     setState(() => isLoading = true);
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) {
+      final profile = await ProfilesService.instance.getProfile();
+      if (profile == null) {
         setState(() => isLoading = false);
         return;
       }
 
-      final response = await Supabase.instance.client
-          .from('profiles')
-          .select()
-          .eq('id', userId)
-          .single();
-
       setState(() {
-        profileData = response;
-        _firstNameController.text = response['first_name'] ?? '';
-        _lastNameController.text = response['last_name'] ?? '';
-        _displayNameController.text = response['display_name'] ?? '';
-        _bioController.text = response['bio'] ?? '';
-        _phoneController.text = response['phone_number'] ?? '';
-        _currentPhotoUrl = response['photo_url'];
+        profileData = profile.data;
+        _firstNameController.text = profile.firstName ?? '';
+        _lastNameController.text = profile.lastName ?? '';
+        _displayNameController.text = profile.displayName ?? '';
+        _bioController.text = profile.bioDetails ?? '';
+        _phoneController.text = profile.phoneNumber ?? '';
+        _currentPhotoUrl = profile.photoUrl;
         isLoading = false;
       });
     } catch (e) {
@@ -106,20 +101,10 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
 
   Future<String?> _uploadPhoto(String userId) async {
     if (_selectedImage == null) return _currentPhotoUrl;
-
     try {
+      final bytes = await _selectedImage!.readAsBytes();
       final fileName = '$userId-${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final filePath = 'profile-photos/$fileName';
-
-      await Supabase.instance.client.storage
-          .from('profiles')
-          .upload(filePath, _selectedImage!);
-
-      final photoUrl = Supabase.instance.client.storage
-          .from('profiles')
-          .getPublicUrl(filePath);
-
-      return photoUrl;
+      return await ProfilesService.instance.uploadProfilePhoto(bytes, fileName);
     } catch (e) {
       LoggingService.error('Error uploading photo: $e', tag: 'EditProfile');
       throw Exception('Failed to upload photo: $e');
@@ -139,21 +124,18 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
       // Upload photo if selected
       final photoUrl = await _uploadPhoto(userId);
 
-      // Update profile
+      // Update profile via ProfilesService (REST-first, else Supabase)
       final updates = {
         'first_name': _firstNameController.text.trim(),
         'last_name': _lastNameController.text.trim(),
         'display_name': _displayNameController.text.trim(),
-        'bio': _bioController.text.trim(),
+        'bio_details': _bioController.text.trim(),
         'phone_number': _phoneController.text.trim(),
         if (photoUrl != null) 'photo_url': photoUrl,
         'updated_at': DateTime.now().toIso8601String(),
       };
 
-      await Supabase.instance.client
-          .from('profiles')
-          .update(updates)
-          .eq('id', userId);
+      await ProfilesService.instance.updateProfile(updates);
 
       LoggingService.info('Profile updated successfully', tag: 'EditProfile');
 

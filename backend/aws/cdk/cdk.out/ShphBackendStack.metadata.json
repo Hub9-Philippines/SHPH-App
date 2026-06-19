@@ -1,0 +1,776 @@
+{
+  "/ShphBackendStack": [
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/RedisSubnetGroup": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "RedisSubnetGroup"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:94:34)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphRedis": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphRedis"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:100:30)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/BootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "BootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/ShphBackendStack/CheckBootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CheckBootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphVpc/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphVpc5F05A5BC"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:16:21)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphVpc/IGW": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphVpcIGW24A1D838"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:16:21)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphVpc/VPCGW": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphVpcVPCGW3DB12E74"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:16:21)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/DbCredentials/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DbCredentials798065DE"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Secret2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:33:31)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/JwtSecret/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "JwtSecretB8834B39"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Secret2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:44:27)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/DbSecurityGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DbSecurityGroupE9D701AD"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new SecurityGroup2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:55:33)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/DbSecurityGroup/from ShphBackendStackEcsSecurityGroupDC3C67D5:5432": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DbSecurityGroupfromShphBackendStackEcsSecurityGroupDC3C67D55432C28B24DF"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:73:25)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/RedisSecurityGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "RedisSecurityGroupB05951F6"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new SecurityGroup2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:61:36)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/RedisSecurityGroup/from ShphBackendStackEcsSecurityGroupDC3C67D5:6379": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "RedisSecurityGroupfromShphBackendStackEcsSecurityGroupDC3C67D56379AF49F976"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:74:28)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/EcsSecurityGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "EcsSecurityGroup44008BF1"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new SecurityGroup2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:67:34)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/EcsSecurityGroup/from ShphBackendStackShphAlbServiceLBSecurityGroup255B7CCF:80": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "EcsSecurityGroupfromShphBackendStackShphAlbServiceLBSecurityGroup255B7CCF808ECE9515"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphPostgres/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphPostgresD187D122"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new DatabaseInstance2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:77:28)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/DatabaseUrlSecret/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DatabaseUrlSecretFA7DE062"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Secret2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:110:35)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/RedisUrlSecret/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "RedisUrlSecretD9C54B0D"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Secret2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:118:32)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphEcsCluster/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphEcsClusterD1914CCB"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Cluster2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:128:25)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphTaskRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphTaskRoleE0B007E3"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Role2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:132:26)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphTaskDef/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphTaskDef87C40450"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:137:32)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphAlbService/LoadBalancerDNS": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphAlbServiceLoadBalancerDNS845E772B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new ApplicationLoadBalancedFargateService2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:158:9)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphAlbService/ServiceURL": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphAlbServiceServiceURLAE597CC1"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new ApplicationLoadBalancedFargateService2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:158:9)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/CDKMetadata/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CDKMetadata"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, node internals...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphVpc/PublicSubnet1/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphVpcPublicSubnet1Subnet587207D0"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\Dev\\SHPH\\backend\\aws\\cdk\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:268 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...aws-cdk-lib..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphVpc/PublicSubnet1/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphVpcPublicSubnet1RouteTable604F5F74"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\Dev\\SHPH\\backend\\aws\\cdk\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:268 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...aws-cdk-lib..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphVpc/PublicSubnet1/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphVpcPublicSubnet1RouteTableAssociation1037C4BB"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\Dev\\SHPH\\backend\\aws\\cdk\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:268 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...aws-cdk-lib..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphVpc/PublicSubnet1/DefaultRoute": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphVpcPublicSubnet1DefaultRoute7DFDD2C0"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\Dev\\SHPH\\backend\\aws\\cdk\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:208 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:16:21)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphVpc/PublicSubnet1/EIP": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphVpcPublicSubnet1EIP18C6D213"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:16:21)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphVpc/PublicSubnet1/NATGateway": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphVpcPublicSubnet1NATGatewayD58C3D4E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:16:21)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphVpc/PublicSubnet2/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphVpcPublicSubnet2Subnet936B5BDB"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\Dev\\SHPH\\backend\\aws\\cdk\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:268 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...aws-cdk-lib..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphVpc/PublicSubnet2/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphVpcPublicSubnet2RouteTable37DC1BC1"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\Dev\\SHPH\\backend\\aws\\cdk\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:268 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...aws-cdk-lib..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphVpc/PublicSubnet2/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphVpcPublicSubnet2RouteTableAssociation42365397"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\Dev\\SHPH\\backend\\aws\\cdk\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:268 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...aws-cdk-lib..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphVpc/PublicSubnet2/DefaultRoute": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphVpcPublicSubnet2DefaultRoute407DCD95"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\Dev\\SHPH\\backend\\aws\\cdk\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:208 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:16:21)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphVpc/PrivateSubnet1/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphVpcPrivateSubnet1Subnet50365461"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\Dev\\SHPH\\backend\\aws\\cdk\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:270 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...aws-cdk-lib..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphVpc/PrivateSubnet1/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphVpcPrivateSubnet1RouteTable00C6FE81"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\Dev\\SHPH\\backend\\aws\\cdk\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:270 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...aws-cdk-lib..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphVpc/PrivateSubnet1/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphVpcPrivateSubnet1RouteTableAssociationFA36F966"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\Dev\\SHPH\\backend\\aws\\cdk\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:270 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...aws-cdk-lib..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphVpc/PrivateSubnet1/DefaultRoute": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphVpcPrivateSubnet1DefaultRoute0D1A658A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:16:21)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphVpc/PrivateSubnet2/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphVpcPrivateSubnet2SubnetFC773A0F"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\Dev\\SHPH\\backend\\aws\\cdk\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:270 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...aws-cdk-lib..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphVpc/PrivateSubnet2/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphVpcPrivateSubnet2RouteTable6A12182B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\Dev\\SHPH\\backend\\aws\\cdk\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:270 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...aws-cdk-lib..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphVpc/PrivateSubnet2/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphVpcPrivateSubnet2RouteTableAssociationF21AF7F4"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\Dev\\SHPH\\backend\\aws\\cdk\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:270 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...aws-cdk-lib..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphVpc/PrivateSubnet2/DefaultRoute": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphVpcPrivateSubnet2DefaultRoute7321438C"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:16:21)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/DbCredentials/Attachment/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DbCredentialsAttachmentD2151D4F"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new DatabaseInstance2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:77:28)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphPostgres/SubnetGroup/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphPostgresSubnetGroup6D8DDDB2"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new DatabaseInstance2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:77:28)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphTaskDef/ExecutionRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphTaskDefExecutionRole9A14D297"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphAlbService/LB/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphAlbServiceLB1C1E8C09"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new ApplicationLoadBalancedFargateService2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:158:9)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphAlbService/Service/Service": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphAlbService790B9958"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new ApplicationLoadBalancedFargateService2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:158:9)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)",
+        "...node internals, ts-node..."
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphTaskDef/ShphContainer/LogGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphTaskDefShphContainerLogGroup4984F25A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:143:42)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)"
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphTaskDef/ExecutionRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphTaskDefExecutionRoleDefaultPolicy17887AF3"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphAlbService/LB/SecurityGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphAlbServiceLBSecurityGroupBC83368D"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new ApplicationLoadBalancedFargateService2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:158:9)",
+        "<anonymous> (D:\\Dev\\SHPH\\backend\\aws\\cdk\\bin\\shph-backend-cdk.ts:7:1)"
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphAlbService/LB/SecurityGroup/to ShphBackendStackEcsSecurityGroupDC3C67D5:80": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphAlbServiceLBSecurityGrouptoShphBackendStackEcsSecurityGroupDC3C67D5809453B6A5"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphAlbService/LB/PublicListener/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphAlbServiceLBPublicListenerC889AD9E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/ShphBackendStack/ShphAlbService/LB/PublicListener/ECSGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ShphAlbServiceLBPublicListenerECSGroup9EEBFCB1"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new ApplicationLoadBalancedFargateService2 in aws-cdk-lib...",
+        "new ShphBackendStack (D:\\Dev\\SHPH\\backend\\aws\\cdk\\lib\\shph-backend-stack.ts:158:9)"
+      ]
+    }
+  ]
+}

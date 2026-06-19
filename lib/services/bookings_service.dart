@@ -1,3 +1,5 @@
+import '/api/bridges/api_row_mapper.dart';
+import '/api/resources/bookings_api.dart';
 import '/backend/supabase/supabase.dart';
 import '/services/logging_service.dart';
 
@@ -6,11 +8,10 @@ class BookingsService {
   static final BookingsService instance = BookingsService._();
 
   final _supabase = Supabase.instance.client;
+  final _bookingsApi = ShphBookingsApi.instance;
 
-  // Get current user ID
   String? get _currentUserId => _supabase.auth.currentUser?.id;
 
-  // Create a new booking
   Future<BookingsRow?> createBooking({
     required int serviceListingId,
     required DateTime bookingDate,
@@ -20,13 +21,30 @@ class BookingsService {
     double? totalPrice,
     String? paymentStatus,
   }) async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final booking = await _bookingsApi.createBooking(
+          listingId: serviceListingId,
+          scheduledDate: bookingDate.toIso8601String().split('T').first,
+          scheduledTime: bookingTime,
+          notes: notes,
+          totalPrice: totalPrice,
+        );
+        return ApiRowMapper.bookingToRow(booking);
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API createBooking failed, falling back to Supabase: $e',
+          tag: 'BookingsService',
+        );
+      }
+    }
+
     try {
       final userId = _currentUserId;
       if (userId == null) {
         return null;
       }
 
-      // Get service listing to get provider info
       final serviceListing = await _supabase
           .from('service_listings')
           .select()
@@ -58,8 +76,19 @@ class BookingsService {
     }
   }
 
-  // Get all bookings for current user
   Future<List<BookingsRow>> getUserBookings() async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final page = await _bookingsApi.listUserBookings();
+        return page.results.map(ApiRowMapper.bookingToRow).toList();
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API getUserBookings failed, falling back to Supabase: $e',
+          tag: 'BookingsService',
+        );
+      }
+    }
+
     try {
       final userId = _currentUserId;
       if (userId == null) {
@@ -80,8 +109,19 @@ class BookingsService {
     }
   }
 
-  // Get bookings for provider
   Future<List<BookingsRow>> getProviderBookings() async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final page = await _bookingsApi.listBookings();
+        return page.results.map(ApiRowMapper.bookingToRow).toList();
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API getProviderBookings failed, falling back to Supabase: $e',
+          tag: 'BookingsService',
+        );
+      }
+    }
+
     try {
       final userId = _currentUserId;
       if (userId == null) {
@@ -102,8 +142,22 @@ class BookingsService {
     }
   }
 
-  // Update booking status
   Future<bool> updateBookingStatus(String bookingId, String status) async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        await _bookingsApi.updateBooking(
+          bookingId,
+          data: {'status': status},
+        );
+        return true;
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API updateBookingStatus failed, falling back to Supabase: $e',
+          tag: 'BookingsService',
+        );
+      }
+    }
+
     try {
       await _supabase
           .from('bookings')
@@ -117,8 +171,19 @@ class BookingsService {
     }
   }
 
-  // Cancel booking
   Future<bool> cancelBooking(String bookingId) async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        await _bookingsApi.cancelBooking(bookingId);
+        return true;
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API cancelBooking failed, falling back to Supabase: $e',
+          tag: 'BookingsService',
+        );
+      }
+    }
+
     try {
       await _supabase.from('bookings').update({
         'status': 'cancelled',
@@ -133,8 +198,19 @@ class BookingsService {
     }
   }
 
-  // Get booking by ID
   Future<BookingsRow?> getBookingById(String bookingId) async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final booking = await _bookingsApi.getBooking(bookingId);
+        return ApiRowMapper.bookingToRow(booking);
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API getBookingById failed, falling back to Supabase: $e',
+          tag: 'BookingsService',
+        );
+      }
+    }
+
     try {
       final response = await _supabase
           .from('bookings')

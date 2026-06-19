@@ -1,3 +1,5 @@
+import '/api/bridges/api_row_mapper.dart';
+import '/api/resources/services_api.dart';
 import '/backend/supabase/supabase.dart';
 import '/services/logging_service.dart';
 
@@ -6,9 +8,21 @@ class SearchService {
   static final SearchService instance = SearchService._();
 
   final _supabase = Supabase.instance.client;
+  final _servicesApi = ShphServicesApi.instance;
 
-  // Search services by query
   Future<List<ServiceListingsRow>> searchServices(String query) async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final page = await _servicesApi.listListings(search: query);
+        return page.results.map(ApiRowMapper.serviceListingToRow).toList();
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API searchServices failed, falling back to Supabase: $e',
+          tag: 'SearchService',
+        );
+      }
+    }
+
     try {
       final response = await _supabase
           .from('service_listings')
@@ -25,8 +39,22 @@ class SearchService {
     }
   }
 
-  // Search services by category
   Future<List<ServiceListingsRow>> searchByCategory(String categoryName) async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final page = await _servicesApi.listListings();
+        return page.results
+            .where((listing) => listing.categoryName == categoryName)
+            .map(ApiRowMapper.serviceListingToRow)
+            .toList();
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API searchByCategory failed, falling back to Supabase: $e',
+          tag: 'SearchService',
+        );
+      }
+    }
+
     try {
       final response = await _supabase
           .from('service_listings')
@@ -38,13 +66,25 @@ class SearchService {
 
       return response.map(ServiceListingsRow.new).toList();
     } catch (e) {
-      LoggingService.error('Error searching by category: $e', tag: 'SearchService');
+      LoggingService.error('Error searching by category: $e',
+          tag: 'SearchService');
       return [];
     }
   }
 
-  // Get all active services
   Future<List<ServiceListingsRow>> getAllServices() async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final page = await _servicesApi.listListings();
+        return page.results.map(ApiRowMapper.serviceListingToRow).toList();
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API getAllServices failed, falling back to Supabase: $e',
+          tag: 'SearchService',
+        );
+      }
+    }
+
     try {
       final response = await _supabase
           .from('service_listings')

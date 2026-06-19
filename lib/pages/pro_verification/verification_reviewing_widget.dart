@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import '/services/verification_timer_service.dart';
+import '/services/profiles_service.dart';
 import '/theme/app_theme.dart';
 import 'verification_reviewing_model.dart';
 
@@ -54,16 +55,8 @@ class _VerificationReviewingWidgetState
   /// Check if user is verified and redirect if so
   Future<void> _checkVerificationStatus() async {
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) return;
-
-      final response = await Supabase.instance.client
-          .from('profiles')
-          .select('verification_status')
-          .eq('id', userId)
-          .single();
-
-      final status = response['verification_status'] as String?;
+      final statusResp = await ProfilesService.instance.getKycStatus();
+      final status = statusResp?['verification_status'] as String?;
 
       if (status == 'verified' && mounted) {
         // Stop checking

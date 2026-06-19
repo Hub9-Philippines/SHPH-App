@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '/services/chat_service.dart';
 import '/components/back_button/back_button_model.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'chat_page_widget.dart' show ChatPageWidget;
@@ -46,18 +47,17 @@ class ChatPageModel extends FlutterFlowModel<ChatPageWidget> {
 
   Future<void> _fetchMessages(String roomId) async {
     try {
-      final response = await Supabase.instance.client
-          .from('chat_messages')
-          .select()
-          .eq('chat_room_id', roomId)
-          .order('created_at', ascending: true);
-
+      final response = await ChatService.instance.getMessages(roomId);
       if (response.isNotEmpty) {
         messages = response
             .map((msg) => {
-                  'text': msg['message_text'] as String,
-                  'isMe': msg['sender_id'] == 'client',
-                  'time': _formatTime(_parseDateTime(msg['created_at'])),
+                  'text': msg['message_text'] ?? msg['content'] ?? msg['text'],
+                  'isMe': msg['sender_id'] ==
+                          Supabase.instance.client.auth.currentUser?.id ||
+                      msg['sender_id'] == 'client',
+                  'time': _formatTime(_parseDateTime(msg['created_at'] ??
+                      msg['createdAt'] ??
+                      msg['timestamp'])),
                 })
             .toList();
         onStateChanged?.call();
@@ -139,11 +139,7 @@ class ChatPageModel extends FlutterFlowModel<ChatPageWidget> {
     onStateChanged?.call();
 
     try {
-      await Supabase.instance.client.from('chat_messages').insert({
-        'chat_room_id': roomId,
-        'sender_id': 'client',
-        'message_text': content,
-      });
+      await ChatService.instance.sendMessage(roomId, content);
 
       // Update message status to 'sent'
       final index = messages.indexWhere((msg) => msg['tempId'] == tempId);

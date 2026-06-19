@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '/api/api_config.dart';
+import '/api/shph_token_storage.dart';
 import 'auth_logger.dart';
 
 /// Manages automatic token refresh to prevent session expiration
@@ -24,7 +26,14 @@ class TokenRefreshManager {
   /// Start monitoring and auto-refreshing the session token
   void startTokenRefreshMonitoring() {
     AuthLogger.debug('Starting token refresh monitoring', tag: 'TokenRefresh');
-    
+
+    if (ApiConfig.preferShphApi) {
+      AuthLogger.debug(
+        'SHPH API mode enabled; JWT refresh handled by ShphApiClient interceptor',
+        tag: 'TokenRefresh',
+      );
+    }
+
     // Check token expiry immediately
     _scheduleTokenRefresh();
     
@@ -77,6 +86,17 @@ class TokenRefreshManager {
 
   /// Perform the actual token refresh
   Future<void> _performTokenRefresh() async {
+    if (ApiConfig.preferShphApi) {
+      final hasShphToken = await ShphTokenStorage.hasAccessToken();
+      if (hasShphToken) {
+        AuthLogger.debug(
+          'Skipping Supabase refresh while SHPH API token is active',
+          tag: 'TokenRefresh',
+        );
+        return;
+      }
+    }
+
     // Prevent overlapping refresh attempts
     if (_isRefreshing) {
       AuthLogger.debug('Token refresh already in progress, skipping', tag: 'TokenRefresh');

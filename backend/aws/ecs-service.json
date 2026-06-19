@@ -1,0 +1,17 @@
+{
+    "serviceName": "shph-backend-service",
+    "taskDefinition": "shph-backend-task",
+    "desiredCount": 1,
+    "launchType": "FARGATE",
+    "networkConfiguration": {
+        "awsvpcConfiguration": {
+            "subnets": [
+                "subnet-xxxxxxxx"
+            ],
+            "securityGroups": [
+                "sg-xxxxxxxx"
+            ],
+            "assignPublicIp": "ENABLED"
+        }
+    }
+}

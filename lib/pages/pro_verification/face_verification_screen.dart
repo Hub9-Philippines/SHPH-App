@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../services/face_verification/face_verification_service.dart';
+import '/services/profiles_service.dart';
 
 /// Enum representing the states of the face verification process
 enum VerificationState {
@@ -306,35 +307,21 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
         throw Exception('User not authenticated');
       }
 
-      // Upload to Supabase Storage
+      // Upload via ProfilesService (REST-first, else Supabase)
       final file = File(_capturedImagePath!);
       final fileBytes = await file.readAsBytes();
       final fileName =
           '${DateTime.now().millisecondsSinceEpoch}_face_verification.jpg';
-      final filePath = '$userId/face_verification/$fileName';
 
-      await Supabase.instance.client.storage
-          .from('provider-verification')
-          .uploadBinary(
-            filePath,
-            fileBytes,
-            fileOptions: const FileOptions(
-              upsert: false,
-              contentType: 'image/jpeg',
-            ),
-          );
-
-      // Get public URL
-      final imageUrl = Supabase.instance.client.storage
-          .from('provider-verification')
-          .getPublicUrl(filePath);
+      final imageUrl = await ProfilesService.instance
+          .uploadProfilePhoto(fileBytes, fileName);
 
       // Update profile with face scan URL and pending status
-      await Supabase.instance.client.from('profiles').update({
+      await ProfilesService.instance.updateProfile({
         'face_scan_url': imageUrl,
         'verification_status': 'reviewing',
         'face_scan_submitted_at': DateTime.now().toIso8601String(),
-      }).eq('id', userId);
+      });
 
       // Mark as verified in local service
       await _faceVerificationService.markAsVerified(userId);

@@ -122,64 +122,65 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                       scrollDirection: Axis.horizontal,
                       children: [
                         // --- PAGE 1: CHATS ---
-                        if (_model.isLoading) ListView.separated(
-                                padding: EdgeInsets.only(
-                                  top: 10,
-                                  left: 15,
-                                  right: 15,
-                                  bottom:
-                                      MediaQuery.sizeOf(context).width * 0.1,
-                                ),
-                                itemCount: 3,
-                                separatorBuilder: (context, index) =>
-                                    const SizedBox(height: 10),
-                                itemBuilder: (context, index) =>
-                                    const MessageCardSkeleton(),
-                              ) else ListView.separated(
-                                padding: EdgeInsets.only(
-                                  top: 10,
-                                  left: 15,
-                                  right: 15,
-                                  bottom:
-                                      MediaQuery.sizeOf(context).width * 0.1,
-                                ),
-                                itemCount: _model.chatRooms.length,
-                                separatorBuilder: (context, index) =>
-                                    const SizedBox(height: 10),
-                                itemBuilder: (context, index) =>
-                                    _buildChatRoomCard(
-                                        context, _model.chatRooms[index]),
-                              ),
+                        if (_model.isLoading)
+                          ListView.separated(
+                            padding: EdgeInsets.only(
+                              top: 10,
+                              left: 15,
+                              right: 15,
+                              bottom: MediaQuery.sizeOf(context).width * 0.1,
+                            ),
+                            itemCount: 3,
+                            separatorBuilder: (context, index) =>
+                                const SizedBox(height: 10),
+                            itemBuilder: (context, index) =>
+                                const MessageCardSkeleton(),
+                          )
+                        else
+                          ListView.separated(
+                            padding: EdgeInsets.only(
+                              top: 10,
+                              left: 15,
+                              right: 15,
+                              bottom: MediaQuery.sizeOf(context).width * 0.1,
+                            ),
+                            itemCount: _model.chatRooms.length,
+                            separatorBuilder: (context, index) =>
+                                const SizedBox(height: 10),
+                            itemBuilder: (context, index) => _buildChatRoomCard(
+                                context, _model.chatRooms[index]),
+                          ),
                         // --- PAGE 2: CALLS HISTORY ---
-                        if (_model.isLoading) ListView.separated(
-                                padding: EdgeInsets.only(
-                                  top: 10,
-                                  left: 15,
-                                  right: 15,
-                                  bottom:
-                                      MediaQuery.sizeOf(context).width * 0.1,
-                                ),
-                                itemCount: 3,
-                                separatorBuilder: (_, __) =>
-                                    const SizedBox(height: 10),
-                                itemBuilder: (context, index) =>
-                                    const MessageCardSkeleton(),
-                              ) else ListView.separated(
-                                padding: EdgeInsets.only(
-                                  top: 10,
-                                  left: 15,
-                                  right: 15,
-                                  bottom:
-                                      MediaQuery.sizeOf(context).width * 0.1,
-                                ),
-                                itemCount: _model.callHistory.length,
-                                separatorBuilder: (_, __) =>
-                                    const SizedBox(height: 10),
-                                itemBuilder: (context, index) {
-                                  final item = _model.callHistory[index];
-                                  return _buildCallHistoryCard(context, item);
-                                },
-                              ),
+                        if (_model.isLoading)
+                          ListView.separated(
+                            padding: EdgeInsets.only(
+                              top: 10,
+                              left: 15,
+                              right: 15,
+                              bottom: MediaQuery.sizeOf(context).width * 0.1,
+                            ),
+                            itemCount: 3,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 10),
+                            itemBuilder: (context, index) =>
+                                const MessageCardSkeleton(),
+                          )
+                        else
+                          ListView.separated(
+                            padding: EdgeInsets.only(
+                              top: 10,
+                              left: 15,
+                              right: 15,
+                              bottom: MediaQuery.sizeOf(context).width * 0.1,
+                            ),
+                            itemCount: _model.callHistory.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 10),
+                            itemBuilder: (context, index) {
+                              final item = _model.callHistory[index];
+                              return _buildCallHistoryCard(context, item);
+                            },
+                          ),
                       ],
                     ),
                   ),
@@ -415,7 +416,9 @@ class _MessagesWidgetState extends State<MessagesWidget> {
   }
 
   String _formatTime(DateTime? dateTime) {
-    if (dateTime == null) return '';
+    if (dateTime == null) {
+      return '';
+    }
     final now = DateTime.now();
     final difference = now.difference(dateTime);
 

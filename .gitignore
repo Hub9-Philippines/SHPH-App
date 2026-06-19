@@ -72,3 +72,7 @@ android/.kotlin/sessions/kotlin-compiler-*.salive
 
 # logs
 *build*.txt
+
+# npm modules
+/backend/node_modules/
+/backend/aws/cdk/node_modules/

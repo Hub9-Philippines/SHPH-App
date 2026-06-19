@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/logging_service.dart';
+import '/services/chat_service.dart';
 import '/services/pro_bookings_service.dart';
 import '/theme/app_theme.dart';
 
@@ -1177,6 +1178,21 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
   Future<void> _loadChatRooms() async {
     setState(() => isLoading = true);
     try {
+      // Try REST API first via ChatService
+      try {
+        final apiRooms = await ChatService.instance.getChatRooms();
+        if (apiRooms.isNotEmpty) {
+          if (mounted) {
+            setState(() {
+              chatRooms = apiRooms;
+              isLoading = false;
+            });
+          }
+          return;
+        }
+      } catch (_) {
+        // ignore and fall back to Supabase
+      }
       final userId = Supabase.instance.client.auth.currentUser?.id;
       if (userId == null) {
         setState(() => isLoading = false);

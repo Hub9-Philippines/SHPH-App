@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '/auth/supabase_auth/auth_util.dart';
 import '/backend/supabase/supabase.dart';
+import '/services/profiles_service.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -40,27 +41,26 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
 
   Future<void> _loadProfileData() async {
     try {
-      final profiles = await ProfilesTable().queryRows(
-        queryFn: (q) => q.eq('id', currentUserUid),
-      );
-      if (profiles.isNotEmpty) {
-        final profile = profiles.first;
+      final profile = await ProfilesService.instance.getProfile();
+      if (profile != null) {
         _verificationStatus = profile.verificationStatus;
-        
+
         if (_verificationStatus == 'pending') {
           final prefs = await SharedPreferences.getInstance();
           final pendingKey = 'pending_profile_edits_$currentUserUid';
           final pendingJson = prefs.getString(pendingKey);
-          
+
           if (pendingJson != null) {
             final Map<String, dynamic> stagedData = jsonDecode(pendingJson);
-            _displayNameController.text = stagedData['display_name'] ?? profile.displayName ?? '';
+            _displayNameController.text =
+                stagedData['display_name'] ?? profile.displayName ?? '';
             _emailController.text = stagedData['email'] ?? profile.email ?? '';
-            _phoneController.text = stagedData['phone_number'] ?? profile.phoneNumber ?? '';
+            _phoneController.text =
+                stagedData['phone_number'] ?? profile.phoneNumber ?? '';
             return;
           }
         }
-        
+
         _displayNameController.text = profile.displayName ?? '';
         _emailController.text = profile.email ?? '';
         _phoneController.text = profile.phoneNumber ?? '';
@@ -91,25 +91,24 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
           'email': _emailController.text.trim(),
           'phone_number': _phoneController.text.trim(),
         };
-        await prefs.setString('pending_profile_edits_$currentUserUid', jsonEncode(stagedData));
-        
+        await prefs.setString(
+            'pending_profile_edits_$currentUserUid', jsonEncode(stagedData));
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Changes staged locally (pending approval)')),
+            const SnackBar(
+                content: Text('Changes staged locally (pending approval)')),
           );
           context.pop();
         }
       } else {
-        // Direct save to Supabase
-        await ProfilesTable().update(
-          data: {
-            'display_name': _displayNameController.text.trim(),
-            'email': _emailController.text.trim(),
-            'phone_number': _phoneController.text.trim(),
-          },
-          matchingRows: (rows) => rows.eq('id', currentUserUid),
-        );
-        
+        // Save via ProfilesService (will use SHPH API if enabled, otherwise Supabase)
+        await ProfilesService.instance.updateProfile({
+          'display_name': _displayNameController.text.trim(),
+          'email': _emailController.text.trim(),
+          'phone_number': _phoneController.text.trim(),
+        });
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Profile updated successfully')),
@@ -167,7 +166,8 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
                       Text(
                         'Personal Information',
                         style: AppTheme.of(context).titleMedium.override(
-                              font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                              font: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.bold),
                             ),
                       ),
                       const SizedBox(height: 16),
@@ -320,7 +320,8 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
                           color: AppTheme.of(context).primary,
                           textStyle: AppTheme.of(context).titleSmall.override(
                                 color: Colors.white,
-                                font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                                font: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w600),
                               ),
                           borderRadius: BorderRadius.circular(8),
                         ),

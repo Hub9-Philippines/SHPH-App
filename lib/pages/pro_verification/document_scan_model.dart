@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '/services/profiles_service.dart';
 
 import '/components/back_button/back_button_model.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -30,41 +31,19 @@ class DocumentScanModel extends FlutterFlowModel<DocumentScanWidget> {
     try {
       onUploadStart();
 
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) {
-        onError('You are not authenticated. Please log in again.');
+      final fileBytes = await image.readAsBytes();
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}_${image.name}';
+
+      final resp = await ProfilesService.instance
+          .submitKycDocument(documentBytes: fileBytes, fileName: fileName);
+
+      if (resp == null) {
+        onError('Upload failed.');
+        onUploadComplete();
         return;
       }
 
-      // Upload to provider-verification bucket
-      final fileBytes = await image.readAsBytes();
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}_${image.name}';
-      final filePath = '$userId/documents/$fileName';
-
-      await Supabase.instance.client.storage
-          .from('provider-verification')
-          .uploadBinary(
-            filePath,
-            fileBytes,
-            fileOptions: const FileOptions(
-              upsert: false,
-              contentType: 'image/jpeg',
-            ),
-          );
-
-      // Get public URL
-      final imageUrl = Supabase.instance.client.storage
-          .from('provider-verification')
-          .getPublicUrl(filePath);
-
-      // Update profile with document URL and set verification status to pending
-      await Supabase.instance.client.from('profiles').update({
-        'document_url': imageUrl,
-        'verification_status': 'pending',
-        'submitted_at': DateTime.now().toIso8601String(),
-      }).eq('id', userId);
-
-      documentUrl = imageUrl;
+      documentUrl = resp['document_url'] as String?;
       onUploadComplete();
     } catch (e) {
       var errorMessage = 'Failed to upload document. Please try again.';

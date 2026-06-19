@@ -1,3 +1,7 @@
+import '/api/bridges/api_row_mapper.dart';
+import '/api/models/service_listing.dart';
+import '/api/resources/favorites_api.dart';
+import '/api/resources/services_api.dart';
 import '/backend/supabase/database/tables/service_listings.dart';
 import '/models/service_listing.dart';
 import '/services/logging_service.dart';
@@ -6,10 +10,10 @@ class ServiceListingService {
   ServiceListingService._();
 
   static final ServiceListingService instance = ServiceListingService._();
+  final _servicesApi = ShphServicesApi.instance;
 
-  /// Convert ServiceListingsRow to ServiceListing
   ServiceListing _rowToServiceListing(ServiceListingsRow row) {
-    final listing = ServiceListing(
+    return ServiceListing(
       id: row.id,
       category: row.category,
       categoryName: row.categoryName,
@@ -26,12 +30,29 @@ class ServiceListingService {
       thumbnail: row.thumbnail,
       reviewCount: row.reviewCount,
     );
-    return listing;
   }
 
-  /// Fetch recommended services sorted by rating and review count
-  Future<List<ServiceListing>> fetchRecommendedServices(
-      {int limit = 10}) async {
+  ServiceListing _apiToServiceListing(ShphServiceListing listing) {
+    final row = ApiRowMapper.serviceListingToRow(listing);
+    return _rowToServiceListing(row);
+  }
+
+  Future<List<ServiceListing>> fetchRecommendedServices({int limit = 10}) async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final page = await _servicesApi.listListings(
+          ordering: '-rating',
+          pageSize: limit,
+        );
+        return page.results.map(_apiToServiceListing).toList();
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API fetchRecommendedServices failed, falling back to Supabase: $e',
+          tag: 'ServiceListingService',
+        );
+      }
+    }
+
     try {
       final services = await ServiceListingsTable().queryRows(
         queryFn: (q) => q
@@ -48,25 +69,38 @@ class ServiceListingService {
     }
   }
 
-  /// Fetch service listings with optional search and ordering
   Future<List<ServiceListing>> fetchServiceListings({
     String? search,
     String? ordering,
     int? page,
     int? pageSize,
   }) async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final pageResult = await _servicesApi.listListings(
+          search: search,
+          ordering: ordering,
+          page: page,
+          pageSize: pageSize,
+        );
+        return pageResult.results.map(_apiToServiceListing).toList();
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API fetchServiceListings failed, falling back to Supabase: $e',
+          tag: 'ServiceListingService',
+        );
+      }
+    }
+
     try {
       final services = await ServiceListingsTable().queryRows(
         queryFn: (q) {
-          // Build query with optional filters and ordering
           var query = q as dynamic;
 
-          // Add search filter if provided
           if (search != null && search.isNotEmpty) {
             query = query.ilike('title', '%$search%');
           }
 
-          // Add ordering if provided
           if (ordering != null) {
             final isAscending = !ordering.startsWith('-');
             final field = isAscending ? ordering : ordering.substring(1);
@@ -86,8 +120,19 @@ class ServiceListingService {
     }
   }
 
-  /// Fetch a single service listing by ID
   Future<ServiceListing?> fetchServiceListingById(int id) async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final listing = await _servicesApi.getListing(id);
+        return _apiToServiceListing(listing);
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API fetchServiceListingById failed, falling back to Supabase: $e',
+          tag: 'ServiceListingService',
+        );
+      }
+    }
+
     try {
       final services = await ServiceListingsTable().querySingleRow(
         queryFn: (q) => q.eq('id', id),
@@ -104,17 +149,19 @@ class ServiceListingService {
     }
   }
 
-  /// Fetch favorite services for the current user
   Future<List<ServiceListing>> fetchFavoriteServices() async {
-    try {
-      // This would typically query a favorites table
-      // For now, return empty list as favorites feature needs database table
-      // TODO: Implement favorites table and query
-      return [];
-    } catch (e) {
-      LoggingService.error('Error fetching favorite services: $e',
-          tag: 'ServiceListingService');
-      return [];
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final favorites = await ShphFavoritesApi.instance.listFavorites();
+        return favorites.map(_apiToServiceListing).toList();
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API fetchFavoriteServices failed: $e',
+          tag: 'ServiceListingService',
+        );
+      }
     }
+
+    return [];
   }
 }

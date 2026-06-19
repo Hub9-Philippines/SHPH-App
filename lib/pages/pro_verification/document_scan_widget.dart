@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '/services/profiles_service.dart';
 
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -90,40 +91,20 @@ class _DocumentScanWidgetState extends State<DocumentScanWidget> {
         throw Exception('User not authenticated');
       }
 
-      // Upload to Supabase Storage
+      // Submit via ProfilesService (uses SHPH API when enabled)
       final file = _model.selectedImage!;
       final fileBytes = await file.readAsBytes();
       final fileName = '${DateTime.now().millisecondsSinceEpoch}_document.jpg';
-      final filePath = '$userId/documents/$fileName';
 
-      await Supabase.instance.client.storage
-          .from('provider-verification')
-          .uploadBinary(
-            filePath,
-            fileBytes,
-            fileOptions: const FileOptions(
-              upsert: false,
-              contentType: 'image/jpeg',
-            ),
-          );
-
-      // Get public URL
-      final imageUrl = Supabase.instance.client.storage
-          .from('provider-verification')
-          .getPublicUrl(filePath);
-
-      // Update profile
-      await Supabase.instance.client.from('profiles').update({
-        'document_url': imageUrl,
-        'verification_status': 'pending',
-        'submitted_at': DateTime.now().toIso8601String(),
-      }).eq('id', userId);
+      final resp = await ProfilesService.instance
+          .submitKycDocument(documentBytes: fileBytes, fileName: fileName);
 
       setState(() => _model.isUploading = false);
 
-      if (mounted) {
-        // Show success and navigate
-        _showSuccessAndNavigate();
+      if (resp != null) {
+        if (mounted) _showSuccessAndNavigate();
+      } else {
+        _showError('Upload failed');
       }
     } catch (e) {
       setState(() => _model.isUploading = false);

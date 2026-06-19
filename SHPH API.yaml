@@ -3,6 +3,11 @@ info:
   title: SHPH API
   version: 1.0.0
   description: Serbisyo Hub PH — Service Provider Platform API
+servers:
+  - url: https://api.serbisyohub.ph
+    description: Production
+  - url: http://localhost:8000
+    description: Local development
 paths:
   /admin/api/main/documents/:
     get:

@@ -1,3 +1,5 @@
+import '/api/bridges/api_row_mapper.dart';
+import '/api/resources/favorites_api.dart';
 import '/backend/supabase/supabase.dart';
 import '/services/logging_service.dart';
 
@@ -6,16 +8,26 @@ class FavoritesService {
   static final FavoritesService instance = FavoritesService._();
 
   final _supabase = Supabase.instance.client;
+  final _favoritesApi = ShphFavoritesApi.instance;
 
-  // Get current user ID
   String? get _currentUserId => _supabase.auth.currentUser?.id;
 
-  // Add service to favorites
   Future<bool> addToFavorites(int serviceListingId) async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        await _favoritesApi.addFavorite(serviceListingId);
+        return true;
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API addToFavorites failed, falling back to Supabase: $e',
+          tag: 'FavoritesService',
+        );
+      }
+    }
+
     try {
       final userId = _currentUserId;
-      if (userId == null)
-        return false;
+      if (userId == null) return false;
 
       await _supabase.from('favorites').insert({
         'user_id': userId,
@@ -24,17 +36,28 @@ class FavoritesService {
 
       return true;
     } catch (e) {
-      LoggingService.error('Error adding to favorites: $e', tag: 'FavoritesService');
+      LoggingService.error('Error adding to favorites: $e',
+          tag: 'FavoritesService');
       return false;
     }
   }
 
-  // Remove service from favorites
   Future<bool> removeFromFavorites(int serviceListingId) async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        await _favoritesApi.removeFavorite(serviceListingId);
+        return true;
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API removeFromFavorites failed, falling back to Supabase: $e',
+          tag: 'FavoritesService',
+        );
+      }
+    }
+
     try {
       final userId = _currentUserId;
-      if (userId == null)
-        return false;
+      if (userId == null) return false;
 
       await _supabase
           .from('favorites')
@@ -44,17 +67,28 @@ class FavoritesService {
 
       return true;
     } catch (e) {
-      LoggingService.error('Error removing from favorites: $e', tag: 'FavoritesService');
+      LoggingService.error('Error removing from favorites: $e',
+          tag: 'FavoritesService');
       return false;
     }
   }
 
-  // Check if service is in favorites
   Future<bool> isFavorite(int serviceListingId) async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final favorites = await _favoritesApi.listFavorites();
+        return favorites.any((listing) => listing.id == serviceListingId);
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API isFavorite failed, falling back to Supabase: $e',
+          tag: 'FavoritesService',
+        );
+      }
+    }
+
     try {
       final userId = _currentUserId;
-      if (userId == null)
-        return false;
+      if (userId == null) return false;
 
       final response = await _supabase
           .from('favorites')
@@ -65,17 +99,28 @@ class FavoritesService {
 
       return response != null;
     } catch (e) {
-      LoggingService.error('Error checking favorite status: $e', tag: 'FavoritesService');
+      LoggingService.error('Error checking favorite status: $e',
+          tag: 'FavoritesService');
       return false;
     }
   }
 
-  // Get all favorite services for current user
   Future<List<ServiceListingsRow>> getFavoriteServices() async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final favorites = await _favoritesApi.listFavorites();
+        return favorites.map(ApiRowMapper.serviceListingToRow).toList();
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API getFavoriteServices failed, falling back to Supabase: $e',
+          tag: 'FavoritesService',
+        );
+      }
+    }
+
     try {
       final userId = _currentUserId;
-      if (userId == null)
-        return [];
+      if (userId == null) return [];
 
       final response = await _supabase
           .from('favorites')
@@ -88,18 +133,17 @@ class FavoritesService {
 
       return services;
     } catch (e) {
-      LoggingService.error('Error fetching favorites: $e', tag: 'FavoritesService');
+      LoggingService.error('Error fetching favorites: $e',
+          tag: 'FavoritesService');
       return [];
     }
   }
 
-  // Toggle favorite status
   Future<bool> toggleFavorite(int serviceListingId) async {
     final isFav = await isFavorite(serviceListingId);
     if (isFav) {
       return removeFromFavorites(serviceListingId);
-    } else {
-      return addToFavorites(serviceListingId);
     }
+    return addToFavorites(serviceListingId);
   }
 }
