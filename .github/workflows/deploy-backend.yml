@@ -39,7 +39,7 @@ jobs:
       - name: Build Docker image
         working-directory: backend
         run: |
-          docker build -t shph-backend:latest aws
+          docker build -t shph-backend:latest -f aws/Dockerfile .
           docker tag shph-backend:latest ${{ steps.login-ecr.outputs.registry }}/shph-backend:latest
 
       - name: Push Docker image
