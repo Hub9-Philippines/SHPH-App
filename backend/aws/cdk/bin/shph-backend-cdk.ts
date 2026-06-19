@@ -7,6 +7,6 @@ const app = new App();
 new ShphBackendStack(app, 'ShphBackendStack', {
     env: {
         account: process.env.CDK_DEFAULT_ACCOUNT,
-        region: process.env.CDK_DEFAULT_REGION ?? 'us-east-1',
+        region: process.env.CDK_DEFAULT_REGION ?? 'ap-southeast-2',
     },
 });

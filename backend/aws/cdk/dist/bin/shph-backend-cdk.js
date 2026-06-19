@@ -8,6 +8,6 @@ const app = new aws_cdk_lib_1.App();
 new shph_backend_stack_1.ShphBackendStack(app, 'ShphBackendStack', {
     env: {
         account: process.env.CDK_DEFAULT_ACCOUNT,
-        region: process.env.CDK_DEFAULT_REGION ?? 'us-east-1',
+        region: process.env.CDK_DEFAULT_REGION ?? 'ap-southeast-2',
     },
 });

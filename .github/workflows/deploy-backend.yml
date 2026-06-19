@@ -9,9 +9,6 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -31,10 +28,9 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-southeast-2
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          role-session-name: github-actions
-          audience: sts.amazonaws.com
 
       - name: Login to ECR
         id: login-ecr
@@ -66,7 +62,7 @@ jobs:
       - name: Register ECS task definition
         working-directory: backend
         run: |
-          sed -e "s|123456789012.dkr.ecr.us-east-1.amazonaws.com/shph-backend:latest|${{ steps.login-ecr.outputs.registry }}/shph-backend:latest|" aws/ecs-task-def.json > aws/ecs-task-def-generated.json
+          sed -e "s|123456789012.dkr.ecr.ap-southeast-2.amazonaws.com/shph-backend:latest|${{ steps.login-ecr.outputs.registry }}/shph-backend:latest|" aws/ecs-task-def.json > aws/ecs-task-def-generated.json
           aws ecs register-task-definition --cli-input-json file://aws/ecs-task-def-generated.json
 
       - name: Deploy ECS service
