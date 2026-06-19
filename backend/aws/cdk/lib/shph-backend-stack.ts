@@ -123,7 +123,9 @@ export class ShphBackendStack extends Stack {
             ),
         });
 
-        const backendRepository = Repository.fromRepositoryName(this, 'BackendRepository', 'shph-backend');
+        const backendRepository = new Repository(this, 'BackendRepository', {
+            repositoryName: 'shph-backend',
+        });
 
         const cluster = new Cluster(this, 'ShphEcsCluster', {
             vpc,

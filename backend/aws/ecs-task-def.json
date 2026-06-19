@@ -11,7 +11,7 @@
     "containerDefinitions": [
         {
             "name": "shph-backend",
-            "image": "123456789012.dkr.ecr.us-east-1.amazonaws.com/shph-backend:latest",
+            "image": "123456789012.dkr.ecr.ap-southeast-2.amazonaws.com/shph-backend:latest",
             "portMappings": [
                 {
                     "containerPort": 4000,
