@@ -10,6 +10,7 @@ import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import '/services/bookings_service.dart';
+import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
 import 'search_page_model.dart';
 
@@ -65,7 +66,11 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
         _recentBookings = bookings.take(3).toList();
       });
     } catch (e) {
-      print('Error loading recent bookings: $e');
+      LoggingService.error(
+        'Error loading recent bookings',
+        tag: 'SearchPage',
+        error: e,
+      );
     }
   }
 
@@ -148,7 +153,11 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
         _isSearching = false;
       });
     } catch (e) {
-      print('Error searching: $e');
+      LoggingService.error(
+        'Error searching services',
+        tag: 'SearchPage',
+        error: e,
+      );
       safeSetState(() {
         _searchResults = [];
         _isSearching = false;
@@ -649,53 +658,60 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
                     padding: const EdgeInsetsDirectional.fromSTEB(0, 10, 0, 20),
                     child: Hero(
                       tag: 'searchBarHero',
-                      child: Container(
-                        height: MediaQuery.of(context).size.width * 0.13,
-                        constraints: const BoxConstraints(
-                          minHeight: 45,
-                          maxHeight: 65,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF4F4F4),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsetsDirectional.fromSTEB(
-                              10, 0, 10, 0),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.max,
-                            children: [
-                              const FaIcon(
-                                FontAwesomeIcons.search,
-                                color: Color(0x6B14181B),
-                                size: 24,
-                              ),
-                              const SizedBox(width: 15),
-                              Expanded(
-                                child: TextField(
-                                  controller: _searchController,
-                                  onChanged: _performSearch,
-                                  decoration: InputDecoration(
-                                    hintText: 'Search for services...',
-                                    hintStyle: AppTheme.of(context)
-                                        .bodyMedium
-                                        .override(
-                                          color: const Color(0xE357636C),
-                                          fontSize: 16,
-                                        ),
-                                    border: InputBorder.none,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: Container(
+                          height: MediaQuery.of(context).size.width * 0.13,
+                          constraints: const BoxConstraints(
+                            minHeight: 45,
+                            maxHeight: 65,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF4F4F4),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsetsDirectional.fromSTEB(
+                                10, 0, 10, 0),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                const FaIcon(
+                                  FontAwesomeIcons.magnifyingGlass,
+                                  color: Color(0x6B14181B),
+                                  size: 24,
+                                ),
+                                const SizedBox(width: 15),
+                                Expanded(
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: TextField(
+                                      controller: _searchController,
+                                      autofocus: true,
+                                      onChanged: _performSearch,
+                                      decoration: InputDecoration(
+                                        hintText: 'Search for services...',
+                                        hintStyle: AppTheme.of(context)
+                                            .bodyMedium
+                                            .override(
+                                              color: const Color(0xE357636C),
+                                              fontSize: 16,
+                                            ),
+                                        border: InputBorder.none,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                              if (_searchController.text.isNotEmpty)
-                                IconButton(
-                                  icon: const Icon(Icons.clear),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    _performSearch('');
-                                  },
-                                ),
-                            ],
+                                if (_searchController.text.isNotEmpty)
+                                  IconButton(
+                                    icon: const Icon(Icons.clear),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      _performSearch('');
+                                    },
+                                  ),
+                              ],
+                            ),
                           ),
                         ),
                       ),

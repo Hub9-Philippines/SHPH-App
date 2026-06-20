@@ -25,6 +25,7 @@ class AddressesWidget extends StatefulWidget {
 class _AddressesWidgetState extends State<AddressesWidget> {
   late AddressesModel _model;
   late Future<List<AddressesRow>> _addressesFuture;
+  bool _didLoadOnce = false;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -33,6 +34,15 @@ class _AddressesWidgetState extends State<AddressesWidget> {
     super.initState();
     _model = createModel(context, AddressesModel.new);
     _loadAddresses();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_didLoadOnce && currentUserUid.isNotEmpty) {
+      _didLoadOnce = true;
+      _loadAddresses();
+    }
   }
 
   void _loadAddresses() {
@@ -174,8 +184,14 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                         padding:
                             const EdgeInsetsDirectional.fromSTEB(15, 0, 15, 15),
                         child: FFButtonWidget(
-                          onPressed: () {
-                            context.pushNamed(AddressFormWidget.routeName);
+                          onPressed: () async {
+                            await context.push(
+                              AddressFormWidget.routePath,
+                            );
+                            _loadAddresses();
+                            if (mounted) {
+                              safeSetState(() {});
+                            }
                           },
                           text: 'Add new address',
                           icon: const Icon(
@@ -256,85 +272,91 @@ class _AddressesWidgetState extends State<AddressesWidget> {
               mainAxisSize: MainAxisSize.max,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: const Color(0x1A368EFF),
-                        borderRadius: BorderRadius.circular(12),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: const Color(0x1A368EFF),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          _getIconForLabel(address.addressLine2),
+                          color: AppTheme.of(context).primary,
+                          size: 28,
+                        ),
                       ),
-                      child: Icon(
-                        _getIconForLabel(address.addressLine2),
-                        color: AppTheme.of(context).primary,
-                        size: 28,
-                      ),
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding:
-                            const EdgeInsetsDirectional.fromSTEB(15, 0, 0, 0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.max,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  address.addressLine2 ?? 'Address',
-                                  style: AppTheme.of(context)
-                                      .titleLarge
-                                      .override(
-                                        font: GoogleFonts.poppins(
-                                            fontWeight: FontWeight.w500),
-                                        color: AppTheme.of(context).primaryText,
-                                        fontSize: 16,
-                                      ),
-                                ),
-                                if (address.isDefault == true) ...[
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.of(context).primary,
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
+                      Expanded(
+                        child: Padding(
+                          padding:
+                              const EdgeInsetsDirectional.fromSTEB(15, 0, 0, 0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Flexible(
                                     child: Text(
-                                      'Default',
+                                      address.addressLine2 ?? 'Address',
+                                      overflow: TextOverflow.ellipsis,
                                       style: AppTheme.of(context)
-                                          .bodySmall
+                                          .titleLarge
                                           .override(
-                                            color: Colors.white,
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w600,
+                                            font: GoogleFonts.poppins(
+                                                fontWeight: FontWeight.w500),
+                                            color:
+                                                AppTheme.of(context).primaryText,
+                                            fontSize: 16,
                                           ),
                                     ),
                                   ),
+                                  if (address.isDefault == true) ...[
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.of(context).primary,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        'Default',
+                                        style: AppTheme.of(context)
+                                            .bodySmall
+                                            .override(
+                                              color: Colors.white,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
                                 ],
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${address.addressLine1 ?? ''}, ${address.barangay ?? ''}, ${address.city ?? ''}',
-                              style: AppTheme.of(context).bodyMedium.override(
-                                    font: GoogleFonts.poppins(),
-                                    fontSize: 12,
-                                    color: AppTheme.of(context).secondaryText,
-                                  ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${address.addressLine1 ?? ''}, ${address.barangay ?? ''}, ${address.city ?? ''}',
+                                style: AppTheme.of(context).bodyMedium.override(
+                                      font: GoogleFonts.poppins(),
+                                      fontSize: 12,
+                                      color: AppTheme.of(context).secondaryText,
+                                    ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 PopupMenuButton<String>(
                   icon: const Icon(Icons.more_vert, color: Color(0xB757636C)),

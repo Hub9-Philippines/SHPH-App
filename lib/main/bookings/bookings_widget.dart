@@ -30,9 +30,7 @@ class _BookingsWidgetState extends State<BookingsWidget> {
     super.initState();
     _model = createModel(context, BookingsModel.new);
     _model.onStateChanged = () {
-      print('onStateChanged callback triggered');
       if (mounted) {
-        print('Calling safeSetState');
         safeSetState(() {});
       }
     };
@@ -45,136 +43,127 @@ class _BookingsWidgetState extends State<BookingsWidget> {
   }
 
   Widget _buildBookingCard(BuildContext context, BookingItem booking) {
-    // Determine color based on status
-    final isCompleted = booking.status.toLowerCase() == 'completed';
-    final statusColor =
-        isCompleted ? const Color(0xFF797979) : AppTheme.of(context).success;
+    final theme = AppTheme.of(context);
+    final status = booking.status.toLowerCase();
+    final statusColor = switch (status) {
+      'completed' => const Color(0xFF7B8794),
+      'in progress' => theme.success,
+      _ => const Color(0xFFFFA726),
+    };
 
     return Container(
       width: double.infinity,
-      // FIX: Removed the fixed height calculation so the card can grow dynamically
-      // height: MediaQuery.sizeOf(context).width * 0.5,
       decoration: BoxDecoration(
-        color: AppTheme.of(context).primaryBackground,
+        color: theme.primaryBackground,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: theme.alternate.withValues(alpha: 0.8)),
         boxShadow: const [
           BoxShadow(
-            blurRadius: 4,
-            color: Color(0x1A000000),
-            offset: Offset(0, 2),
-          )
+            blurRadius: 18,
+            color: Color(0x12000000),
+            offset: Offset(0, 10),
+          ),
         ],
-        borderRadius: BorderRadius.circular(12),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(15),
+        padding: const EdgeInsets.all(18),
         child: Column(
-          // FIX: Wrap content tightly instead of trying to stretch to max
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start, // Align to top
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: const BoxDecoration(),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.network(
-                      booking.imageUrl,
-                      width: double.infinity,
-                      height: double.infinity,
-                      fit: BoxFit.cover,
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: Image.network(
+                    booking.imageUrl,
+                    width: 72,
+                    height: 72,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      width: 72,
+                      height: 72,
+                      color: theme.secondaryBackground,
+                      child: Icon(
+                        Icons.image_not_supported_rounded,
+                        color: theme.secondaryText,
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 14),
                 Expanded(
-                  // Use Expanded to prevent text overflow horizontally
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        booking.status,
-                        style: AppTheme.of(context).bodyMedium.override(
-                              font: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w500,
-                              ),
-                              color: statusColor,
-                              fontSize: 12,
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: statusColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          booking.status,
+                          style: theme.labelMedium.override(
+                            font: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w700,
                             ),
+                            color: statusColor,
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 5),
+                      const SizedBox(height: 8),
                       Text(
                         booking.title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: AppTheme.of(context).titleSmall.override(
-                              font: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600,
-                              ),
-                              fontSize: 16,
-                            ),
+                        style: theme.titleSmall.override(
+                          font: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w700,
+                          ),
+                          fontSize: 17,
+                        ),
                       ),
-                      const SizedBox(height: 5),
+                      const SizedBox(height: 4),
                       Text(
                         booking.serviceType,
-                        style: AppTheme.of(context).bodyMedium.override(
-                              font: GoogleFonts.poppins(),
-                              fontSize: 12,
-                            ),
+                        style: theme.bodySmall.override(
+                          font: GoogleFonts.poppins(),
+                          color: theme.secondaryText,
+                        ),
                       ),
                     ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Booking date:',
-                      style: AppTheme.of(context).bodyMedium.override(
-                            font: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                    ),
-                    Text(
-                      booking.date,
-                      style: AppTheme.of(context).bodyMedium.override(
-                            font: GoogleFonts.poppins(),
-                          ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Total paid:',
-                      style: AppTheme.of(context).bodyMedium.override(
-                            font: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                    ),
-                    Text(
-                      '₱${booking.price.toStringAsFixed(0)}', // Format dynamic price
-                      style: AppTheme.of(context).bodyMedium.override(
-                            font: GoogleFonts.poppins(),
-                          ),
-                    ),
-                  ],
-                ),
-              ],
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: theme.secondaryBackground,
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Column(
+                children: [
+                  _BookingMetaRow(
+                    label: 'Booking date',
+                    value: booking.date,
+                  ),
+                  const SizedBox(height: 8),
+                  _BookingMetaRow(
+                    label: 'Total paid',
+                    value: 'PHP ${booking.price.toStringAsFixed(0)}',
+                    emphasized: true,
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             FFButtonWidget(
               onPressed: () {
                 context.pushNamed(
@@ -185,21 +174,131 @@ class _BookingsWidgetState extends State<BookingsWidget> {
                 );
               },
               text: 'View Booking Details',
+              icon: const Icon(
+                Icons.arrow_forward_rounded,
+                size: 18,
+              ),
               options: FFButtonOptions(
                 width: double.infinity,
-                height: 50,
-                color: const Color(0xFFDFECFF),
-                textStyle: AppTheme.of(context).titleSmall.override(
-                      font: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w600,
-                      ),
-                      color: AppTheme.of(context).primary,
-                    ),
+                height: 52,
+                color: theme.primary.withValues(alpha: 0.10),
+                textStyle: theme.titleSmall.override(
+                  font: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w700,
+                  ),
+                  color: theme.primary,
+                ),
                 elevation: 0,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
+    final theme = AppTheme.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Container(
+          width: double.infinity,
+          constraints: const BoxConstraints(maxWidth: 420),
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: theme.primaryBackground,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: theme.alternate),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 58,
+                height: 58,
+                decoration: BoxDecoration(
+                  color: theme.primary.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Icon(icon, color: theme.primary, size: 28),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: theme.titleMedium.override(
+                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                subtitle,
+                textAlign: TextAlign.center,
+                style: theme.bodyMedium.override(
+                  color: theme.secondaryText,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(BuildContext context) {
+    final theme = AppTheme.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Container(
+          width: double.infinity,
+          constraints: const BoxConstraints(maxWidth: 420),
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: theme.primaryBackground,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: theme.alternate),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.error_outline_rounded,
+                size: 48,
+                color: theme.error,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                _model.errorMessage ?? 'Something went wrong',
+                textAlign: TextAlign.center,
+                style: theme.bodyMedium,
+              ),
+              const SizedBox(height: 16),
+              FFButtonWidget(
+                onPressed: () => _model.reloadBookings(),
+                text: 'Retry',
+                options: FFButtonOptions(
+                  width: 120,
+                  height: 44,
+                  color: theme.primary,
+                  textStyle: theme.bodySmall.override(
+                    color: Colors.white,
+                    font: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -213,230 +312,205 @@ class _BookingsWidgetState extends State<BookingsWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: AppTheme.of(context).secondaryBackground,
+          backgroundColor: const Color(0xFFF4F7FB),
           appBar: AppBar(
             backgroundColor: AppTheme.of(context).primaryBackground,
             automaticallyImplyLeading: false,
-            actions: const [],
-            flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                'Bookings',
-                style: AppTheme.of(context).titleLarge.override(
-                      font: GoogleFonts.poppins(
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            centerTitle: true,
+            title: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Bookings',
+                  style: AppTheme.of(context).titleLarge.override(
+                        font: GoogleFonts.poppins(
+                          fontWeight: FontWeight.bold,
+                          fontStyle: AppTheme.of(context).titleLarge.fontStyle,
+                        ),
+                        letterSpacing: 0,
                         fontWeight: FontWeight.bold,
                         fontStyle: AppTheme.of(context).titleLarge.fontStyle,
                       ),
-                      letterSpacing: 0,
-                      fontWeight: FontWeight.bold,
-                      fontStyle: AppTheme.of(context).titleLarge.fontStyle,
-                    ),
-              ),
-              centerTitle: true,
-              expandedTitleScale: 1,
-              titlePadding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 20),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Track active work and completed visits',
+                  style: AppTheme.of(context).bodySmall.override(
+                        font: GoogleFonts.poppins(),
+                        color: AppTheme.of(context).secondaryText,
+                      ),
+                ),
+              ],
             ),
-            elevation: 0,
           ),
           body: SafeArea(
             top: true,
             child: Column(
-              mainAxisSize: MainAxisSize.max,
               children: [
                 Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(15, 0, 15, 0),
+                  padding: const EdgeInsets.fromLTRB(15, 10, 15, 6),
                   child: Container(
                     width: double.infinity,
                     height: 80,
-                    decoration: const BoxDecoration(),
-                    child: Container(
+                    decoration: BoxDecoration(
+                      color: AppTheme.of(context).primaryBackground,
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(
+                        color: AppTheme.of(context).alternate,
+                      ),
+                    ),
+                    child: custom_widgets.CupertinoSlidingWidgetBookings(
                       width: double.infinity,
                       height: double.infinity,
-                      child: custom_widgets.CupertinoSlidingWidgetBookings(
-                        width: double.infinity,
-                        height: double.infinity,
-                        initialIndex: _model.selectedTabIndex!,
-                        onChanged: (index) async {
-                          _model.selectedTabIndex = index;
-                          safeSetState(() {});
-                          await _model.pageViewController?.animateToPage(
-                            index,
-                            duration: const Duration(milliseconds: 500),
-                            curve: Curves.ease,
-                          );
-                        },
-                      ),
+                      initialIndex: _model.selectedTabIndex!,
+                      onChanged: (index) async {
+                        _model.selectedTabIndex = index;
+                        safeSetState(() {});
+                        await _model.pageViewController?.animateToPage(
+                          index,
+                          duration: const Duration(milliseconds: 500),
+                          curve: Curves.ease,
+                        );
+                      },
                     ),
                   ),
                 ),
                 Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    height: double.infinity,
-                    child: _model.errorMessage != null
-                        ? Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(20),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.error_outline,
-                                    size: 48,
-                                    color: AppTheme.of(context).error,
+                  child: _model.errorMessage != null
+                      ? _buildErrorState(context)
+                      : _model.isLoading
+                          ? ListView.separated(
+                              padding: EdgeInsets.only(
+                                top: 10,
+                                left: 15,
+                                right: 15,
+                                bottom: MediaQuery.sizeOf(context).width * 0.1,
+                              ),
+                              itemCount: 3,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: 10),
+                              itemBuilder: (_, __) =>
+                                  const BookingCardSkeleton(),
+                            )
+                          : PageView(
+                              controller: _model.pageViewController ??=
+                                  PageController(
+                                initialPage: max(
+                                  0,
+                                  min(
+                                    valueOrDefault<int>(
+                                        _model.selectedTabIndex, 0),
+                                    1,
                                   ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    _model.errorMessage!,
-                                    textAlign: TextAlign.center,
-                                    style: AppTheme.of(context).bodyMedium,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  FFButtonWidget(
-                                    onPressed: () => _model.reloadBookings(),
-                                    text: 'Retry',
-                                    options: FFButtonOptions(
-                                      width: 120,
-                                      height: 40,
-                                      color: AppTheme.of(context).primary,
-                                      textStyle: AppTheme.of(context)
-                                          .bodySmall
-                                          .override(
-                                            color: AppTheme.of(context)
-                                                .primaryText,
-                                          ),
-                                      borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              onPageChanged: (_) async {
+                                safeSetState(() {});
+                                _model.selectedTabIndex =
+                                    _model.pageViewCurrentIndex;
+                                safeSetState(() {});
+                              },
+                              children: [
+                                if (_model.inProgressList.isEmpty)
+                                  _buildEmptyState(
+                                    context,
+                                    icon: Icons.timelapse_rounded,
+                                    title: 'No bookings in progress',
+                                    subtitle:
+                                        'New active bookings will appear here once a provider is on the way or currently working.',
+                                  )
+                                else
+                                  ListView.separated(
+                                    padding: EdgeInsets.only(
+                                      top: 10,
+                                      left: 15,
+                                      right: 15,
+                                      bottom: MediaQuery.sizeOf(context).width *
+                                          0.1,
+                                    ),
+                                    itemCount: _model.inProgressList.length,
+                                    separatorBuilder: (_, __) =>
+                                        const SizedBox(height: 10),
+                                    itemBuilder: (context, index) =>
+                                        _buildBookingCard(
+                                      context,
+                                      _model.inProgressList[index],
                                     ),
                                   ),
-                                ],
-                              ),
+                                if (_model.completedList.isEmpty)
+                                  _buildEmptyState(
+                                    context,
+                                    icon: Icons.task_alt_rounded,
+                                    title: 'No completed bookings',
+                                    subtitle:
+                                        'Finished bookings will show here with their final status and details.',
+                                  )
+                                else
+                                  ListView.separated(
+                                    padding: EdgeInsets.only(
+                                      top: 10,
+                                      left: 15,
+                                      right: 15,
+                                      bottom: MediaQuery.sizeOf(context).width *
+                                          0.1,
+                                    ),
+                                    itemCount: _model.completedList.length,
+                                    separatorBuilder: (_, __) =>
+                                        const SizedBox(height: 10),
+                                    itemBuilder: (context, index) =>
+                                        _buildBookingCard(
+                                      context,
+                                      _model.completedList[index],
+                                    ),
+                                  ),
+                              ],
                             ),
-                          )
-                        : _model.isLoading
-                            ? ListView.separated(
-                                padding: EdgeInsets.only(
-                                  top: 10,
-                                  left: 15,
-                                  right: 15,
-                                  bottom:
-                                      MediaQuery.sizeOf(context).width * 0.1,
-                                ),
-                                itemCount: 3,
-                                separatorBuilder: (context, index) =>
-                                    const SizedBox(height: 10),
-                                itemBuilder: (context, index) =>
-                                    const BookingCardSkeleton(),
-                              )
-                            : PageView(
-                                controller: _model.pageViewController ??=
-                                    PageController(
-                                        initialPage: max(
-                                            0,
-                                            min(
-                                                valueOrDefault<int>(
-                                                    _model.selectedTabIndex, 0),
-                                                1))),
-                                onPageChanged: (_) async {
-                                  safeSetState(() {});
-                                  _model.selectedTabIndex =
-                                      _model.pageViewCurrentIndex;
-                                  safeSetState(() {});
-                                },
-                                scrollDirection: Axis.horizontal,
-                                children: [
-                                  // --- PAGE 1: IN PROGRESS ---
-                                  if (_model.inProgressList.isEmpty) Center(
-                                          child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Icon(
-                                                Icons.inbox,
-                                                size: 64,
-                                                color: AppTheme.of(context)
-                                                    .secondaryText,
-                                              ),
-                                              const SizedBox(height: 16),
-                                              Text(
-                                                'No bookings in progress',
-                                                style: AppTheme.of(context)
-                                                    .bodyMedium
-                                                    .override(
-                                                      color:
-                                                          AppTheme.of(context)
-                                                              .secondaryText,
-                                                    ),
-                                              ),
-                                            ],
-                                          ),
-                                        ) else ListView.separated(
-                                          padding: EdgeInsets.only(
-                                            top: 10,
-                                            left: 15,
-                                            right: 15,
-                                            bottom: MediaQuery.sizeOf(context)
-                                                    .width *
-                                                0.1,
-                                          ),
-                                          itemCount:
-                                              _model.inProgressList.length,
-                                          separatorBuilder: (context, index) =>
-                                              const SizedBox(height: 10),
-                                          itemBuilder: (context, index) =>
-                                              _buildBookingCard(context,
-                                                  _model.inProgressList[index]),
-                                        ),
-                                  // --- PAGE 2: COMPLETED ---
-                                  if (_model.completedList.isEmpty) Center(
-                                          child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Icon(
-                                                Icons.inbox,
-                                                size: 64,
-                                                color: AppTheme.of(context)
-                                                    .secondaryText,
-                                              ),
-                                              const SizedBox(height: 16),
-                                              Text(
-                                                'No completed bookings',
-                                                style: AppTheme.of(context)
-                                                    .bodyMedium
-                                                    .override(
-                                                      color:
-                                                          AppTheme.of(context)
-                                                              .secondaryText,
-                                                    ),
-                                              ),
-                                            ],
-                                          ),
-                                        ) else ListView.separated(
-                                          padding: EdgeInsets.only(
-                                            top: 10,
-                                            left: 15,
-                                            right: 15,
-                                            bottom: MediaQuery.sizeOf(context)
-                                                    .width *
-                                                0.1,
-                                          ),
-                                          itemCount:
-                                              _model.completedList.length,
-                                          separatorBuilder: (_, __) =>
-                                              const SizedBox(height: 10),
-                                          itemBuilder: (context, index) {
-                                            final item =
-                                                _model.completedList[index];
-                                            return _buildBookingCard(
-                                                context, item);
-                                          },
-                                        ),
-                                ],
-                              ),
-                  ),
                 ),
               ],
             ),
           ),
         ),
       );
+}
+
+class _BookingMetaRow extends StatelessWidget {
+  const _BookingMetaRow({
+    required this.label,
+    required this.value,
+    this.emphasized = false,
+  });
+
+  final String label;
+  final String value;
+  final bool emphasized;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: theme.bodyMedium.override(
+            font: GoogleFonts.poppins(
+              fontWeight: FontWeight.w600,
+            ),
+            color: theme.secondaryText,
+          ),
+        ),
+        Text(
+          value,
+          style: theme.bodyMedium.override(
+            font: GoogleFonts.poppins(
+              fontWeight: emphasized ? FontWeight.w700 : FontWeight.w500,
+            ),
+            color: emphasized ? theme.primary : theme.primaryText,
+          ),
+        ),
+      ],
+    );
+  }
 }

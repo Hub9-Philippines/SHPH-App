@@ -5,8 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
-import '/services/logging_service.dart';
 import '/services/chat_service.dart';
+import '/services/logging_service.dart';
 import '/services/pro_bookings_service.dart';
 import '/theme/app_theme.dart';
 
@@ -54,64 +54,90 @@ class _ProDashboardWidgetState extends State<ProDashboardWidget> {
       'ProProfile': const ProProfileWidget(),
     };
     final currentIndex = tabs.keys.toList().indexOf(_currentPageName);
+    final theme = AppTheme.of(context);
 
     return Scaffold(
       resizeToAvoidBottomInset: !widget.disableResizeToAvoidBottomInset,
+      backgroundColor: const Color(0xFFF4F7FB),
       body: _currentPage ?? tabs[_currentPageName],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: currentIndex,
-        onTap: (i) => safeSetState(() {
-          _currentPage = null;
-          _currentPageName = tabs.keys.toList()[i];
-        }),
-        backgroundColor: AppTheme.of(context).primaryBackground,
-        selectedItemColor: AppTheme.of(context).primary,
-        unselectedItemColor: AppTheme.of(context).secondaryText,
-        showSelectedLabels: true,
-        showUnselectedLabels: true,
-        type: BottomNavigationBarType.fixed,
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.work_outline,
-              size: 24,
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Color(0x14000000),
+              blurRadius: 24,
+              offset: Offset(0, -8),
             ),
-            label: 'Jobs',
-            tooltip: '',
+          ],
+        ),
+        child: SafeArea(
+          top: false,
+          child: BottomNavigationBar(
+            currentIndex: currentIndex,
+            onTap: (i) => safeSetState(() {
+              _currentPage = null;
+              _currentPageName = tabs.keys.toList()[i];
+            }),
+            backgroundColor: Colors.white,
+            selectedItemColor: theme.primary,
+            unselectedItemColor: const Color(0xFF7B8794),
+            selectedLabelStyle: GoogleFonts.poppins(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+            unselectedLabelStyle: GoogleFonts.poppins(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+            showSelectedLabels: true,
+            showUnselectedLabels: true,
+            type: BottomNavigationBarType.fixed,
+            elevation: 0,
+            items: const <BottomNavigationBarItem>[
+              BottomNavigationBarItem(
+                icon: Icon(
+                  Icons.work_outline,
+                  size: 24,
+                ),
+                label: 'Jobs',
+                tooltip: '',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(
+                  Icons.calendar_today_outlined,
+                  size: 24,
+                ),
+                label: 'Schedule',
+                tooltip: '',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(
+                  Icons.account_balance_wallet_outlined,
+                  size: 24,
+                ),
+                label: 'Earnings',
+                tooltip: '',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(
+                  Icons.chat_outlined,
+                  size: 24,
+                ),
+                label: 'Messages',
+                tooltip: '',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(
+                  Icons.person,
+                  size: 24,
+                ),
+                label: 'Profile',
+                tooltip: '',
+              )
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.calendar_today_outlined,
-              size: 24,
-            ),
-            label: 'Schedule',
-            tooltip: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.account_balance_wallet_outlined,
-              size: 24,
-            ),
-            label: 'Earnings',
-            tooltip: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.chat_outlined,
-              size: 24,
-            ),
-            label: 'Messages',
-            tooltip: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.person,
-              size: 24,
-            ),
-            label: 'Profile',
-            tooltip: '',
-          )
-        ],
+        ),
       ),
     );
   }
@@ -128,6 +154,7 @@ class ProJobsWidget extends StatefulWidget {
 class _ProJobsWidgetState extends State<ProJobsWidget> {
   List<Map<String, dynamic>> jobRequests = [];
   bool isLoading = true;
+  String? loadError;
   final ProBookingsService _bookingsService = ProBookingsService.instance;
 
   @override
@@ -137,7 +164,10 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
   }
 
   Future<void> _loadJobRequests() async {
-    setState(() => isLoading = true);
+    setState(() {
+      isLoading = true;
+      loadError = null;
+    });
     try {
       final requests = await _bookingsService.getPendingJobRequests();
       setState(() {
@@ -145,10 +175,10 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
         isLoading = false;
       });
     } catch (e) {
-      setState(() => isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading jobs: $e')),
-      );
+      setState(() {
+        isLoading = false;
+        loadError = 'We could not load job requests right now.';
+      });
     }
   }
 
@@ -189,113 +219,128 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'Job Requests',
-            style: AppTheme.of(context).titleLarge.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+  Widget build(BuildContext context) {
+    final pendingToday = jobRequests
+        .where((job) => _isSameDay(_parseDate(job['booking_date'])))
+        .length;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF4F7FB),
+      appBar: _buildDashboardAppBar(
+        context,
+        title: 'Job Requests',
+        subtitle: 'Review and respond to new customer bookings fast.',
+        onRefresh: _loadJobRequests,
+      ),
+      body: RefreshIndicator(
+        onRefresh: _loadJobRequests,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          children: [
+            _DashboardHeroCard(
+              accentColor: const Color(0xFF0F766E),
+              title: 'Provider inbox',
+              headline:
+                  '${jobRequests.length} pending request${jobRequests.length == 1 ? '' : 's'}',
+              subtitle: jobRequests.isEmpty
+                  ? 'New service requests will appear here as soon as customers book you.'
+                  : 'Quick replies help you convert more requests into confirmed jobs.',
+              leading: const Icon(
+                Icons.inventory_2_outlined,
+                color: Colors.white,
+                size: 26,
+              ),
+              stats: [
+                _DashboardStatData(
+                  label: 'Pending',
+                  value: jobRequests.length.toString(),
                 ),
-          ),
-          backgroundColor: AppTheme.of(context).primaryBackground,
-          elevation: 0,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _loadJobRequests,
+                _DashboardStatData(
+                  label: 'Today',
+                  value: pendingToday.toString(),
+                ),
+              ],
             ),
+            const SizedBox(height: 16),
+            if (isLoading)
+              const Padding(
+                padding: EdgeInsets.only(top: 60),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (loadError != null)
+              _DashboardMessageCard(
+                icon: Icons.error_outline_rounded,
+                title: 'Could not load requests',
+                message: loadError!,
+                actionLabel: 'Try Again',
+                onTap: _loadJobRequests,
+              )
+            else if (jobRequests.isEmpty)
+              const _DashboardMessageCard(
+                icon: Icons.work_history_outlined,
+                title: 'No job requests yet',
+                message:
+                    'When a client books one of your services, the request will appear here for review.',
+              )
+            else
+              ...jobRequests.map(
+                (job) => Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: _buildJobCard(context, job),
+                ),
+              ),
           ],
         ),
-        body: isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : jobRequests.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.work_off_outlined,
-                          size: 64,
-                          color: AppTheme.of(context).secondaryText,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No job requests yet',
-                          style: AppTheme.of(context).bodyLarge.override(
-                                color: AppTheme.of(context).secondaryText,
-                              ),
-                        ),
-                      ],
-                    ),
-                  )
-                : RefreshIndicator(
-                    onRefresh: _loadJobRequests,
-                    child: ListView.separated(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: jobRequests.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 16),
-                      itemBuilder: (context, index) {
-                        final job = jobRequests[index];
-                        return _buildJobCard(context, job);
-                      },
-                    ),
-                  ),
-      );
+      ),
+    );
+  }
 
   Widget _buildJobCard(BuildContext context, Map<String, dynamic> job) {
     final isPending = job['status'] == 'pending';
 
-    // Extract nested data from Supabase response
     final serviceListing = job['service_listings'] as Map<String, dynamic>?;
     final profile = job['profiles'] as Map<String, dynamic>?;
+    final address = job['addresses'] as Map<String, dynamic>?;
 
     final clientName =
         profile?['display_name'] ?? profile?['first_name'] ?? 'Unknown Client';
     final clientPhoto = profile?['photo_url'];
-    final serviceName = serviceListing?['name'] ?? 'Unknown Service';
-    const location = 'Location N/A'; // TODO: Get from address if available
-    final bookingDate = job['booking_date'] != null
-        ? DateTime.parse(job['booking_date'])
-        : DateTime.now();
+    final serviceName =
+        serviceListing?['title'] ?? serviceListing?['name'] ?? 'Unknown Service';
+    final location = _bookingLocationText(address);
+    final bookingDate = _parseDate(job['booking_date']) ?? DateTime.now();
     final bookingTime = job['booking_time'] ?? 'N/A';
     final price = (job['total_price'] as num?)?.toDouble() ?? 0.0;
     final jobId = job['id'] as String?;
+    final status = job['status']?.toString();
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppTheme.of(context).secondaryBackground,
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: AppTheme.of(context).primaryText.withValues(alpha: 0.1),
+          color: const Color(0xFFE2E8F0),
           width: 1,
         ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A0F172A),
+            blurRadius: 18,
+            offset: Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header with client info
           Row(
             mainAxisSize: MainAxisSize.max,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: AppTheme.of(context).primary,
-                  image: clientPhoto != null
-                      ? DecorationImage(
-                          fit: BoxFit.cover,
-                          image: Image.network(clientPhoto).image,
-                        )
-                      : null,
-                  shape: BoxShape.circle,
-                ),
-                child: clientPhoto == null
-                    ? const Icon(Icons.person, color: Colors.white)
-                    : null,
-              ),
+              _DashboardAvatar(imageUrl: clientPhoto, size: 54),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -305,35 +350,26 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
                     Text(
                       clientName,
                       style: AppTheme.of(context).bodyLarge.override(
-                            fontWeight: FontWeight.w600,
+                            font: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w700,
+                            ),
+                            color: const Color(0xFF0F172A),
                           ),
                     ),
+                    const SizedBox(height: 4),
                     Text(
                       serviceName,
                       style: AppTheme.of(context).bodySmall.override(
-                            color: AppTheme.of(context).secondaryText,
+                            font: GoogleFonts.poppins(),
+                            color: const Color(0xFF64748B),
                           ),
                     ),
                   ],
                 ),
               ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: isPending
-                      ? AppTheme.of(context).warning
-                      : AppTheme.of(context).success,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  job['status'].toString().toUpperCase(),
-                  style: AppTheme.of(context).bodySmall.override(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 10,
-                      ),
-                ),
+              _StatusPill(
+                label: (status ?? 'pending').toUpperCase(),
+                status: status,
               ),
             ],
           ),
@@ -456,6 +492,7 @@ class ProScheduleWidget extends StatefulWidget {
 class _ProScheduleWidgetState extends State<ProScheduleWidget> {
   List<Map<String, dynamic>> scheduledJobs = [];
   bool isLoading = true;
+  String? loadError;
   final ProBookingsService _bookingsService = ProBookingsService.instance;
 
   @override
@@ -465,7 +502,10 @@ class _ProScheduleWidgetState extends State<ProScheduleWidget> {
   }
 
   Future<void> _loadScheduledJobs() async {
-    setState(() => isLoading = true);
+    setState(() {
+      isLoading = true;
+      loadError = null;
+    });
     try {
       final jobs = await _bookingsService.getScheduledJobs();
       setState(() {
@@ -473,10 +513,10 @@ class _ProScheduleWidgetState extends State<ProScheduleWidget> {
         isLoading = false;
       });
     } catch (e) {
-      setState(() => isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading schedule: $e')),
-      );
+      setState(() {
+        isLoading = false;
+        loadError = 'We could not load your schedule right now.';
+      });
     }
   }
 
@@ -500,71 +540,56 @@ class _ProScheduleWidgetState extends State<ProScheduleWidget> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'Schedule',
-            style: AppTheme.of(context).titleLarge.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-                ),
-          ),
-          backgroundColor: AppTheme.of(context).primaryBackground,
-          elevation: 0,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _loadScheduledJobs,
-            ),
-          ],
+        backgroundColor: const Color(0xFFF4F7FB),
+        appBar: _buildDashboardAppBar(
+          context,
+          title: 'Schedule',
+          subtitle: 'Track upcoming, active, and completed provider jobs.',
+          onRefresh: _loadScheduledJobs,
         ),
         body: isLoading
             ? const Center(child: CircularProgressIndicator())
-            : scheduledJobs.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.calendar_today_outlined,
-                          size: 64,
-                          color: AppTheme.of(context).secondaryText,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No scheduled jobs',
-                          style: AppTheme.of(context).bodyLarge.override(
-                                color: AppTheme.of(context).secondaryText,
-                              ),
-                        ),
-                      ],
-                    ),
+            : loadError != null
+                ? _DashboardMessageCard(
+                    icon: Icons.error_outline_rounded,
+                    title: 'Could not load schedule',
+                    message: loadError!,
+                    actionLabel: 'Try Again',
+                    onTap: _loadScheduledJobs,
                   )
-                : RefreshIndicator(
-                    onRefresh: _loadScheduledJobs,
-                    child: ListView.separated(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: scheduledJobs.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 16),
-                      itemBuilder: (context, index) {
-                        final job = scheduledJobs[index];
-                        return _buildScheduleCard(context, job);
-                      },
-                    ),
-                  ),
+                : scheduledJobs.isEmpty
+                    ? const _DashboardMessageCard(
+                        icon: Icons.event_busy_outlined,
+                        title: 'No scheduled jobs',
+                        message:
+                            'Accepted and active jobs will appear here once your calendar fills up.',
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _loadScheduledJobs,
+                        child: ListView.separated(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: scheduledJobs.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 16),
+                          itemBuilder: (context, index) {
+                            final job = scheduledJobs[index];
+                            return _buildScheduleCard(context, job);
+                          },
+                        ),
+                      ),
       );
 
   Widget _buildScheduleCard(BuildContext context, Map<String, dynamic> job) {
-    // Extract nested data from Supabase response
     final serviceListing = job['service_listings'] as Map<String, dynamic>?;
     final profile = job['profiles'] as Map<String, dynamic>?;
+    final address = job['addresses'] as Map<String, dynamic>?;
 
     final clientName =
         profile?['display_name'] ?? profile?['first_name'] ?? 'Unknown Client';
     final clientPhoto = profile?['photo_url'];
-    final serviceName = serviceListing?['name'] ?? 'Unknown Service';
-    const location = 'Location N/A';
-    final bookingDate = job['booking_date'] != null
-        ? DateTime.parse(job['booking_date'])
-        : DateTime.now();
+    final serviceName =
+        serviceListing?['title'] ?? serviceListing?['name'] ?? 'Unknown Service';
+    final location = _bookingLocationText(address);
+    final bookingDate = _parseDate(job['booking_date']) ?? DateTime.now();
     final bookingTime = job['booking_time'] ?? 'N/A';
     final price = (job['total_price'] as num?)?.toDouble() ?? 0.0;
     final jobId = job['id'] as String?;
@@ -572,14 +597,21 @@ class _ProScheduleWidgetState extends State<ProScheduleWidget> {
     final isCompleted = status == 'completed';
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppTheme.of(context).secondaryBackground,
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: AppTheme.of(context).primaryText.withValues(alpha: 0.1),
+          color: const Color(0xFFE2E8F0),
           width: 1,
         ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A0F172A),
+            blurRadius: 18,
+            offset: Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -818,6 +850,9 @@ class _ProEarningsWidgetState extends State<ProEarningsWidget> {
       });
     } catch (e) {
       setState(() => isLoading = false);
+      if (!mounted) {
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error loading earnings: $e')),
       );
@@ -844,21 +879,12 @@ class _ProEarningsWidgetState extends State<ProEarningsWidget> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Earnings',
-          style: AppTheme.of(context).titleLarge.override(
-                font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-              ),
-        ),
-        backgroundColor: AppTheme.of(context).primaryBackground,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadEarnings,
-          ),
-        ],
+      backgroundColor: const Color(0xFFF4F7FB),
+      appBar: _buildDashboardAppBar(
+        context,
+        title: 'Earnings',
+        subtitle: 'Monitor payouts, momentum, and recent completed work.',
+        onRefresh: _loadEarnings,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -885,8 +911,8 @@ class _ProEarningsWidgetState extends State<ProEarningsWidget> {
                                   .primary
                                   .withValues(alpha: 0.8),
                             ],
-                            begin: const AlignmentDirectional(-1, -1),
-                            end: const AlignmentDirectional(1, 1),
+                            begin: AlignmentDirectional.topStart,
+                            end: AlignmentDirectional.bottomEnd,
                           ),
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -1369,38 +1395,36 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
               ),
       );
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.chat_bubble_outline,
-              size: 64,
-              color: AppTheme.of(context).secondaryText,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No messages yet',
-              style: AppTheme.of(context).titleMedium.override(
-                    color: AppTheme.of(context).secondaryText,
-                  ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Your conversations with customers will appear here',
-              style: AppTheme.of(context).bodyMedium.override(
-                    color: AppTheme.of(context).secondaryText,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+  Widget _buildEmptyState() => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.chat_bubble_outline,
+                size: 64,
+                color: AppTheme.of(context).secondaryText,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No messages yet',
+                style: AppTheme.of(context).titleMedium.override(
+                      color: AppTheme.of(context).secondaryText,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Your conversations with customers will appear here',
+                style: AppTheme.of(context).bodyMedium.override(
+                      color: AppTheme.of(context).secondaryText,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
-      ),
-    );
-  }
+      );
 
   Widget _buildChatRoomCard(
       BuildContext context, Map<String, dynamic> chatRoom) {
@@ -1579,6 +1603,9 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
 
       setState(() => isAvailable = value);
     } catch (e) {
+      if (!mounted) {
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error updating availability: $e')),
       );
@@ -1627,6 +1654,9 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
         context.go('/');
       }
     } catch (e) {
+      if (!mounted) {
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error logging out: $e')),
       );
@@ -1635,21 +1665,12 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'Profile',
-            style: AppTheme.of(context).titleLarge.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-                ),
-          ),
-          backgroundColor: AppTheme.of(context).primaryBackground,
-          elevation: 0,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _loadProfile,
-            ),
-          ],
+        backgroundColor: const Color(0xFFF4F7FB),
+        appBar: _buildDashboardAppBar(
+          context,
+          title: 'Profile',
+          subtitle: 'Manage your provider presence, pricing, and availability.',
+          onRefresh: _loadProfile,
         ),
         body: isLoading
             ? const Center(child: CircularProgressIndicator())
@@ -2140,4 +2161,348 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
           ),
         ),
       );
+}
+
+PreferredSizeWidget _buildDashboardAppBar(
+  BuildContext context, {
+  required String title,
+  required String subtitle,
+  required VoidCallback onRefresh,
+}) =>
+    AppBar(
+      backgroundColor: const Color(0xFFF4F7FB),
+      elevation: 0,
+      surfaceTintColor: Colors.transparent,
+      titleSpacing: 20,
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: AppTheme.of(context).titleLarge.override(
+                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                  color: const Color(0xFF0F172A),
+                ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            subtitle,
+            style: AppTheme.of(context).bodySmall.override(
+                  font: GoogleFonts.poppins(),
+                  color: const Color(0xFF64748B),
+                ),
+          ),
+        ],
+      ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 14),
+          child: IconButton.filledTonal(
+            onPressed: onRefresh,
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: AppTheme.of(context).primary,
+            ),
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+        ),
+      ],
+    );
+
+class _DashboardHeroCard extends StatelessWidget {
+  const _DashboardHeroCard({
+    required this.accentColor,
+    required this.title,
+    required this.headline,
+    required this.subtitle,
+    required this.leading,
+    required this.stats,
+  });
+
+  final Color accentColor;
+  final String title;
+  final String headline;
+  final String subtitle;
+  final Widget leading;
+  final List<_DashboardStatData> stats;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              accentColor,
+              accentColor.withValues(alpha: 0.86),
+            ],
+            begin: AlignmentDirectional.topStart,
+            end: AlignmentDirectional.bottomEnd,
+          ),
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x14000000),
+              blurRadius: 24,
+              offset: Offset(0, 12),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Center(child: leading),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: AppTheme.of(context).labelLarge.override(
+                              font: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w600,
+                              ),
+                              color: Colors.white.withValues(alpha: 0.82),
+                            ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        headline,
+                        style: AppTheme.of(context).headlineSmall.override(
+                              font: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w700,
+                              ),
+                              color: Colors.white,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Text(
+              subtitle,
+              style: AppTheme.of(context).bodyMedium.override(
+                    font: GoogleFonts.poppins(),
+                    color: Colors.white.withValues(alpha: 0.86),
+                  ),
+            ),
+            if (stats.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Row(
+                children: stats
+                    .map(
+                      (stat) => Expanded(
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 10),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.14),
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                stat.label,
+                                style: AppTheme.of(context).bodySmall.override(
+                                      font: GoogleFonts.poppins(),
+                                      color: Colors.white.withValues(alpha: 0.78),
+                                    ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                stat.value,
+                                style:
+                                    AppTheme.of(context).titleMedium.override(
+                                          font: GoogleFonts.poppins(
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                          color: Colors.white,
+                                        ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ],
+          ],
+        ),
+      );
+}
+
+class _DashboardStatData {
+  const _DashboardStatData({required this.label, required this.value});
+
+  final String label;
+  final String value;
+}
+
+class _DashboardMessageCard extends StatelessWidget {
+  const _DashboardMessageCard({
+    required this.icon,
+    required this.title,
+    required this.message,
+    this.actionLabel,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String message;
+  final String? actionLabel;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) => Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 28),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(28),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 48, color: const Color(0xFF94A3B8)),
+                const SizedBox(height: 14),
+                Text(
+                  title,
+                  style: AppTheme.of(context).titleMedium.override(
+                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        color: const Color(0xFF0F172A),
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  style: AppTheme.of(context).bodyMedium.override(
+                        font: GoogleFonts.poppins(),
+                        color: const Color(0xFF64748B),
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+                if (actionLabel != null && onTap != null) ...[
+                  const SizedBox(height: 18),
+                  FilledButton(
+                    onPressed: onTap,
+                    child: Text(actionLabel!),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      );
+}
+
+class _DashboardAvatar extends StatelessWidget {
+  const _DashboardAvatar({required this.imageUrl, this.size = 50});
+
+  final String? imageUrl;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: AppTheme.of(context).primary,
+          shape: BoxShape.circle,
+          image: imageUrl != null && imageUrl!.isNotEmpty
+              ? DecorationImage(
+                  fit: BoxFit.cover,
+                  image: NetworkImage(imageUrl!),
+                )
+              : null,
+        ),
+        child: imageUrl == null || imageUrl!.isEmpty
+            ? Icon(Icons.person, color: Colors.white, size: size * 0.48)
+            : null,
+      );
+}
+
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.label, required this.status});
+
+  final String label;
+  final String? status;
+
+  @override
+  Widget build(BuildContext context) {
+    final normalized = (status ?? '').toLowerCase();
+    final (background, foreground) = switch (normalized) {
+      'pending' => (const Color(0xFFFFF7ED), const Color(0xFFC2410C)),
+      'completed' => (const Color(0xFFECFDF3), const Color(0xFF027A48)),
+      'accepted' || 'confirmed' || 'in_progress' =>
+        (const Color(0xFFEFF6FF), const Color(0xFF1D4ED8)),
+      _ => (const Color(0xFFF1F5F9), const Color(0xFF475569)),
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: AppTheme.of(context).bodySmall.override(
+              font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+              color: foreground,
+              fontSize: 10,
+            ),
+      ),
+    );
+  }
+}
+
+DateTime? _parseDate(dynamic raw) {
+  if (raw == null) {
+    return null;
+  }
+  if (raw is DateTime) {
+    return raw;
+  }
+  return DateTime.tryParse(raw.toString());
+}
+
+bool _isSameDay(DateTime? date) {
+  if (date == null) {
+    return false;
+  }
+  final now = DateTime.now();
+  return date.year == now.year &&
+      date.month == now.month &&
+      date.day == now.day;
+}
+
+String _bookingLocationText(Map<String, dynamic>? address) {
+  if (address == null) {
+    return 'Location pending';
+  }
+  final line1 = address['address_line1']?.toString().trim() ?? '';
+  final line2 = address['address_line2']?.toString().trim() ?? '';
+  final city = address['city']?.toString().trim() ?? '';
+  final parts = [line1, line2, city].where((part) => part.isNotEmpty).toList();
+  return parts.isEmpty ? 'Location pending' : parts.join(', ');
 }

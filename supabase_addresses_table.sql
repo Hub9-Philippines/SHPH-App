@@ -36,6 +36,22 @@ BEGIN
   ) THEN
     ALTER TABLE addresses ADD COLUMN barangay_code VARCHAR(20);
   END IF;
+
+  -- Add latitude column
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'addresses' AND column_name = 'latitude'
+  ) THEN
+    ALTER TABLE addresses ADD COLUMN latitude DOUBLE PRECISION;
+  END IF;
+
+  -- Add longitude column
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'addresses' AND column_name = 'longitude'
+  ) THEN
+    ALTER TABLE addresses ADD COLUMN longitude DOUBLE PRECISION;
+  END IF;
 END $$;
 
 -- Create indexes for better query performance
@@ -120,3 +136,5 @@ COMMENT ON COLUMN addresses.region_code IS 'PSGC region code (e.g., 130000000 fo
 COMMENT ON COLUMN addresses.province_code IS 'PSGC province code (e.g., 012800000 for Ilocos Norte)';
 COMMENT ON COLUMN addresses.city_municipality_code IS 'PSGC city/municipality code (e.g., 012805000)';
 COMMENT ON COLUMN addresses.barangay_code IS 'PSGC barangay code (e.g., 012805001)';
+COMMENT ON COLUMN addresses.latitude IS 'Pinned latitude for the address location';
+COMMENT ON COLUMN addresses.longitude IS 'Pinned longitude for the address location';

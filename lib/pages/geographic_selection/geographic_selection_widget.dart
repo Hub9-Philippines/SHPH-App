@@ -8,12 +8,15 @@ export 'geographic_selection_model.dart' show GeographicSelectionType;
 
 class GeographicSelectionWidget extends StatefulWidget {
   const GeographicSelectionWidget({
-    required this.selectionType, super.key,
+    required this.selectionType,
+    super.key,
     this.parentCode,
+    this.isRegionFallback = false,
   });
 
   final GeographicSelectionType selectionType;
   final String? parentCode;
+  final bool isRegionFallback;
 
   static String routeName = 'GeographicSelection';
   static String routePath = '/geographic-selection';
@@ -30,7 +33,8 @@ class _GeographicSelectionWidgetState extends State<GeographicSelectionWidget> {
   void initState() {
     super.initState();
     _model = GeographicSelectionModel();
-    _model.loadData(widget.selectionType, widget.parentCode);
+    _model.loadData(widget.selectionType, widget.parentCode,
+        isRegionFallback: widget.isRegionFallback);
   }
 
   @override
@@ -41,8 +45,8 @@ class _GeographicSelectionWidgetState extends State<GeographicSelectionWidget> {
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
-      listenable: _model,
-      builder: (context, child) => GestureDetector(
+        listenable: _model,
+        builder: (context, child) => GestureDetector(
           onTap: () {
             FocusScope.of(context).unfocus();
             FocusManager.instance.primaryFocus?.unfocus();
@@ -189,5 +193,5 @@ class _GeographicSelectionWidgetState extends State<GeographicSelectionWidget> {
             ),
           ),
         ),
-    );
+      );
 }

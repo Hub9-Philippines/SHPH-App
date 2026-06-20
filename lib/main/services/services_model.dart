@@ -2,36 +2,32 @@ import 'package:flutter/material.dart';
 
 import '/backend/supabase/database/tables/service_listings.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/services/logging_service.dart';
 import 'services_widget.dart' show ServicesScreen;
 
 class ServicesModel extends FlutterFlowModel<ServicesScreen> {
-  ///  State fields for stateful widgets in this page.
-
-  // Filter state
   String? selectedCategory;
-  String?
-      selectedFilter; // Combined filter: 'recommended', 'topRated', 'lowestPrice', 'nearest'
+  String? selectedFilter;
   String searchQuery = '';
   bool isRecommended = false;
   bool isTopService = false;
 
-  // Search controller
   TextEditingController searchController = TextEditingController();
   FocusNode searchFocusNode = FocusNode();
 
-  // Favorites tracking (local state - needs database integration)
   final Set<int> favorites = <int>{};
 
-  // Categories - dynamically generated from available services
   List<String> get categories {
-    if (allServices.isEmpty) return ['All'];
+    if (allServices.isEmpty) {
+      return ['All'];
+    }
+
     final uniqueCategories = allServices
         .map((service) => service['category'] as String)
         .toSet()
         .toList()
       ..sort();
 
-    // If a category is selected, move it to the front after "All"
     if (selectedCategory != null && selectedCategory != 'All') {
       uniqueCategories.remove(selectedCategory);
       return ['All', selectedCategory!, ...uniqueCategories];
@@ -40,7 +36,6 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
     return ['All', ...uniqueCategories];
   }
 
-  // Master list of services
   List<Map<String, dynamic>> allServices = [];
   List<Map<String, dynamic>> filteredServices = [];
   bool isLoading = true;
@@ -49,14 +44,14 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
   void initState(BuildContext context) {
     filteredServices = List.from(allServices);
     _loadServicesFromDatabase().then((_) {
-      print('ServicesModel - Data loaded, setting isLoading to false');
       isLoading = false;
-      // Re-apply filters after data is loaded
-      print(
-          'ServicesModel - Applying filters after data load. Category: $selectedCategory, Search: $searchQuery');
+      _coerceSelectedCategoryToAvailable();
       applyFilters();
+      LoggingService.debug(
+        'Service catalog loaded with ${allServices.length} items',
+        tag: 'ServicesModel',
+      );
     });
-    print('ServicesModel - initState completed');
   }
 
   @override
@@ -65,16 +60,12 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
     searchFocusNode.dispose();
   }
 
-  /// Load services from database
   Future<void> _loadServicesFromDatabase() async {
     try {
-      print('ServicesModel - Loading services from database...');
       final services = await ServiceListingsTable().queryRows(
         queryFn: (q) =>
             q.eq('is_available', 'true').order('rating', ascending: false),
       );
-
-      print('ServicesModel - Loaded ${services.length} services from database');
 
       allServices = services
           .map((service) => {
@@ -82,62 +73,54 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
                 'title': service.title,
                 'category': service.categoryName ?? 'Service',
                 'price': service.basePrice != null
-                    ? '₱${service.basePrice}${service.priceUnit ?? ''}'
-                    : '₱0',
+                    ? 'PHP ${service.basePrice}${service.priceUnit ?? ''}'
+                    : 'PHP 0',
                 'rating': double.tryParse(service.rating ?? '0') ?? 0.0,
                 'reviewCount': service.reviewCount ?? 0,
                 'imageUrl': service.thumbnail ?? '',
               })
           .toList();
 
-      print('ServicesModel - Mapped services: ${allServices.length}');
-      print('ServicesModel - Categories: $categories');
-
       filteredServices = List.from(allServices);
-    } catch (e) {
-      print('Error loading services from database: $e');
-      // Fallback to empty list if database fails
+    } catch (e, stackTrace) {
+      LoggingService.error(
+        'Error loading services from database',
+        tag: 'ServicesModel',
+        error: e,
+        stackTrace: stackTrace,
+      );
       allServices = [];
       filteredServices = [];
     }
   }
 
-  /// Apply all filters to the service list
   void applyFilters() {
-    print(
-        'ServicesModel - applyFilters called. Category: $selectedCategory, Search: $searchQuery, Total services: ${allServices.length}');
+    _coerceSelectedCategoryToAvailable();
     filteredServices = List.from(allServices);
 
-    // Filter by category
     if (selectedCategory != null && selectedCategory != 'All') {
-      print('ServicesModel - Filtering by category: $selectedCategory');
       filteredServices = filteredServices
-          .where((service) => service['category'] == selectedCategory)
+          .where(
+            (service) => _matchesCategory(
+              selectedCategory!,
+              service['category'] as String? ?? '',
+            ),
+          )
           .toList();
-      print(
-          'ServicesModel - After category filter: ${filteredServices.length} services');
     }
 
-    // Filter by search query
     if (searchQuery.isNotEmpty) {
-      print('ServicesModel - Filtering by search: $searchQuery');
       filteredServices = filteredServices
-          .where((service) =>
-              (service['title'] as String)
-                  .toLowerCase()
-                  .contains(searchQuery.toLowerCase()) ||
-              (service['category'] as String)
-                  .toLowerCase()
-                  .contains(searchQuery.toLowerCase()))
+          .where((service) {
+            final query = searchQuery.toLowerCase();
+            return (service['title'] as String).toLowerCase().contains(query) ||
+                (service['category'] as String).toLowerCase().contains(query);
+          })
           .toList();
-      print(
-          'ServicesModel - After search filter: ${filteredServices.length} services');
     }
 
-    // Apply combined filter
     switch (selectedFilter) {
       case 'recommended':
-        // Sort by rating/review count
         filteredServices.sort((a, b) {
           final ratingA = a['rating'] as double;
           final ratingB = b['rating'] as double;
@@ -151,7 +134,6 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
         });
         break;
       case 'topRated':
-        // Sort by rating only
         filteredServices.sort((a, b) {
           final ratingA = a['rating'] as double;
           final ratingB = b['rating'] as double;
@@ -159,7 +141,6 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
         });
         break;
       case 'lowestPrice':
-        // Sort by price low to high
         filteredServices.sort((a, b) {
           final priceA = _extractPrice(a['price'] as String);
           final priceB = _extractPrice(b['price'] as String);
@@ -167,8 +148,6 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
         });
         break;
       case 'nearest':
-        // TODO: Implement location-based sorting
-        // For now, sort by rating as placeholder
         filteredServices.sort((a, b) {
           final ratingA = a['rating'] as double;
           final ratingB = b['rating'] as double;
@@ -176,15 +155,10 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
         });
         break;
       default:
-        // No sorting
         break;
     }
-
-    print(
-        'ServicesModel - Final filtered services: ${filteredServices.length}');
   }
 
-  /// Extract numeric price from price string (e.g., "₱500/hour" -> 500)
   double _extractPrice(String priceString) {
     final regex = RegExp(r'[\d,]+\.?\d*');
     final match = regex.firstMatch(priceString);
@@ -193,4 +167,73 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
     }
     return 0;
   }
+
+  void _coerceSelectedCategoryToAvailable() {
+    final selected = selectedCategory;
+    if (selected == null || selected == 'All' || allServices.isEmpty) {
+      return;
+    }
+
+    final availableCategories = allServices
+        .map((service) => service['category'] as String? ?? '')
+        .where((category) => category.isNotEmpty)
+        .toSet();
+
+    for (final category in availableCategories) {
+      if (_matchesCategory(selected, category)) {
+        selectedCategory = category;
+        return;
+      }
+    }
+  }
+
+  bool _matchesCategory(String selected, String actual) {
+    final selectedNormalized = _normalizeCategory(selected);
+    final actualNormalized = _normalizeCategory(actual);
+
+    if (selectedNormalized == actualNormalized) {
+      return true;
+    }
+
+    if (_categoryAlias(selectedNormalized) == _categoryAlias(actualNormalized)) {
+      return true;
+    }
+
+    return actualNormalized.contains(selectedNormalized) ||
+        selectedNormalized.contains(actualNormalized);
+  }
+
+  String _categoryAlias(String category) {
+    switch (category) {
+      case 'clean':
+      case 'cleaning':
+      case 'cleaningservice':
+      case 'cleaningservices':
+        return 'cleaning';
+      case 'plumb':
+      case 'plumbing':
+      case 'plumbingservice':
+      case 'plumbingservices':
+        return 'plumbing';
+      case 'electric':
+      case 'electrical':
+      case 'electricalservice':
+      case 'electricalservices':
+        return 'electrical';
+      case 'paint':
+      case 'painting':
+      case 'paintingdecorating':
+      case 'paintinganddecorating':
+      case 'paintingdecoratingservice':
+      case 'paintingdecoratingservices':
+        return 'paintingdecorating';
+      default:
+        return category;
+    }
+  }
+
+  String _normalizeCategory(String value) => value
+      .toLowerCase()
+      .replaceAll('&', 'and')
+      .replaceAll(RegExp('[^a-z0-9]+'), '');
 }

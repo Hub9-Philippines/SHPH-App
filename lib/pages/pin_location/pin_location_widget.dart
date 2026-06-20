@@ -9,7 +9,6 @@ import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_place_picker.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
-import '/index.dart';
 import '/theme/app_theme.dart';
 import 'pin_location_model.dart';
 
@@ -40,6 +39,10 @@ class _PinLocationWidgetState extends State<PinLocationWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, PinLocationModel.new);
+    if (widget.latlong != null) {
+      _model.googleMapsCenter = widget.latlong;
+      _model.latlng = widget.latlong;
+    }
   }
 
   @override
@@ -129,7 +132,6 @@ class _PinLocationWidgetState extends State<PinLocationWidget> {
                           size: 24,
                         ),
                         onPressed: () async {
-                          // No 'if' check or '!' operator needed anymore since Dart guarantees it's non-nullable
                           await _model.googleMapsController.future.then(
                             (c) => c.animateCamera(
                               CameraUpdate.newLatLng(
@@ -152,7 +154,15 @@ class _PinLocationWidgetState extends State<PinLocationWidget> {
                         onCameraIdle: (latLng) => safeSetState(
                             () => _model.googleMapsCenter = latLng),
                         initialLocation: _model.googleMapsCenter ??=
-                            const LatLng(14.5995, 120.9842),
+                            widget.latlong ?? const LatLng(14.5995, 120.9842),
+                        markers: [
+                          FlutterFlowMarker(
+                            'selected_pin',
+                            _model.googleMapsCenter ??
+                                widget.latlong ??
+                                const LatLng(14.5995, 120.9842),
+                          ),
+                        ],
                         markerColor: GoogleMarkerColor.red,
                         mapType: MapType.normal,
                         style: GoogleMapStyle.standard,
@@ -166,45 +176,6 @@ class _PinLocationWidgetState extends State<PinLocationWidget> {
                         showTraffic: false,
                         centerMapOnMarkerTap: true,
                         mapTakesGesturePreference: false,
-                      ),
-                      Align(
-                        alignment: AlignmentDirectional.center,
-                        child: PointerInterceptor(
-                          intercepting: isWeb,
-                          child: Padding(
-                            padding: const EdgeInsetsDirectional.fromSTEB(
-                                0, 20, 0, 0),
-                            child: Container(
-                              width: 20,
-                              height: 5,
-                              decoration: BoxDecoration(
-                                boxShadow: const [
-                                  BoxShadow(
-                                    blurRadius: 0,
-                                    color: Color(0x33000000),
-                                    offset: Offset(
-                                      0,
-                                      10,
-                                    ),
-                                  )
-                                ],
-                                borderRadius: BorderRadius.circular(50),
-                                shape: BoxShape.rectangle,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Align(
-                        alignment: AlignmentDirectional.center,
-                        child: PointerInterceptor(
-                          intercepting: isWeb,
-                          child: Icon(
-                            Icons.location_pin,
-                            color: AppTheme.of(context).error,
-                            size: 40,
-                          ),
-                        ),
                       ),
                       Align(
                         alignment: AlignmentDirectional.bottomEnd,
@@ -243,6 +214,79 @@ class _PinLocationWidgetState extends State<PinLocationWidget> {
                           ),
                         ),
                       ),
+                      // Address preview card
+                      if (_model.placePickerValue.name.isNotEmpty ||
+                          _model.placePickerValue.address.isNotEmpty)
+                        Align(
+                          alignment: AlignmentDirectional.bottomCenter,
+                          child: PointerInterceptor(
+                            intercepting: isWeb,
+                            child: Padding(
+                              padding: const EdgeInsetsDirectional.fromSTEB(
+                                  16, 0, 16, 90),
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.of(context).primaryBackground,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      blurRadius: 8,
+                                      color: Color(0x26000000),
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.location_on_rounded,
+                                      color: AppTheme.of(context).primary,
+                                      size: 24,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          if (_model
+                                              .placePickerValue.name.isNotEmpty)
+                                            Text(
+                                              _model.placePickerValue.name,
+                                              style: AppTheme.of(context)
+                                                  .bodyMedium
+                                                  .override(
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          if (_model.placePickerValue.address
+                                              .isNotEmpty)
+                                            Text(
+                                              _model.placePickerValue.address,
+                                              style: AppTheme.of(context)
+                                                  .bodySmall
+                                                  .override(
+                                                    color: AppTheme.of(context)
+                                                        .secondaryText,
+                                                  ),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      // Submit button
                       Align(
                         alignment: AlignmentDirectional.bottomCenter,
                         child: PointerInterceptor(
@@ -252,15 +296,30 @@ class _PinLocationWidgetState extends State<PinLocationWidget> {
                                 0, 0, 0, 25),
                             child: FFButtonWidget(
                               onPressed: () async {
-                                await context.pushNamed(
-                                  AddressFormWidget.routeName,
-                                  queryParameters: {
-                                    'latlng': serializeParam(
-                                      widget.latlong,
-                                      ParamType.LatLng,
+                                final center = _model.googleMapsCenter;
+                                if (center == null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                          'Please select a location on the map'),
                                     ),
-                                  }.withoutNulls,
-                                );
+                                  );
+                                  return;
+                                }
+
+                                final place = _model.placePickerValue;
+                                String? address;
+                                if (place.address.isNotEmpty) {
+                                  address = place.address;
+                                } else if (place.name.isNotEmpty) {
+                                  address = place.name;
+                                }
+
+                                context.pop({
+                                  'latitude': center.latitude,
+                                  'longitude': center.longitude,
+                                  'address': address,
+                                });
                               },
                               text: 'Submit',
                               options: FFButtonOptions(

@@ -1,4 +1,5 @@
 import 'package:easy_debounce/easy_debounce.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -17,10 +18,15 @@ import 'address_form_model.dart';
 export 'address_form_model.dart';
 
 class AddressFormWidget extends StatefulWidget {
-  const AddressFormWidget({super.key});
+  const AddressFormWidget({
+    super.key,
+    this.addressId,
+  });
 
   static String routeName = 'AddressForm';
   static String routePath = '/addressForm';
+
+  final int? addressId;
 
   @override
   State<AddressFormWidget> createState() => _AddressFormWidgetState();
@@ -30,6 +36,9 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
   late AddressFormModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _hasLoadedRegions = false;
+  bool _hasLoadedAddressData = false;
+  bool _isRestoringGeography = false;
 
   @override
   void initState() {
@@ -68,6 +77,8 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
 
     // Load regions on init
     _model.loadRegions().then((_) {
+      _hasLoadedRegions = true;
+      _restoreGeographicSelectionFromCodes();
       if (mounted) {
         safeSetState(() {});
       }
@@ -77,13 +88,8 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Check if editing an existing address
-    final args =
-        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-    if (args != null &&
-        args['addressId'] != null &&
-        _model.editingAddressId == null) {
-      _model.editingAddressId = args['addressId'] as String;
+    if (widget.addressId != null && _model.editingAddressId == null) {
+      _model.editingAddressId = widget.addressId.toString();
       _loadAddressData(_model.editingAddressId!);
     }
   }
@@ -115,6 +121,8 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
           _model.selectedCityMunicipalityCode = address.cityMunicipalityCode;
           _model.selectedBarangayCode = address.barangayCode;
         });
+        _hasLoadedAddressData = true;
+        await _restoreGeographicSelectionFromCodes();
       }
     } catch (e) {
       if (mounted) {
@@ -122,6 +130,76 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
           SnackBar(content: Text('Error loading address: $e')),
         );
       }
+    }
+  }
+
+  Future<void> _restoreGeographicSelectionFromCodes() async {
+    if (!_hasLoadedRegions ||
+        !_hasLoadedAddressData ||
+        _isRestoringGeography ||
+        _model.selectedRegionCode == null ||
+        _model.selectedRegionCode!.isEmpty) {
+      return;
+    }
+
+    _isRestoringGeography = true;
+    try {
+      final region = _model.regions.firstWhereOrNull(
+        (item) => item.code == _model.selectedRegionCode,
+      );
+      if (region == null) {
+        return;
+      }
+
+      _model.selectedRegion = region;
+      _model.regionTextFieldTextController?.text = region.regionName;
+
+      if (_model.selectedProvinceCode != null &&
+          _model.selectedProvinceCode!.isNotEmpty) {
+        await _model.loadProvinces(region.code);
+        _model.selectedProvince = _model.provinces.firstWhereOrNull(
+          (item) => item.code == _model.selectedProvinceCode,
+        );
+        _model.provinceTextFieldTextController?.text =
+            _model.selectedProvince?.name ?? '';
+      } else {
+        _model.selectedProvince = null;
+        _model.provinces = [];
+        _model.provinceTextFieldTextController?.text = '';
+      }
+
+      if (_model.selectedProvince != null) {
+        await _model.loadCitiesMunicipalitiesByProvince(
+          _model.selectedProvince!.code,
+        );
+      } else {
+        await _model.loadCitiesMunicipalities(region.code);
+      }
+
+      _model.selectedCityMunicipality = _model.citiesMunicipalities
+          .firstWhereOrNull(
+              (item) => item.code == _model.selectedCityMunicipalityCode);
+      _model.cityTextFieldTextController?.text =
+          _model.selectedCityMunicipality?.name ?? '';
+
+      if (_model.selectedCityMunicipality != null) {
+        await _model.loadBarangays(_model.selectedCityMunicipality!.code);
+        _model.selectedBarangay = _model.barangays.firstWhereOrNull(
+          (item) => item.code == _model.selectedBarangayCode,
+        );
+        _model.barangayTextFieldTextController?.text =
+            _model.selectedBarangay?.name ?? '';
+      } else {
+        _model.selectedBarangay = null;
+        _model.barangays = [];
+        _model.barangayTextFieldTextController?.text = '';
+      }
+
+      if (mounted) {
+        safeSetState(() {});
+      }
+    } finally {
+      _isRestoringGeography = false;
     }
   }
 
@@ -256,7 +334,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                         label: 'Mobile number',
                         hint: '09XX XXX XXXX',
                         keyboardType: TextInputType.phone,
-                        maxLength: 13,
+                        maxLength: 11,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter your mobile number';
@@ -270,6 +348,8 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                       const SizedBox(height: 20),
                       _buildSectionTitle('Address Details'),
                       _buildLabelSelector(),
+                      // Location picker - moved to first position under Address Details
+                      _buildLocationPicker(),
                       _buildTextField(
                         controller: _model.streetAddressTextFieldTextController,
                         focusNode: _model.streetAddressTextFieldFocusNode,
@@ -294,9 +374,6 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                         keyboardType: TextInputType.number,
                         maxLength: 4,
                       ),
-                      const SizedBox(height: 20),
-                      _buildSectionTitle('Location'),
-                      _buildLocationPicker(),
                       const SizedBox(height: 20),
                       Row(
                         children: [
@@ -679,13 +756,20 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                       _model.selectedProvince == null)
                   ? null
                   : () async {
+                      // Determine the correct parent code for fetching cities:
+                      // If a province is selected, use its code (cities under province)
+                      // Otherwise, use the region code (e.g. NCR with no provinces)
+                      final parentCode = _model.selectedProvince?.code ??
+                          _model.selectedRegion?.code;
+                      if (parentCode == null) return;
+
                       final result = await context.pushNamed(
                         GeographicSelectionWidget.routeName,
                         extra: {
                           'selectionType':
                               GeographicSelectionType.cityMunicipality,
-                          'parentCode': _model.selectedProvince?.code ??
-                              _model.selectedRegion?.code,
+                          'parentCode': parentCode,
+                          'isRegionFallback': _model.selectedProvince == null,
                         },
                       );
                       if (result != null && result is CityMunicipality) {
@@ -740,6 +824,172 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
         ),
       );
 
+  void _showBarangayBottomSheet() {
+    if (_model.barangays.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No barangays available for this city/municipality'),
+        ),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetContext) {
+        final searchController = TextEditingController();
+        final searchFocus = FocusNode();
+        List<Barangay> filteredBarangays = List.from(_model.barangays);
+
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return DraggableScrollableSheet(
+              initialChildSize: 0.7,
+              minChildSize: 0.4,
+              maxChildSize: 0.9,
+              expand: false,
+              builder: (context, scrollController) {
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Handle bar
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: AppTheme.of(context).alternate,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Select Barangay',
+                        style: AppTheme.of(context).titleLarge.override(
+                              font: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Search field
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppTheme.of(context).secondaryBackground,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppTheme.of(context).alternate,
+                          ),
+                        ),
+                        child: TextField(
+                          controller: searchController,
+                          focusNode: searchFocus,
+                          onChanged: (value) {
+                            setSheetState(() {
+                              filteredBarangays = _model.barangays
+                                  .where((b) => b.name
+                                      .toLowerCase()
+                                      .contains(value.toLowerCase()))
+                                  .toList();
+                            });
+                          },
+                          decoration: InputDecoration(
+                            hintText: 'Search barangay...',
+                            prefixIcon: Icon(
+                              Icons.search,
+                              color: AppTheme.of(context).secondaryText,
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Barangay list
+                      Expanded(
+                        child: filteredBarangays.isEmpty
+                            ? Center(
+                                child: Text(
+                                  'No barangays found',
+                                  style: AppTheme.of(context).bodyMedium,
+                                ),
+                              )
+                            : ListView.separated(
+                                controller: scrollController,
+                                itemCount: filteredBarangays.length,
+                                separatorBuilder: (_, __) => const Divider(
+                                  height: 1,
+                                ),
+                                itemBuilder: (context, index) {
+                                  final barangay = filteredBarangays[index];
+                                  final isSelected = barangay.code ==
+                                      _model.selectedBarangayCode;
+                                  return InkWell(
+                                    onTap: () {
+                                      setState(() {
+                                        _model.onBarangayChanged(barangay);
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 14,
+                                        horizontal: 4,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              barangay.name,
+                                              style: AppTheme.of(context)
+                                                  .bodyMedium
+                                                  .override(
+                                                    fontWeight: isSelected
+                                                        ? FontWeight.w600
+                                                        : FontWeight.normal,
+                                                    color: isSelected
+                                                        ? AppTheme.of(context)
+                                                            .primary
+                                                        : AppTheme.of(context)
+                                                            .primaryText,
+                                                  ),
+                                            ),
+                                          ),
+                                          if (isSelected)
+                                            Icon(
+                                              Icons.check,
+                                              color:
+                                                  AppTheme.of(context).primary,
+                                              size: 20,
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
   Widget _buildBarangayDropdown() => Padding(
         padding: const EdgeInsets.only(bottom: 16),
         child: Column(
@@ -755,20 +1005,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
             InkWell(
               onTap: _model.selectedCityMunicipality == null
                   ? null
-                  : () async {
-                      final result = await context.pushNamed(
-                        GeographicSelectionWidget.routeName,
-                        extra: {
-                          'selectionType': GeographicSelectionType.barangay,
-                          'parentCode': _model.selectedCityMunicipality?.code,
-                        },
-                      );
-                      if (result != null && result is Barangay) {
-                        setState(() {
-                          _model.onBarangayChanged(result);
-                        });
-                      }
-                    },
+                  : _showBarangayBottomSheet,
               child: Container(
                 width: double.infinity,
                 padding:
@@ -809,71 +1046,136 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
         ),
       );
 
-  Widget _buildLocationPicker() => InkWell(
-        onTap: () async {
-          final result = await context.pushNamed(PinLocationWidget.routeName);
-          if (result != null && result is Map<String, dynamic>) {
-            setState(() {
-              _model.latitude = result['latitude'] as double?;
-              _model.longitude = result['longitude'] as double?;
-              _model.selectedAddress = result['address'] as String?;
-            });
-          }
-        },
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppTheme.of(context).primaryBackground,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: AppTheme.of(context).alternate,
-              width: 1,
+  /// Opens the pin location map. When the user submits, the result
+  /// includes lat/lng and an address string. The selected location
+  /// is shown as a preview card (which is tappable to re-pin).
+  Future<void> _openPinLocation() async {
+    final result = await context.pushNamed(PinLocationWidget.routeName);
+    if (result != null && result is Map<String, dynamic>) {
+      setState(() {
+        _model.latitude = result['latitude'] as double?;
+        _model.longitude = result['longitude'] as double?;
+        _model.selectedAddress = result['address'] as String?;
+      });
+    }
+  }
+
+  /// Builds the location picker. Shows a pin preview when a location
+  /// is already selected, or a "Pin location on map" placeholder.
+  Widget _buildLocationPicker() => Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Pin Location',
+              style: AppTheme.of(context).bodyMedium.override(
+                    color: AppTheme.of(context).secondaryText,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            InkWell(
+              onTap: _openPinLocation,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.of(context).primaryBackground,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _model.latitude != null
+                        ? AppTheme.of(context).primary
+                        : AppTheme.of(context).alternate,
+                    width: _model.latitude != null ? 2 : 1,
+                  ),
+                ),
+                child: _model.latitude != null
+                    ? _buildPinPreview()
+                    : _buildPinPlaceholder(),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _buildPinPlaceholder() => Row(
+        children: [
+          Icon(
+            Icons.location_on_rounded,
+            color: AppTheme.of(context).secondaryText,
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Pin location on map (optional)',
+              style: AppTheme.of(context).bodyMedium.override(
+                    color: AppTheme.of(context).secondaryText,
+                  ),
             ),
           ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.location_on_rounded,
-                color: _model.latitude != null
-                    ? AppTheme.of(context).primary
-                    : AppTheme.of(context).secondaryText,
-                size: 24,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _model.selectedAddress ??
-                          'Pin location on map (optional)',
-                      style: AppTheme.of(context).bodyMedium.override(
-                            color: _model.latitude != null
-                                ? AppTheme.of(context).primaryText
-                                : AppTheme.of(context).secondaryText,
-                          ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (_model.latitude != null)
-                      Text(
-                        'Lat: ${_model.latitude!.toStringAsFixed(6)}, Lng: ${_model.longitude!.toStringAsFixed(6)}',
-                        style: AppTheme.of(context).bodySmall.override(
-                              color: AppTheme.of(context).secondaryText,
-                            ),
-                      ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: AppTheme.of(context).secondaryText,
-                size: 16,
-              ),
-            ],
+          Icon(
+            Icons.arrow_forward_ios_rounded,
+            color: AppTheme.of(context).secondaryText,
+            size: 16,
           ),
-        ),
+        ],
+      );
+
+  Widget _buildPinPreview() => Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppTheme.of(context).primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.location_on_rounded,
+              color: AppTheme.of(context).primary,
+              size: 28,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _model.selectedAddress ?? 'Pinned location',
+                  style: AppTheme.of(context).bodyMedium.override(
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.of(context).primaryText,
+                      ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${_model.latitude!.toStringAsFixed(6)}, ${_model.longitude!.toStringAsFixed(6)}',
+                  style: AppTheme.of(context).bodySmall.override(
+                        color: AppTheme.of(context).secondaryText,
+                      ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Change',
+            style: AppTheme.of(context).bodySmall.override(
+                  color: AppTheme.of(context).primary,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          Icon(
+            Icons.arrow_forward_ios_rounded,
+            color: AppTheme.of(context).primary,
+            size: 14,
+          ),
+        ],
       );
 
   void _showDeleteConfirmation() {

@@ -194,6 +194,7 @@ class _EditAddressWidgetState extends State<EditAddressWidget> {
 
   Widget _buildAddressItem(AddressesRow address) => InkWell(
         onTap: () {
+          FFAppState().setSelectedAddressFromRow(address);
           Navigator.pop(context, address);
         },
         child: Container(

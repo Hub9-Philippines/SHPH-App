@@ -29,6 +29,31 @@ class FFAppState extends ChangeNotifier {
       _hasCompletedOnboarding =
           prefs.getBool('ff_hasCompletedOnboarding') ?? _hasCompletedOnboarding;
     });
+    _safeInit(() {
+      _selectedAddressId = prefs.getInt('ff_selectedAddressId');
+    });
+    _safeInit(() {
+      _selectedAddressLabel =
+          prefs.getString('ff_selectedAddressLabel') ?? _selectedAddressLabel;
+    });
+    _safeInit(() {
+      _selectedAddressLine1 =
+          prefs.getString('ff_selectedAddressLine1') ?? _selectedAddressLine1;
+    });
+    _safeInit(() {
+      _selectedAddressCity =
+          prefs.getString('ff_selectedAddressCity') ?? _selectedAddressCity;
+    });
+    _safeInit(() {
+      _selectedLatitude = prefs.getDouble('ff_selectedLatitude');
+    });
+    _safeInit(() {
+      _selectedLongitude = prefs.getDouble('ff_selectedLongitude');
+    });
+    _safeInit(() {
+      _selectedLocationMode =
+          prefs.getString('ff_selectedLocationMode') ?? _selectedLocationMode;
+    });
   }
 
   void update(VoidCallback callback) {
@@ -70,6 +95,114 @@ class FFAppState extends ChangeNotifier {
   set hasCompletedOnboarding(bool value) {
     _hasCompletedOnboarding = value;
     prefs.setBool('ff_hasCompletedOnboarding', value);
+  }
+
+  int? _selectedAddressId;
+  int? get selectedAddressId => _selectedAddressId;
+
+  String _selectedAddressLabel = '';
+  String get selectedAddressLabel => _selectedAddressLabel;
+
+  String _selectedAddressLine1 = '';
+  String get selectedAddressLine1 => _selectedAddressLine1;
+
+  String _selectedAddressCity = '';
+  String get selectedAddressCity => _selectedAddressCity;
+
+  double? _selectedLatitude;
+  double? get selectedLatitude => _selectedLatitude;
+
+  double? _selectedLongitude;
+  double? get selectedLongitude => _selectedLongitude;
+
+  String _selectedLocationMode = 'device';
+  String get selectedLocationMode => _selectedLocationMode;
+
+  bool get hasSelectedLocation =>
+      (_selectedLatitude != null && _selectedLongitude != null) ||
+      _selectedAddressLine1.isNotEmpty ||
+      _selectedAddressLabel.isNotEmpty;
+
+  void setSelectedAddress({
+    required int? id,
+    required String label,
+    required String line1,
+    required String city,
+    required double? latitude,
+    required double? longitude,
+    String? locationMode,
+  }) {
+    _selectedAddressId = id;
+    _selectedAddressLabel = label;
+    _selectedAddressLine1 = line1;
+    _selectedAddressCity = city;
+    _selectedLatitude = latitude;
+    _selectedLongitude = longitude;
+    _selectedLocationMode = locationMode ?? (id == null ? 'device' : 'saved');
+
+    if (id == null) {
+      prefs.remove('ff_selectedAddressId');
+    } else {
+      prefs.setInt('ff_selectedAddressId', id);
+    }
+    prefs.setString('ff_selectedAddressLabel', label);
+    prefs.setString('ff_selectedAddressLine1', line1);
+    prefs.setString('ff_selectedAddressCity', city);
+    if (latitude == null) {
+      prefs.remove('ff_selectedLatitude');
+    } else {
+      prefs.setDouble('ff_selectedLatitude', latitude);
+    }
+    if (longitude == null) {
+      prefs.remove('ff_selectedLongitude');
+    } else {
+      prefs.setDouble('ff_selectedLongitude', longitude);
+    }
+    prefs.setString('ff_selectedLocationMode', _selectedLocationMode);
+
+    notifyListeners();
+  }
+
+  void setSelectedAddressFromRow(AddressesRow address) {
+    setSelectedAddress(
+      id: address.id,
+      label: address.addressLine2 ?? '',
+      line1: address.addressLine1 ?? '',
+      city: address.city ?? '',
+      latitude: address.latitude,
+      longitude: address.longitude,
+      locationMode: 'saved',
+    );
+  }
+
+  void setSelectedDeviceLocation({
+    required double latitude,
+    required double longitude,
+    String label = 'Current location',
+    String line1 = 'Current device location',
+    String city = '',
+  }) {
+    setSelectedAddress(
+      id: null,
+      label: label,
+      line1: line1,
+      city: city,
+      latitude: latitude,
+      longitude: longitude,
+      locationMode: 'device',
+    );
+  }
+
+  void clearSelectedAddress() {
+    setSelectedAddress(
+      id: null,
+      label: '',
+      line1: '',
+      city: '',
+      latitude: null,
+      longitude: null,
+      locationMode: 'device',
+    );
   }
 
   final _checkIfAccountExistsManager =

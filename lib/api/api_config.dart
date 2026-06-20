@@ -1,7 +1,7 @@
 /// Backend data-source configuration for the SHPH REST API integration.
 ///
-/// Enable the API layer at build time:
-/// `flutter run --dart-define=USE_SHPH_API=true --dart-define=SHPH_API_BASE_URL=https://api.serbisyohub.ph`
+/// The app currently uses Supabase as the primary backend.
+/// Flip `preferShphApi` back on later when the SHPH API is ready for use.
 class ApiConfig {
   ApiConfig._();
 
@@ -25,7 +25,6 @@ class ApiConfig {
 
   static bool get isConfigured => baseUrl.isNotEmpty;
 
-  /// When true, domain services prefer the SHPH REST API and fall back to
-  /// Supabase if a call fails or the user has no API token.
-  static bool get preferShphApi => useShphApi && isConfigured;
+  /// Keep the app on Supabase for now.
+  static bool get preferShphApi => false;
 }

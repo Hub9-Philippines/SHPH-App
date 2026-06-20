@@ -9,7 +9,11 @@ class GeographicSelectionModel extends ChangeNotifier {
   Map<String, List<dynamic>> groupedItems = {};
   List<dynamic> allItems = [];
 
-  void loadData(GeographicSelectionType type, String? parentCode) async {
+  void loadData(
+    GeographicSelectionType type,
+    String? parentCode, {
+    bool isRegionFallback = false,
+  }) async {
     isLoading = true;
     notifyListeners();
 
@@ -28,8 +32,13 @@ class GeographicSelectionModel extends ChangeNotifier {
           break;
         case GeographicSelectionType.cityMunicipality:
           if (parentCode != null) {
-            items =
-                await PSGCService.getCitiesMunicipalitiesByProvince(parentCode);
+            if (isRegionFallback) {
+              items =
+                  await PSGCService.getCitiesMunicipalitiesByRegion(parentCode);
+            } else {
+              items = await PSGCService.getCitiesMunicipalitiesByProvince(
+                  parentCode);
+            }
           } else {
             items = [];
           }
@@ -83,7 +92,10 @@ class GeographicSelectionModel extends ChangeNotifier {
     if (query.isEmpty) {
       _groupItems(allItems);
     } else {
-      final filtered = allItems.where((item) => item.name.toLowerCase().contains(query.toLowerCase())).toList();
+      final filtered = allItems
+          .where(
+              (item) => item.name.toLowerCase().contains(query.toLowerCase()))
+          .toList();
       _groupItems(filtered);
     }
     notifyListeners();
@@ -101,7 +113,6 @@ class GeographicSelectionModel extends ChangeNotifier {
         return 'Select Barangay';
     }
   }
-
 }
 
 enum GeographicSelectionType {

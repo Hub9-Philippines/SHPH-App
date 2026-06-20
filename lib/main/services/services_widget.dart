@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
+import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
 import 'services_model.dart';
 
@@ -45,7 +46,10 @@ class _ServicesScreenState extends State<ServicesScreen> {
       await Future.delayed(const Duration(milliseconds: 200));
       if (!_model.isLoading && mounted) {
         setState(() {});
-        print('ServicesWidget - Data loaded, triggering rebuild');
+        LoggingService.debug(
+          'Service screen rebuilt after initial data load',
+          tag: 'ServicesScreen',
+        );
         return;
       }
     }

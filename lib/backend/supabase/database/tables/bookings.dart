@@ -41,6 +41,9 @@ class BookingsRow extends SupabaseDataRow {
   String get status => getField<String>('status')!;
   set status(String value) => setField<String>('status', value);
 
+  String? get paymentStatus => getField<String>('payment_status');
+  set paymentStatus(String? value) => setField<String>('payment_status', value);
+
   double? get totalPrice => getField<double>('total_price');
   set totalPrice(double? value) => setField<double>('total_price', value);
 

@@ -53,7 +53,6 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
           await BookingsService.instance.getBookingById(widget.bookingId!);
 
       if (booking != null) {
-        // Fetch service listing details
         final service = await Supabase.instance.client
             .from('service_listings')
             .select()
@@ -133,7 +132,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: AppTheme.of(context).primaryBackground,
+          backgroundColor: const Color(0xFFF4F7FB),
           appBar: AppBar(
             backgroundColor: AppTheme.of(context).primaryBackground,
             automaticallyImplyLeading: false,
@@ -150,338 +149,317 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
             ),
             centerTitle: true,
             elevation: 0,
+            scrolledUnderElevation: 0,
           ),
           body: _model.isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? Center(
+                  child: CircularProgressIndicator(
+                    color: AppTheme.of(context).primary,
+                  ),
+                )
               : _model.errorMessage != null
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              size: 48,
-                              color: AppTheme.of(context).error,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              _model.errorMessage!,
-                              textAlign: TextAlign.center,
-                              style: AppTheme.of(context).bodyMedium,
-                            ),
-                            const SizedBox(height: 16),
-                            FFButtonWidget(
-                              onPressed: _loadBookingDetails,
-                              text: 'Retry',
-                              options: FFButtonOptions(
-                                width: 120,
-                                height: 40,
-                                color: AppTheme.of(context).primary,
-                                textStyle: AppTheme.of(context)
-                                    .bodySmall
-                                    .override(
-                                      color: AppTheme.of(context).primaryText,
-                                    ),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                  ? _buildMessageState(
+                      context,
+                      icon: Icons.error_outline_rounded,
+                      title: 'Could not load booking',
+                      subtitle: _model.errorMessage!,
+                      actionLabel: 'Retry',
+                      onPressed: _loadBookingDetails,
+                      iconColor: AppTheme.of(context).error,
                     )
                   : _model.booking == null
-                      ? const Center(child: Text('No booking data'))
+                      ? _buildMessageState(
+                          context,
+                          icon: Icons.inventory_2_outlined,
+                          title: 'No booking data',
+                          subtitle:
+                              'This booking could not be found or is no longer available.',
+                          actionLabel: 'Go back',
+                          onPressed: () => Navigator.of(context).maybePop(),
+                          iconColor: AppTheme.of(context).secondaryText,
+                        )
                       : SingleChildScrollView(
+                          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Status Banner
-                              Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.all(20),
-                                decoration: BoxDecoration(
-                                  color: _getStatusColor(_model.booking!.status)
-                                      .withValues(alpha: 0.1),
-                                  border: Border(
-                                    bottom: BorderSide(
-                                      color: _getStatusColor(
-                                          _model.booking!.status),
-                                      width: 2,
-                                    ),
+                              _buildStatusHero(context),
+                              const SizedBox(height: 18),
+                              _buildServiceCard(context),
+                              const SizedBox(height: 18),
+                              _buildSectionCard(
+                                context,
+                                title: 'Booking information',
+                                children: [
+                                  _buildInfoRow(
+                                    context,
+                                    'Booking ID',
+                                    _model.booking!.id.substring(0, 8),
                                   ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: _getStatusColor(
-                                            _model.booking!.status),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Text(
-                                        _formatStatus(_model.booking!.status),
-                                        style: AppTheme.of(context)
-                                            .bodySmall
-                                            .override(
-                                              color: Colors.white,
-                                              font: GoogleFonts.poppins(
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              // Service Details
-                              Padding(
-                                padding: const EdgeInsets.all(20),
-                                child: Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.of(context)
-                                        .secondaryBackground,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: AppTheme.of(context).alternate,
-                                      width: 1,
-                                    ),
+                                  _buildInfoRow(
+                                    context,
+                                    'Date',
+                                    '${_model.booking!.bookingDate.day}/${_model.booking!.bookingDate.month}/${_model.booking!.bookingDate.year}',
                                   ),
-                                  child: Row(
-                                    children: [
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(8),
-                                        child: _model.serviceListing != null &&
-                                                _model.serviceListing![
-                                                        'thumbnail'] !=
-                                                    null
-                                            ? Image.network(
-                                                _model.serviceListing![
-                                                    'thumbnail'],
-                                                width: 80,
-                                                height: 80,
-                                                fit: BoxFit.cover,
-                                                errorBuilder: (context, error,
-                                                        stackTrace) =>
-                                                    Container(
-                                                  width: 80,
-                                                  height: 80,
-                                                  color: AppTheme.of(context)
-                                                      .secondaryText,
-                                                  child: Icon(
-                                                    Icons.image_not_supported,
-                                                    color: AppTheme.of(context)
-                                                        .primaryBackground,
-                                                  ),
-                                                ),
-                                              )
-                                            : Container(
-                                                width: 80,
-                                                height: 80,
-                                                color: AppTheme.of(context)
-                                                    .secondaryText,
-                                                child: Icon(
-                                                  Icons.image_not_supported,
-                                                  color: AppTheme.of(context)
-                                                      .primaryBackground,
-                                                ),
-                                              ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              _model.serviceListing?['title'] ??
-                                                  'Unknown Service',
-                                              style: AppTheme.of(context)
-                                                  .titleMedium
-                                                  .override(
-                                                    font: GoogleFonts.poppins(
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    ),
-                                                  ),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              _model.serviceListing?[
-                                                      'category_name'] ??
-                                                  'Service',
-                                              style: AppTheme.of(context)
-                                                  .bodySmall
-                                                  .override(
-                                                    color: AppTheme.of(context)
-                                                        .secondaryText,
-                                                  ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              '₱${(_model.booking!.totalPrice ?? 0).toStringAsFixed(2)}',
-                                              style: AppTheme.of(context)
-                                                  .bodyMedium
-                                                  .override(
-                                                    color: AppTheme.of(context)
-                                                        .primary,
-                                                    font: GoogleFonts.poppins(
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    ),
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
+                                  _buildInfoRow(
+                                    context,
+                                    'Time',
+                                    _model.booking!.bookingTime,
                                   ),
-                                ),
-                              ),
-                              // Booking Information
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 20),
-                                child: Text(
-                                  'Booking Information',
-                                  style:
-                                      AppTheme.of(context).titleMedium.override(
-                                            font: GoogleFonts.poppins(
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              _buildInfoRow(
-                                'Booking ID',
-                                _model.booking!.id.substring(0, 8),
-                              ),
-                              _buildInfoRow(
-                                'Date',
-                                '${_model.booking!.bookingDate.day}/${_model.booking!.bookingDate.month}/${_model.booking!.bookingDate.year}',
-                              ),
-                              _buildInfoRow(
-                                'Time',
-                                _model.booking!.bookingTime,
+                                  _buildInfoRow(
+                                    context,
+                                    'Status',
+                                    _formatStatus(_model.booking!.status),
+                                  ),
+                                ],
                               ),
                               if (_model.booking!.notes != null &&
-                                  _model.booking!.notes!.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 20),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      const SizedBox(height: 12),
-                                      Text(
-                                        'Notes',
-                                        style: AppTheme.of(context)
-                                            .titleMedium
-                                            .override(
-                                              font: GoogleFonts.poppins(
-                                                  fontWeight: FontWeight.bold),
-                                            ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Container(
-                                        width: double.infinity,
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          color: AppTheme.of(context)
-                                              .secondaryBackground,
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                          border: Border.all(
-                                            color:
-                                                AppTheme.of(context).alternate,
-                                            width: 1,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          _model.booking!.notes!,
-                                          style:
-                                              AppTheme.of(context).bodyMedium,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              const SizedBox(height: 24),
-                              // Action Buttons
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 20),
-                                child: Column(
+                                  _model.booking!.notes!.isNotEmpty) ...[
+                                const SizedBox(height: 18),
+                                _buildSectionCard(
+                                  context,
+                                  title: 'Notes',
                                   children: [
-                                    if (_model.booking!.status == 'pending' ||
-                                        _model.booking!.status == 'confirmed')
-                                      FFButtonWidget(
-                                        onPressed: () {
-                                          _cancelBooking();
-                                        },
-                                        text: 'Cancel Booking',
-                                        options: FFButtonOptions(
-                                          width: double.infinity,
-                                          height: 50,
-                                          color: AppTheme.of(context).error,
-                                          textStyle: AppTheme.of(context)
-                                              .titleSmall
-                                              .override(
-                                                color: Colors.white,
-                                                font: GoogleFonts.poppins(
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                      ),
-                                    if (_model.booking!.status == 'completed')
-                                      FFButtonWidget(
-                                        onPressed: () {
-                                          // TODO: Navigate to review page
-                                        },
-                                        text: 'Leave a Review',
-                                        options: FFButtonOptions(
-                                          width: double.infinity,
-                                          height: 50,
-                                          color: AppTheme.of(context).primary,
-                                          textStyle: AppTheme.of(context)
-                                              .titleSmall
-                                              .override(
-                                                color: AppTheme.of(context)
-                                                    .primaryText,
-                                                font: GoogleFonts.poppins(
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                      ),
+                                    Text(
+                                      _model.booking!.notes!,
+                                      style: AppTheme.of(context).bodyMedium,
+                                    ),
                                   ],
                                 ),
-                              ),
-                              SizedBox(
-                                  height:
-                                      MediaQuery.sizeOf(context).width * 0.1),
+                              ],
+                              const SizedBox(height: 24),
+                              if (_model.booking!.status == 'pending' ||
+                                  _model.booking!.status == 'confirmed')
+                                FFButtonWidget(
+                                  onPressed: _cancelBooking,
+                                  text: 'Cancel Booking',
+                                  options: FFButtonOptions(
+                                    width: double.infinity,
+                                    height: 52,
+                                    color: AppTheme.of(context).error,
+                                    textStyle: AppTheme.of(context)
+                                        .titleSmall
+                                        .override(
+                                          color: Colors.white,
+                                          font: GoogleFonts.poppins(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                              if (_model.booking!.status == 'completed')
+                                FFButtonWidget(
+                                  onPressed: () {},
+                                  text: 'Leave a Review',
+                                  options: FFButtonOptions(
+                                    width: double.infinity,
+                                    height: 52,
+                                    color: AppTheme.of(context).primary,
+                                    textStyle: AppTheme.of(context)
+                                        .titleSmall
+                                        .override(
+                                          color: Colors.white,
+                                          font: GoogleFonts.poppins(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
                             ],
                           ),
                         ),
         ),
       );
 
-  Widget _buildInfoRow(String label, String value) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+  Widget _buildMessageState(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required String actionLabel,
+    required VoidCallback onPressed,
+    required Color iconColor,
+  }) =>
+      Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Container(
+            width: double.infinity,
+            constraints: const BoxConstraints(maxWidth: 420),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: AppTheme.of(context).secondaryBackground,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: AppTheme.of(context).alternate),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 48, color: iconColor),
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: AppTheme.of(context).titleMedium.override(
+                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  subtitle,
+                  textAlign: TextAlign.center,
+                  style: AppTheme.of(context).bodyMedium,
+                ),
+                const SizedBox(height: 16),
+                FFButtonWidget(
+                  onPressed: onPressed,
+                  text: actionLabel,
+                  options: FFButtonOptions(
+                    width: 140,
+                    height: 44,
+                    color: AppTheme.of(context).primary,
+                    textStyle: AppTheme.of(context).bodySmall.override(
+                          color: Colors.white,
+                        ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+  Widget _buildStatusHero(BuildContext context) {
+    final statusColor = _getStatusColor(_model.booking!.status);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: statusColor.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: statusColor.withValues(alpha: 0.24),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: statusColor,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              _formatStatus(_model.booking!.status),
+              style: AppTheme.of(context).bodySmall.override(
+                    color: Colors.white,
+                    font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                  ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            _model.serviceListing?['title'] ?? 'Unknown Service',
+            style: AppTheme.of(context).titleLarge.override(
+                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Booking reference ${_model.booking!.id.substring(0, 8).toUpperCase()}',
+            style: AppTheme.of(context).bodyMedium.override(
+                  color: AppTheme.of(context).secondaryText,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildServiceCard(BuildContext context) => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.of(context).secondaryBackground,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppTheme.of(context).alternate),
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: _model.serviceListing != null &&
+                      _model.serviceListing!['thumbnail'] != null
+                  ? Image.network(
+                      _model.serviceListing!['thumbnail'],
+                      width: 88,
+                      height: 88,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => _imageFallback(context),
+                    )
+                  : _imageFallback(context),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _model.serviceListing?['category_name'] ?? 'Service',
+                    style: AppTheme.of(context).bodySmall.override(
+                          color: AppTheme.of(context).secondaryText,
+                        ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'PHP ${(_model.booking!.totalPrice ?? 0).toStringAsFixed(2)}',
+                    style: AppTheme.of(context).titleMedium.override(
+                          color: AppTheme.of(context).primary,
+                          font:
+                              GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _buildSectionCard(
+    BuildContext context, {
+    required String title,
+    required List<Widget> children,
+  }) =>
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: AppTheme.of(context).secondaryBackground,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppTheme.of(context).alternate),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: AppTheme.of(context).titleMedium.override(
+                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                  ),
+            ),
+            const SizedBox(height: 10),
+            ...children,
+          ],
+        ),
+      );
+
+  Widget _buildInfoRow(BuildContext context, String label, String value) =>
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -489,6 +467,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
               label,
               style: AppTheme.of(context).bodyMedium.override(
                     font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    color: AppTheme.of(context).secondaryText,
                   ),
             ),
             Text(
@@ -496,6 +475,16 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
               style: AppTheme.of(context).bodyMedium,
             ),
           ],
+        ),
+      );
+
+  Widget _imageFallback(BuildContext context) => Container(
+        width: 88,
+        height: 88,
+        color: AppTheme.of(context).secondaryText,
+        child: Icon(
+          Icons.image_not_supported,
+          color: AppTheme.of(context).primaryBackground,
         ),
       );
 

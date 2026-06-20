@@ -45,25 +45,17 @@ class BookingsService {
         return null;
       }
 
-      final serviceListing = await _supabase
-          .from('service_listings')
-          .select()
-          .eq('id', serviceListingId)
-          .single();
-
       final booking = await _supabase
           .from('bookings')
           .insert({
             'user_id': userId,
             'service_listing_id': serviceListingId,
-            'provider_id': serviceListing['provider'],
             'booking_date': bookingDate.toIso8601String(),
             'booking_time': bookingTime,
             'address_id': addressId,
             'notes': notes,
             'status': 'pending',
             'total_price': totalPrice,
-            'payment_status': paymentStatus ?? 'pending',
           })
           .select()
           .single();

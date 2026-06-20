@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 
+String? _stringValue(dynamic value) => value is String ? value : null;
+
 class PSGCService {
   static const String baseUrl = 'https://psgc.gitlab.io/api';
 
@@ -169,9 +171,13 @@ class Barangay {
         code: json['code'] as String,
         name: json['name'] as String,
         oldName: json['oldName'] as String?,
-        cityMunicipalityCode: json['cityMunicipalityCode'] as String,
+        cityMunicipalityCode: _stringValue(json['cityMunicipalityCode']) ??
+            _stringValue(json['cityCode']) ??
+            _stringValue(json['municipalityCode']) ??
+            _stringValue(json['subMunicipalityCode']) ??
+            '',
         regionCode: json['regionCode'] as String,
-        provinceCode: json['provinceCode'] as String?,
+        provinceCode: _stringValue(json['provinceCode']),
         islandGroupCode: json['islandGroupCode'] as String,
       );
   final String code;

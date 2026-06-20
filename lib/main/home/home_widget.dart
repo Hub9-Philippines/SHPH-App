@@ -1,22 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:provider/provider.dart';
 
 import '/auth/supabase_auth/auth_util.dart';
-import '/backend/supabase/supabase.dart';
-import '/components/categoriesgrid/categoriesgrid_widget.dart';
-import '/components/edit_address/edit_address_widget.dart';
-import '/components/skeleton_loading/skeleton_loading_widget.dart';
-import '/flutter_flow/flutter_flow_icon_button.dart';
-import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
+import '/backend/supabase/supabase.dart' hide LatLng;
+import '/flutter_flow/flutter_flow_util.dart' hide LatLng;
 import '/index.dart';
 import '/models/service_listing.dart';
 import '/services/logging_service.dart';
-import '/services/service_listing_service.dart';
 import '/theme/app_theme.dart';
+import '../../pages/booking_funnel/widgets/booking_flow_route.dart';
+import '../../pages/booking_funnel/widgets/service_selection_panel.dart';
 import 'home_model.dart';
 
 export 'home_model.dart';
@@ -34,19 +32,24 @@ class HomeWidget extends StatefulWidget {
 class _HomeWidgetState extends State<HomeWidget> {
   late HomeModel _model;
   late Future<List<AddressesRow>> _addressFuture;
-  late Future<List<ServiceListing>> _recommendedServicesFuture;
   final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  GoogleMapController? _mapController;
+  LatLng _center = const LatLng(14.5995, 120.9842);
+  bool _hasLocation = false;
+  bool _isUsingDeviceLocation = false;
 
   @override
   void initState() {
     super.initState();
     _model = createModel(context, HomeModel.new);
     _loadAddress();
-    _loadRecommendedServices();
+    _loadDeviceLocation();
   }
 
   @override
   void dispose() {
+    _mapController?.dispose();
     _model.dispose();
     super.dispose();
   }
@@ -55,6 +58,13 @@ class _HomeWidgetState extends State<HomeWidget> {
   Widget build(BuildContext context) => FutureBuilder<List<AddressesRow>>(
         future: _addressFuture,
         builder: (context, snapshot) {
+          final appState = context.watch<FFAppState>();
+          final mediaQuery = MediaQuery.of(context);
+          final mapPadding = EdgeInsets.only(
+            top: mediaQuery.padding.top + 132,
+            right: 16,
+            bottom: mediaQuery.padding.bottom + 248,
+          );
           if (!snapshot.hasData) {
             return Scaffold(
               backgroundColor: AppTheme.of(context).primaryBackground,
@@ -72,9 +82,6 @@ class _HomeWidgetState extends State<HomeWidget> {
           }
 
           final homeAddressesRowList = snapshot.data!;
-          final homeAddressesRow = homeAddressesRowList.isNotEmpty
-              ? homeAddressesRowList.first
-              : null;
 
           return GestureDetector(
             onTap: () {
@@ -83,16 +90,16 @@ class _HomeWidgetState extends State<HomeWidget> {
             },
             child: PopScope(
               canPop: false,
-              onPopInvoked: (didPop) async {
-                if (didPop) return;
-                // Only show exit confirmation if there's no page to pop to
+              onPopInvokedWithResult: (didPop, _) async {
+                if (didPop) {
+                  return;
+                }
                 if (!GoRouter.of(context).canPop()) {
                   final shouldExit = await _showExitConfirmation();
                   if (shouldExit && mounted) {
-                    SystemNavigator.pop();
+                    await SystemNavigator.pop();
                   }
                 } else {
-                  // Allow normal back navigation
                   if (mounted) {
                     context.pop();
                   }
@@ -102,27 +109,60 @@ class _HomeWidgetState extends State<HomeWidget> {
                 key: scaffoldKey,
                 resizeToAvoidBottomInset: false,
                 backgroundColor: AppTheme.of(context).primaryBackground,
-                body: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(15, 0, 15, 0),
-                    child: RefreshIndicator(
-                      onRefresh: _refreshData,
-                      child: SingleChildScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.max,
-                          children: [
-                            _buildHeader(homeAddressesRow),
-                            _buildSearchBar(),
-                            _buildCategoriesSection(),
-                            _buildAdBanner(),
-                            _buildRecommendationsSection(),
-                            _buildTopServicesSection(),
-                          ],
+                body: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: GoogleMap(
+                        initialCameraPosition: CameraPosition(
+                          target: _center,
+                          zoom: 16,
+                        ),
+                        myLocationEnabled: _hasLocation,
+                        myLocationButtonEnabled: _hasLocation,
+                        zoomControlsEnabled: false,
+                        mapToolbarEnabled: false,
+                        compassEnabled: false,
+                        markers: _homeMarkers(appState),
+                        padding: mapPadding,
+                        onMapCreated: (controller) {
+                          _mapController = controller;
+                          if (_isUsingDeviceLocation) {
+                            _animateToCenter();
+                          }
+                        },
+                      ),
+                    ),
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.black.withValues(alpha: 0.06),
+                                Colors.transparent,
+                                Colors.black.withValues(alpha: 0.12),
+                              ],
+                              stops: const [0, 0.35, 1],
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: _buildTopOverlay(),
+                    ),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: _buildBottomCard(appState, homeAddressesRowList),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -130,7 +170,6 @@ class _HomeWidgetState extends State<HomeWidget> {
         },
       );
 
-  /// Load user address with error handling
   void _loadAddress() {
     if (currentUserUid.isEmpty) {
       _addressFuture = Future.value(<AddressesRow>[]);
@@ -150,631 +189,280 @@ class _HomeWidgetState extends State<HomeWidget> {
         error: error,
       );
       return <AddressesRow>[];
+    }).then((rows) {
+      if (rows.isEmpty) {
+        return rows;
+      }
+
+      final appState = FFAppState();
+      if (appState.selectedLocationMode != 'saved') {
+        return rows;
+      }
+
+      AddressesRow? selectedRow;
+
+      final selectedId = appState.selectedAddressId;
+      if (selectedId != null) {
+        for (final row in rows) {
+          if (row.id == selectedId) {
+            selectedRow = row;
+            break;
+          }
+        }
+      }
+
+      selectedRow ??= rows.cast<AddressesRow?>().firstWhere(
+            (row) => row?.isDefault == true,
+            orElse: () => null,
+          );
+      selectedRow ??= rows.first;
+
+      appState.setSelectedAddressFromRow(selectedRow);
+      final latitude = selectedRow.latitude;
+      final longitude = selectedRow.longitude;
+      if (latitude != null && longitude != null && mounted) {
+        final target = LatLng(latitude, longitude);
+        setState(() {
+          _center = target;
+          _isUsingDeviceLocation = false;
+        });
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _animateToCenter();
+        });
+      }
+      return rows;
     });
   }
 
-  /// Load recommended services from database
-  void _loadRecommendedServices() {
-    _recommendedServicesFuture =
-        ServiceListingService.instance.fetchRecommendedServices(limit: 10);
+  Future<void> _loadDeviceLocation({bool forceUseDevice = false}) async {
+    try {
+      final enabled = await Geolocator.isLocationServiceEnabled();
+      if (!enabled) {
+        return;
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+      if (!mounted) {
+        return;
+      }
+
+      final appState = FFAppState();
+      final nextCenter = LatLng(position.latitude, position.longitude);
+      if (!forceUseDevice && appState.selectedLocationMode == 'saved') {
+        setState(() {
+          _hasLocation = true;
+        });
+        return;
+      }
+
+      appState.setSelectedDeviceLocation(
+        latitude: position.latitude,
+        longitude: position.longitude,
+      );
+      setState(() {
+        _hasLocation = true;
+        _isUsingDeviceLocation = true;
+        _center = nextCenter;
+      });
+      await _animateToCenter();
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _hasLocation = false;
+      });
+    }
   }
 
-  /// Refresh all data when user pulls to refresh
-  Future<void> _refreshData() async {
-    _loadAddress();
-    _loadRecommendedServices();
-    await _model.loadNotificationCount();
-    safeSetState(() {});
+  Future<void> _animateToCenter() async {
+    final controller = _mapController;
+    if (controller == null) {
+      return;
+    }
+
+    await controller.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(target: _center, zoom: 15.5),
+      ),
+    );
   }
 
-  // ==========================================
-  // UI COMPONENTS SEPARATED FOR READABILITY
-  // ==========================================
-
-  Widget _buildHeader(AddressesRow? homeAddressesRow) => Container(
-        width: double.infinity,
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+  Widget _buildTopOverlay() => SafeArea(
+        bottom: false,
         child: Padding(
-          padding: const EdgeInsets.only(
-            top: 20,
-            left: 16,
-            right: 16,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              InkWell(
-                onTap: () async {
-                  await showModalBottomSheet(
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    useSafeArea: false,
-                    context: context,
-                    builder: (context) => GestureDetector(
-                      onTap: () => FocusScope.of(context).unfocus(),
-                      child: Padding(
-                        padding: MediaQuery.viewInsetsOf(context),
-                        child: const EditAddressWidget(),
-                      ),
-                    ),
-                  ).then((value) => safeSetState(_loadAddress));
-                },
-                child: Row(
-                  children: [
-                    Container(
-                      width: MediaQuery.sizeOf(context).width * 0.12,
-                      height: MediaQuery.sizeOf(context).width * 0.12,
-                      constraints: const BoxConstraints(
-                        minWidth: 40,
-                        maxWidth: 60,
-                        minHeight: 40,
-                        maxHeight: 60,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE0EEFF),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Center(
-                        child: FaIcon(
-                          FontAwesomeIcons.mapMarkerAlt,
-                          color: AppTheme.of(context).primary,
-                          size: MediaQuery.sizeOf(context).width * 0.06,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 15),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Current Location',
-                          style: AppTheme.of(context).bodySmall.override(
-                                font: GoogleFonts.poppins(),
-                                fontSize:
-                                    MediaQuery.sizeOf(context).width * 0.03,
-                              ),
-                        ),
-                        Text(
-                          valueOrDefault<String>(
-                              homeAddressesRow?.addressLine2, 'Home Location'),
-                          style: AppTheme.of(context).titleMedium.override(
-                                font: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.w600),
-                                fontSize:
-                                    MediaQuery.sizeOf(context).width * 0.04,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  IconButton(
-                    icon: FaIcon(
-                      FontAwesomeIcons.bell,
-                      color: AppTheme.of(context).primaryText,
-                      size: 24,
-                    ),
-                    onPressed: () =>
-                        context.pushNamed(MyNotificationsWidget.routeName),
-                  ),
-                  Positioned(
-                    top: 0,
-                    right: 0,
-                    child: _model.notificationCount > 0
-                        ? Container(
-                            padding: const EdgeInsets.all(3),
-                            decoration: BoxDecoration(
-                              color: AppTheme.of(context).error,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: AppTheme.of(context).primaryBackground,
-                                width: 2,
-                              ),
-                            ),
-                            constraints: const BoxConstraints(
-                              minWidth: 16,
-                              minHeight: 16,
-                            ),
-                            child: Text(
-                              _model.notificationCount > 99
-                                  ? '99+'
-                                  : _model.notificationCount.toString(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      );
-
-  Widget _buildSearchBar() => Padding(
-        padding: const EdgeInsetsDirectional.fromSTEB(0, 20, 0, 20),
-        child: Hero(
-          tag: 'searchBarHero',
-          child: GestureDetector(
-            onTap: () => context.pushNamed(SearchPageWidget.routeName),
-            child: Container(
-              height: 55,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF4F4F4),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(10, 0, 10, 0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        const FaIcon(FontAwesomeIcons.search,
-                            color: Color(0x6B14181B), size: 24),
-                        const SizedBox(width: 15),
-                        Text(
-                          'Find service...',
-                          style: AppTheme.of(context).bodyMedium.override(
-                                font: GoogleFonts.poppins(),
-                                color: const Color(0xE357636C),
-                                fontSize: 16,
-                              ),
-                        ),
-                      ],
-                    ),
-                    FlutterFlowIconButton(
-                      borderRadius: 6,
-                      buttonSize: 40,
-                      fillColor: const Color(0x2C57636C),
-                      icon: const FaIcon(
-                        FontAwesomeIcons.slidersH,
-                        color: Color(0xE114181B),
-                        size: 24,
-                      ),
-                      onPressed: () => context.pushNamed(
-                        SearchPageWidget.routeName,
-                        extra: <String, dynamic>{'openFilters': true},
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-
-  Widget _buildCategoriesSection() => Padding(
-        padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionTitle('Services', onSeeAll: () {
-              context.pushNamed(
-                CategoriesWidget.routeName,
-                extra: <String, dynamic>{
-                  '__transition_info__': const TransitionInfo(
-                    hasTransition: true,
-                    transitionType: TransitionType.bottomToTop,
-                    duration: Duration(milliseconds: 100),
-                  ),
-                },
-              );
-            }),
-            SizedBox(
-              width: double.infinity,
-              height: MediaQuery.sizeOf(context).width * 0.68,
-              child: wrapWithModel(
-                model: _model.categoriesgridModel,
-                updateCallback: () => safeSetState(() {}),
-                child: const CategoriesgridWidget(),
-              ),
-            ),
-          ],
-        ),
-      );
-
-  Widget _buildAdBanner() => Padding(
-        padding: const EdgeInsetsDirectional.fromSTEB(1, 0, 0, 20),
-        child: Container(
-          width: double.infinity,
-          height: MediaQuery.sizeOf(context).width * 0.45,
-          constraints: const BoxConstraints(
-            minHeight: 180,
-            maxHeight: 220,
-          ),
-          decoration: BoxDecoration(
-            color: AppTheme.of(context).primary,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              color: const Color(0x4D000000),
-              image: DecorationImage(
-                fit: BoxFit.cover,
-                image: Image.asset('assets/images/sample-ad-banner.jpg').image,
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Painting walls services',
-                        style: AppTheme.of(context).titleLarge.override(
-                              font: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w800),
-                            ),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        'Home painting',
-                        style: AppTheme.of(context).bodyMedium.override(
-                              font: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600),
-                              fontSize: 14,
-                            ),
-                      ),
-                    ],
-                  ),
-                  FFButtonWidget(
-                    onPressed: () => context.pushNamed(
-                      ServicesScreen.routeName,
-                      extra: {
-                        'initialCategory': 'Painting & Decorating',
-                        'initialSearch': 'painting',
-                      },
-                    ),
-                    text: 'View More',
-                    options: FFButtonOptions(
-                      width: 120,
-                      height: 42,
-                      color: AppTheme.of(context).primaryText,
-                      textStyle: AppTheme.of(context).bodySmall.override(
-                            font: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600),
-                            color: AppTheme.of(context).primaryBackground,
-                            fontSize: 14,
-                          ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-
-  Widget _buildRecommendationsSection() => Padding(
-        padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 30),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionTitle('Recommendations', onSeeAll: () {
-              context.push('/services?filter=recommended');
-            }),
-            FutureBuilder<List<ServiceListing>>(
-              future: _recommendedServicesFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return SizedBox(
-                    height: MediaQuery.sizeOf(context).width * 0.8,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      itemCount: 4,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(width: 10),
-                      itemBuilder: (context, index) => const SizedBox(
-                        width: 160,
-                        child: ServiceCardSkeleton(),
-                      ),
-                    ),
-                  );
-                }
-                if (snapshot.hasError ||
-                    !snapshot.hasData ||
-                    snapshot.data!.isEmpty) {
-                  return SizedBox(
-                    height: MediaQuery.sizeOf(context).width * 0.6,
-                    child: const Center(
-                      child: Text('No recommendations available'),
-                    ),
-                  );
-                }
-                final services = snapshot.data!.take(4).toList();
-                return LayoutBuilder(
-                  builder: (context, constraints) {
-                    final crossAxisCount = constraints.maxWidth > 600 ? 3 : 2;
-                    return GridView.builder(
-                      padding: EdgeInsets.zero,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: crossAxisCount,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                        childAspectRatio:
-                            constraints.maxWidth > 600 ? 0.8 : 0.7,
-                      ),
-                      primary: false,
-                      shrinkWrap: true,
-                      itemCount: services.length,
-                      itemBuilder: (context, index) =>
-                          _buildServiceCard(services[index]),
-                    );
-                  },
-                );
-              },
-            ),
-          ],
-        ),
-      );
-
-  Widget _buildTopServicesSection() => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSectionTitle('Top Service', onSeeAll: () {
-            context.push('/services?filter=topRated');
-          }),
-          FutureBuilder<List<ServiceListing>>(
-            future: _recommendedServicesFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return SizedBox(
-                  height: MediaQuery.sizeOf(context).width * 0.6,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                    itemCount: 5,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(width: 10),
-                    itemBuilder: (context, index) => const SizedBox(
-                      width: 160,
-                      child: ServiceCardSkeleton(),
-                    ),
-                  ),
-                );
-              }
-              if (snapshot.hasError ||
-                  !snapshot.hasData ||
-                  snapshot.data!.isEmpty) {
-                return SizedBox(
-                  height: MediaQuery.sizeOf(context).width * 0.5,
-                  child: const Center(
-                    child: Text('No top services available'),
-                  ),
-                );
-              }
-              final services = snapshot.data!.take(5).toList();
-              return SizedBox(
-                height: MediaQuery.sizeOf(context).width * 0.6,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: services.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(width: 10),
-                  itemBuilder: (context, index) => SizedBox(
-                    width: MediaQuery.sizeOf(context).width * 0.7,
-                    child: _buildServiceCard(services[index],
-                        imageFit: BoxFit.fill),
-                  ),
-                ),
-              );
-            },
-          ),
-          SizedBox(
-              height:
-                  MediaQuery.sizeOf(context).width * 0.05), // Bottom padding
-        ],
-      );
-  // ==========================================
-  // REUSABLE WIDGETS
-  // ==========================================
-
-  Widget _buildSectionTitle(String title, {required VoidCallback onSeeAll}) =>
-      Padding(
-        padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 12),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              title,
-              style: AppTheme.of(context).titleMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-                    fontSize: 20,
-                  ),
-            ),
-            InkWell(
-              onTap: onSeeAll,
-              child: Text(
-                'See All',
-                style: AppTheme.of(context).bodyMedium.override(
-                      font: GoogleFonts.poppins(fontWeight: FontWeight.w500),
-                      color: AppTheme.of(context).primary,
-                    ),
-              ),
-            ),
-          ],
-        ),
-      );
-
-  // This single widget replaces the 9 duplicate containers!
-  Widget _buildServiceCard(ServiceListing service,
-          {BoxFit imageFit = BoxFit.cover}) =>
-      GestureDetector(
-        onTap: () {
-          print(
-              'Navigating to product page with imageUrl: ${service.thumbnail}');
-          context.pushNamed(
-            ProductPageWidget.routeName,
-            extra: <String, dynamic>{
-              'serviceName': service.title,
-              'category': service.categoryName ?? 'Service',
-              'price': service.formattedPrice,
-              'rating': service.ratingValue ?? 0.0,
-              'reviewCount': service.reviewCount ?? 0,
-              'imageUrl': service.thumbnail ?? '',
-              'description': service.description ?? '',
-              'serviceId': service.id,
-              'providerId': service.provider?.toString() ?? '',
-              'providerName': service.providerName ?? 'Provider',
-              'providerPhoto': service.providerPhoto,
-              'providerCategory': service.categoryName ?? 'Service',
-            },
-          );
-        },
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppTheme.of(context).primaryBackground,
-            boxShadow: const [
-              BoxShadow(
-                  blurRadius: 4, color: Color(0x1A000000), offset: Offset(0, 2))
-            ],
-            borderRadius: BorderRadius.circular(12),
-          ),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: double.infinity,
-                height: MediaQuery.sizeOf(context).width * 0.35,
-                constraints: const BoxConstraints(
-                  minHeight: 120,
-                  maxHeight: 180,
-                ),
-                decoration: BoxDecoration(
-                  color:
-                      service.thumbnail != null && service.thumbnail!.isNotEmpty
-                          ? null
-                          : AppTheme.of(context).accent1,
-                  image:
-                      service.thumbnail != null && service.thumbnail!.isNotEmpty
-                          ? DecorationImage(
-                              fit: imageFit,
-                              image: Image.network(service.thumbnail!).image,
-                            )
-                          : null,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0x33000000),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Align(
-                    alignment: AlignmentDirectional.topEnd,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: GestureDetector(
-                        onTap: () {
-                          // TODO: Implement favorite toggle with database
-                          // Currently just toggles local state for UI feedback
-                          final isFavorited =
-                              _model.favorites.contains(service.id);
-                          if (isFavorited) {
-                            _model.favorites.remove(service.id);
-                          } else {
-                            _model.favorites.add(service.id);
-                          }
-                          safeSetState(() {});
-                        },
-                        child: Container(
-                          width: 30,
-                          height: 30,
-                          decoration: BoxDecoration(
-                            color: _model.favorites.contains(service.id)
-                                ? Colors.red
-                                : const Color(0x5A14181B),
-                            shape: BoxShape.circle,
+              Hero(
+                tag: 'searchBarHero',
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: _openSearchPage,
+                    borderRadius: BorderRadius.circular(28),
+                    child: Container(
+                      height: 56,
+                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(28),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x18000000),
+                            blurRadius: 20,
+                            offset: Offset(0, 10),
                           ),
-                          child: Center(
-                            child: FaIcon(
-                              FontAwesomeIcons.heart,
-                              color: AppTheme.of(context).primaryBackground,
-                              size: 16,
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.search_rounded,
+                            color: Color(0xFF5F6B76),
+                            size: 24,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Search services...',
+                              style: AppTheme.of(context).bodyMedium.override(
+                                    font: GoogleFonts.poppins(),
+                                    color: const Color(0xFF6A7681),
+                                    fontSize: 15,
+                                  ),
                             ),
                           ),
-                        ),
+                          Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              InkWell(
+                                onTap: () => context.pushNamed(
+                                  MyNotificationsWidget.routeName,
+                                ),
+                                borderRadius: BorderRadius.circular(18),
+                                child: const Padding(
+                                  padding: EdgeInsets.all(6),
+                                  child: Icon(
+                                    Icons.notifications_none_rounded,
+                                    color: Color(0xFF17212B),
+                                    size: 24,
+                                  ),
+                                ),
+                              ),
+                              if (_model.notificationCount > 0)
+                                Positioned(
+                                  top: 0,
+                                  right: -2,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 5,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.of(context).error,
+                                      borderRadius: BorderRadius.circular(999),
+                                      border: Border.all(
+                                        color: Colors.white,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      _model.notificationCount > 99
+                                          ? '99+'
+                                          : _model.notificationCount.toString(),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              const SizedBox(height: 14),
+              SizedBox(
+                height: 40,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  clipBehavior: Clip.none,
                   children: [
-                    Text(
-                      service.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTheme.of(context).titleSmall.override(
-                            font: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600),
-                            fontSize: 15,
-                          ),
+                    _buildCategoryChip(
+                      icon: Icons.cleaning_services_rounded,
+                      label: 'Cleaning',
+                      onTap: () => context.pushNamed(
+                        ServicesScreen.routeName,
+                        extra: <String, dynamic>{
+                          'initialCategory': 'Cleaning',
+                        },
+                      ),
                     ),
-                    Text(
-                      service.categoryName ?? 'Service',
-                      style: AppTheme.of(context).bodyMedium.override(
-                            font: GoogleFonts.poppins(),
-                            fontSize: 12,
-                          ),
+                    _buildCategoryChip(
+                      icon: Icons.plumbing_rounded,
+                      label: 'Plumbing',
+                      onTap: () => context.pushNamed(
+                        ServicesScreen.routeName,
+                        extra: <String, dynamic>{
+                          'initialCategory': 'Plumbing',
+                        },
+                      ),
                     ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          service.formattedPrice,
-                          style: AppTheme.of(context).titleSmall.override(
-                                font: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.bold),
-                                color: AppTheme.of(context).primaryText,
-                              ),
-                        ),
-                        Row(
-                          children: [
-                            const FaIcon(FontAwesomeIcons.solidStar,
-                                color: Colors.orange, size: 14),
-                            const SizedBox(width: 4),
-                            Text(
-                              service.ratingValue?.toStringAsFixed(1) ?? '0.0',
-                              style: AppTheme.of(context).bodySmall.override(
-                                    font: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.w500),
-                                    fontSize: 12,
-                                  ),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '(${service.reviewCount ?? 0})',
-                              style: AppTheme.of(context).bodySmall.override(
-                                    font: GoogleFonts.poppins(),
-                                    color: AppTheme.of(context).secondaryText,
-                                    fontSize: 12,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ],
+                    _buildCategoryChip(
+                      icon: Icons.electrical_services_rounded,
+                      label: 'Electrical',
+                      onTap: () => context.pushNamed(
+                        ServicesScreen.routeName,
+                        extra: <String, dynamic>{
+                          'initialCategory': 'Electrical',
+                        },
+                      ),
+                    ),
+                    _buildCategoryChip(
+                      icon: Icons.format_paint_rounded,
+                      label: 'Painting',
+                      onTap: () => context.pushNamed(
+                        ServicesScreen.routeName,
+                        extra: <String, dynamic>{
+                          'initialCategory': 'Painting & Decorating',
+                        },
+                      ),
+                    ),
+                    _buildCategoryChip(
+                      icon: Icons.grid_view_rounded,
+                      label: 'More',
+                      onTap: () => context.pushNamed(
+                        CategoriesWidget.routeName,
+                        extra: <String, dynamic>{
+                          '__transition_info__': const TransitionInfo(
+                            hasTransition: true,
+                            transitionType: TransitionType.bottomToTop,
+                            duration: Duration(milliseconds: 100),
+                          ),
+                        },
+                      ),
                     ),
                   ],
                 ),
@@ -783,6 +471,406 @@ class _HomeWidgetState extends State<HomeWidget> {
           ),
         ),
       );
+
+  Widget _buildCategoryChip({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) =>
+      Padding(
+        padding: const EdgeInsets.only(right: 10),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(999),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(999),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x12000000),
+                    blurRadius: 12,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    icon,
+                    size: 13,
+                    color: const Color(0xFF17212B),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    label,
+                    style: AppTheme.of(context).bodySmall.override(
+                          font: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600,
+                          ),
+                          color: const Color(0xFF17212B),
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+  Widget _buildBottomCard(
+    FFAppState appState,
+    List<AddressesRow> addresses,
+  ) =>
+      Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          boxShadow: [
+            BoxShadow(
+              color: Color(0x17000000),
+              blurRadius: 24,
+              offset: Offset(0, -8),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 22),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFD6DBE1),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.of(context).primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    'Booking starts from your pinned location',
+                    textAlign: TextAlign.center,
+                    style: AppTheme.of(context).labelMedium.override(
+                          font: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w700,
+                          ),
+                          color: AppTheme.of(context).primary,
+                        ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: _startBookingProcess,
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: AppTheme.of(context).primary.withValues(
+                              alpha: 0.1,
+                            ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Book a Service',
+                                  style:
+                                      AppTheme.of(context).titleMedium.override(
+                                            font: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                            color: const Color(0xFF16202A),
+                                          ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Tap here to get a professional to your destination',
+                                  style:
+                                      AppTheme.of(context).bodySmall.override(
+                                            font: GoogleFonts.poppins(),
+                                            color: const Color(0xFF63707C),
+                                          ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Container(
+                            width: 54,
+                            height: 54,
+                            decoration: BoxDecoration(
+                              color: AppTheme.of(context).primary.withValues(
+                                    alpha: 0.16,
+                                  ),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.handyman_rounded,
+                              color: AppTheme.of(context).primary,
+                              size: 28,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () =>
+                        _openLocationSheet(snapshotAddresses: addresses),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: const Color(0xFFE5E9EE)),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF4F7FA),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Icon(
+                              Icons.location_history_rounded,
+                              color: Color(0xFF53606D),
+                              size: 22,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Pin location',
+                                  style:
+                                      AppTheme.of(context).bodySmall.override(
+                                            font: GoogleFonts.poppins(),
+                                            color: const Color(0xFF7A8793),
+                                          ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  _addressText(appState),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style:
+                                      AppTheme.of(context).bodyMedium.override(
+                                            font: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                            color: const Color(0xFF16202A),
+                                          ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          const Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            color: Color(0xFF53606D),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+  Future<void> _openLocationSheet({
+    List<AddressesRow>? snapshotAddresses,
+  }) async {
+    final addresses = snapshotAddresses ??
+        await _addressFuture.catchError((_) => <AddressesRow>[]);
+    if (!mounted) {
+      return;
+    }
+
+    await showModalBottomSheet(
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      useSafeArea: false,
+      context: context,
+      builder: (context) => GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Padding(
+          padding: MediaQuery.viewInsetsOf(context),
+          child: _HomeLocationSheet(
+            addresses: addresses,
+            hasDeviceLocation: _hasLocation,
+            selectedAddressId: FFAppState().selectedAddressId,
+            selectedLocationMode: FFAppState().selectedLocationMode,
+            onUseCurrentLocation: _hasLocation ? _selectCurrentDeviceLocation : null,
+            onSelectSavedAddress: _selectSavedAddress,
+            onAddAddress: () async {
+              Navigator.of(context).pop();
+              await context.pushNamed(AddressFormWidget.routeName);
+              if (mounted) {
+                safeSetState(_loadAddress);
+              }
+            },
+          ),
+        ),
+      ),
+    ).then((_) => safeSetState(_loadAddress));
+  }
+
+  Future<void> _startBookingProcess() async {
+    final selectedService = await showModalBottomSheet<ServiceListing>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ServiceSelectionPanel(
+        locationLabel: _addressText(FFAppState()),
+      ),
+    );
+    if (!mounted || selectedService == null) {
+      return;
+    }
+
+    await Navigator.of(context).push(
+      buildBookingFlowRoute(
+        CleaningBookingFlowScreen(selectedService: selectedService),
+      ),
+    );
+  }
+
+  Future<void> _openSearchPage() async {
+    await Navigator.of(context).push(
+      PageRouteBuilder<void>(
+        transitionDuration: const Duration(milliseconds: 240),
+        reverseTransitionDuration: const Duration(milliseconds: 200),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const SearchPageWidget(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final fade = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+          );
+          return FadeTransition(
+            opacity: fade,
+            child: child,
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _selectCurrentDeviceLocation() async {
+    final latitude = FFAppState().selectedLatitude;
+    final longitude = FFAppState().selectedLongitude;
+    if (latitude == null || longitude == null) {
+      await _loadDeviceLocation(forceUseDevice: true);
+      if (!mounted) {
+        return;
+      }
+    }
+
+    final appState = FFAppState();
+    final nextLatitude = appState.selectedLatitude;
+    final nextLongitude = appState.selectedLongitude;
+    if (nextLatitude == null || nextLongitude == null || !mounted) {
+      return;
+    }
+
+    final target = LatLng(nextLatitude, nextLongitude);
+    setState(() {
+      _center = target;
+      _isUsingDeviceLocation = true;
+    });
+    Navigator.of(context).pop();
+    await _animateToCenter();
+  }
+
+  Future<void> _selectSavedAddress(AddressesRow address) async {
+    final latitude = address.latitude;
+    final longitude = address.longitude;
+    FFAppState().setSelectedAddressFromRow(address);
+    if (mounted && latitude != null && longitude != null) {
+      setState(() {
+        _center = LatLng(latitude, longitude);
+        _isUsingDeviceLocation = false;
+      });
+      Navigator.of(context).pop();
+      await _animateToCenter();
+      return;
+    }
+
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  Set<Marker> _homeMarkers(FFAppState appState) {
+    if (appState.selectedLocationMode != 'saved') {
+      return const <Marker>{};
+    }
+
+    final latitude = appState.selectedLatitude;
+    final longitude = appState.selectedLongitude;
+    if (latitude == null || longitude == null) {
+      return const <Marker>{};
+    }
+
+    return {
+      Marker(
+        markerId: const MarkerId('selected_home_location'),
+        position: LatLng(latitude, longitude),
+      ),
+    };
+  }
+
+  String _addressText(FFAppState appState) {
+    if (appState.selectedLocationMode == 'device' && _hasLocation) {
+      return 'Current device location';
+    }
+
+    if (appState.selectedAddressLine1.isNotEmpty) {
+      return appState.selectedAddressLine1;
+    }
+    if (appState.selectedAddressLabel.isNotEmpty) {
+      return appState.selectedAddressLabel;
+    }
+    return 'Select your location';
+  }
 
   Future<bool> _showExitConfirmation() async =>
       await showDialog<bool>(
@@ -803,4 +891,242 @@ class _HomeWidgetState extends State<HomeWidget> {
         ),
       ) ??
       false;
+}
+
+class _HomeLocationSheet extends StatelessWidget {
+  const _HomeLocationSheet({
+    required this.addresses,
+    required this.hasDeviceLocation,
+    required this.selectedAddressId,
+    required this.selectedLocationMode,
+    required this.onUseCurrentLocation,
+    required this.onSelectSavedAddress,
+    required this.onAddAddress,
+  });
+
+  final List<AddressesRow> addresses;
+  final bool hasDeviceLocation;
+  final int? selectedAddressId;
+  final String selectedLocationMode;
+  final VoidCallback? onUseCurrentLocation;
+  final ValueChanged<AddressesRow> onSelectSavedAddress;
+  final VoidCallback onAddAddress;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFD6DBE1),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'Choose location',
+                style: theme.titleMedium.override(
+                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                  color: const Color(0xFF16202A),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Use your live device location or one of your saved addresses.',
+                style: theme.bodySmall.override(
+                  font: GoogleFonts.poppins(),
+                  color: const Color(0xFF66727E),
+                ),
+              ),
+              const SizedBox(height: 18),
+              _HomeLocationOption(
+                icon: Icons.my_location_rounded,
+                title: 'Current device location',
+                subtitle: hasDeviceLocation
+                    ? 'Use your live phone location on the map'
+                    : 'Enable location services to use this option',
+                isSelected:
+                    selectedLocationMode == 'device' && hasDeviceLocation,
+                isEnabled: hasDeviceLocation,
+                onTap: onUseCurrentLocation,
+              ),
+              if (addresses.isNotEmpty) ...[
+                const SizedBox(height: 18),
+                Text(
+                  'Saved addresses',
+                  style: theme.labelLarge.override(
+                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    color: const Color(0xFF16202A),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 320),
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: addresses.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemBuilder: (context, index) {
+                      final address = addresses[index];
+                      return _HomeLocationOption(
+                        icon: _addressIcon(address.addressLine2),
+                        title: address.addressLine2?.trim().isNotEmpty == true
+                            ? address.addressLine2!.trim()
+                            : 'Saved address',
+                        subtitle: [
+                          address.addressLine1,
+                          address.city,
+                        ].whereType<String>().where((e) => e.trim().isNotEmpty).join(', '),
+                        isSelected: selectedLocationMode == 'saved' &&
+                            selectedAddressId == address.id,
+                        onTap: () => onSelectSavedAddress(address),
+                      );
+                    },
+                  ),
+                ),
+              ],
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: onAddAddress,
+                  icon: const Icon(Icons.add_location_alt_outlined),
+                  label: const Text('Add new address'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  IconData _addressIcon(String? label) {
+    final normalized = label?.toLowerCase().trim() ?? '';
+    if (normalized.contains('home')) {
+      return Icons.home_rounded;
+    }
+    if (normalized.contains('work') || normalized.contains('office')) {
+      return Icons.work_rounded;
+    }
+    return Icons.location_on_rounded;
+  }
+}
+
+class _HomeLocationOption extends StatelessWidget {
+  const _HomeLocationOption({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.isSelected = false,
+    this.isEnabled = true,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool isSelected;
+  final bool isEnabled;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+
+    return Opacity(
+      opacity: isEnabled ? 1 : 0.5,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isEnabled ? onTap : null,
+          borderRadius: BorderRadius.circular(18),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? theme.primary.withValues(alpha: 0.08)
+                  : Colors.white,
+              border: Border.all(
+                color: isSelected
+                    ? theme.primary
+                    : const Color(0xFFE5E9EE),
+                width: isSelected ? 1.4 : 1,
+              ),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? theme.primary.withValues(alpha: 0.12)
+                        : const Color(0xFFF4F7FA),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: isSelected ? theme.primary : const Color(0xFF53606D),
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: theme.bodyMedium.override(
+                          font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                          color: const Color(0xFF16202A),
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        subtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.bodySmall.override(
+                          font: GoogleFonts.poppins(),
+                          color: const Color(0xFF6F7B86),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Icon(
+                  isSelected
+                      ? Icons.radio_button_checked_rounded
+                      : Icons.radio_button_off_rounded,
+                  color: isSelected ? theme.primary : const Color(0xFF9AA6B2),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

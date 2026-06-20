@@ -47,7 +47,8 @@ class ProBookingsService {
           .select('''
             *,
             service_listings(*),
-            profiles!bookings_user_id_fkey(*)
+            profiles!bookings_user_id_fkey(*),
+            addresses(*)
           ''')
           .eq('provider_id', userId)
           .eq('status', 'pending')
@@ -94,10 +95,14 @@ class ProBookingsService {
           .select('''
             *,
             service_listings(*),
-            profiles!bookings_user_id_fkey(*)
+            profiles!bookings_user_id_fkey(*),
+            addresses(*)
           ''')
           .eq('provider_id', userId)
-          .inFilter('status', ['accepted', 'in_progress', 'completed'])
+          .inFilter(
+            'status',
+            ['accepted', 'confirmed', 'in_progress', 'completed'],
+          )
           .order('booking_date', ascending: true);
 
       return response;

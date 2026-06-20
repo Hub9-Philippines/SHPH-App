@@ -87,6 +87,8 @@ CREATE TABLE addresses (
     city TEXT NOT NULL,
     province TEXT NOT NULL,
     postal_code TEXT,
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION,
     is_default BOOLEAN DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -112,6 +114,7 @@ CREATE TABLE bookings (
     address_id INTEGER REFERENCES addresses(id) ON DELETE SET NULL,
     notes TEXT,
     status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'in_progress', 'completed', 'cancelled')),
+    payment_status TEXT DEFAULT 'pending',
     total_price DOUBLE PRECISION,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

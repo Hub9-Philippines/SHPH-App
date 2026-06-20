@@ -8,9 +8,8 @@ import '/flutter_flow/lat_lng.dart';
 import '/flutter_flow/nav/nav.dart';
 import '/index.dart';
 import '/main.dart';
-import '/main/pro_dashboard/create_service_widget.dart';
+import '/models/service_listing.dart';
 import '/pages/geographic_selection/geographic_selection_widget.dart';
-import '/pages/pro_verification/face_verification_screen.dart';
 
 // Helper function to fetch user profile for role-based routing
 Future<Map<String, dynamic>?> _fetchUserProfile(String userId) async {
@@ -157,6 +156,23 @@ class AppRouter {
                 );
               }
               return const HomeWidget();
+            },
+          ),
+          GoRoute(
+            path: CleaningBookingFlowScreen.routePath,
+            name: CleaningBookingFlowScreen.routeName,
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              final service = extra?['service'] as ServiceListing?;
+              if (service == null) {
+                return const NavBarPage(
+                  initialPage: 'Home',
+                  disableResizeToAvoidBottomInset: true,
+                );
+              }
+              return CleaningBookingFlowScreen(
+                selectedService: service,
+              );
             },
           ),
           GoRoute(
@@ -332,7 +348,12 @@ class AppRouter {
           GoRoute(
             path: AddressFormWidget.routePath,
             name: AddressFormWidget.routeName,
-            builder: (context, state) => const AddressFormWidget(),
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return AddressFormWidget(
+                addressId: extra?['addressId'] as int?,
+              );
+            },
           ),
           GoRoute(
             path: ForgotPasswordWidget.routePath,
