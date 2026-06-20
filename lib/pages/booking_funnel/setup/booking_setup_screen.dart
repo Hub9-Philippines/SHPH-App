@@ -22,7 +22,8 @@ class BookingSetupScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: const Icon(Icons.arrow_back_rounded,
+              size: 24, color: Colors.black),
         ),
         titleSpacing: 0,
         title: Column(

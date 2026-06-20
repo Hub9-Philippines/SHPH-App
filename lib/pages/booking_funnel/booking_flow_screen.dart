@@ -187,7 +187,7 @@ class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
                       latitude: _center.latitude,
                       longitude: _center.longitude,
                     );
-                  },
+              },
               markers: {
                 Marker(
                   markerId: const MarkerId('selected_booking_pin'),
@@ -405,16 +405,16 @@ class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
     BookingFlowController controller,
   ) async {
     final appState = FFAppState();
-    final currentLocation = appState.selectedLatitude != null &&
-            appState.selectedLongitude != null
-        ? ff_latlng.LatLng(
-            appState.selectedLatitude!,
-            appState.selectedLongitude!,
-          )
-        : ff_latlng.LatLng(
-            controller.draft.latitude,
-            controller.draft.longitude,
-          );
+    final currentLocation =
+        appState.selectedLatitude != null && appState.selectedLongitude != null
+            ? ff_latlng.LatLng(
+                appState.selectedLatitude!,
+                appState.selectedLongitude!,
+              )
+            : ff_latlng.LatLng(
+                controller.draft.latitude,
+                controller.draft.longitude,
+              );
 
     final result = await context.pushNamed(
       PinLocationWidget.routeName,
@@ -430,12 +430,12 @@ class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
       return;
     }
 
-    final updatedLine1 = ((result['address'] as String?)?.trim().isNotEmpty ??
-            false)
-        ? (result['address'] as String).trim()
-        : (appState.selectedAddressLine1.isNotEmpty
-            ? appState.selectedAddressLine1
-            : controller.draft.address.line1);
+    final updatedLine1 =
+        ((result['address'] as String?)?.trim().isNotEmpty ?? false)
+            ? (result['address'] as String).trim()
+            : (appState.selectedAddressLine1.isNotEmpty
+                ? appState.selectedAddressLine1
+                : controller.draft.address.line1);
     final updatedLabel = appState.selectedAddressLabel.isNotEmpty
         ? appState.selectedAddressLabel
         : controller.draft.address.label;

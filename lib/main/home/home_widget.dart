@@ -122,7 +122,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                         zoomControlsEnabled: false,
                         mapToolbarEnabled: false,
                         compassEnabled: false,
-                        markers: _homeMarkers(appState),
+                        //markers: _homeMarkers(appState),
                         padding: mapPadding,
                         onMapCreated: (controller) {
                           _mapController = controller;
@@ -738,7 +738,8 @@ class _HomeWidgetState extends State<HomeWidget> {
             hasDeviceLocation: _hasLocation,
             selectedAddressId: FFAppState().selectedAddressId,
             selectedLocationMode: FFAppState().selectedLocationMode,
-            onUseCurrentLocation: _hasLocation ? _selectCurrentDeviceLocation : null,
+            onUseCurrentLocation:
+                _hasLocation ? _selectCurrentDeviceLocation : null,
             onSelectSavedAddress: _selectSavedAddress,
             onAddAddress: () async {
               Navigator.of(context).pop();
@@ -993,7 +994,10 @@ class _HomeLocationSheet extends StatelessWidget {
                         subtitle: [
                           address.addressLine1,
                           address.city,
-                        ].whereType<String>().where((e) => e.trim().isNotEmpty).join(', '),
+                        ]
+                            .whereType<String>()
+                            .where((e) => e.trim().isNotEmpty)
+                            .join(', '),
                         isSelected: selectedLocationMode == 'saved' &&
                             selectedAddressId == address.id,
                         onTap: () => onSelectSavedAddress(address),
@@ -1066,9 +1070,7 @@ class _HomeLocationOption extends StatelessWidget {
                   ? theme.primary.withValues(alpha: 0.08)
                   : Colors.white,
               border: Border.all(
-                color: isSelected
-                    ? theme.primary
-                    : const Color(0xFFE5E9EE),
+                color: isSelected ? theme.primary : const Color(0xFFE5E9EE),
                 width: isSelected ? 1.4 : 1,
               ),
               borderRadius: BorderRadius.circular(18),
@@ -1098,7 +1100,8 @@ class _HomeLocationOption extends StatelessWidget {
                       Text(
                         title,
                         style: theme.bodyMedium.override(
-                          font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                          font:
+                              GoogleFonts.poppins(fontWeight: FontWeight.w600),
                           color: const Color(0xFF16202A),
                         ),
                       ),
