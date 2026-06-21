@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/components/back_button/back_button_widget.dart';
@@ -65,7 +64,6 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
     setState(() => _model.isLoading = true);
 
     try {
-      // Determine payment status based on selection
       final paymentStatus = _selectedPaymentMethod == 'cash'
           ? 'pay_on_completion'
           : 'authorized_escrow';
@@ -80,7 +78,6 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
       );
 
       if (booking != null && mounted) {
-        // Clear navigation stack and go to success screen
         context.go('/booking-success');
       } else if (mounted) {
         setState(() {
@@ -120,9 +117,9 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: AppTheme.of(context).primaryBackground,
+          backgroundColor: const Color(0xFFF5F7FA),
           appBar: AppBar(
-            backgroundColor: AppTheme.of(context).primaryBackground,
+            backgroundColor: const Color(0xFFF5F7FA),
             automaticallyImplyLeading: false,
             leading: wrapWithModel(
               model: _model.backButtonModel,
@@ -132,238 +129,147 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
             title: Text(
               'Select Payment',
               style: AppTheme.of(context).titleLarge.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    color: const Color(0xFF16202A),
                   ),
             ),
             centerTitle: true,
             elevation: 0,
           ),
-          body: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Service Summary
-                Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(20, 20, 20, 20),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.of(context).secondaryBackground,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppTheme.of(context).alternate,
-                        width: 1,
-                      ),
+          body: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 140),
+            children: [
+              _buildServiceHero(context),
+              const SizedBox(height: 18),
+              _buildEscrowNotice(context),
+              const SizedBox(height: 18),
+              Text(
+                'Choose how you want to pay',
+                style: AppTheme.of(context).titleMedium.override(
+                      font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                      color: const Color(0xFF16202A),
                     ),
-                    child: Row(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: widget.imageUrl != null
-                              ? Image.network(
-                                  widget.imageUrl!,
-                                  width: 80,
-                                  height: 80,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      Container(
-                                    width: 80,
-                                    height: 80,
-                                    color: AppTheme.of(context).secondaryText,
-                                    child: Icon(
-                                      Icons.image_not_supported,
-                                      color: AppTheme.of(context)
-                                          .primaryBackground,
-                                    ),
-                                  ),
-                                )
-                              : Container(
-                                  width: 80,
-                                  height: 80,
-                                  color: AppTheme.of(context).secondaryText,
-                                  child: Icon(
-                                    Icons.image_not_supported,
-                                    color:
-                                        AppTheme.of(context).primaryBackground,
-                                  ),
-                                ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                widget.serviceName ?? 'Service',
-                                style:
-                                    AppTheme.of(context).titleMedium.override(
-                                          font: GoogleFonts.poppins(
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                widget.bookingDate != null
-                                    ? '${DateTime.parse(widget.bookingDate!).day}/${DateTime.parse(widget.bookingDate!).month}/${DateTime.parse(widget.bookingDate!).year} at ${widget.bookingTime}'
-                                    : 'Date & Time',
-                                style: AppTheme.of(context).bodySmall.override(
-                                      color: AppTheme.of(context).secondaryText,
-                                    ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                widget.price ?? '₱0',
-                                style: AppTheme.of(context).bodyMedium.override(
-                                      color: AppTheme.of(context).primary,
-                                      font: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Card, wallet, and QR payments are protected through escrow until the job is completed.',
+                style: AppTheme.of(context).bodySmall.override(
+                      font: GoogleFonts.poppins(),
+                      color: const Color(0xFF6F7B86),
                     ),
-                  ),
-                ),
-                // Escrow Notice
-                Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 20),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE3F2FD),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: const Color(0xFF2196F3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(
-                          Icons.info_outline,
-                          color: Color(0xFF1976D2),
-                          size: 24,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Important: For card and e-wallet transactions, your payment is held securely in escrow. The service provider will not receive the funds until you explicitly confirm the job is finished via the Bookings page.',
-                            style: AppTheme.of(context).bodySmall.override(
-                                  color: const Color(0xFF0D47A1),
-                                  font: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                // Payment Methods
-                Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Payment Method',
-                        style: AppTheme.of(context).titleMedium.override(
-                              font: GoogleFonts.poppins(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                      ),
-                      const SizedBox(height: 16),
-                      // Credit/Debit Card
-                      _buildPaymentOption(
-                        value: 'card',
-                        icon: FontAwesomeIcons.creditCard,
-                        label: 'Credit / Debit Card',
-                        sublabel: 'Visa, Mastercard',
-                      ),
-                      const SizedBox(height: 12),
-                      // E-Wallets
-                      _buildPaymentOption(
-                        value: 'ewallet',
-                        icon: FontAwesomeIcons.wallet,
-                        label: 'E-Wallets',
-                        sublabel: 'GCash, Maya',
-                      ),
-                      const SizedBox(height: 12),
-                      // QR Ph
-                      _buildPaymentOption(
-                        value: 'qr',
-                        icon: FontAwesomeIcons.qrcode,
-                        label: 'QR Ph Code',
-                        sublabel: 'Standard Philippine digital QR',
-                      ),
-                      const SizedBox(height: 12),
-                      // Cash on Completion
-                      _buildPaymentOption(
-                        value: 'cash',
-                        icon: FontAwesomeIcons.moneyBill,
-                        label: 'Cash on Completion',
-                        sublabel: 'Pay the pro directly after the job',
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: MediaQuery.sizeOf(context).width * 0.1),
-              ],
-            ),
+              ),
+              const SizedBox(height: 16),
+              _buildPaymentOption(
+                value: 'card',
+                icon: Icons.credit_card_rounded,
+                label: 'Credit / Debit Card',
+                sublabel: 'Visa, Mastercard',
+                tint: const Color(0xFF1B74E4),
+              ),
+              const SizedBox(height: 12),
+              _buildPaymentOption(
+                value: 'ewallet',
+                icon: Icons.account_balance_wallet_rounded,
+                label: 'E-Wallets',
+                sublabel: 'GCash, Maya',
+                tint: const Color(0xFF0F8A6C),
+              ),
+              const SizedBox(height: 12),
+              _buildPaymentOption(
+                value: 'qr',
+                icon: Icons.qr_code_rounded,
+                label: 'QR Ph Code',
+                sublabel: 'Standard Philippine digital QR',
+                tint: const Color(0xFF7C5CFC),
+              ),
+              const SizedBox(height: 12),
+              _buildPaymentOption(
+                value: 'cash',
+                icon: Icons.payments_rounded,
+                label: 'Cash on Completion',
+                sublabel: 'Pay the pro directly after the job',
+                tint: const Color(0xFFEF6C57),
+              ),
+            ],
           ),
-          // Bottom Action Bar
           bottomNavigationBar: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.of(context).primaryBackground,
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, -2),
+                  color: Color(0x12000000),
+                  blurRadius: 20,
+                  offset: Offset(0, -8),
                 ),
               ],
             ),
             child: SafeArea(
+              top: false,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (_model.errorMessage != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Text(
-                        _model.errorMessage!,
-                        style: AppTheme.of(context).bodySmall.override(
-                              color: AppTheme.of(context).error,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Total',
+                              style: AppTheme.of(context).bodySmall.override(
+                                    font: GoogleFonts.poppins(),
+                                    color: const Color(0xFF6F7B86),
+                                  ),
                             ),
+                            const SizedBox(height: 4),
+                            Text(
+                              widget.price ?? 'PHP 0',
+                              style: AppTheme.of(context).titleLarge.override(
+                                    font: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    color: AppTheme.of(context).primary,
+                                  ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  FFButtonWidget(
-                    onPressed: _model.isLoading ? null : _confirmPayment,
-                    text:
-                        _model.isLoading ? 'Processing...' : 'Confirm Payment',
-                    options: FFButtonOptions(
-                      width: double.infinity,
-                      color: _model.isLoading
-                          ? AppTheme.of(context).alternate
-                          : AppTheme.of(context).primary,
-                      textStyle: AppTheme.of(context).titleMedium.override(
-                            font: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600),
-                            color: AppTheme.of(context).primaryText,
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: FFButtonWidget(
+                          onPressed: _model.isLoading ? null : _confirmPayment,
+                          text: _model.isLoading
+                              ? 'Processing...'
+                              : 'Confirm Payment',
+                          options: FFButtonOptions(
+                            width: double.infinity,
+                            height: 54,
+                            color: _model.isLoading
+                                ? AppTheme.of(context).alternate
+                                : AppTheme.of(context).primary,
+                            textStyle: AppTheme.of(context).titleSmall.override(
+                                  font: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                  color: Colors.white,
+                                ),
+                            borderRadius: BorderRadius.circular(18),
                           ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                        ),
+                      ),
+                    ],
                   ),
+                  if (_model.errorMessage != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      _model.errorMessage!,
+                      style: AppTheme.of(context).bodySmall.override(
+                            color: AppTheme.of(context).error,
+                          ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -371,50 +277,35 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
         ),
       );
 
-  Widget _buildPaymentOption({
-    required String value,
-    required dynamic icon,
-    required String label,
-    required String sublabel,
-  }) {
-    final isSelected = _selectedPaymentMethod == value;
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _selectedPaymentMethod = value;
-        });
-      },
-      child: Container(
+  Widget _buildServiceHero(BuildContext context) => Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppTheme.of(context).primary.withValues(alpha: 0.1)
-              : AppTheme.of(context).secondaryBackground,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected
-                ? AppTheme.of(context).primary
-                : AppTheme.of(context).alternate,
-            width: isSelected ? 2 : 1,
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF17212B),
+              Color(0xFF23384D),
+              Color(0xFF2F5368),
+            ],
           ),
+          borderRadius: BorderRadius.circular(28),
         ),
         child: Row(
           children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: AppTheme.of(context).primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Center(
-                child: FaIcon(
-                  icon,
-                  color: AppTheme.of(context).primary,
-                  size: 24,
-                ),
-              ),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: widget.imageUrl != null
+                  ? Image.network(
+                      widget.imageUrl!,
+                      width: 88,
+                      height: 88,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) =>
+                          _paymentImageFallback(context),
+                    )
+                  : _paymentImageFallback(context),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -422,50 +313,173 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    label,
-                    style: AppTheme.of(context).bodyMedium.override(
+                    widget.serviceName ?? 'Service',
+                    style: AppTheme.of(context).titleLarge.override(
                           font:
-                              GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                              GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                          color: Colors.white,
                         ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
-                    sublabel,
+                    widget.category ?? 'Service',
                     style: AppTheme.of(context).bodySmall.override(
-                          color: AppTheme.of(context).secondaryText,
+                          font: GoogleFonts.poppins(),
+                          color: Colors.white.withValues(alpha: 0.78),
+                        ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    widget.bookingDate != null
+                        ? '${DateTime.parse(widget.bookingDate!).day}/${DateTime.parse(widget.bookingDate!).month}/${DateTime.parse(widget.bookingDate!).year} at ${widget.bookingTime}'
+                        : 'Date & Time',
+                    style: AppTheme.of(context).labelLarge.override(
+                          font:
+                              GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                          color: Colors.white,
                         ),
                   ),
                 ],
               ),
             ),
+          ],
+        ),
+      );
+
+  Widget _buildEscrowNotice(BuildContext context) => Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: const Color(0xFFEAF4FF),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: const Color(0xFFC9E1FF)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Container(
-              width: 24,
-              height: 24,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isSelected
-                      ? AppTheme.of(context).primary
-                      : AppTheme.of(context).alternate,
-                  width: 2,
-                ),
+                color: const Color(0xFF1B74E4).withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
               ),
-              child: isSelected
-                  ? Center(
-                      child: Container(
-                        width: 12,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppTheme.of(context).primary,
-                        ),
-                      ),
-                    )
-                  : null,
+              child: const Icon(
+                Icons.shield_outlined,
+                color: Color(0xFF1B74E4),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Card, e-wallet, and QR payments are held in escrow. The provider receives the funds only after you confirm the work is done from your bookings page.',
+                style: AppTheme.of(context).bodySmall.override(
+                      font: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                      color: const Color(0xFF17426E),
+                    ),
+              ),
             ),
           ],
+        ),
+      );
+
+  Widget _buildPaymentOption({
+    required String value,
+    required IconData? icon,
+    required String label,
+    required String sublabel,
+    required Color tint,
+  }) {
+    final isSelected = _selectedPaymentMethod == value;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            _selectedPaymentMethod = value;
+          });
+        },
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isSelected ? tint.withValues(alpha: 0.08) : Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isSelected ? tint : const Color(0xFFE5E9EE),
+              width: isSelected ? 1.6 : 1,
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x10000000),
+                blurRadius: 16,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: tint.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Center(
+                  child: Icon(
+                    icon,
+                    color: tint,
+                    size: 22,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: AppTheme.of(context).titleSmall.override(
+                            font: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w700,
+                            ),
+                            color: const Color(0xFF16202A),
+                          ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      sublabel,
+                      style: AppTheme.of(context).bodySmall.override(
+                            font: GoogleFonts.poppins(),
+                            color: const Color(0xFF6F7B86),
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Icon(
+                isSelected
+                    ? Icons.radio_button_checked_rounded
+                    : Icons.radio_button_off_rounded,
+                color: isSelected ? tint : const Color(0xFF9AA6B2),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+
+  Widget _paymentImageFallback(BuildContext context) => Container(
+        width: 88,
+        height: 88,
+        color: Colors.white.withValues(alpha: 0.14),
+        child: const Icon(
+          Icons.image_not_supported_outlined,
+          color: Colors.white,
+        ),
+      );
 }

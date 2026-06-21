@@ -83,6 +83,20 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
         safeSetState(() {});
       }
     });
+
+    if (widget.addressId == null) {
+      getCurrentUserLocation(
+        defaultLocation: const LatLng(14.5995, 120.9842),
+      ).then((loc) {
+        if (mounted) {
+          setState(() {
+            _model.latitude = loc.latitude;
+            _model.longitude = loc.longitude;
+            _model.selectedAddress = 'Current device location';
+          });
+        }
+      });
+    }
   }
 
   @override
@@ -115,6 +129,9 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
               address.postalCode ?? '';
           _model.latitude = address.latitude;
           _model.longitude = address.longitude;
+          if (_model.latitude != null && _model.longitude != null) {
+            _model.selectedAddress = address.addressLine1;
+          }
           _model.isDefault = address.isDefault ?? false;
           _model.selectedRegionCode = address.regionCode;
           _model.selectedProvinceCode = address.provinceCode;
@@ -123,6 +140,22 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
         });
         _hasLoadedAddressData = true;
         await _restoreGeographicSelectionFromCodes();
+
+        if (_model.latitude == null || _model.longitude == null) {
+          getCurrentUserLocation(
+            defaultLocation: const LatLng(14.5995, 120.9842),
+          ).then((loc) {
+            if (mounted) {
+              setState(() {
+                if (_model.latitude == null) {
+                  _model.latitude = loc.latitude;
+                  _model.longitude = loc.longitude;
+                  _model.selectedAddress = 'Current device location';
+                }
+              });
+            }
+          });
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -241,6 +274,21 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
           data: addressData,
           matchingRows: (q) => q.eq('id', _model.editingAddressId!),
         );
+
+        // Sync FFAppState active selected address if the edited address is the currently selected one
+        final editingId = int.tryParse(_model.editingAddressId ?? '');
+        if (editingId != null && FFAppState().selectedAddressId == editingId) {
+          FFAppState().setSelectedAddress(
+            id: editingId,
+            label: _model.labelTextFieldTextController?.text ?? '',
+            line1: _model.streetAddressTextFieldTextController?.text ?? '',
+            city: _model.cityTextFieldTextController?.text ?? '',
+            latitude: _model.latitude,
+            longitude: _model.longitude,
+            locationMode: 'saved',
+          );
+        }
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Address updated successfully')),
@@ -255,6 +303,9 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
           );
         }
       }
+
+      // Clear the address cache to ensure changes are fetched fresh
+      FFAppState().clearGetAddressCache();
 
       if (mounted) {
         context.pop();
@@ -1050,12 +1101,29 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
   /// includes lat/lng and an address string. The selected location
   /// is shown as a preview card (which is tappable to re-pin).
   Future<void> _openPinLocation() async {
-    final result = await context.pushNamed(PinLocationWidget.routeName);
+    LatLng startLocation;
+    if (_model.latitude != null && _model.longitude != null) {
+      startLocation = LatLng(_model.latitude!, _model.longitude!);
+    } else {
+      startLocation = await getCurrentUserLocation(
+        defaultLocation: const LatLng(14.5995, 120.9842),
+      );
+    }
+
+    final result = await context.pushNamed(
+      PinLocationWidget.routeName,
+      extra: startLocation,
+    );
     if (result != null && result is Map<String, dynamic>) {
       setState(() {
         _model.latitude = result['latitude'] as double?;
         _model.longitude = result['longitude'] as double?;
-        _model.selectedAddress = result['address'] as String?;
+        if (result['address'] != null &&
+            (result['address'] as String).isNotEmpty) {
+          _model.selectedAddress = result['address'] as String?;
+        } else {
+          _model.selectedAddress ??= 'Pinned location';
+        }
       });
     }
   }

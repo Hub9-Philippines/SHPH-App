@@ -73,7 +73,7 @@ class _CleaningBookingFlowView extends StatefulWidget {
 }
 
 class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
-  LatLng _center = const LatLng(14.5995, 120.9842);
+  late LatLng _center;
   bool _isLocationConfirmed = false;
   GoogleMapController? _mapController;
   late final bool _prefersSelectedAddressCenter;

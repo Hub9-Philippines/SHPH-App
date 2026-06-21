@@ -155,14 +155,7 @@ class _PinLocationWidgetState extends State<PinLocationWidget> {
                             () => _model.googleMapsCenter = latLng),
                         initialLocation: _model.googleMapsCenter ??=
                             widget.latlong ?? const LatLng(14.5995, 120.9842),
-                        markers: [
-                          FlutterFlowMarker(
-                            'selected_pin',
-                            _model.googleMapsCenter ??
-                                widget.latlong ??
-                                const LatLng(14.5995, 120.9842),
-                          ),
-                        ],
+                        markers: const [],
                         markerColor: GoogleMarkerColor.red,
                         mapType: MapType.normal,
                         style: GoogleMapStyle.standard,
@@ -176,6 +169,37 @@ class _PinLocationWidgetState extends State<PinLocationWidget> {
                         showTraffic: false,
                         centerMapOnMarkerTap: true,
                         mapTakesGesturePreference: false,
+                      ),
+                      IgnorePointer(
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Transform.translate(
+                                offset: const Offset(0, 0),
+                                child: Container(
+                                  width: 10,
+                                  height: 5,
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.25),
+                                    borderRadius: const BorderRadius.all(
+                                      Radius.elliptical(10, 5),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Transform.translate(
+                                offset: const Offset(0, -22),
+                                child: Icon(
+                                  Icons.location_pin,
+                                  size: 44,
+                                  color: AppTheme.of(context).primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                       Align(
                         alignment: AlignmentDirectional.bottomEnd,

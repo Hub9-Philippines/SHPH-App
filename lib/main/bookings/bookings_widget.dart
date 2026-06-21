@@ -312,69 +312,99 @@ class _BookingsWidgetState extends State<BookingsWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: const Color(0xFFF4F7FB),
-          appBar: AppBar(
-            backgroundColor: AppTheme.of(context).primaryBackground,
-            automaticallyImplyLeading: false,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            centerTitle: true,
-            title: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Bookings',
-                  style: AppTheme.of(context).titleLarge.override(
-                        font: GoogleFonts.poppins(
-                          fontWeight: FontWeight.bold,
-                          fontStyle: AppTheme.of(context).titleLarge.fontStyle,
-                        ),
-                        letterSpacing: 0,
-                        fontWeight: FontWeight.bold,
-                        fontStyle: AppTheme.of(context).titleLarge.fontStyle,
-                      ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Track active work and completed visits',
-                  style: AppTheme.of(context).bodySmall.override(
-                        font: GoogleFonts.poppins(),
-                        color: AppTheme.of(context).secondaryText,
-                      ),
-                ),
-              ],
-            ),
-          ),
+          backgroundColor: const Color(0xFFF5F7FA),
           body: SafeArea(
-            top: true,
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(15, 10, 15, 6),
-                  child: Container(
-                    width: double.infinity,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: AppTheme.of(context).primaryBackground,
-                      borderRadius: BorderRadius.circular(22),
-                      border: Border.all(
-                        color: AppTheme.of(context).alternate,
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Bookings',
+                                  style: AppTheme.of(context)
+                                      .headlineSmall
+                                      .override(
+                                        font: GoogleFonts.poppins(
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                        color: const Color(0xFF16202A),
+                                      ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Track active work and completed visits',
+                                  style: AppTheme.of(context)
+                                      .bodySmall
+                                      .override(
+                                        font: GoogleFonts.poppins(),
+                                        color:
+                                            AppTheme.of(context).secondaryText,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            width: 46,
+                            height: 46,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x12000000),
+                                  blurRadius: 16,
+                                  offset: Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              Icons.receipt_long_rounded,
+                              color: AppTheme.of(context).primary,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    child: custom_widgets.CupertinoSlidingWidgetBookings(
-                      width: double.infinity,
-                      height: double.infinity,
-                      initialIndex: _model.selectedTabIndex!,
-                      onChanged: (index) async {
-                        _model.selectedTabIndex = index;
-                        safeSetState(() {});
-                        await _model.pageViewController?.animateToPage(
-                          index,
-                          duration: const Duration(milliseconds: 500),
-                          curve: Curves.ease,
-                        );
-                      },
-                    ),
+                      const SizedBox(height: 18),
+                      _buildBookingsHeader(context),
+                      const SizedBox(height: 16),
+                      Container(
+                        width: double.infinity,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: AppTheme.of(context).primaryBackground,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x10000000),
+                              blurRadius: 18,
+                              offset: Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: custom_widgets.CupertinoSlidingWidgetBookings(
+                          width: double.infinity,
+                          height: double.infinity,
+                          initialIndex: _model.selectedTabIndex!,
+                          onChanged: (index) async {
+                            _model.selectedTabIndex = index;
+                            safeSetState(() {});
+                            await _model.pageViewController?.animateToPage(
+                              index,
+                              duration: const Duration(milliseconds: 500),
+                              curve: Curves.ease,
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 Expanded(
@@ -382,15 +412,15 @@ class _BookingsWidgetState extends State<BookingsWidget> {
                       ? _buildErrorState(context)
                       : _model.isLoading
                           ? ListView.separated(
-                              padding: EdgeInsets.only(
-                                top: 10,
-                                left: 15,
-                                right: 15,
-                                bottom: MediaQuery.sizeOf(context).width * 0.1,
+                              padding: const EdgeInsets.fromLTRB(
+                                20,
+                                16,
+                                20,
+                                24,
                               ),
                               itemCount: 3,
                               separatorBuilder: (_, __) =>
-                                  const SizedBox(height: 10),
+                                  const SizedBox(height: 12),
                               itemBuilder: (_, __) =>
                                   const BookingCardSkeleton(),
                             )
@@ -423,16 +453,15 @@ class _BookingsWidgetState extends State<BookingsWidget> {
                                   )
                                 else
                                   ListView.separated(
-                                    padding: EdgeInsets.only(
-                                      top: 10,
-                                      left: 15,
-                                      right: 15,
-                                      bottom: MediaQuery.sizeOf(context).width *
-                                          0.1,
+                                    padding: const EdgeInsets.fromLTRB(
+                                      20,
+                                      16,
+                                      20,
+                                      24,
                                     ),
                                     itemCount: _model.inProgressList.length,
                                     separatorBuilder: (_, __) =>
-                                        const SizedBox(height: 10),
+                                        const SizedBox(height: 12),
                                     itemBuilder: (context, index) =>
                                         _buildBookingCard(
                                       context,
@@ -449,16 +478,15 @@ class _BookingsWidgetState extends State<BookingsWidget> {
                                   )
                                 else
                                   ListView.separated(
-                                    padding: EdgeInsets.only(
-                                      top: 10,
-                                      left: 15,
-                                      right: 15,
-                                      bottom: MediaQuery.sizeOf(context).width *
-                                          0.1,
+                                    padding: const EdgeInsets.fromLTRB(
+                                      20,
+                                      16,
+                                      20,
+                                      24,
                                     ),
                                     itemCount: _model.completedList.length,
                                     separatorBuilder: (_, __) =>
-                                        const SizedBox(height: 10),
+                                        const SizedBox(height: 12),
                                     itemBuilder: (context, index) =>
                                         _buildBookingCard(
                                       context,
@@ -473,6 +501,50 @@ class _BookingsWidgetState extends State<BookingsWidget> {
           ),
         ),
       );
+
+  Widget _buildBookingsHeader(BuildContext context) {
+    final total = _model.inProgressList.length + _model.completedList.length;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF0F8A6C),
+            Color(0xFF17B890),
+            Color(0xFF73D8B4),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(28),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _HeaderMetric(
+              label: 'Active',
+              value: '${_model.inProgressList.length}',
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _HeaderMetric(
+              label: 'Completed',
+              value: '${_model.completedList.length}',
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _HeaderMetric(
+              label: 'Total',
+              value: '$total',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _BookingMetaRow extends StatelessWidget {
@@ -513,4 +585,41 @@ class _BookingMetaRow extends StatelessWidget {
       ],
     );
   }
+}
+
+class _HeaderMetric extends StatelessWidget {
+  const _HeaderMetric({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Column(
+          children: [
+            Text(
+              value,
+              style: AppTheme.of(context).titleMedium.override(
+                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    color: Colors.white,
+                  ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: AppTheme.of(context).bodySmall.override(
+                    color: Colors.white.withValues(alpha: 0.8),
+                  ),
+            ),
+          ],
+        ),
+      );
 }

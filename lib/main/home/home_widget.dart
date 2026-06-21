@@ -236,26 +236,7 @@ class _HomeWidgetState extends State<HomeWidget> {
 
   Future<void> _loadDeviceLocation({bool forceUseDevice = false}) async {
     try {
-      final enabled = await Geolocator.isLocationServiceEnabled();
-      if (!enabled) {
-        return;
-      }
-
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        return;
-      }
-
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-        ),
-      );
+      final position = await _determineCurrentPosition();
       if (!mounted) {
         return;
       }
@@ -287,6 +268,29 @@ class _HomeWidgetState extends State<HomeWidget> {
         _hasLocation = false;
       });
     }
+  }
+
+  Future<Position> _determineCurrentPosition() async {
+    final enabled = await Geolocator.isLocationServiceEnabled();
+    if (!enabled) {
+      throw Exception('Location services are disabled.');
+    }
+
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      throw Exception('Location permission denied.');
+    }
+
+    return Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+      ),
+    );
   }
 
   Future<void> _animateToCenter() async {
@@ -796,29 +800,31 @@ class _HomeWidgetState extends State<HomeWidget> {
   }
 
   Future<void> _selectCurrentDeviceLocation() async {
-    final latitude = FFAppState().selectedLatitude;
-    final longitude = FFAppState().selectedLongitude;
-    if (latitude == null || longitude == null) {
-      await _loadDeviceLocation(forceUseDevice: true);
+    try {
+      final position = await _determineCurrentPosition();
       if (!mounted) {
         return;
       }
-    }
 
-    final appState = FFAppState();
-    final nextLatitude = appState.selectedLatitude;
-    final nextLongitude = appState.selectedLongitude;
-    if (nextLatitude == null || nextLongitude == null || !mounted) {
-      return;
+      FFAppState().setSelectedDeviceLocation(
+        latitude: position.latitude,
+        longitude: position.longitude,
+      );
+      setState(() {
+        _hasLocation = true;
+        _center = LatLng(position.latitude, position.longitude);
+        _isUsingDeviceLocation = true;
+      });
+      Navigator.of(context).pop();
+      await _animateToCenter();
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _hasLocation = false;
+      });
     }
-
-    final target = LatLng(nextLatitude, nextLongitude);
-    setState(() {
-      _center = target;
-      _isUsingDeviceLocation = true;
-    });
-    Navigator.of(context).pop();
-    await _animateToCenter();
   }
 
   Future<void> _selectSavedAddress(AddressesRow address) async {

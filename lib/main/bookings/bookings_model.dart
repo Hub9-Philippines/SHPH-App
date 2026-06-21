@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '/backend/supabase/database/tables/service_listings.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/bookings_service.dart';
+import '/services/logging_service.dart';
 import 'bookings_widget.dart' show BookingsWidget;
 
 // 1. Define the model class here or in a separate file
@@ -64,27 +65,22 @@ class BookingsModel extends FlutterFlowModel<BookingsWidget> {
     try {
       final bookings = await BookingsService.instance.getUserBookings();
 
-      // Log each booking's serviceListingId to find the problematic one
-      for (final booking in bookings) {
-        print(
-            'Booking ID: ${booking.id}, serviceListingId: ${booking.serviceListingId}');
-      }
-
-      // Fetch all service listings in a single query
       final serviceIds =
           bookings.map((b) => b.serviceListingId).where((id) => id > 0).toSet();
-      print('Service IDs to fetch: $serviceIds');
       if (serviceIds.isNotEmpty) {
         try {
           final services = await ServiceListingsTable().queryRows(
             queryFn: (q) => q.inFilter('id', serviceIds.toList()),
           );
-          print('Services loaded: ${services.length}');
           for (final service in services) {
             _serviceListingsCache[service.id] = service;
           }
         } catch (e) {
-          print('Error fetching services: $e');
+          LoggingService.error(
+            'Error fetching service listings for bookings',
+            tag: 'BookingsModel',
+            error: e,
+          );
         }
       }
 
@@ -93,7 +89,6 @@ class BookingsModel extends FlutterFlowModel<BookingsWidget> {
 
       for (final booking in bookings) {
         final serviceListing = _serviceListingsCache[booking.serviceListingId];
-        print('Booking ID: ${booking.id}, Status: "${booking.status}"');
         final bookingItem = BookingItem(
           id: booking.id,
           status: _formatStatus(booking.status),
@@ -114,16 +109,16 @@ class BookingsModel extends FlutterFlowModel<BookingsWidget> {
 
       inProgressList = inProgress;
       completedList = completed;
-      print(
-          'In progress: ${inProgressList.length}, Completed: ${completedList.length}');
       isLoading = false;
-      print('Setting isLoading to false');
       onStateChanged?.call();
-      print('onStateChanged called');
     } catch (e) {
-      print('Error loading bookings: $e');
       isLoading = false;
       errorMessage = 'Failed to load bookings: $e';
+      LoggingService.error(
+        'Error loading bookings',
+        tag: 'BookingsModel',
+        error: e,
+      );
       onStateChanged?.call();
     }
   }

@@ -36,6 +36,7 @@ class CheckoutScreen extends StatelessWidget {
           return BookingStatusScaffold(
             showMap: showLiveMap,
             location: location,
+            markerHue: gmaps.BitmapDescriptor.hueRose,
             topCard: _CheckoutTopCard(
               serviceTitle: controller.selectedServiceLabel,
               title: isScheduled
@@ -46,7 +47,6 @@ class CheckoutScreen extends StatelessWidget {
                   : 'Confirm the pinned address and payment before we start searching nearby providers.',
               onBack: () => Navigator.of(context).pop(),
             ),
-            center: const _CheckoutPin(),
             bottomSheet: BookingStatusBottomSheet(
               child: _CheckoutSheet(
                 controller: controller,
@@ -259,81 +259,63 @@ class _CheckoutTopCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.primaryBackground.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          IconButton(
-            onPressed: onBack,
-            style: IconButton.styleFrom(
-              backgroundColor: theme.secondaryBackground,
-            ),
-            icon: const Icon(Icons.arrow_back_rounded),
+    return SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: theme.primaryBackground.withValues(alpha: 0.94),
+            borderRadius: BorderRadius.circular(26),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.10),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  serviceTitle,
-                  style: theme.bodyLarge.override(
-                    fontWeight: FontWeight.w700,
-                  ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              IconButton(
+                onPressed: onBack,
+                style: IconButton.styleFrom(
+                  backgroundColor: theme.secondaryBackground,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  title,
-                  style: theme.titleMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                  ),
+                icon: const Icon(Icons.arrow_back_rounded),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      serviceTitle,
+                      style: theme.bodyLarge.override(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      title,
+                      style: theme.titleMedium.override(
+                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: theme.bodySmall.override(
+                        color: theme.secondaryText,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: theme.bodySmall.override(
-                    color: theme.secondaryText,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CheckoutPin extends StatelessWidget {
-  const _CheckoutPin();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
-    return IgnorePointer(
-      child: Container(
-        width: 92,
-        height: 92,
-        decoration: BoxDecoration(
-          color: theme.primaryBackground.withValues(alpha: 0.94),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.16),
-              blurRadius: 22,
-              offset: const Offset(0, 12),
-            ),
-          ],
-        ),
-        child: Icon(
-          Icons.location_on_rounded,
-          color: theme.primary,
-          size: 48,
         ),
       ),
     );
@@ -394,7 +376,7 @@ class _CheckoutSheet extends StatelessWidget {
                       : 'Instant provider search',
                   subtitle: isScheduled
                       ? 'We will lock in your selected slot and keep this pinned location for the visit.'
-                      : 'We will search nearby providers around this pinned location as soon as you continue.',
+                      : 'We will search nearby providers around this saved pin as soon as you continue.',
                 ),
                 const SizedBox(height: 14),
                 _SummaryGrid(

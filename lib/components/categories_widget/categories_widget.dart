@@ -50,13 +50,14 @@ class _CategoriesWidgetWidgetState extends State<CategoriesWidgetWidget> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Padding(
-              padding: const EdgeInsets.all(15),
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
               child: GridView.builder(
+                physics: const BouncingScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                  childAspectRatio: 1.5,
+                  crossAxisSpacing: 14,
+                  mainAxisSpacing: 14,
+                  childAspectRatio: 0.92,
                 ),
                 itemCount: 6,
                 itemBuilder: (context, index) => const CategoryCardSkeleton(),
@@ -77,128 +78,159 @@ class _CategoriesWidgetWidgetState extends State<CategoriesWidgetWidget> {
           }
 
           final categories = snapshot.data ?? [];
-
           if (categories.isEmpty) {
-            return const Center(
+            return Center(
               child: Padding(
-                padding: EdgeInsets.all(32),
-                child: Text('No categories available'),
+                padding: const EdgeInsets.all(32),
+                child: Text(
+                  'No categories available',
+                  style: AppTheme.of(context).bodyMedium,
+                ),
               ),
             );
           }
 
-          return Padding(
-            padding: const EdgeInsets.all(15),
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-                childAspectRatio: 1.5,
-              ),
-              itemCount: categories.length,
-              itemBuilder: (context, index) =>
-                  _buildCategoryCard(categories[index]),
+          return GridView.builder(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 14,
+              mainAxisSpacing: 14,
+              childAspectRatio: 0.92,
             ),
+            itemCount: categories.length,
+            itemBuilder: (context, index) =>
+                _buildCategoryCard(categories[index], index),
           );
         },
       );
 
-  Widget _buildCategoryCard(CategoriesRow category) => GestureDetector(
+  Widget _buildCategoryCard(CategoriesRow category, int index) {
+    final palette = _paletteForIndex(index);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         onTap: () => context.push('/services?category=${category.name}'),
-        child: Container(
+        borderRadius: BorderRadius.circular(28),
+        child: Ink(
           decoration: BoxDecoration(
-            color: AppTheme.of(context).primaryBackground,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: category.imageUrl != null &&
-                            category.imageUrl!.isNotEmpty
-                        ? (category.imageUrl!.startsWith('http')
-                            ? Image.network(
-                                category.imageUrl!,
-                                width: double.infinity,
-                                height: double.infinity,
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Container(
-                                  color:
-                                      AppTheme.of(context).secondaryBackground,
-                                  child: Icon(
-                                    Icons.category,
-                                    color: AppTheme.of(context).secondaryText,
-                                    size: 40,
-                                  ),
-                                ),
-                              )
-                            : Image.asset(
-                                category.imageUrl!,
-                                width: double.infinity,
-                                height: double.infinity,
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Container(
-                                  color:
-                                      AppTheme.of(context).secondaryBackground,
-                                  child: Icon(
-                                    Icons.category,
-                                    color: AppTheme.of(context).secondaryText,
-                                    size: 40,
-                                  ),
-                                ),
-                              ))
-                        : Icon(
-                            Icons.category,
-                            color: AppTheme.of(context).secondaryText,
-                            size: 40,
-                          ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      category.name,
-                      style: AppTheme.of(context).titleSmall.override(
-                            font: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w600,
-                            ),
-                            letterSpacing: 0,
-                            fontWeight: FontWeight.w600,
-                          ),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '5+ Services',
-                      style: AppTheme.of(context).bodySmall.override(
-                            font: GoogleFonts.poppins(
-                              fontWeight:
-                                  AppTheme.of(context).bodySmall.fontWeight,
-                            ),
-                            letterSpacing: 0,
-                            fontWeight:
-                                AppTheme.of(context).bodySmall.fontWeight,
-                          ),
-                    ),
-                  ],
-                ),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: palette,
+            ),
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: palette.first.withValues(alpha: 0.16),
+                blurRadius: 20,
+                offset: const Offset(0, 12),
               ),
             ],
           ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: _buildCategoryArt(category),
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  category.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.of(context).titleMedium.override(
+                        font: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w700,
+                        ),
+                        color: Colors.white,
+                      ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Open services',
+                  style: AppTheme.of(context).bodySmall.override(
+                        font: GoogleFonts.poppins(),
+                        color: Colors.white.withValues(alpha: 0.82),
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryArt(CategoriesRow category) {
+    if (category.imageUrl != null && category.imageUrl!.isNotEmpty) {
+      if (category.imageUrl!.startsWith('http')) {
+        return Image.network(
+          category.imageUrl!,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) => Icon(
+            _fallbackIcon(category.name),
+            color: Colors.white,
+            size: 28,
+          ),
+        );
+      }
+      return Image.asset(
+        category.imageUrl!,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => Icon(
+          _fallbackIcon(category.name),
+          color: Colors.white,
+          size: 28,
         ),
       );
+    }
+
+    return Icon(
+      _fallbackIcon(category.name),
+      color: Colors.white,
+      size: 28,
+    );
+  }
+
+  IconData _fallbackIcon(String name) {
+    final normalized = name.toLowerCase();
+    if (normalized.contains('clean')) {
+      return Icons.cleaning_services_rounded;
+    }
+    if (normalized.contains('plumb')) {
+      return Icons.plumbing_rounded;
+    }
+    if (normalized.contains('paint')) {
+      return Icons.format_paint_rounded;
+    }
+    if (normalized.contains('electric')) {
+      return Icons.electrical_services_rounded;
+    }
+    return Icons.home_repair_service_rounded;
+  }
+
+  List<Color> _paletteForIndex(int index) {
+    const palettes = [
+      [Color(0xFF0F8A6C), Color(0xFF17B890)],
+      [Color(0xFF1C6DD0), Color(0xFF54A6FF)],
+      [Color(0xFFEF6C57), Color(0xFFFF9A62)],
+      [Color(0xFF6C5CE7), Color(0xFF9C88FF)],
+      [Color(0xFF0E7490), Color(0xFF22C3DD)],
+      [Color(0xFF9A3412), Color(0xFFF97316)],
+    ];
+    return palettes[index % palettes.length];
+  }
 }

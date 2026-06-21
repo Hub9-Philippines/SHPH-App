@@ -10,6 +10,10 @@ class BookingStatusScaffold extends StatelessWidget {
     required this.bottomSheet,
     this.center,
     this.showMap = true,
+    this.markerHue = BitmapDescriptor.hueRed,
+    this.overlayOpacityTop = 0.10,
+    this.overlayOpacityMiddle = 0.18,
+    this.overlayOpacityBottom = 0.28,
     super.key,
   });
 
@@ -18,6 +22,10 @@ class BookingStatusScaffold extends StatelessWidget {
   final Widget bottomSheet;
   final Widget? center;
   final bool showMap;
+  final double markerHue;
+  final double overlayOpacityTop;
+  final double overlayOpacityMiddle;
+  final double overlayOpacityBottom;
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +56,7 @@ class BookingStatusScaffold extends StatelessWidget {
                         position: location,
                         anchor: const Offset(0.5, 1),
                         icon: BitmapDescriptor.defaultMarkerWithHue(
-                          BitmapDescriptor.hueRed,
+                          markerHue,
                         ),
                       ),
                     },
@@ -71,9 +79,9 @@ class BookingStatusScaffold extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.black.withValues(alpha: 0.18),
-                    Colors.black.withValues(alpha: 0.28),
-                    Colors.black.withValues(alpha: 0.38),
+                    Colors.black.withValues(alpha: overlayOpacityTop),
+                    Colors.black.withValues(alpha: overlayOpacityMiddle),
+                    Colors.black.withValues(alpha: overlayOpacityBottom),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -82,9 +90,9 @@ class BookingStatusScaffold extends StatelessWidget {
             ),
           ),
           Positioned(
-            top: MediaQuery.of(context).padding.top + 12,
-            left: 16,
-            right: 16,
+            top: 0,
+            left: 0,
+            right: 0,
             child: topCard,
           ),
           if (center != null) Center(child: center!),
@@ -113,24 +121,23 @@ class BookingStatusBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(18, 12, 18, 18),
-        decoration: BoxDecoration(
-          color: theme.primaryBackground.withValues(alpha: 0.97),
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.12),
-              blurRadius: 24,
-              offset: const Offset(0, 12),
-            ),
-          ],
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
+      decoration: BoxDecoration(
+        color: theme.primaryBackground.withValues(alpha: 0.98),
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(32),
         ),
-        child: child,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.10),
+            blurRadius: 24,
+            offset: const Offset(0, -8),
+          ),
+        ],
       ),
+      child: child,
     );
   }
 }

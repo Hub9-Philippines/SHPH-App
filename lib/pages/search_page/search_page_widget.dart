@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '/backend/supabase/database/tables/bookings.dart';
 import '/backend/supabase/database/tables/service_listings.dart';
-import '/components/back_button/back_button_widget.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
@@ -33,6 +31,16 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+
+  static const List<String> _categoryOptions = [
+    'Cleaning',
+    'Painting',
+    'Plumbing',
+    'Electrical',
+  ];
+  static const List<String> _ratingOptions = ['4.0', '4.5', '5.0'];
+
   List<ServiceListingsRow> _searchResults = [];
   bool _isSearching = false;
   bool _showFilters = false;
@@ -49,6 +57,11 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
     _showFilters = widget.openFilters;
     _loadRecentSearches();
     _loadRecentBookings();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _searchFocusNode.requestFocus();
+      }
+    });
   }
 
   Future<void> _loadRecentSearches() async {
@@ -78,6 +91,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
     if (query.isEmpty) {
       return;
     }
+
     final prefs = await SharedPreferences.getInstance();
     final searches = prefs.getStringList('recent_searches') ?? []
       ..remove(query)
@@ -91,62 +105,52 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
     });
   }
 
-  @override
-  void dispose() {
-    _model.dispose();
-    _searchController.dispose();
-
-    super.dispose();
-  }
-
   Future<void> _performSearch(String query) async {
-    if (query.isEmpty) {
+    final normalizedQuery = query.trim();
+    if (normalizedQuery.isEmpty) {
       safeSetState(() {
         _searchResults = [];
       });
       return;
     }
 
-    await _saveRecentSearch(query);
-
+    await _saveRecentSearch(normalizedQuery);
     safeSetState(() {
       _isSearching = true;
     });
 
     try {
-      var queryBuilder = ServiceListingsTable().queryRows(
-        queryFn: (q) => q.ilike('title', '%$query%'),
+      final services = await ServiceListingsTable().queryRows(
+        queryFn: (q) => q.ilike('title', '%$normalizedQuery%'),
       );
 
-      // Apply category filter
-      if (_selectedCategory != null) {
-        queryBuilder = ServiceListingsTable().queryRows(
-          queryFn: (q) => q
-              .ilike('title', '%$query%')
-              .eq('category_name', _selectedCategory!),
-        );
-      }
+      final results = services.where((service) {
+        final category = service.categoryName ?? '';
+        final rating = double.tryParse(service.rating ?? '0') ?? 0.0;
 
-      // Apply rating filter
-      if (_selectedRating != null) {
-        final minRating = double.parse(_selectedRating!);
-        queryBuilder = ServiceListingsTable().queryRows(
-          queryFn: (q) =>
-              q.ilike('title', '%$query%').gte('rating', minRating.toString()),
-        );
-      }
+        final matchesCategory = _selectedCategory == null ||
+            _matchesCategory(_selectedCategory!, category);
+        final matchesRating =
+            _selectedRating == null || rating >= double.parse(_selectedRating!);
 
-      // Apply price sort
+        return matchesCategory && matchesRating;
+      }).toList();
+
       if (_selectedPriceSort != null) {
-        final ascending = _selectedPriceSort == 'low';
-        queryBuilder = ServiceListingsTable().queryRows(
-          queryFn: (q) => q
-              .ilike('title', '%$query%')
-              .order('base_price', ascending: ascending),
-        );
+        results.sort((a, b) {
+          final priceA = a.basePrice ?? 0;
+          final priceB = b.basePrice ?? 0;
+          return _selectedPriceSort == 'low'
+              ? priceA.compareTo(priceB)
+              : priceB.compareTo(priceA);
+        });
+      } else {
+        results.sort((a, b) {
+          final ratingA = double.tryParse(a.rating ?? '0') ?? 0.0;
+          final ratingB = double.tryParse(b.rating ?? '0') ?? 0.0;
+          return ratingB.compareTo(ratingA);
+        });
       }
-
-      final results = await queryBuilder;
 
       safeSetState(() {
         _searchResults = results;
@@ -165,6 +169,595 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
     }
   }
 
+  bool _matchesCategory(String selected, String actual) {
+    final selectedNormalized = _normalizeCategory(selected);
+    final actualNormalized = _normalizeCategory(actual);
+    return actualNormalized == selectedNormalized ||
+        actualNormalized.contains(selectedNormalized) ||
+        selectedNormalized.contains(actualNormalized);
+  }
+
+  String _normalizeCategory(String value) => value
+      .toLowerCase()
+      .replaceAll('&', 'and')
+      .replaceAll(RegExp('[^a-z0-9]+'), '');
+
+  void _applyQuickSearch(String value) {
+    _searchController.text = value;
+    _performSearch(value);
+  }
+
+  void _resetFilters() {
+    safeSetState(() {
+      _selectedCategory = null;
+      _selectedRating = null;
+      _selectedPriceSort = null;
+    });
+    if (_searchController.text.trim().isNotEmpty) {
+      _performSearch(_searchController.text);
+    }
+  }
+
+  @override
+  void dispose() {
+    _model.dispose();
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+        onTap: () {
+          FocusScope.of(context).unfocus();
+          FocusManager.instance.primaryFocus?.unfocus();
+        },
+        child: Scaffold(
+          key: scaffoldKey,
+          backgroundColor: const Color(0xFFF5F7FA),
+          body: SafeArea(
+            child: Column(
+              children: [
+                _buildTopBar(),
+                Expanded(
+                  child: CustomScrollView(
+                    physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics(),
+                    ),
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+                          child: Column(
+                            children: [
+                              Hero(
+                                tag: 'searchBarHero',
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: _buildSearchBar(),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              _buildSearchSummary(),
+                              if (_showFilters) ...[
+                                const SizedBox(height: 16),
+                                _buildFilterPanel(),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                      if (_isSearching)
+                        SliverList.builder(
+                          itemCount: 5,
+                          itemBuilder: (context, index) => const Padding(
+                            padding: EdgeInsets.fromLTRB(20, 0, 20, 14),
+                            child: SearchCardSkeleton(),
+                          ),
+                        )
+                      else if (_searchResults.isEmpty)
+                        SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                            child: _searchController.text.isEmpty
+                                ? _buildEmptyState()
+                                : _buildNoResultsState(),
+                          ),
+                        )
+                      else
+                        SliverPadding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                          sliver: SliverList.builder(
+                            itemCount: _searchResults.length,
+                            itemBuilder: (context, index) =>
+                                _buildServiceCard(_searchResults[index]),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+  Widget _buildTopBar() => Padding(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+        child: Row(
+          children: [
+            Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              child: InkWell(
+                onTap: () => context.pop(),
+                borderRadius: BorderRadius.circular(16),
+                child: const SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: Icon(Icons.arrow_back_rounded),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Search',
+                    style: AppTheme.of(context).titleLarge.override(
+                          font: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w700,
+                          ),
+                          color: const Color(0xFF16202A),
+                        ),
+                  ),
+                  Text(
+                    'Browse services with filters that actually help.',
+                    style: AppTheme.of(context).bodySmall.override(
+                          font: GoogleFonts.poppins(),
+                          color: const Color(0xFF6F7B86),
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              child: InkWell(
+                onTap: () {
+                  safeSetState(() {
+                    _showFilters = !_showFilters;
+                  });
+                },
+                borderRadius: BorderRadius.circular(16),
+                child: SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: Icon(
+                    _showFilters ? Icons.close_rounded : Icons.tune_rounded,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _buildSearchBar() => Container(
+        height: 58,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x12000000),
+              blurRadius: 20,
+              offset: Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.search_rounded,
+              color: Color(0xFF5F6B76),
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextField(
+                controller: _searchController,
+                focusNode: _searchFocusNode,
+                autofocus: true,
+                onChanged: _performSearch,
+                decoration: InputDecoration(
+                  hintText: 'Search for services...',
+                  hintStyle: AppTheme.of(context).bodyMedium.override(
+                        font: GoogleFonts.poppins(),
+                        color: const Color(0xFF93A0AC),
+                      ),
+                  border: InputBorder.none,
+                ),
+              ),
+            ),
+            if (_searchController.text.isNotEmpty)
+              InkWell(
+                onTap: () {
+                  _searchController.clear();
+                  _performSearch('');
+                },
+                borderRadius: BorderRadius.circular(999),
+                child: const Padding(
+                  padding: EdgeInsets.all(4),
+                  child: Icon(
+                    Icons.close_rounded,
+                    color: Color(0xFF7F8B97),
+                    size: 20,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+
+  Widget _buildSearchSummary() => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF17212B),
+              Color(0xFF23384D),
+              Color(0xFF2F5368),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(28),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _searchController.text.trim().isEmpty
+                  ? 'Start with a keyword'
+                  : '"${_searchController.text.trim()}"',
+              style: AppTheme.of(context).headlineSmall.override(
+                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    color: Colors.white,
+                  ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              _searchController.text.trim().isEmpty
+                  ? 'Search by service name or category.'
+                  : '${_searchResults.length} matching services',
+              style: AppTheme.of(context).bodyMedium.override(
+                    font: GoogleFonts.poppins(),
+                    color: Colors.white.withValues(alpha: 0.82),
+                  ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _buildFilterPanel() => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x10000000),
+              blurRadius: 16,
+              offset: Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildFilterGroup(
+              title: 'Category',
+              children: [
+                _buildChip(
+                  label: 'All',
+                  selected: _selectedCategory == null,
+                  onTap: () {
+                    safeSetState(() => _selectedCategory = null);
+                    _performSearch(_searchController.text);
+                  },
+                ),
+                ..._categoryOptions.map(
+                  (category) => _buildChip(
+                    label: category,
+                    selected: _selectedCategory == category,
+                    onTap: () {
+                      safeSetState(() => _selectedCategory = category);
+                      _performSearch(_searchController.text);
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            _buildFilterGroup(
+              title: 'Minimum rating',
+              children: [
+                _buildChip(
+                  label: 'All',
+                  selected: _selectedRating == null,
+                  onTap: () {
+                    safeSetState(() => _selectedRating = null);
+                    _performSearch(_searchController.text);
+                  },
+                ),
+                ..._ratingOptions.map(
+                  (rating) => _buildChip(
+                    label: '$rating+',
+                    selected: _selectedRating == rating,
+                    onTap: () {
+                      safeSetState(() => _selectedRating = rating);
+                      _performSearch(_searchController.text);
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            _buildFilterGroup(
+              title: 'Price',
+              children: [
+                _buildChip(
+                  label: 'Default',
+                  selected: _selectedPriceSort == null,
+                  onTap: () {
+                    safeSetState(() => _selectedPriceSort = null);
+                    _performSearch(_searchController.text);
+                  },
+                ),
+                _buildChip(
+                  label: 'Low to High',
+                  selected: _selectedPriceSort == 'low',
+                  onTap: () {
+                    safeSetState(() => _selectedPriceSort = 'low');
+                    _performSearch(_searchController.text);
+                  },
+                ),
+                _buildChip(
+                  label: 'High to Low',
+                  selected: _selectedPriceSort == 'high',
+                  onTap: () {
+                    safeSetState(() => _selectedPriceSort = 'high');
+                    _performSearch(_searchController.text);
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: _resetFilters,
+                child: const Text('Reset filters'),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _buildFilterGroup({
+    required String title,
+    required List<Widget> children,
+  }) =>
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: AppTheme.of(context).labelLarge.override(
+                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                  color: const Color(0xFF16202A),
+                ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: children,
+          ),
+        ],
+      );
+
+  Widget _buildChip({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) =>
+      FilterChip(
+        label: Text(label),
+        selected: selected,
+        showCheckmark: false,
+        onSelected: (_) => onTap(),
+        side: BorderSide.none,
+        backgroundColor: const Color(0xFFF3F6F8),
+        selectedColor: AppTheme.of(context).primary,
+        labelStyle: AppTheme.of(context).labelMedium.override(
+              font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+              color: selected ? Colors.white : const Color(0xFF16202A),
+            ),
+      );
+
+  Widget _buildEmptyState() => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 92,
+              height: 92,
+              decoration: BoxDecoration(
+                color: AppTheme.of(context).primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(28),
+              ),
+              child: Icon(
+                Icons.search_rounded,
+                size: 42,
+                color: AppTheme.of(context).primary,
+              ),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              'Search for services',
+              style: AppTheme.of(context).titleMedium.override(
+                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    color: const Color(0xFF16202A),
+                  ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Try keywords like cleaning, painting, or plumbing.',
+              textAlign: TextAlign.center,
+              style: AppTheme.of(context).bodySmall.override(
+                    font: GoogleFonts.poppins(),
+                    color: const Color(0xFF6F7B86),
+                  ),
+            ),
+            if (_recentSearches.isNotEmpty) ...[
+              const SizedBox(height: 26),
+              _buildSuggestionBlock(
+                title: 'Recent searches',
+                children: _recentSearches
+                    .map(
+                      (search) => _buildSuggestionChip(
+                        icon: Icons.history_rounded,
+                        label: search,
+                        onTap: () => _applyQuickSearch(search),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ],
+            if (_recentBookings.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              _buildSuggestionBlock(
+                title: 'Recent bookings',
+                children: _recentBookings
+                    .map(
+                      (booking) => _buildSuggestionChip(
+                        icon: Icons.bookmark_outline_rounded,
+                        label: 'Booking #${booking.id.substring(0, 8)}',
+                        onTap: () => _applyQuickSearch(
+                            booking.serviceListingId.toString()),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ],
+          ],
+        ),
+      );
+
+  Widget _buildSuggestionBlock({
+    required String title,
+    required List<Widget> children,
+  }) =>
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: AppTheme.of(context).labelLarge.override(
+                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                  color: const Color(0xFF16202A),
+                ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: children,
+          ),
+        ],
+      );
+
+  Widget _buildSuggestionChip({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) =>
+      Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 16, color: const Color(0xFF7F8B97)),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: AppTheme.of(context).bodySmall.override(
+                        font: GoogleFonts.poppins(),
+                        color: const Color(0xFF16202A),
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+  Widget _buildNoResultsState() => Center(
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(28),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.search_off_rounded,
+                size: 46,
+                color: AppTheme.of(context).primary,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No services found',
+                style: AppTheme.of(context).titleMedium.override(
+                      font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                      color: const Color(0xFF16202A),
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Try another keyword or loosen your filters.',
+                textAlign: TextAlign.center,
+                style: AppTheme.of(context).bodySmall.override(
+                      font: GoogleFonts.poppins(),
+                      color: const Color(0xFF6F7B86),
+                    ),
+              ),
+            ],
+          ),
+        ),
+      );
+
   Widget _buildServiceCard(ServiceListingsRow service) => GestureDetector(
         onTap: () => context.pushNamed(
           ProductPageWidget.routeName,
@@ -172,8 +765,8 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
             'serviceName': service.title,
             'category': service.categoryName ?? 'Service',
             'price': service.basePrice != null
-                ? '₱${service.basePrice}${service.priceUnit ?? ''}'
-                : '₱0',
+                ? 'PHP ${service.basePrice}${service.priceUnit ?? ''}'
+                : 'PHP 0',
             'rating': double.tryParse(service.rating ?? '0') ?? 0.0,
             'reviewCount': service.reviewCount ?? 0,
             'imageUrl': service.thumbnail ?? '',
@@ -187,570 +780,121 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
           },
         ),
         child: Container(
-          margin: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 12),
+          margin: const EdgeInsets.only(bottom: 14),
           decoration: BoxDecoration(
-            color: AppTheme.of(context).secondaryBackground,
-            borderRadius: BorderRadius.circular(12),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x10000000),
+                blurRadius: 18,
+                offset: Offset(0, 8),
+              ),
+            ],
           ),
           child: Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(12, 12, 12, 12),
+            padding: const EdgeInsets.all(14),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(18),
                   child:
                       service.thumbnail != null && service.thumbnail!.isNotEmpty
                           ? Image.network(
                               service.thumbnail!,
-                              width: 80,
-                              height: 80,
+                              width: 92,
+                              height: 92,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) =>
                                   Container(
-                                width: 80,
-                                height: 80,
-                                color: AppTheme.of(context).secondaryText,
+                                width: 92,
+                                height: 92,
+                                color: const Color(0xFFE8EDF2),
                                 child: Icon(
-                                  Icons.image_not_supported,
-                                  color: AppTheme.of(context).primaryBackground,
+                                  Icons.image_not_supported_outlined,
+                                  color: AppTheme.of(context).secondaryText,
                                 ),
                               ),
                             )
                           : Container(
-                              width: 80,
-                              height: 80,
-                              color: AppTheme.of(context).secondaryText,
+                              width: 92,
+                              height: 92,
+                              color: const Color(0xFFE8EDF2),
                               child: Icon(
-                                Icons.image_not_supported,
-                                color: AppTheme.of(context).primaryBackground,
+                                Icons.image_not_supported_outlined,
+                                color: AppTheme.of(context).secondaryText,
                               ),
                             ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         service.title,
-                        style: AppTheme.of(context).titleSmall.override(
-                              font: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600),
-                            ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
+                        style: AppTheme.of(context).titleMedium.override(
+                              font: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w700,
+                              ),
+                              color: const Color(0xFF16202A),
+                            ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 6),
                       Text(
                         service.categoryName ?? 'Service',
                         style: AppTheme.of(context).bodySmall.override(
-                              color: AppTheme.of(context).secondaryText,
+                              font: GoogleFonts.poppins(),
+                              color: const Color(0xFF6F7B86),
                             ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 8),
                       Row(
                         children: [
                           const Icon(
-                            Icons.star,
-                            size: 16,
-                            color: Colors.amber,
+                            Icons.star_rounded,
+                            size: 18,
+                            color: Color(0xFFFFC44D),
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            service.rating ?? '0',
-                            style: AppTheme.of(context).bodySmall,
+                            (double.tryParse(service.rating ?? '0') ?? 0)
+                                .toStringAsFixed(1),
+                            style: AppTheme.of(context).bodySmall.override(
+                                  font: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            '(${service.reviewCount ?? 0})',
+                            '${service.reviewCount ?? 0} reviews',
                             style: AppTheme.of(context).bodySmall.override(
-                                  color: AppTheme.of(context).secondaryText,
+                                  font: GoogleFonts.poppins(),
+                                  color: const Color(0xFF6F7B86),
                                 ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 10),
                       Text(
                         service.basePrice != null
-                            ? '₱${service.basePrice}${service.priceUnit ?? ''}'
-                            : '₱0',
-                        style: AppTheme.of(context).bodyMedium.override(
-                              color: AppTheme.of(context).primary,
+                            ? 'PHP ${service.basePrice}${service.priceUnit ?? ''}'
+                            : 'PHP 0',
+                        style: AppTheme.of(context).titleSmall.override(
                               font: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600),
+                                fontWeight: FontWeight.w700,
+                              ),
+                              color: AppTheme.of(context).primary,
                             ),
                       ),
                     ],
                   ),
                 ),
               ],
-            ),
-          ),
-        ),
-      );
-
-  Widget _buildEmptyState() => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.search,
-              size: 64,
-              color: AppTheme.of(context).secondaryText,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Search for services',
-              style: AppTheme.of(context).titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Try searching for "painting", "cleaning", or "plumbing"',
-              style: AppTheme.of(context).bodySmall.override(
-                    color: AppTheme.of(context).secondaryText,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            if (_recentSearches.isNotEmpty) ...[
-              const SizedBox(height: 24),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 40),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Recent searches',
-                      style: AppTheme.of(context).bodySmall.override(
-                            font: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600),
-                          ),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: _recentSearches
-                          .map((search) => GestureDetector(
-                                onTap: () {
-                                  _searchController.text = search;
-                                  _performSearch(search);
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 8,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.of(context)
-                                        .secondaryBackground,
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.history,
-                                        size: 14,
-                                        color:
-                                            AppTheme.of(context).secondaryText,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        search,
-                                        style: AppTheme.of(context).bodySmall,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ))
-                          .toList(),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            if (_recentBookings.isNotEmpty) ...[
-              const SizedBox(height: 24),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 40),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Recent bookings',
-                      style: AppTheme.of(context).bodySmall.override(
-                            font: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600),
-                          ),
-                    ),
-                    const SizedBox(height: 12),
-                    ..._recentBookings.map((booking) => GestureDetector(
-                          onTap: () {
-                            _searchController.text =
-                                booking.serviceListingId.toString();
-                            _performSearch(booking.serviceListingId.toString());
-                          },
-                          child: Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppTheme.of(context).secondaryBackground,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.bookmark,
-                                  size: 16,
-                                  color: AppTheme.of(context).primary,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    'Booking #${booking.id.substring(0, 8)}',
-                                    style: AppTheme.of(context).bodySmall,
-                                  ),
-                                ),
-                                Text(
-                                  booking.status,
-                                  style:
-                                      AppTheme.of(context).bodySmall.override(
-                                            color: AppTheme.of(context).primary,
-                                          ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ))
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
-      );
-
-  Widget _buildFilterPanel() => Container(
-        padding: const EdgeInsetsDirectional.fromSTEB(0, 12, 0, 12),
-        decoration: BoxDecoration(
-          color: AppTheme.of(context).primaryBackground,
-          border: Border(
-            bottom: BorderSide(
-              color: AppTheme.of(context).alternate,
-              width: 1,
-            ),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Category Filter
-            Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(15, 0, 15, 8),
-              child: Text(
-                'Category',
-                style: AppTheme.of(context).bodySmall.override(
-                      font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                    ),
-              ),
-            ),
-            SizedBox(
-              height: 40,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsetsDirectional.fromSTEB(15, 0, 15, 0),
-                children: [
-                  _buildFilterChip('All', _selectedCategory == null, () {
-                    safeSetState(() {
-                      _selectedCategory = null;
-                      _performSearch(_searchController.text);
-                    });
-                  }),
-                  _buildFilterChip('Cleaning', _selectedCategory == 'Cleaning',
-                      () {
-                    safeSetState(() {
-                      _selectedCategory = 'Cleaning';
-                      _performSearch(_searchController.text);
-                    });
-                  }),
-                  _buildFilterChip('Painting', _selectedCategory == 'Painting',
-                      () {
-                    safeSetState(() {
-                      _selectedCategory = 'Painting';
-                      _performSearch(_searchController.text);
-                    });
-                  }),
-                  _buildFilterChip('Plumbing', _selectedCategory == 'Plumbing',
-                      () {
-                    safeSetState(() {
-                      _selectedCategory = 'Plumbing';
-                      _performSearch(_searchController.text);
-                    });
-                  }),
-                  _buildFilterChip(
-                      'Electrical', _selectedCategory == 'Electrical', () {
-                    safeSetState(() {
-                      _selectedCategory = 'Electrical';
-                      _performSearch(_searchController.text);
-                    });
-                  }),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            // Rating Filter
-            Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(15, 0, 15, 8),
-              child: Text(
-                'Rating',
-                style: AppTheme.of(context).bodySmall.override(
-                      font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                    ),
-              ),
-            ),
-            SizedBox(
-              height: 40,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsetsDirectional.fromSTEB(15, 0, 15, 0),
-                children: [
-                  _buildFilterChip('All', _selectedRating == null, () {
-                    safeSetState(() {
-                      _selectedRating = null;
-                      _performSearch(_searchController.text);
-                    });
-                  }),
-                  _buildFilterChip('4.0+', _selectedRating == '4.0', () {
-                    safeSetState(() {
-                      _selectedRating = '4.0';
-                      _performSearch(_searchController.text);
-                    });
-                  }),
-                  _buildFilterChip('4.5+', _selectedRating == '4.5', () {
-                    safeSetState(() {
-                      _selectedRating = '4.5';
-                      _performSearch(_searchController.text);
-                    });
-                  }),
-                  _buildFilterChip('5.0', _selectedRating == '5.0', () {
-                    safeSetState(() {
-                      _selectedRating = '5.0';
-                      _performSearch(_searchController.text);
-                    });
-                  }),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            // Price Sort
-            Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(15, 0, 15, 8),
-              child: Text(
-                'Price',
-                style: AppTheme.of(context).bodySmall.override(
-                      font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                    ),
-              ),
-            ),
-            SizedBox(
-              height: 40,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsetsDirectional.fromSTEB(15, 0, 15, 0),
-                children: [
-                  _buildFilterChip('All', _selectedPriceSort == null, () {
-                    safeSetState(() {
-                      _selectedPriceSort = null;
-                      _performSearch(_searchController.text);
-                    });
-                  }),
-                  _buildFilterChip('Low to High', _selectedPriceSort == 'low',
-                      () {
-                    safeSetState(() {
-                      _selectedPriceSort = 'low';
-                      _performSearch(_searchController.text);
-                    });
-                  }),
-                  _buildFilterChip('High to Low', _selectedPriceSort == 'high',
-                      () {
-                    safeSetState(() {
-                      _selectedPriceSort = 'high';
-                      _performSearch(_searchController.text);
-                    });
-                  }),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-
-  Widget _buildFilterChip(String label, bool isSelected, VoidCallback onTap) =>
-      Padding(
-        padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 8, 0),
-        child: FilterChip(
-          label: Text(label),
-          selected: isSelected,
-          onSelected: (selected) => onTap(),
-          selectedColor: AppTheme.of(context).primary,
-          labelStyle: TextStyle(
-            color: isSelected ? Colors.white : AppTheme.of(context).primaryText,
-            fontSize: 13,
-          ),
-          backgroundColor: AppTheme.of(context).secondaryBackground,
-        ),
-      );
-
-  @override
-  Widget build(BuildContext context) => GestureDetector(
-        onTap: () {
-          FocusScope.of(context).unfocus();
-          FocusManager.instance.primaryFocus?.unfocus();
-        },
-        child: Scaffold(
-          key: scaffoldKey,
-          backgroundColor: AppTheme.of(context).primaryBackground,
-          appBar: AppBar(
-            backgroundColor: AppTheme.of(context).primaryBackground,
-            automaticallyImplyLeading: false,
-            leading: wrapWithModel(
-              model: _model.backButtonModel,
-              updateCallback: () => safeSetState(() {}),
-              child: const BackButtonWidget(),
-            ),
-            title: Text(
-              'Search',
-              style: AppTheme.of(context).titleLarge.override(
-                    font: GoogleFonts.poppins(
-                      fontWeight: FontWeight.bold,
-                      fontStyle: AppTheme.of(context).titleLarge.fontStyle,
-                    ),
-                    letterSpacing: 0,
-                    fontWeight: FontWeight.bold,
-                    fontStyle: AppTheme.of(context).titleLarge.fontStyle,
-                  ),
-            ),
-            actions: [
-              IconButton(
-                icon: Icon(
-                  _showFilters ? Icons.close : Icons.filter_list,
-                  color: AppTheme.of(context).primaryText,
-                ),
-                onPressed: () {
-                  safeSetState(() {
-                    _showFilters = !_showFilters;
-                  });
-                },
-              ),
-            ],
-            centerTitle: true,
-            elevation: 0,
-          ),
-          body: SafeArea(
-            top: true,
-            child: Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(15, 0, 15, 0),
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(0, 10, 0, 20),
-                    child: Hero(
-                      tag: 'searchBarHero',
-                      child: Material(
-                        color: Colors.transparent,
-                        child: Container(
-                          height: MediaQuery.of(context).size.width * 0.13,
-                          constraints: const BoxConstraints(
-                            minHeight: 45,
-                            maxHeight: 65,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF4F4F4),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsetsDirectional.fromSTEB(
-                                10, 0, 10, 0),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.max,
-                              children: [
-                                const FaIcon(
-                                  FontAwesomeIcons.magnifyingGlass,
-                                  color: Color(0x6B14181B),
-                                  size: 24,
-                                ),
-                                const SizedBox(width: 15),
-                                Expanded(
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    child: TextField(
-                                      controller: _searchController,
-                                      autofocus: true,
-                                      onChanged: _performSearch,
-                                      decoration: InputDecoration(
-                                        hintText: 'Search for services...',
-                                        hintStyle: AppTheme.of(context)
-                                            .bodyMedium
-                                            .override(
-                                              color: const Color(0xE357636C),
-                                              fontSize: 16,
-                                            ),
-                                        border: InputBorder.none,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                if (_searchController.text.isNotEmpty)
-                                  IconButton(
-                                    icon: const Icon(Icons.clear),
-                                    onPressed: () {
-                                      _searchController.clear();
-                                      _performSearch('');
-                                    },
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (_showFilters) _buildFilterPanel(),
-                  Expanded(
-                    child: _isSearching
-                        ? ListView.builder(
-                            padding: const EdgeInsetsDirectional.fromSTEB(
-                                0, 0, 0, 20),
-                            itemCount: 5,
-                            itemBuilder: (context, index) =>
-                                const SearchCardSkeleton(),
-                          )
-                        : _searchResults.isEmpty
-                            ? _searchController.text.isEmpty
-                                ? _buildEmptyState()
-                                : const Center(
-                                    child: Text(
-                                      'No services found',
-                                      style: TextStyle(
-                                        color: Color(0xE357636C),
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  )
-                            : ListView.builder(
-                                padding: const EdgeInsetsDirectional.fromSTEB(
-                                    0, 0, 0, 20),
-                                itemCount: _searchResults.length,
-                                itemBuilder: (context, index) {
-                                  final service = _searchResults[index];
-                                  return _buildServiceCard(service);
-                                },
-                              ),
-                  ),
-                ],
-              ),
             ),
           ),
         ),

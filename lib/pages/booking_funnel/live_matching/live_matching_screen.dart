@@ -2,12 +2,11 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
-import '/main/home/home_widget.dart';
+import '/main.dart';
 import '/theme/app_theme.dart';
 import '../booking_controller.dart';
 import '../widgets/booking_status_scaffold.dart';
@@ -77,6 +76,10 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     return BookingStatusScaffold(
       showMap: widget.showMap,
       location: location,
+      markerHue: BitmapDescriptor.hueAzure,
+      overlayOpacityTop: 0,
+      overlayOpacityMiddle: 0.03,
+      overlayOpacityBottom: 0.08,
       topCard: _StatusCard(
         secondsRemaining: _secondsRemaining,
         timedOut: _timedOut,
@@ -84,45 +87,77 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
         stageLabel: matchingStage.label,
         stageSubtitle: matchingStage.subtitle,
       ),
-      center: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, _) {
-          final progress = _controller.value * 3.0;
-          return IgnorePointer(
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                for (var ringIndex = 0; ringIndex < 3; ringIndex++)
-                  _RippleRing(
-                    progress: (progress + ringIndex * 0.33) % 1.0,
-                    ringIndex: ringIndex,
+      center: _timedOut
+          ? null
+          : AnimatedBuilder(
+              animation: _controller,
+              builder: (context, _) {
+                final progress = _controller.value * 3;
+                return IgnorePointer(
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      for (var ringIndex = 0; ringIndex < 3; ringIndex++)
+                        _RippleRing(
+                          progress: (progress + ringIndex * 0.33) % 1.0,
+                          ringIndex: ringIndex,
+                        ),
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: AppTheme.of(context)
+                              .primary
+                              .withValues(alpha: 0.18),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      Container(
+                        width: 18,
+                        height: 18,
+                        decoration: BoxDecoration(
+                          color: AppTheme.of(context)
+                              .primary
+                              .withValues(alpha: 0.34),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: AppTheme.of(context).primary,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.of(context)
+                                  .primary
+                                  .withValues(alpha: 0.45),
+                              blurRadius: 18,
+                              spreadRadius: 6,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                Container(
-                  width: 16,
-                  height: 16,
-                  decoration: BoxDecoration(
-                    color: AppTheme.of(context).primary.withValues(alpha: 0.28),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: AppTheme.of(context).primary,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ],
+                );
+              },
             ),
-          );
-        },
-      ),
       bottomSheet: BookingStatusBottomSheet(
         child: _timedOut
             ? _TimeoutSheet(
                 onAdjustBooking: () => Navigator.of(context).pop(),
-                onBackHome: () => context.goNamed(HomeWidget.routeName),
+                onBackHome: () => Navigator.of(context, rootNavigator: true)
+                    .pushAndRemoveUntil(
+                  MaterialPageRoute(
+                    builder: (_) => const NavBarPage(
+                      initialPage: 'Home',
+                      disableResizeToAvoidBottomInset: true,
+                    ),
+                  ),
+                  (route) => false,
+                ),
               )
             : _SearchingSheet(
                 stageLabel: matchingStage.label,
@@ -178,26 +213,33 @@ class _RippleRing extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
-    final size = 34 + (progress * 92);
+    final size = 52 + (progress * 160);
     final opacity = math.max(0, 1.0 - progress);
 
     return Opacity(
       opacity: opacity *
           (ringIndex == 0
-              ? 0.34
+              ? 0.64
               : ringIndex == 1
-                  ? 0.24
-                  : 0.16),
+                  ? 0.46
+                  : 0.30),
       child: Container(
         width: size,
         height: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: theme.primary.withValues(alpha: 0.12),
+          color: theme.primary.withValues(alpha: 0.18),
           border: Border.all(
-            color: theme.primary.withValues(alpha: 0.22),
-            width: 1.4,
+            color: theme.primary.withValues(alpha: 0.42),
+            width: 2.2,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: theme.primary.withValues(alpha: 0.18),
+              blurRadius: 14,
+              spreadRadius: 3,
+            ),
+          ],
         ),
       ),
     );
@@ -222,69 +264,91 @@ class _StatusCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.primaryBackground.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            serviceTitle,
-            style: theme.bodyLarge.override(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            timedOut ? 'Search timed out' : 'Finding the nearest provider',
-            style: theme.titleMedium.override(
-              font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            timedOut
-                ? 'We could not find an active provider in time.'
-                : stageSubtitle,
-            style: theme.bodyMedium.override(
-              color: theme.secondaryText,
-            ),
-          ),
-          if (!timedOut) ...[
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: theme.primary.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(999),
+    return SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: theme.primaryBackground.withValues(alpha: 0.94),
+            borderRadius: BorderRadius.circular(26),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.10),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
-              child: Text(
-                stageLabel,
-                style: theme.labelMedium.override(
-                  color: theme.primary,
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                serviceTitle,
+                style: theme.bodyLarge.override(
                   fontWeight: FontWeight.w700,
                 ),
               ),
-            ),
-            const SizedBox(height: 10),
-            LinearProgressIndicator(
-              value: secondsRemaining / 30,
-              minHeight: 6,
-              backgroundColor: theme.alternate.withValues(alpha: 0.25),
-              color: theme.primary,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              '$secondsRemaining s remaining',
-              style: theme.labelMedium.override(
-                color: theme.secondaryText,
+              const SizedBox(height: 4),
+              Text(
+                timedOut ? 'Search timed out' : 'Finding the nearest provider',
+                style: theme.titleMedium.override(
+                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                ),
               ),
-            ),
-          ],
-        ],
+              const SizedBox(height: 4),
+              Text(
+                timedOut
+                    ? 'We could not find an active provider in time.'
+                    : stageSubtitle,
+                style: theme.bodyMedium.override(
+                  color: theme.secondaryText,
+                ),
+              ),
+              if (!timedOut) ...[
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.primary.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        stageLabel,
+                        style: theme.labelMedium.override(
+                          color: theme.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '$secondsRemaining s',
+                      style: theme.labelLarge.override(
+                        color: theme.secondaryText,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                LinearProgressIndicator(
+                  value: secondsRemaining / 30,
+                  minHeight: 7,
+                  backgroundColor: theme.alternate.withValues(alpha: 0.25),
+                  color: theme.primary,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -323,6 +387,55 @@ class _SearchingSheet extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF6FBFF),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: theme.primary.withValues(alpha: 0.16),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: theme.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  Icons.radar_rounded,
+                  color: theme.primary,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Live search in progress',
+                      style: theme.bodyMedium.override(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Keeping your pinned location active while we scan nearby providers.',
+                      style: theme.bodySmall.override(
+                        color: theme.secondaryText,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
         Text(
           'Searching nearby providers',
           style: theme.titleMedium.override(
@@ -430,6 +543,12 @@ class _TimeoutSheet extends StatelessWidget {
             Expanded(
               child: OutlinedButton(
                 onPressed: onAdjustBooking,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(54),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
                 child: const Text('Adjust booking'),
               ),
             ),
@@ -437,6 +556,12 @@ class _TimeoutSheet extends StatelessWidget {
             Expanded(
               child: ElevatedButton(
                 onPressed: onBackHome,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(54),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
                 child: const Text('Back home'),
               ),
             ),

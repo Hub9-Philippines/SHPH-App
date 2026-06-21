@@ -20,6 +20,7 @@ class BookingSuccessScreen extends StatelessWidget {
 
           return BookingStatusScaffold(
             location: location,
+            markerHue: BitmapDescriptor.hueGreen,
             topCard: _SuccessTopCard(
               serviceTitle: controller.selectedServiceLabel,
               referenceId: controller.activeReferenceId,
@@ -58,46 +59,69 @@ class _SuccessTopCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.primaryBackground.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            serviceTitle,
-            style: theme.bodyLarge.override(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Reservation confirmed',
-            style: theme.titleMedium.override(
-              font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Your slot is reserved and ready for provider assignment.',
-            style: theme.bodyMedium.override(
-              color: theme.secondaryText,
-            ),
-          ),
-          if ((referenceId ?? '').isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Text(
-              'Reference: $referenceId',
-              style: theme.labelMedium.override(
-                color: theme.secondaryText,
-                fontWeight: FontWeight.w600,
+    return SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: theme.primaryBackground.withValues(alpha: 0.94),
+            borderRadius: BorderRadius.circular(26),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.10),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
-            ),
-          ],
-        ],
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                serviceTitle,
+                style: theme.bodyLarge.override(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Reservation confirmed',
+                style: theme.titleMedium.override(
+                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Your slot is reserved and ready for provider assignment.',
+                style: theme.bodyMedium.override(
+                  color: theme.secondaryText,
+                ),
+              ),
+              if ((referenceId ?? '').isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.primary.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    'Reference: $referenceId',
+                    style: theme.labelMedium.override(
+                      color: theme.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -110,10 +134,10 @@ class _SuccessBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
     return Container(
-      width: 108,
-      height: 108,
+      width: 116,
+      height: 116,
       decoration: BoxDecoration(
-        color: theme.primaryBackground.withValues(alpha: 0.94),
+        color: theme.primaryBackground.withValues(alpha: 0.96),
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
@@ -125,7 +149,7 @@ class _SuccessBadge extends StatelessWidget {
       ),
       child: Icon(
         Icons.check_circle_rounded,
-        size: 54,
+        size: 58,
         color: theme.primary,
       ),
     );
@@ -175,6 +199,55 @@ class _SuccessSheet extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: theme.primary.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: theme.primary.withValues(alpha: 0.16),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: theme.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  Icons.notifications_active_rounded,
+                  color: theme.primary,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Next step',
+                      style: theme.bodyMedium.override(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'We will send an update as soon as a provider accepts your scheduled request.',
+                      style: theme.bodySmall.override(
+                        color: theme.secondaryText,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
         _SuccessMetaRow(
           icon: Icons.calendar_today_rounded,
           title: 'Scheduled visit',

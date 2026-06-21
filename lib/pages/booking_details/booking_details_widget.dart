@@ -110,7 +110,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
       case 'in_progress':
         return const Color(0xFF66BB6A);
       case 'completed':
-        return const Color(0xFF9E9E9E);
+        return const Color(0xFF7A8793);
       case 'cancelled':
         return const Color(0xFFEF5350);
       default:
@@ -132,9 +132,9 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: const Color(0xFFF4F7FB),
+          backgroundColor: const Color(0xFFF5F7FA),
           appBar: AppBar(
-            backgroundColor: AppTheme.of(context).primaryBackground,
+            backgroundColor: const Color(0xFFF5F7FA),
             automaticallyImplyLeading: false,
             leading: wrapWithModel(
               model: _model.backButtonModel,
@@ -144,7 +144,8 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
             title: Text(
               'Booking Details',
               style: AppTheme.of(context).titleLarge.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    color: const Color(0xFF16202A),
                   ),
             ),
             centerTitle: true,
@@ -178,10 +179,11 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                           onPressed: () => Navigator.of(context).maybePop(),
                           iconColor: AppTheme.of(context).secondaryText,
                         )
-                      : SingleChildScrollView(
-                          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                      : RefreshIndicator(
+                          color: AppTheme.of(context).primary,
+                          onRefresh: _loadBookingDetails,
+                          child: ListView(
+                            padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
                             children: [
                               _buildStatusHero(context),
                               const SizedBox(height: 18),
@@ -211,6 +213,11 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                                     'Status',
                                     _formatStatus(_model.booking!.status),
                                   ),
+                                  _buildInfoRow(
+                                    context,
+                                    'Payment status',
+                                    _model.booking!.paymentStatus ?? 'Pending',
+                                  ),
                                 ],
                               ),
                               if (_model.booking!.notes != null &&
@@ -235,17 +242,17 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                                   text: 'Cancel Booking',
                                   options: FFButtonOptions(
                                     width: double.infinity,
-                                    height: 52,
+                                    height: 54,
                                     color: AppTheme.of(context).error,
                                     textStyle: AppTheme.of(context)
                                         .titleSmall
                                         .override(
                                           color: Colors.white,
                                           font: GoogleFonts.poppins(
-                                            fontWeight: FontWeight.w600,
+                                            fontWeight: FontWeight.w700,
                                           ),
                                         ),
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius: BorderRadius.circular(18),
                                   ),
                                 ),
                               if (_model.booking!.status == 'completed')
@@ -254,17 +261,17 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                                   text: 'Leave a Review',
                                   options: FFButtonOptions(
                                     width: double.infinity,
-                                    height: 52,
+                                    height: 54,
                                     color: AppTheme.of(context).primary,
                                     textStyle: AppTheme.of(context)
                                         .titleSmall
                                         .override(
                                           color: Colors.white,
                                           font: GoogleFonts.poppins(
-                                            fontWeight: FontWeight.w600,
+                                            fontWeight: FontWeight.w700,
                                           ),
                                         ),
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius: BorderRadius.circular(18),
                                   ),
                                 ),
                             ],
@@ -290,9 +297,15 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
             constraints: const BoxConstraints(maxWidth: 420),
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: AppTheme.of(context).secondaryBackground,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppTheme.of(context).alternate),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x12000000),
+                  blurRadius: 18,
+                  offset: Offset(0, 8),
+                ),
+              ],
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -338,11 +351,15 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: statusColor.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: statusColor.withValues(alpha: 0.24),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            statusColor.withValues(alpha: 0.92),
+            statusColor.withValues(alpha: 0.74),
+          ],
         ),
+        borderRadius: BorderRadius.circular(28),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -350,14 +367,14 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: statusColor,
+              color: Colors.white.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
               _formatStatus(_model.booking!.status),
               style: AppTheme.of(context).bodySmall.override(
                     color: Colors.white,
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
                   ),
             ),
           ),
@@ -366,13 +383,14 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
             _model.serviceListing?['title'] ?? 'Unknown Service',
             style: AppTheme.of(context).titleLarge.override(
                   font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                  color: Colors.white,
                 ),
           ),
           const SizedBox(height: 6),
           Text(
             'Booking reference ${_model.booking!.id.substring(0, 8).toUpperCase()}',
             style: AppTheme.of(context).bodyMedium.override(
-                  color: AppTheme.of(context).secondaryText,
+                  color: Colors.white.withValues(alpha: 0.82),
                 ),
           ),
         ],
@@ -383,20 +401,26 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
   Widget _buildServiceCard(BuildContext context) => Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppTheme.of(context).secondaryBackground,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppTheme.of(context).alternate),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x10000000),
+              blurRadius: 18,
+              offset: Offset(0, 8),
+            ),
+          ],
         ),
         child: Row(
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
               child: _model.serviceListing != null &&
                       _model.serviceListing!['thumbnail'] != null
                   ? Image.network(
                       _model.serviceListing!['thumbnail'],
-                      width: 88,
-                      height: 88,
+                      width: 92,
+                      height: 92,
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => _imageFallback(context),
                     )
@@ -438,9 +462,15 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
         width: double.infinity,
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: AppTheme.of(context).secondaryBackground,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppTheme.of(context).alternate),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x10000000),
+              blurRadius: 18,
+              offset: Offset(0, 8),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -462,29 +492,36 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              label,
-              style: AppTheme.of(context).bodyMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                    color: AppTheme.of(context).secondaryText,
-                  ),
+            Expanded(
+              child: Text(
+                label,
+                style: AppTheme.of(context).bodyMedium.override(
+                      font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                      color: AppTheme.of(context).secondaryText,
+                    ),
+              ),
             ),
-            Text(
-              value,
-              style: AppTheme.of(context).bodyMedium,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                value,
+                textAlign: TextAlign.right,
+                style: AppTheme.of(context).bodyMedium,
+              ),
             ),
           ],
         ),
       );
 
   Widget _imageFallback(BuildContext context) => Container(
-        width: 88,
-        height: 88,
-        color: AppTheme.of(context).secondaryText,
+        width: 92,
+        height: 92,
+        color: const Color(0xFFE7ECF1),
         child: Icon(
-          Icons.image_not_supported,
-          color: AppTheme.of(context).primaryBackground,
+          Icons.image_not_supported_outlined,
+          color: AppTheme.of(context).secondaryText,
         ),
       );
 
