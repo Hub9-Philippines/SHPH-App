@@ -4,8 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/theme/app_theme.dart';
 import '/services/logging_service.dart';
+import '/theme/app_theme.dart';
 
 class CreateServiceWidget extends StatefulWidget {
   const CreateServiceWidget({super.key});
@@ -73,6 +73,7 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
       }
     } catch (e) {
       LoggingService.error('Error picking images: $e', tag: 'CreateService');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error selecting images: $e')),
       );

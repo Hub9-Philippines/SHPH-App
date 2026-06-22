@@ -1,14 +1,15 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '/backend/supabase/database/tables/payment_methods.dart';
 import '/flutter_flow/lat_lng.dart';
-import '/flutter_flow/nav/nav.dart';
 import '/index.dart';
 import '/main.dart';
 import '/models/service_listing.dart';
+import '/pages/booking_funnel/booking_models.dart';
 import '/pages/geographic_selection/geographic_selection_widget.dart';
 
 // Helper function to fetch user profile for role-based routing
@@ -103,6 +104,8 @@ class AppRouter {
         initialLocation: '/',
         debugLogDiagnostics: true,
         refreshListenable: appStateNotifier,
+        redirect: (context, state) =>
+            RoleBasedRedirectGuard.checkRedirect(appStateNotifier, state),
         errorBuilder: (context, state) {
           final isLoggedIn = appStateNotifier?.loggedIn ?? false;
           final page = isLoggedIn ? const NavBarPage() : const SplashWidget();
@@ -159,8 +162,8 @@ class AppRouter {
             },
           ),
           GoRoute(
-            path: CleaningBookingFlowScreen.routePath,
-            name: CleaningBookingFlowScreen.routeName,
+            path: BookingFlowScreen.routePath,
+            name: BookingFlowScreen.routeName,
             builder: (context, state) {
               final extra = state.extra as Map<String, dynamic>?;
               final service = extra?['service'] as ServiceListing?;
@@ -170,7 +173,29 @@ class AppRouter {
                   disableResizeToAvoidBottomInset: true,
                 );
               }
-              return CleaningBookingFlowScreen(
+              return BookingFlowScreen(
+                selectedService: service,
+                initialUrgency: extra?['initialUrgency'] as BookingUrgency?,
+                initialScheduledDate:
+                    extra?['initialScheduledDate'] as DateTime?,
+                initialScheduledTime:
+                    extra?['initialScheduledTime'] as TimeOfDay?,
+              );
+            },
+          ),
+          GoRoute(
+            path: TMSubCategoryScreen.routePath,
+            name: TMSubCategoryScreen.routeName,
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              final service = extra?['service'] as ServiceListing?;
+              if (service == null) {
+                return const NavBarPage(
+                  initialPage: 'Home',
+                  disableResizeToAvoidBottomInset: true,
+                );
+              }
+              return TMSubCategoryScreen(
                 selectedService: service,
               );
             },
@@ -233,11 +258,6 @@ class AppRouter {
             path: EKYCBeginWidget.routePath,
             name: EKYCBeginWidget.routeName,
             builder: (context, state) => const EKYCBeginWidget(),
-          ),
-          GoRoute(
-            path: IDVerifyWidget.routePath,
-            name: IDVerifyWidget.routeName,
-            builder: (context, state) => const IDVerifyWidget(),
           ),
           GoRoute(
             path: SearchPageWidget.routePath,
@@ -569,6 +589,51 @@ class AppRouter {
                     state.uri.queryParameters['bookingId'],
               );
             },
+          ),
+          GoRoute(
+            path: TMActiveJobScreen.routePath,
+            name: TMActiveJobScreen.routeName,
+            builder: (context, state) => const TMActiveJobScreen(),
+          ),
+          GoRoute(
+            path: TMBroadcastScreen.routePath,
+            name: TMBroadcastScreen.routeName,
+            builder: (context, state) => const TMBroadcastScreen(),
+          ),
+          GoRoute(
+            path: TMEstimateScreen.routePath,
+            name: TMEstimateScreen.routeName,
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return TMEstimateScreen(
+                subCategory: extra?['subCategory'],
+              );
+            },
+          ),
+          GoRoute(
+            path: TMInvoiceScreen.routePath,
+            name: TMInvoiceScreen.routeName,
+            builder: (context, state) => const TMInvoiceScreen(),
+          ),
+          GoRoute(
+            path: TMPaymentScreen.routePath,
+            name: TMPaymentScreen.routeName,
+            builder: (context, state) => const TMPaymentScreen(),
+          ),
+          GoRoute(
+            path: TMRatingScreen.routePath,
+            name: TMRatingScreen.routeName,
+            builder: (context, state) => const TMRatingScreen(),
+          ),
+          GoRoute(
+            path: PrivacyPolicyWidget.routePath,
+            name: PrivacyPolicyWidget.routeName,
+            builder: (context, state) => const PrivacyPolicyWidget(),
+          ),
+          GoRoute(
+            path: TermsOfServiceWidget.routePath,
+            name: TermsOfServiceWidget.routeName,
+            builder: (context, state) => const TermsOfServiceWidget(),
           ),
           GoRoute(
             path: GeographicSelectionWidget.routePath,

@@ -42,6 +42,7 @@ Future<void> signOutUser(BuildContext context) async {
   try {
     await authManager.signOut();
   } catch (e) {
+    if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Error signing out: $e')),
     );
@@ -52,10 +53,12 @@ Future<void> signOutUser(BuildContext context) async {
 Future<void> verifyCurrentUserEmail(BuildContext context) async {
   try {
     await authManager.sendEmailVerification();
+    if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Verification email sent')),
     );
   } catch (e) {
+    if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Error: ${e.toString()}')),
     );

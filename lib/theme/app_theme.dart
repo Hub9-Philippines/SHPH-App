@@ -406,16 +406,16 @@ extension TextStyleHelper on TextStyle {
     List<Shadow>? shadows,
     String? package,
   }) {
-    if (useGoogleFonts && fontFamily != null) {
-      font = GoogleFonts.getFont(
-        fontFamily,
-        fontWeight: fontWeight ?? this.fontWeight,
-        fontStyle: fontStyle ?? this.fontStyle,
-      );
-    }
+    final resolvedFont = useGoogleFonts && fontFamily != null
+        ? GoogleFonts.getFont(
+            fontFamily,
+            fontWeight: fontWeight ?? this.fontWeight,
+            fontStyle: fontStyle ?? this.fontStyle,
+          )
+        : font;
 
-    return font != null
-        ? font.copyWith(
+    return resolvedFont != null
+        ? resolvedFont.copyWith(
             color: color ?? this.color,
             fontSize: fontSize ?? this.fontSize,
             letterSpacing: letterSpacing ?? this.letterSpacing,

@@ -41,7 +41,9 @@ class _EditAddressWidgetState extends State<EditAddressWidget> {
       return;
     }
     _addressesFuture = AddressesTable().queryRows(
-      queryFn: (q) => q.eq('user_id', currentUserUid),
+      queryFn: (q) => q
+          .eq('user_id', currentUserUid)
+          .order('is_default', ascending: false),
     );
   }
 
@@ -57,8 +59,8 @@ class _EditAddressWidgetState extends State<EditAddressWidget> {
         elevation: 5,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(0),
-            bottomRight: Radius.circular(0),
+            bottomLeft: Radius.zero,
+            bottomRight: Radius.zero,
             topLeft: Radius.circular(16),
             topRight: Radius.circular(16),
           ),
@@ -69,8 +71,8 @@ class _EditAddressWidgetState extends State<EditAddressWidget> {
           decoration: BoxDecoration(
             color: AppTheme.of(context).secondaryBackground,
             borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(0),
-              bottomRight: Radius.circular(0),
+              bottomLeft: Radius.zero,
+              bottomRight: Radius.zero,
               topLeft: Radius.circular(16),
               topRight: Radius.circular(16),
             ),
@@ -176,7 +178,7 @@ class _EditAddressWidgetState extends State<EditAddressWidget> {
                     height: 56,
                     padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 0),
                     iconPadding:
-                        const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
+                        EdgeInsetsDirectional.zero,
                     color: AppTheme.of(context).primary,
                     textStyle: AppTheme.of(context).titleMedium.override(
                           color: Colors.white,

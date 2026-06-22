@@ -37,6 +37,12 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
     _loadBookingDetails();
   }
 
+  @override
+  void dispose() {
+    _model.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadBookingDetails() async {
     if (widget.bookingId == null) {
       setState(() => _model.errorMessage = 'Booking ID is required');
@@ -59,6 +65,10 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
             .eq('id', booking.serviceListingId)
             .maybeSingle();
 
+        if (!mounted) {
+          return;
+        }
+
         setState(() {
           _model.booking = booking;
           _model.serviceListing = service;
@@ -71,10 +81,57 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
         });
       }
     } catch (e) {
-      setState(() {
-        _model.isLoading = false;
-        _model.errorMessage = 'Failed to load booking: $e';
-      });
+      if (mounted) {
+        setState(() {
+          _model.isLoading = false;
+          _model.errorMessage = 'Failed to load booking: $e';
+        });
+      }
+    }
+  }
+
+  Future<void> _cancelBooking() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancel Booking'),
+        content: const Text('Are you sure you want to cancel this booking?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('No'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Yes'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && _model.booking != null) {
+      final success =
+          await BookingsService.instance.cancelBooking(_model.booking!.id);
+      if (!mounted) {
+        return;
+      }
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Booking cancelled successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to cancel booking'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -104,24 +161,18 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
     }
     switch (status.toLowerCase()) {
       case 'pending':
-        return const Color(0xFFFFA726);
+        return const Color(0xFFF59E0B);
       case 'confirmed':
-        return const Color(0xFF42A5F5);
+        return const Color(0xFF2563EB);
       case 'in_progress':
-        return const Color(0xFF66BB6A);
+        return const Color(0xFF16A34A);
       case 'completed':
-        return const Color(0xFF7A8793);
+        return const Color(0xFF64748B);
       case 'cancelled':
-        return const Color(0xFFEF5350);
+        return const Color(0xFFEF4444);
       default:
         return AppTheme.of(context).secondaryText;
     }
-  }
-
-  @override
-  void dispose() {
-    _model.dispose();
-    super.dispose();
   }
 
   @override
@@ -132,152 +183,182 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: const Color(0xFFF5F7FA),
-          appBar: AppBar(
-            backgroundColor: const Color(0xFFF5F7FA),
-            automaticallyImplyLeading: false,
-            leading: wrapWithModel(
+          backgroundColor: const Color(0xFFF4F7FB),
+          body: SafeArea(
+            child: _model.isLoading
+                ? Center(
+                    child: CircularProgressIndicator(
+                      color: AppTheme.of(context).primary,
+                    ),
+                  )
+                : _model.errorMessage != null
+                    ? _buildMessageState(
+                        context,
+                        icon: Icons.error_outline_rounded,
+                        title: 'Could not load booking',
+                        subtitle: _model.errorMessage!,
+                        actionLabel: 'Retry',
+                        onPressed: _loadBookingDetails,
+                        iconColor: AppTheme.of(context).error,
+                      )
+                    : _model.booking == null
+                        ? _buildMessageState(
+                            context,
+                            icon: Icons.inventory_2_outlined,
+                            title: 'No booking data',
+                            subtitle:
+                                'This booking could not be found or is no longer available.',
+                            actionLabel: 'Go back',
+                            onPressed: () => Navigator.of(context).maybePop(),
+                            iconColor: AppTheme.of(context).secondaryText,
+                          )
+                        : RefreshIndicator(
+                            color: AppTheme.of(context).primary,
+                            onRefresh: _loadBookingDetails,
+                            child: ListView(
+                              padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+                              children: [
+                                _buildTopBar(context),
+                                const SizedBox(height: 18),
+                                _buildStatusHero(context),
+                                const SizedBox(height: 18),
+                                _buildServiceCard(context),
+                                const SizedBox(height: 18),
+                                _buildSectionCard(
+                                  context,
+                                  title: 'Booking information',
+                                  subtitle:
+                                      'Core scheduling, payment, and status details.',
+                                  children: [
+                                    _buildInfoRow(
+                                      context,
+                                      'Booking ID',
+                                      _model.booking!.id.substring(0, 8),
+                                    ),
+                                    _buildInfoRow(
+                                      context,
+                                      'Date',
+                                      '${_model.booking!.bookingDate.day}/${_model.booking!.bookingDate.month}/${_model.booking!.bookingDate.year}',
+                                    ),
+                                    _buildInfoRow(
+                                      context,
+                                      'Time',
+                                      _model.booking!.bookingTime,
+                                    ),
+                                    _buildInfoRow(
+                                      context,
+                                      'Status',
+                                      _formatStatus(_model.booking!.status),
+                                    ),
+                                    _buildInfoRow(
+                                      context,
+                                      'Payment status',
+                                      _model.booking!.paymentStatus ?? 'Pending',
+                                    ),
+                                  ],
+                                ),
+                                if (_model.booking!.notes != null &&
+                                    _model.booking!.notes!.isNotEmpty) ...[
+                                  const SizedBox(height: 18),
+                                  _buildSectionCard(
+                                    context,
+                                    title: 'Notes',
+                                    subtitle:
+                                        'Special instructions attached to this booking.',
+                                    children: [
+                                      Text(
+                                        _model.booking!.notes!,
+                                        style: AppTheme.of(context)
+                                            .bodyMedium
+                                            .override(
+                                              font: GoogleFonts.poppins(),
+                                              color: const Color(0xFF64748B),
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                                const SizedBox(height: 24),
+                                if (_model.booking!.status == 'pending' ||
+                                    _model.booking!.status == 'confirmed')
+                                  FFButtonWidget(
+                                    onPressed: _cancelBooking,
+                                    text: 'Cancel Booking',
+                                    options: FFButtonOptions(
+                                      width: double.infinity,
+                                      height: 54,
+                                      color: AppTheme.of(context).error,
+                                      textStyle: AppTheme.of(context)
+                                          .titleSmall
+                                          .override(
+                                            color: Colors.white,
+                                            font: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                      borderRadius: BorderRadius.circular(18),
+                                    ),
+                                  ),
+                                if (_model.booking!.status == 'completed')
+                                  FFButtonWidget(
+                                    onPressed: () {},
+                                    text: 'Leave a Review',
+                                    options: FFButtonOptions(
+                                      width: double.infinity,
+                                      height: 54,
+                                      color: AppTheme.of(context).primary,
+                                      textStyle: AppTheme.of(context)
+                                          .titleSmall
+                                          .override(
+                                            color: Colors.white,
+                                            font: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                      borderRadius: BorderRadius.circular(18),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+          ),
+        ),
+      );
+
+  Widget _buildTopBar(BuildContext context) => Row(
+        children: [
+          Material(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            child: wrapWithModel(
               model: _model.backButtonModel,
               updateCallback: () => safeSetState(() {}),
               child: const BackButtonWidget(),
             ),
-            title: Text(
-              'Booking Details',
-              style: AppTheme.of(context).titleLarge.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                    color: const Color(0xFF16202A),
-                  ),
-            ),
-            centerTitle: true,
-            elevation: 0,
-            scrolledUnderElevation: 0,
           ),
-          body: _model.isLoading
-              ? Center(
-                  child: CircularProgressIndicator(
-                    color: AppTheme.of(context).primary,
-                  ),
-                )
-              : _model.errorMessage != null
-                  ? _buildMessageState(
-                      context,
-                      icon: Icons.error_outline_rounded,
-                      title: 'Could not load booking',
-                      subtitle: _model.errorMessage!,
-                      actionLabel: 'Retry',
-                      onPressed: _loadBookingDetails,
-                      iconColor: AppTheme.of(context).error,
-                    )
-                  : _model.booking == null
-                      ? _buildMessageState(
-                          context,
-                          icon: Icons.inventory_2_outlined,
-                          title: 'No booking data',
-                          subtitle:
-                              'This booking could not be found or is no longer available.',
-                          actionLabel: 'Go back',
-                          onPressed: () => Navigator.of(context).maybePop(),
-                          iconColor: AppTheme.of(context).secondaryText,
-                        )
-                      : RefreshIndicator(
-                          color: AppTheme.of(context).primary,
-                          onRefresh: _loadBookingDetails,
-                          child: ListView(
-                            padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-                            children: [
-                              _buildStatusHero(context),
-                              const SizedBox(height: 18),
-                              _buildServiceCard(context),
-                              const SizedBox(height: 18),
-                              _buildSectionCard(
-                                context,
-                                title: 'Booking information',
-                                children: [
-                                  _buildInfoRow(
-                                    context,
-                                    'Booking ID',
-                                    _model.booking!.id.substring(0, 8),
-                                  ),
-                                  _buildInfoRow(
-                                    context,
-                                    'Date',
-                                    '${_model.booking!.bookingDate.day}/${_model.booking!.bookingDate.month}/${_model.booking!.bookingDate.year}',
-                                  ),
-                                  _buildInfoRow(
-                                    context,
-                                    'Time',
-                                    _model.booking!.bookingTime,
-                                  ),
-                                  _buildInfoRow(
-                                    context,
-                                    'Status',
-                                    _formatStatus(_model.booking!.status),
-                                  ),
-                                  _buildInfoRow(
-                                    context,
-                                    'Payment status',
-                                    _model.booking!.paymentStatus ?? 'Pending',
-                                  ),
-                                ],
-                              ),
-                              if (_model.booking!.notes != null &&
-                                  _model.booking!.notes!.isNotEmpty) ...[
-                                const SizedBox(height: 18),
-                                _buildSectionCard(
-                                  context,
-                                  title: 'Notes',
-                                  children: [
-                                    Text(
-                                      _model.booking!.notes!,
-                                      style: AppTheme.of(context).bodyMedium,
-                                    ),
-                                  ],
-                                ),
-                              ],
-                              const SizedBox(height: 24),
-                              if (_model.booking!.status == 'pending' ||
-                                  _model.booking!.status == 'confirmed')
-                                FFButtonWidget(
-                                  onPressed: _cancelBooking,
-                                  text: 'Cancel Booking',
-                                  options: FFButtonOptions(
-                                    width: double.infinity,
-                                    height: 54,
-                                    color: AppTheme.of(context).error,
-                                    textStyle: AppTheme.of(context)
-                                        .titleSmall
-                                        .override(
-                                          color: Colors.white,
-                                          font: GoogleFonts.poppins(
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
-                                    borderRadius: BorderRadius.circular(18),
-                                  ),
-                                ),
-                              if (_model.booking!.status == 'completed')
-                                FFButtonWidget(
-                                  onPressed: () {},
-                                  text: 'Leave a Review',
-                                  options: FFButtonOptions(
-                                    width: double.infinity,
-                                    height: 54,
-                                    color: AppTheme.of(context).primary,
-                                    textStyle: AppTheme.of(context)
-                                        .titleSmall
-                                        .override(
-                                          color: Colors.white,
-                                          font: GoogleFonts.poppins(
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
-                                    borderRadius: BorderRadius.circular(18),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-        ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Booking Details',
+                  style: AppTheme.of(context).titleLarge.override(
+                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        color: const Color(0xFF14213D),
+                      ),
+                ),
+                Text(
+                  'Review progress, schedule, and payment state.',
+                  style: AppTheme.of(context).bodySmall.override(
+                        font: GoogleFonts.poppins(),
+                        color: const Color(0xFF64748B),
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ],
       );
 
   Widget _buildMessageState(
@@ -298,7 +379,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(28),
               boxShadow: const [
                 BoxShadow(
                   color: Color(0x12000000),
@@ -323,7 +404,9 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                 Text(
                   subtitle,
                   textAlign: TextAlign.center,
-                  style: AppTheme.of(context).bodyMedium,
+                  style: AppTheme.of(context).bodyMedium.override(
+                        font: GoogleFonts.poppins(),
+                      ),
                 ),
                 const SizedBox(height: 16),
                 FFButtonWidget(
@@ -335,6 +418,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                     color: AppTheme.of(context).primary,
                     textStyle: AppTheme.of(context).bodySmall.override(
                           color: Colors.white,
+                          font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
                         ),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -349,17 +433,24 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
     final statusColor = _getStatusColor(_model.booking!.status);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            statusColor.withValues(alpha: 0.92),
-            statusColor.withValues(alpha: 0.74),
+            statusColor.withValues(alpha: 0.94),
+            statusColor.withValues(alpha: 0.76),
           ],
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x18000000),
+            blurRadius: 24,
+            offset: Offset(0, 14),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -399,10 +490,10 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
   }
 
   Widget _buildServiceCard(BuildContext context) => Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(26),
           boxShadow: const [
             BoxShadow(
               color: Color(0x10000000),
@@ -414,7 +505,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
         child: Row(
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(18),
               child: _model.serviceListing != null &&
                       _model.serviceListing!['thumbnail'] != null
                   ? Image.network(
@@ -434,7 +525,8 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                   Text(
                     _model.serviceListing?['category_name'] ?? 'Service',
                     style: AppTheme.of(context).bodySmall.override(
-                          color: AppTheme.of(context).secondaryText,
+                          font: GoogleFonts.poppins(),
+                          color: const Color(0xFF64748B),
                         ),
                   ),
                   const SizedBox(height: 6),
@@ -442,8 +534,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                     'PHP ${(_model.booking!.totalPrice ?? 0).toStringAsFixed(2)}',
                     style: AppTheme.of(context).titleMedium.override(
                           color: AppTheme.of(context).primary,
-                          font:
-                              GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                          font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
                         ),
                   ),
                 ],
@@ -456,14 +547,15 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
   Widget _buildSectionCard(
     BuildContext context, {
     required String title,
+    required String subtitle,
     required List<Widget> children,
   }) =>
       Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(26),
           boxShadow: const [
             BoxShadow(
               color: Color(0x10000000),
@@ -479,9 +571,18 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
               title,
               style: AppTheme.of(context).titleMedium.override(
                     font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    color: const Color(0xFF14213D),
                   ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: AppTheme.of(context).bodySmall.override(
+                    font: GoogleFonts.poppins(),
+                    color: const Color(0xFF64748B),
+                  ),
+            ),
+            const SizedBox(height: 12),
             ...children,
           ],
         ),
@@ -499,7 +600,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                 label,
                 style: AppTheme.of(context).bodyMedium.override(
                       font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                      color: AppTheme.of(context).secondaryText,
+                      color: const Color(0xFF64748B),
                     ),
               ),
             ),
@@ -508,7 +609,9 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
               child: Text(
                 value,
                 textAlign: TextAlign.right,
-                style: AppTheme.of(context).bodyMedium,
+                style: AppTheme.of(context).bodyMedium.override(
+                      font: GoogleFonts.poppins(),
+                    ),
               ),
             ),
           ],
@@ -524,45 +627,4 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
           color: AppTheme.of(context).secondaryText,
         ),
       );
-
-  Future<void> _cancelBooking() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Cancel Booking'),
-        content: const Text('Are you sure you want to cancel this booking?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('No'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Yes'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && _model.booking != null) {
-      final success =
-          await BookingsService.instance.cancelBooking(_model.booking!.id);
-      if (success && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Booking cancelled successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pop(context);
-      } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to cancel booking'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
 }

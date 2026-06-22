@@ -60,7 +60,7 @@ class _FFPlacePickerState extends State<FlutterFlowPlacePicker> {
           context: context,
           apiKey: googleMapsApiKey,
           onError: (response) =>
-              print('Error occured when getting places response:'
+              debugPrint('Error occured when getting places response:'
                   '\n${response.errorMessage}'),
           mode: Mode.overlay,
           types: [],

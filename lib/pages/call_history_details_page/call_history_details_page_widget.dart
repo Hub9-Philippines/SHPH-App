@@ -220,7 +220,7 @@ class _CallHistoryDetailsPageWidgetState extends State<CallHistoryDetailsPageWid
                         child: FFButtonWidget(
                           onPressed: () {
                             // Call back action
-                            print('Call back: ${widget.providerName}');
+                            debugPrint('Call back: ${widget.providerName}');
                           },
                           text: 'Call Back',
                           icon: const Icon(
@@ -230,8 +230,8 @@ class _CallHistoryDetailsPageWidgetState extends State<CallHistoryDetailsPageWid
                           options: FFButtonOptions(
                             width: double.infinity,
                             height: 50,
-                            padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
-                            iconPadding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
+                            padding: EdgeInsetsDirectional.zero,
+                            iconPadding: EdgeInsetsDirectional.zero,
                             color: AppTheme.of(context).primary,
                             textStyle: AppTheme.of(context).titleSmall.override(
                                   font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
@@ -246,7 +246,7 @@ class _CallHistoryDetailsPageWidgetState extends State<CallHistoryDetailsPageWid
                         child: FFButtonWidget(
                           onPressed: () {
                             // Message action
-                            print('Message: ${widget.providerName}');
+                            debugPrint('Message: ${widget.providerName}');
                           },
                           text: 'Message',
                           icon: const Icon(
@@ -256,8 +256,8 @@ class _CallHistoryDetailsPageWidgetState extends State<CallHistoryDetailsPageWid
                           options: FFButtonOptions(
                             width: double.infinity,
                             height: 50,
-                            padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
-                            iconPadding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
+                            padding: EdgeInsetsDirectional.zero,
+                            iconPadding: EdgeInsetsDirectional.zero,
                             color: AppTheme.of(context).secondaryBackground,
                             textStyle: AppTheme.of(context).titleSmall.override(
                                   font: GoogleFonts.poppins(fontWeight: FontWeight.w600),

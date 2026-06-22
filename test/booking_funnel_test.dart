@@ -45,7 +45,7 @@ BookingDraft _draft({
     BookingDraft(
       urgency: urgency,
       rooms: 2,
-      cleaningType: CleaningType.deep,
+      cleaningType: ServiceType.deep,
       paymentMethod: BookingPaymentMethod.gcash,
       address: const BookingAddress(
         label: 'Home',

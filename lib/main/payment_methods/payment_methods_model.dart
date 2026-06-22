@@ -18,11 +18,22 @@ class PaymentMethodsModel extends FlutterFlowModel {
       return [];
     }
     return PaymentMethodsTable().queryRows(
-      queryFn: (q) => q.eq('user_id', currentUserUid),
+      queryFn: (q) => q
+          .eq('user_id', currentUserUid)
+          .order('is_default', ascending: false)
+          .order('created_at', ascending: false),
     );
   }
 
   Future<void> setAsDefault(String paymentMethodId) async {
+    if (currentUserUid.isEmpty) {
+      return;
+    }
+
+    await PaymentMethodsTable().update(
+      data: {'is_default': false},
+      matchingRows: (f) => f.eq('user_id', currentUserUid),
+    );
     await PaymentMethodsTable().update(
       data: {'is_default': true},
       matchingRows: (f) => f.eq('id', paymentMethodId),
@@ -30,8 +41,36 @@ class PaymentMethodsModel extends FlutterFlowModel {
   }
 
   Future<void> deletePaymentMethod(String paymentMethodId) async {
+    if (currentUserUid.isEmpty) {
+      return;
+    }
+
+    final methods = await PaymentMethodsTable().queryRows(
+      queryFn: (q) => q
+          .eq('user_id', currentUserUid)
+          .order('is_default', ascending: false)
+          .order('created_at', ascending: false),
+    );
+    final target =
+        methods.where((method) => method.id == paymentMethodId).firstOrNull;
+
     await PaymentMethodsTable().delete(
       matchingRows: (f) => f.eq('id', paymentMethodId),
+    );
+
+    if (target?.isDefault != true) {
+      return;
+    }
+
+    final remaining =
+        methods.where((method) => method.id != paymentMethodId).toList();
+    if (remaining.isEmpty) {
+      return;
+    }
+
+    await PaymentMethodsTable().update(
+      data: {'is_default': true},
+      matchingRows: (f) => f.eq('id', remaining.first.id),
     );
   }
 }

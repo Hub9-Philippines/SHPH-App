@@ -1,10 +1,9 @@
 import 'dart:typed_data';
 
 import '/api/bridges/api_row_mapper.dart';
-import '/api/resources/users_api.dart';
 import '/api/resources/kyc_api.dart';
+import '/api/resources/users_api.dart';
 import '/backend/supabase/supabase.dart';
-import '/backend/supabase/database/tables/profiles.dart';
 import '/services/logging_service.dart';
 
 class ProfilesService {

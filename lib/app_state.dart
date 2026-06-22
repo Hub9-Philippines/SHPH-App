@@ -54,6 +54,9 @@ class FFAppState extends ChangeNotifier {
       _selectedLocationMode =
           prefs.getString('ff_selectedLocationMode') ?? _selectedLocationMode;
     });
+    _safeInit(() {
+      _locale = prefs.getString('ff_locale') ?? _locale;
+    });
   }
 
   void update(VoidCallback callback) {
@@ -117,6 +120,14 @@ class FFAppState extends ChangeNotifier {
 
   String _selectedLocationMode = 'device';
   String get selectedLocationMode => _selectedLocationMode;
+
+  String _locale = 'en';
+  String get locale => _locale;
+  set locale(String value) {
+    _locale = value;
+    prefs.setString('ff_locale', value);
+    notifyListeners();
+  }
 
   bool get hasSelectedLocation =>
       (_selectedLatitude != null && _selectedLongitude != null) ||
@@ -203,6 +214,37 @@ class FFAppState extends ChangeNotifier {
       longitude: null,
       locationMode: 'device',
     );
+  }
+
+  AddressesRow? resolveSelectedSavedAddress(List<AddressesRow> addresses) {
+    if (addresses.isEmpty) {
+      return null;
+    }
+
+    final selectedId = _selectedAddressId;
+    if (selectedId != null) {
+      for (final address in addresses) {
+        if (address.id == selectedId) {
+          return address;
+        }
+      }
+    }
+
+    for (final address in addresses) {
+      if (address.isDefault == true) {
+        return address;
+      }
+    }
+
+    return addresses.first;
+  }
+
+  AddressesRow? syncSelectedSavedAddress(List<AddressesRow> addresses) {
+    final address = resolveSelectedSavedAddress(addresses);
+    if (address != null) {
+      setSelectedAddressFromRow(address);
+    }
+    return address;
   }
 
   final _checkIfAccountExistsManager =

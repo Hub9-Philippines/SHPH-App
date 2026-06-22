@@ -18,6 +18,7 @@ class ShphServiceListing {
     this.createdAt,
     this.city,
     this.province,
+    this.isTimeMaterial = false,
   });
 
   final int id;
@@ -38,6 +39,7 @@ class ShphServiceListing {
   final String? createdAt;
   final String? city;
   final String? province;
+  final bool isTimeMaterial;
 
   factory ShphServiceListing.fromJson(Map<String, dynamic> json) {
     return ShphServiceListing(
@@ -59,6 +61,7 @@ class ShphServiceListing {
       createdAt: json['created_at'] as String?,
       city: json['city'] as String?,
       province: json['province'] as String?,
+      isTimeMaterial: json['is_time_material'] as bool? ?? false,
     );
   }
 

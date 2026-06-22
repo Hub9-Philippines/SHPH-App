@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/backend/supabase/database/tables/profiles.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import '/index.dart';
+import '/services/chat_service.dart';
+import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
 import 'contact_provider_model.dart';
 
@@ -11,7 +15,8 @@ export 'contact_provider_model.dart';
 
 class ContactProviderWidget extends StatefulWidget {
   const ContactProviderWidget({
-    required this.providerName, super.key,
+    required this.providerName,
+    super.key,
     this.providerId,
     this.providerPhoto,
     this.isVerified = false,
@@ -43,12 +48,21 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
   late ContactProviderModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final _formKey = GlobalKey<FormState>();
+
   bool _isSending = false;
+  bool _isOpeningChat = false;
+  String? _providerPhone;
+  String? _providerPhotoUrl;
+  String? _providerDisplayName;
 
   @override
   void initState() {
     super.initState();
     _model = createModel(context, ContactProviderModel.new);
+    _providerPhone = widget.mobileNumber;
+    _providerPhotoUrl = widget.providerPhoto;
+    _providerDisplayName = widget.providerName;
+    _hydrateProviderProfile();
   }
 
   @override
@@ -57,45 +71,197 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
     super.dispose();
   }
 
+  Future<void> _hydrateProviderProfile() async {
+    final providerId = widget.providerId;
+    if (providerId == null || providerId.isEmpty) {
+      return;
+    }
+    if ((_providerPhone ?? '').trim().isNotEmpty &&
+        (_providerPhotoUrl ?? '').trim().isNotEmpty) {
+      return;
+    }
+
+    try {
+      final rows = await ProfilesTable().querySingleRow(
+        queryFn: (q) => q.eq('id', providerId),
+      );
+      if (!mounted || rows.isEmpty) {
+        return;
+      }
+
+      final profile = rows.first;
+      setState(() {
+        _providerPhone = _providerPhone?.trim().isNotEmpty == true
+            ? _providerPhone
+            : profile.phoneNumber;
+        _providerPhotoUrl = _providerPhotoUrl?.trim().isNotEmpty == true
+            ? _providerPhotoUrl
+            : profile.photoUrl;
+        _providerDisplayName =
+            (profile.displayName ?? '').trim().isNotEmpty == true
+                ? profile.displayName!.trim()
+                : _providerDisplayName;
+      });
+    } catch (e, stackTrace) {
+      LoggingService.error(
+        'Failed to hydrate provider profile',
+        tag: 'ContactProvider',
+        error: e,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  Future<Map<String, dynamic>?> _ensureDirectThread() async {
+    final providerId = widget.providerId;
+    if (providerId == null || providerId.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('This provider cannot be contacted yet.'),
+          ),
+        );
+      }
+      return null;
+    }
+
+    try {
+      final thread = await ChatService.instance.getOrCreateDirectThread(
+        providerId: providerId,
+        providerName: _providerDisplayName ?? widget.providerName,
+        providerPhoto: _providerPhotoUrl ?? widget.providerPhoto,
+      );
+      if (thread == null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open chat right now.')),
+        );
+      }
+      return thread;
+    } catch (e, stackTrace) {
+      LoggingService.error(
+        'Failed to ensure direct thread',
+        tag: 'ContactProvider',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open chat right now.')),
+        );
+      }
+      return null;
+    }
+  }
+
+  Future<void> _openChatThread({
+    String? initialMessage,
+    bool closeCurrentPage = false,
+  }) async {
+    if (_isOpeningChat || _isSending) {
+      return;
+    }
+
+    setState(() {
+      _isOpeningChat = true;
+    });
+
+    try {
+      final thread = await _ensureDirectThread();
+      final roomId = thread?['id']?.toString();
+      if (!mounted || roomId == null || roomId.isEmpty) {
+        return;
+      }
+
+      if ((initialMessage ?? '').trim().isNotEmpty) {
+        final sent = await ChatService.instance.sendMessage(
+          roomId,
+          initialMessage!.trim(),
+        );
+        if (!sent && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Message could not be sent.')),
+          );
+        }
+      }
+
+      if (!mounted) {
+        return;
+      }
+
+      if (closeCurrentPage && context.canPop()) {
+        context.pop();
+      }
+
+      await context.pushNamed(
+        ChatPageWidget.routeName,
+        pathParameters: {'roomId': roomId},
+        extra: <String, dynamic>{
+          'providerName': _providerDisplayName ?? widget.providerName,
+          'providerPhoto': _providerPhotoUrl ?? widget.providerPhoto,
+        },
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isOpeningChat = false;
+        });
+      }
+    }
+  }
+
   Future<void> _sendMessage() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
+    final subject = _model.subjectController.text.trim();
+    final body = _model.messageController.text.trim();
+    final composedMessage =
+        subject.isEmpty ? body : 'Subject: $subject\n\n$body';
+
     setState(() => _isSending = true);
-
-    // TODO: Implement actual message sending logic
-    // This would typically create a chat room or send a message to the provider
-
-    await Future.delayed(const Duration(seconds: 1));
-
-    if (mounted) {
-      setState(() => _isSending = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Message sent successfully')),
+    try {
+      await _openChatThread(
+        initialMessage: composedMessage,
+        closeCurrentPage: true,
       );
-      context.pop();
+    } finally {
+      if (mounted) {
+        setState(() => _isSending = false);
+      }
     }
   }
 
-  void _callProvider() {
-    if (widget.mobileNumber != null && widget.mobileNumber!.isNotEmpty) {
-      // TODO: Implement phone call functionality
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Calling ${widget.mobileNumber}')),
+  Future<void> _callProvider() async {
+    final phone = (_providerPhone ?? widget.mobileNumber ?? '').trim();
+    if (phone.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No mobile number available')),
+        );
+      }
+      return;
+    }
+
+    try {
+      await launchURL('tel:$phone');
+    } catch (e, stackTrace) {
+      LoggingService.error(
+        'Failed to launch phone dialer',
+        tag: 'ContactProvider',
+        error: e,
+        stackTrace: stackTrace,
       );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No mobile number available')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not launch phone dialer')),
+        );
+      }
     }
   }
 
-  void _startChat() {
-    // TODO: Implement chat functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Opening chat...')),
-    );
+  Future<void> _startChat() async {
+    await _openChatThread();
   }
 
   @override
@@ -106,319 +272,382 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: AppTheme.of(context).primaryBackground,
-          appBar: AppBar(
-            backgroundColor: AppTheme.of(context).primaryBackground,
-            automaticallyImplyLeading: false,
-            leading: IconButton(
-              icon: Icon(
-                Icons.arrow_back,
-                color: AppTheme.of(context).primaryText,
-                size: 24,
-              ),
-              onPressed: () {
-                if (context.canPop()) {
-                  context.pop();
-                }
-              },
-            ),
-            title: Text(
-              'Contact ${widget.providerName}',
-              style: AppTheme.of(context).titleLarge.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-                  ),
-            ),
-            actions: const [],
-            centerTitle: true,
-            elevation: 0,
-          ),
+          backgroundColor: const Color(0xFFF4F7FB),
           body: SafeArea(
-            top: true,
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(20, 20, 20, 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Provider Profile Card
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppTheme.of(context).secondaryBackground,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 60,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              color: AppTheme.of(context).accent1,
-                              shape: BoxShape.circle,
-                            ),
-                            child: ClipOval(
-                              child: widget.providerPhoto != null &&
-                                      widget.providerPhoto!.isNotEmpty
-                                  ? Image.network(
-                                      widget.providerPhoto!,
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (context, error, stackTrace) => Center(
-                                          child: FaIcon(
-                                            FontAwesomeIcons.user,
-                                            color: AppTheme.of(context)
-                                                .primaryText,
-                                            size: 24,
-                                          ),
-                                        ),
-                                    )
-                                  : Center(
-                                      child: FaIcon(
-                                        FontAwesomeIcons.user,
-                                        color: AppTheme.of(context).primaryText,
-                                        size: 24,
-                                      ),
-                                    ),
-                            ),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: Row(
+                    children: [
+                      Material(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.arrow_back_rounded,
+                            color: AppTheme.of(context).primaryText,
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Text(
-                                      widget.providerName,
-                                      style: AppTheme.of(context)
-                                          .titleSmall
-                                          .override(
-                                            font: GoogleFonts.poppins(
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                    ),
-                                    if (widget.isVerified) ...[
-                                      const SizedBox(width: 8),
-                                      FaIcon(
-                                        FontAwesomeIcons.checkCircle,
-                                        color: AppTheme.of(context).success,
-                                        size: 16,
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                                if (widget.mobileNumber != null) ...[
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    widget.mobileNumber!,
-                                    style:
-                                        AppTheme.of(context).bodySmall.override(
-                                              color: AppTheme.of(context)
-                                                  .secondaryText,
-                                            ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    // Service Details Card
-                    if (widget.serviceName != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: AppTheme.of(context).secondaryBackground,
-                          borderRadius: BorderRadius.circular(12),
+                          onPressed: () {
+                            if (context.canPop()) {
+                              context.pop();
+                            }
+                          },
                         ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Service Details',
-                              style: AppTheme.of(context).titleSmall.override(
+                              'Contact Provider',
+                              style: AppTheme.of(context).titleLarge.override(
                                     font: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.bold),
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    color: const Color(0xFF14213D),
                                   ),
                             ),
-                            const SizedBox(height: 12),
-                            if (widget.serviceName != null) ...[
-                              Text(
-                                widget.serviceName!,
-                                style: AppTheme.of(context).bodyMedium.override(
-                                      font: GoogleFonts.poppins(
-                                          fontWeight: FontWeight.w600),
-                                    ),
-                              ),
-                              const SizedBox(height: 4),
-                            ],
-                            if (widget.serviceCategory != null) ...[
-                              Text(
-                                widget.serviceCategory!,
-                                style: AppTheme.of(context).bodySmall.override(
-                                      color: AppTheme.of(context).secondaryText,
-                                    ),
-                              ),
-                              const SizedBox(height: 8),
-                            ],
-                            if (widget.servicePrice != null) ...[
-                              Text(
-                                widget.servicePrice!,
-                                style: AppTheme.of(context).bodyMedium.override(
-                                      color: AppTheme.of(context).primary,
-                                      font: GoogleFonts.poppins(
-                                          fontWeight: FontWeight.w600),
-                                    ),
-                              ),
-                              const SizedBox(height: 8),
-                            ],
-                            if (widget.serviceDescription != null) ...[
-                              Text(
-                                widget.serviceDescription!,
-                                style: AppTheme.of(context).bodySmall.override(
-                                      color: AppTheme.of(context).secondaryText,
-                                    ),
-                              ),
-                            ],
+                            Text(
+                              'Reach out to ${_providerDisplayName ?? widget.providerName} about service details or availability.',
+                              style: AppTheme.of(context).bodySmall.override(
+                                    font: GoogleFonts.poppins(),
+                                    color: const Color(0xFF64748B),
+                                  ),
+                            ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 16),
                     ],
-                    // Contact Options
-                    Text(
-                      'Contact Options',
-                      style: AppTheme.of(context).titleMedium.override(
-                            font: GoogleFonts.poppins(
-                                fontWeight: FontWeight.bold),
-                          ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
+                  ),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: FFButtonWidget(
-                            onPressed: _callProvider,
-                            text: 'Call',
-                            icon:
-                                const FaIcon(FontAwesomeIcons.phone, size: 16),
-                            options: FFButtonOptions(
-                              width: double.infinity,
-                              color: AppTheme.of(context).success,
-                              textStyle:
-                                  AppTheme.of(context).titleSmall.override(
-                                        font: GoogleFonts.poppins(
-                                            fontWeight: FontWeight.w600),
-                                        color: Colors.white,
-                                      ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
+                        _buildProviderCard(),
+                        if (widget.serviceName != null) ...[
+                          const SizedBox(height: 16),
+                          _buildServiceCard(),
+                        ],
+                        const SizedBox(height: 18),
+                        Text(
+                          'Contact options',
+                          style: AppTheme.of(context).titleMedium.override(
+                                font: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                color: const Color(0xFF14213D),
+                              ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: FFButtonWidget(
-                            onPressed: _startChat,
-                            text: 'Chat',
-                            icon: const FaIcon(FontAwesomeIcons.comment,
-                                size: 16),
-                            options: FFButtonOptions(
-                              width: double.infinity,
-                              color: AppTheme.of(context).primary,
-                              textStyle:
-                                  AppTheme.of(context).titleSmall.override(
-                                        font: GoogleFonts.poppins(
-                                            fontWeight: FontWeight.w600),
-                                        color: Colors.white,
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: FFButtonWidget(
+                                onPressed: _callProvider,
+                                text: 'Call',
+                                icon: const FaIcon(
+                                  FontAwesomeIcons.phone,
+                                  size: 16,
+                                ),
+                                options: FFButtonOptions(
+                                  width: double.infinity,
+                                  height: 54,
+                                  color: const Color(0xFF0F8A6C),
+                                  textStyle:
+                                      AppTheme.of(context).titleSmall.override(
+                                            font: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                            color: Colors.white,
+                                          ),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: FFButtonWidget(
+                                onPressed: _isOpeningChat ? null : _startChat,
+                                text: _isOpeningChat ? 'Opening...' : 'Chat',
+                                icon: const FaIcon(
+                                  FontAwesomeIcons.comment,
+                                  size: 16,
+                                ),
+                                options: FFButtonOptions(
+                                  width: double.infinity,
+                                  height: 54,
+                                  color: AppTheme.of(context).primary,
+                                  textStyle:
+                                      AppTheme.of(context).titleSmall.override(
+                                            font: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                            color: Colors.white,
+                                          ),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        Container(
+                          padding: const EdgeInsets.all(18),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x12000000),
+                                blurRadius: 18,
+                                offset: Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Send a message',
+                                  style:
+                                      AppTheme.of(context).titleMedium.override(
+                                            font: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                            color: const Color(0xFF14213D),
+                                          ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'This sends your message straight into the existing in-app chat thread.',
+                                  style: AppTheme.of(context).bodySmall.override(
+                                        font: GoogleFonts.poppins(),
+                                        color: const Color(0xFF64748B),
                                       ),
-                              borderRadius: BorderRadius.circular(12),
+                                ),
+                                const SizedBox(height: 16),
+                                TextFormField(
+                                  controller: _model.subjectController,
+                                  decoration: InputDecoration(
+                                    labelText: 'Subject',
+                                    hintText: 'What is this about?',
+                                    filled: true,
+                                    fillColor: const Color(0xFFF8FAFC),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                  ),
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return 'Please enter a subject';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 16),
+                                TextFormField(
+                                  controller: _model.messageController,
+                                  maxLines: 5,
+                                  decoration: InputDecoration(
+                                    labelText: 'Message',
+                                    hintText: 'Write your message here...',
+                                    filled: true,
+                                    fillColor: const Color(0xFFF8FAFC),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                  ),
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return 'Please enter a message';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 20),
+                                FFButtonWidget(
+                                  onPressed: _isSending ? null : _sendMessage,
+                                  text: _isSending ? 'Sending...' : 'Send Message',
+                                  options: FFButtonOptions(
+                                    width: double.infinity,
+                                    height: 54,
+                                    color: AppTheme.of(context).primary,
+                                    textStyle: AppTheme.of(context)
+                                        .titleMedium
+                                        .override(
+                                          font: GoogleFonts.poppins(
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                          color: Colors.white,
+                                        ),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
-                    // Message Form
-                    Text(
-                      'Send a Message',
-                      style: AppTheme.of(context).titleMedium.override(
-                            font: GoogleFonts.poppins(
-                                fontWeight: FontWeight.bold),
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Send a message to ${widget.providerName} about their service.',
-                      style: AppTheme.of(context).bodySmall.override(
-                            color: AppTheme.of(context).secondaryText,
-                          ),
-                    ),
-                    const SizedBox(height: 16),
-                    Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          TextFormField(
-                            controller: _model.subjectController,
-                            decoration: InputDecoration(
-                              labelText: 'Subject',
-                              hintText: 'What is this about?',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter a subject';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          TextFormField(
-                            controller: _model.messageController,
-                            maxLines: 5,
-                            decoration: InputDecoration(
-                              labelText: 'Message',
-                              hintText: 'Write your message here...',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter a message';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 24),
-                          FFButtonWidget(
-                            onPressed: _isSending ? null : _sendMessage,
-                            text: _isSending ? 'Sending...' : 'Send Message',
-                            options: FFButtonOptions(
-                              width: double.infinity,
-                              color: AppTheme.of(context).primary,
-                              textStyle:
-                                  AppTheme.of(context).titleMedium.override(
-                                        font: GoogleFonts.poppins(
-                                            fontWeight: FontWeight.w600),
-                                        color: AppTheme.of(context).primaryText,
-                                      ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
+        ),
+      );
+
+  Widget _buildProviderCard() => Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(26),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x12000000),
+              blurRadius: 18,
+              offset: Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 68,
+              height: 68,
+              decoration: BoxDecoration(
+                color: AppTheme.of(context).primary.withValues(alpha: 0.10),
+                shape: BoxShape.circle,
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: (_providerPhotoUrl ?? '').trim().isNotEmpty
+                  ? Image.network(
+                      _providerPhotoUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => _buildFallbackAvatar(),
+                    )
+                  : _buildFallbackAvatar(),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _providerDisplayName ?? widget.providerName,
+                          style: AppTheme.of(context).titleMedium.override(
+                                font: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                color: const Color(0xFF14213D),
+                              ),
+                        ),
+                      ),
+                      if (widget.isVerified)
+                        FaIcon(
+                          FontAwesomeIcons.circleCheck,
+                          color: AppTheme.of(context).success,
+                          size: 16,
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    (_providerPhone ?? '').trim().isNotEmpty
+                        ? _providerPhone!
+                        : 'Phone number unavailable',
+                    style: AppTheme.of(context).bodySmall.override(
+                          font: GoogleFonts.poppins(),
+                          color: const Color(0xFF64748B),
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _buildFallbackAvatar() => Center(
+        child: FaIcon(
+          FontAwesomeIcons.user,
+          color: AppTheme.of(context).primary,
+          size: 24,
+        ),
+      );
+
+  Widget _buildServiceCard() => Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(26),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x12000000),
+              blurRadius: 18,
+              offset: Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Service details',
+              style: AppTheme.of(context).titleSmall.override(
+                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    color: const Color(0xFF14213D),
+                  ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              widget.serviceName!,
+              style: AppTheme.of(context).bodyLarge.override(
+                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    color: const Color(0xFF14213D),
+                  ),
+            ),
+            if ((widget.serviceCategory ?? '').trim().isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                widget.serviceCategory!,
+                style: AppTheme.of(context).bodySmall.override(
+                      font: GoogleFonts.poppins(),
+                      color: const Color(0xFF64748B),
+                    ),
+              ),
+            ],
+            if ((widget.servicePrice ?? '').trim().isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Text(
+                widget.servicePrice!,
+                style: AppTheme.of(context).bodyMedium.override(
+                      font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                      color: AppTheme.of(context).primary,
+                    ),
+              ),
+            ],
+            if ((widget.serviceDescription ?? '').trim().isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Text(
+                widget.serviceDescription!,
+                style: AppTheme.of(context).bodySmall.override(
+                      font: GoogleFonts.poppins(),
+                      color: const Color(0xFF64748B),
+                    ),
+              ),
+            ],
+          ],
         ),
       );
 }

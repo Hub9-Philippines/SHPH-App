@@ -1,7 +1,6 @@
 import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
 
@@ -38,7 +37,6 @@ class _SignupWidgetState extends State<SignupWidget> {
 
     _model.phoneFieldTextController ??= TextEditingController();
     _model.phoneFieldFocusNode ??= FocusNode();
-
     _model.phoneFieldMask = MaskTextInputFormatter(mask: '+63##########');
     handlePhoneAuthStateChanges(context);
   }
@@ -46,13 +44,13 @@ class _SignupWidgetState extends State<SignupWidget> {
   @override
   void dispose() {
     _model.dispose();
-
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     context.watch<FFAppState>();
+    final theme = AppTheme.of(context);
 
     return GestureDetector(
       onTap: () {
@@ -67,480 +65,294 @@ class _SignupWidgetState extends State<SignupWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: AppTheme.of(context).primaryBackground,
+          backgroundColor: theme.primaryBackground,
           appBar: AppBar(
-            backgroundColor: AppTheme.of(context).primaryBackground,
+            backgroundColor: Colors.transparent,
             automaticallyImplyLeading: false,
             leading: wrapWithModel(
               model: _model.backButtonModel,
               updateCallback: () => safeSetState(() {}),
               child: const BackButtonWidget(),
             ),
-            actions: const [],
-            centerTitle: true,
             elevation: 0,
           ),
-          body: Column(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Column(
-                        mainAxisSize: MainAxisSize.max,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Welcome to SerbisyoHub PH!',
-                            textAlign: TextAlign.start,
-                            style: AppTheme.of(context)
-                                .headlineLarge
-                                .override(
-                                  font: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.bold,
-                                    fontStyle: AppTheme.of(context)
-                                        .headlineLarge
-                                        .fontStyle,
-                                  ),
-                                  letterSpacing: 0,
-                                  fontWeight: FontWeight.bold,
-                                  fontStyle: AppTheme.of(context)
-                                      .headlineLarge
-                                      .fontStyle,
-                                ),
-                          ),
-                          Text(
-                            'Create your account and manage your home services effortlessly.',
-                            textAlign: TextAlign.start,
-                            style: AppTheme.of(context)
-                                .bodyMedium
-                                .override(
-                                  font: GoogleFonts.poppins(
-                                    fontWeight: AppTheme.of(context)
-                                        .bodyMedium
-                                        .fontWeight,
-                                    fontStyle: AppTheme.of(context)
-                                        .bodyMedium
-                                        .fontStyle,
-                                  ),
-                                  color: const Color(0xFF889096),
-                                  fontSize: 15,
-                                  letterSpacing: 0,
-                                  fontWeight: AppTheme.of(context)
-                                      .bodyMedium
-                                      .fontWeight,
-                                  fontStyle: AppTheme.of(context)
-                                      .bodyMedium
-                                      .fontStyle,
-                                ),
-                          ),
-                        ].divide(const SizedBox(height: 10)),
-                      ),
-                      Container(
-                        width: double.infinity,
-                        child: TextFormField(
-                          controller: _model.phoneFieldTextController,
-                          focusNode: _model.phoneFieldFocusNode,
-                          onChanged: (_) => EasyDebounce.debounce(
-                            '_model.phoneFieldTextController',
-                            const Duration(milliseconds: 100),
-                            () async {
-                              _model.isPhoneValid =
-                                  (_model.phoneFieldTextController.text.length ==
-                                          13);
-                              safeSetState(() {});
-                              FFAppState().phone =
-                                  _model.phoneFieldTextController.text;
-                              safeSetState(() {});
-                            },
-                          ),
-                          autofocus: true,
-                          enabled: true,
-                          textInputAction: TextInputAction.go,
-                          obscureText: false,
-                          decoration: InputDecoration(
-                            isDense: false,
-                            labelText: 'Mobile number',
-                            labelStyle: AppTheme.of(context)
-                                .labelMedium
-                                .override(
-                                  font: GoogleFonts.poppins(
-                                    fontWeight: AppTheme.of(context)
-                                        .labelMedium
-                                        .fontWeight,
-                                    fontStyle: AppTheme.of(context)
-                                        .labelMedium
-                                        .fontStyle,
-                                  ),
-                                  fontSize: 16,
-                                  letterSpacing: 0,
-                                  fontWeight: AppTheme.of(context)
-                                      .labelMedium
-                                      .fontWeight,
-                                  fontStyle: AppTheme.of(context)
-                                      .labelMedium
-                                      .fontStyle,
-                                ),
-                            hintText: '+63',
-                            hintStyle: AppTheme.of(context)
-                                .labelMedium
-                                .override(
-                                  font: GoogleFonts.poppins(
-                                    fontWeight: AppTheme.of(context)
-                                        .labelMedium
-                                        .fontWeight,
-                                    fontStyle: AppTheme.of(context)
-                                        .labelMedium
-                                        .fontStyle,
-                                  ),
-                                  fontSize: 16,
-                                  letterSpacing: 0,
-                                  fontWeight: AppTheme.of(context)
-                                      .labelMedium
-                                      .fontWeight,
-                                  fontStyle: AppTheme.of(context)
-                                      .labelMedium
-                                      .fontStyle,
-                                ),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color: valueOrDefault<Color>(
-                                  _model.isPhoneValid
-                                      ? AppTheme.of(context)
-                                          .secondaryBackground
-                                      : AppTheme.of(context).error,
-                                  AppTheme.of(context)
-                                      .secondaryBackground,
-                                ),
-                                width: 1,
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color: valueOrDefault<Color>(
-                                  _model.isPhoneValid
-                                      ? AppTheme.of(context)
-                                          .secondaryBackground
-                                      : AppTheme.of(context).error,
-                                  AppTheme.of(context)
-                                      .secondaryBackground,
-                                ),
-                                width: 1,
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            errorBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color: AppTheme.of(context).error,
-                                width: 1,
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            focusedErrorBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color: AppTheme.of(context).error,
-                                width: 1,
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            filled: true,
-                            fillColor: AppTheme.of(context)
-                                .secondaryBackground,
-                          ),
-                          style:
-                              AppTheme.of(context).bodyMedium.override(
-                                    font: GoogleFonts.poppins(
-                                      fontWeight: AppTheme.of(context)
-                                          .bodyMedium
-                                          .fontWeight,
-                                      fontStyle: AppTheme.of(context)
-                                          .bodyMedium
-                                          .fontStyle,
-                                    ),
-                                    fontSize: 16,
-                                    letterSpacing: 0,
-                                    fontWeight: AppTheme.of(context)
-                                        .bodyMedium
-                                        .fontWeight,
-                                    fontStyle: AppTheme.of(context)
-                                        .bodyMedium
-                                        .fontStyle,
-                                  ),
-                          textAlign: TextAlign.start,
-                          maxLength: 13,
-                          maxLengthEnforcement: MaxLengthEnforcement.enforced,
-                          buildCounter: (context,
-                                  {required currentLength,
-                                  required isFocused,
-                                  maxLength}) =>
-                              null,
-                          keyboardType: TextInputType.phone,
-                          cursorColor: AppTheme.of(context).primaryText,
-                          enableInteractiveSelection: true,
-                          validator: _model.phoneFieldTextControllerValidator
-                              .asValidator(context),
-                          inputFormatters: [_model.phoneFieldMask],
-                        ),
-                      ),
-                      if (_model.errorMessage != null)
-                        Padding(
-                          padding: const EdgeInsetsDirectional.fromSTEB(0, 8, 0, 0),
-                          child: Text(
-                            _model.errorMessage!,
-                            style: AppTheme.of(context)
-                                .bodySmall
-                                .override(
-                                  font: GoogleFonts.poppins(
-                                    fontWeight: AppTheme.of(context)
-                                        .bodySmall
-                                        .fontWeight,
-                                    fontStyle: AppTheme.of(context)
-                                        .bodySmall
-                                        .fontStyle,
-                                  ),
-                                  color: AppTheme.of(context).error,
-                                  letterSpacing: 0,
-                                  fontWeight: AppTheme.of(context)
-                                      .bodySmall
-                                      .fontWeight,
-                                  fontStyle: AppTheme.of(context)
-                                      .bodySmall
-                                      .fontStyle,
-                                ),
-                          ),
-                        ),
-                      Column(
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          FFButtonWidget(
-                            onPressed: _model.isLoading
-                                ? null
-                                : () async {
-                                    _model.errorMessage = null;
-                                    _model.isLoading = true;
-                                    safeSetState(() {});
-
-                                    if (_model.phoneFieldTextController.text !=
-                                        '') {
-                                      try {
-                                        _model.isPhoneExists =
-                                            await ProfilesTable().queryRows(
-                                          queryFn: (q) => q.eqOrNull(
-                                            'phone_number',
-                                            FFAppState().phone,
-                                          ),
-                                        );
-                                        if (_model.isPhoneExists?.firstOrNull
-                                                ?.phoneNumber ==
-                                            FFAppState().phone) {
-                                          _model.isLoading = false;
-                                          _model.errorMessage =
-                                              'This phone number is already associated with an account. Please login instead.';
-                                          safeSetState(() {});
-                                          if (!context.mounted) return;
-                                          await showDialog(
-                                            context: context,
-                                            builder: (alertDialogContext) =>
-                                                AlertDialog(
-                                              title: const Text(
-                                                  'Account Already Exists'),
-                                              content: const Text(
-                                                  'This phone number is already associated with an account. Please login instead.'),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () =>
-                                                      Navigator.pop(
-                                                          alertDialogContext),
-                                                  child: const Text('Ok'),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        } else {
-                                          final phoneNumberVal =
-                                              _model.phoneFieldTextController
-                                                  .text;
-                                          if (phoneNumberVal.isEmpty ||
-                                              !phoneNumberVal
-                                                  .startsWith('+')) {
-                                            _model.isLoading = false;
-                                            _model.errorMessage =
-                                                'Phone Number is required and has to start with +.';
-                                            safeSetState(() {});
-                                            if (!context.mounted) return;
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              const SnackBar(
-                                                content: Text(
-                                                    'Phone Number is required and has to start with +.'),
-                                              ),
-                                            );
-                                            return;
-                                          }
-                                          await beginPhoneAuth(
-                                            context: context,
-                                            phoneNumber: phoneNumberVal,
-                                            onCodeSent: (context) async {
-                                              if (!context.mounted) return;
-                                              context.pushNamed(
-                                                PhoneVerifyUserWidget
-                                                    .routeName,
-                                              );
-                                            },
-                                          );
-
-                                          _model.isLoading = false;
-                                          safeSetState(() {});
-                                        }
-                                      } catch (e) {
-                                        _model.isLoading = false;
-                                        _model.errorMessage =
-                                            'An error occurred. Please try again.';
-                                        safeSetState(() {});
-                                        if (!context.mounted) return;
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                                'Error: ${e.toString()}'),
-                                          ),
-                                        );
-                                      }
-                                    } else {
-                                      _model.isLoading = false;
-                                      _model.errorMessage =
-                                          'Please input your phone number to continue';
-                                      safeSetState(() {});
-                                      if (!context.mounted) return;
-                                      await showDialog(
-                                        context: context,
-                                        builder: (alertDialogContext) =>
-                                            AlertDialog(
-                                          title: const Text(
-                                              'Phone number is empty'),
-                                          content: const Text(
-                                              'Please input your phone number to continue'),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () =>
-                                                  Navigator.pop(
-                                                      alertDialogContext),
-                                              child: const Text('Ok'),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    }
-
-                                    safeSetState(() {});
-                                  },
-                            text: _model.isLoading ? 'Signing Up...' : 'Sign Up',
-                            options: FFButtonOptions(
-                              width: double.infinity,
-                              height: MediaQuery.sizeOf(context).width * 0.13,
-                              padding: const EdgeInsetsDirectional.fromSTEB(
-                                  16, 0, 16, 0),
-                              iconPadding: const EdgeInsetsDirectional.fromSTEB(
-                                  0, 0, 0, 0),
-                              color: _model.isLoading
-                                  ? AppTheme.of(context).alternate
-                                  : AppTheme.of(context).primary,
-                              textStyle: AppTheme.of(context)
-                                  .titleMedium
-                                  .override(
-                                    font: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.w600,
-                                      fontStyle: AppTheme.of(context)
-                                          .titleMedium
-                                          .fontStyle,
-                                    ),
-                                    color: Colors.white,
-                                    letterSpacing: 0,
-                                    fontWeight: FontWeight.w600,
-                                    fontStyle: AppTheme.of(context)
-                                        .titleMedium
-                                        .fontStyle,
-                                  ),
-                              elevation: 0,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ].divide(const SizedBox(height: 16)),
-                      ),
-                      Row(
-                        mainAxisSize: MainAxisSize.max,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Already have an account? ',
-                            style: AppTheme.of(context)
-                                .bodyMedium
-                                .override(
-                                  font: GoogleFonts.poppins(
-                                    fontWeight: AppTheme.of(context)
-                                        .bodyMedium
-                                        .fontWeight,
-                                    fontStyle: AppTheme.of(context)
-                                        .bodyMedium
-                                        .fontStyle,
-                                  ),
-                                  color: AppTheme.of(context)
-                                      .secondaryText,
-                                  letterSpacing: 0,
-                                  fontWeight: AppTheme.of(context)
-                                      .bodyMedium
-                                      .fontWeight,
-                                  fontStyle: AppTheme.of(context)
-                                      .bodyMedium
-                                      .fontStyle,
-                                ),
-                          ),
-                          InkWell(
-                            splashColor: Colors.transparent,
-                            focusColor: Colors.transparent,
-                            hoverColor: Colors.transparent,
-                            highlightColor: Colors.transparent,
-                            onTap: () async {
-                              context.pushNamed(SigninWidget.routeName);
-                            },
-                            child: Text(
-                              'Sign In',
-                              style: AppTheme.of(context)
-                                  .bodyMedium
-                                  .override(
-                                    font: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.w600,
-                                      fontStyle: AppTheme.of(context)
-                                          .bodyMedium
-                                          .fontStyle,
-                                    ),
-                                    color: AppTheme.of(context).primary,
-                                    letterSpacing: 0,
-                                    fontWeight: FontWeight.w600,
-                                    fontStyle: AppTheme.of(context)
-                                        .bodyMedium
-                                        .fontStyle,
-                                  ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ].divide(const SizedBox(height: 24)),
-                  ),
+          body: SafeArea(
+            top: true,
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(theme),
+                    const SizedBox(height: 40),
+                    _buildForm(theme),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildHeader(AppThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            color: theme.primary,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Icon(Icons.person_add_rounded, color: Colors.white, size: 28),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          'Create Account',
+          style: theme.headlineLarge.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Join SerbisyoHub PH and access home services at your fingertips.',
+          style: theme.bodyMedium.copyWith(
+            color: const Color(0xFF889096),
+            fontSize: 15,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildForm(AppThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Mobile number',
+          style: theme.bodyMedium.copyWith(
+            fontWeight: FontWeight.w500,
+            color: theme.primaryText,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _model.phoneFieldTextController,
+          focusNode: _model.phoneFieldFocusNode,
+          onChanged: (_) => EasyDebounce.debounce(
+            '_model.phoneFieldTextController',
+            const Duration(milliseconds: 100),
+            () async {
+              _model.isPhoneValid =
+                  _model.phoneFieldTextController.text.length == 13;
+              safeSetState(() {});
+              FFAppState().phone = _model.phoneFieldTextController.text;
+              safeSetState(() {});
+            },
+          ),
+          autofocus: true,
+          textInputAction: TextInputAction.go,
+          obscureText: false,
+          decoration: InputDecoration(
+            labelText: '+63',
+            labelStyle: theme.labelMedium.copyWith(fontSize: 16),
+            hintText: '9123456789',
+            hintStyle: theme.labelMedium.copyWith(
+              fontSize: 16,
+              color: theme.secondaryText,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: _model.isPhoneValid ? theme.secondaryText : theme.error,
+                width: 1,
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: _model.isPhoneValid ? theme.secondaryText : theme.error,
+                width: 1.5,
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: theme.error, width: 1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: theme.error, width: 1.5),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            filled: true,
+            fillColor: theme.secondaryBackground,
+          ),
+          style: theme.bodyMedium.copyWith(fontSize: 16),
+          textAlign: TextAlign.start,
+          maxLength: 13,
+          maxLengthEnforcement: MaxLengthEnforcement.enforced,
+          buildCounter: (context,
+                  {required currentLength,
+                  required isFocused,
+                  maxLength}) =>
+              null,
+          keyboardType: TextInputType.phone,
+          cursorColor: theme.primaryText,
+          enableInteractiveSelection: true,
+          validator:
+              _model.phoneFieldTextControllerValidator.asValidator(context),
+          inputFormatters: [_model.phoneFieldMask],
+        ),
+        if (_model.errorMessage != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              _model.errorMessage!,
+              style: theme.bodySmall.copyWith(color: theme.error),
+            ),
+          ),
+        const SizedBox(height: 24),
+        FFButtonWidget(
+          onPressed: _model.isLoading
+              ? null
+              : () async {
+                  _model.errorMessage = null;
+                  _model.isLoading = true;
+                  safeSetState(() {});
+
+                  if (_model.phoneFieldTextController.text != '') {
+                    try {
+                      _model.isPhoneExists =
+                          await ProfilesTable().queryRows(
+                        queryFn: (q) => q.eqOrNull(
+                          'phone_number',
+                          FFAppState().phone,
+                        ),
+                      );
+                      if (_model.isPhoneExists?.firstOrNull?.phoneNumber ==
+                          FFAppState().phone) {
+                        _model.isLoading = false;
+                        _model.errorMessage =
+                            'This phone number is already associated with an account. Please login instead.';
+                        safeSetState(() {});
+                        if (!context.mounted) return;
+                        await showDialog(
+                          context: context,
+                          builder: (alertDialogContext) => AlertDialog(
+                            title: const Text('Account Already Exists'),
+                            content: const Text(
+                                'This phone number is already associated with an account. Please login instead.'),
+                            actions: [
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.pop(alertDialogContext),
+                                child: const Text('Ok'),
+                              ),
+                            ],
+                          ),
+                        );
+                      } else {
+                        final phoneNumberVal =
+                            _model.phoneFieldTextController.text;
+                        if (phoneNumberVal.isEmpty ||
+                            !phoneNumberVal.startsWith('+')) {
+                          _model.isLoading = false;
+                          _model.errorMessage =
+                              'Phone Number is required and has to start with +.';
+                          safeSetState(() {});
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                  'Phone Number is required and has to start with +.'),
+                            ),
+                          );
+                          return;
+                        }
+                        if (!context.mounted) return;
+                        await beginPhoneAuth(
+                          context: context,
+                          phoneNumber: phoneNumberVal,
+                          onCodeSent: (context) async {
+                            if (!context.mounted) return;
+                            await context.pushNamed(
+                              PhoneVerifyUserWidget.routeName,
+                            );
+                          },
+                        );
+                        _model.isLoading = false;
+                        safeSetState(() {});
+                      }
+                    } catch (e) {
+                      _model.isLoading = false;
+                      _model.errorMessage =
+                          'An error occurred. Please try again.';
+                      safeSetState(() {});
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error: ${e.toString()}')),
+                      );
+                    }
+                  } else {
+                    _model.isLoading = false;
+                    _model.errorMessage =
+                        'Please input your phone number to continue';
+                    safeSetState(() {});
+                    if (!context.mounted) return;
+                    await showDialog(
+                      context: context,
+                      builder: (alertDialogContext) => AlertDialog(
+                        title: const Text('Phone number is empty'),
+                        content: const Text(
+                            'Please input your phone number to continue'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(alertDialogContext),
+                            child: const Text('Ok'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  safeSetState(() {});
+                },
+          text: _model.isLoading ? 'Signing Up...' : 'Sign Up',
+          options: FFButtonOptions(
+            width: double.infinity,
+            height: 52,
+            color: _model.isLoading ? theme.alternate : theme.primary,
+            textStyle: theme.titleMedium.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+            elevation: 0,
+            borderRadius: BorderRadius.circular(12),
+            disabledColor: theme.alternate,
+          ),
+        ),
+        const SizedBox(height: 24),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Already have an account? ',
+              style: theme.bodyMedium.copyWith(color: theme.secondaryText),
+            ),
+            GestureDetector(
+              onTap: () => context.pushNamed(SigninWidget.routeName),
+              child: Text(
+                'Sign In',
+                style: theme.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

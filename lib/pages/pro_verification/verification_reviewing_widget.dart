@@ -2,12 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
-import '/services/verification_timer_service.dart';
 import '/services/profiles_service.dart';
+import '/services/verification_timer_service.dart';
 import '/theme/app_theme.dart';
 import 'verification_reviewing_model.dart';
 
@@ -99,7 +98,7 @@ class _VerificationReviewingWidgetState
               IconButton(
                 icon: const Icon(Icons.edit),
                 onPressed: () {
-                  context.pushNamed('EditProfile');
+                  context.pushNamed(EditProfileWidget.routeName);
                 },
                 tooltip: 'Edit Profile',
               ),

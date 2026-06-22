@@ -70,6 +70,18 @@ class _AddEwalletPaymentWidgetState extends State<AddEwalletPaymentWidget> {
     }
 
     try {
+      final existingMethods = await PaymentMethodsTable().queryRows(
+        queryFn: (q) => q.eq('user_id', userId),
+      );
+      final shouldBeDefault = _model.isDefault || existingMethods.isEmpty;
+
+      if (shouldBeDefault) {
+        await PaymentMethodsTable().update(
+          data: {'is_default': false},
+          matchingRows: (f) => f.eq('user_id', userId),
+        );
+      }
+
       if (widget.paymentMethod != null) {
         // Update existing
         await PaymentMethodsTable().update(
@@ -77,7 +89,7 @@ class _AddEwalletPaymentWidgetState extends State<AddEwalletPaymentWidget> {
             'provider': _model.selectedProvider,
             'phone_number': _model.phoneNumberController.text,
             'account_name': _model.accountNameController.text,
-            'is_default': _model.isDefault,
+            'is_default': shouldBeDefault,
           },
           matchingRows: (f) => f.eq('id', widget.paymentMethod!.id),
         );
@@ -89,7 +101,7 @@ class _AddEwalletPaymentWidgetState extends State<AddEwalletPaymentWidget> {
           'provider': _model.selectedProvider,
           'phone_number': _model.phoneNumberController.text,
           'account_name': _model.accountNameController.text,
-          'is_default': _model.isDefault,
+          'is_default': shouldBeDefault,
         });
       }
 

@@ -89,7 +89,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
             delay: 300.0.ms,
             duration: 600.0.ms,
             begin: const Offset(0, -20),
-            end: const Offset(0, 0),
+            end: Offset.zero,
           ),
         ],
       ),
@@ -1189,6 +1189,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                             );
 
                                             if (_model.register == 'success') {
+                                              if (!context.mounted) return;
                                               LoggingService.info(
                                                 'Profile created successfully',
                                                 tag: 'CreateProfile',
@@ -1204,14 +1205,14 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                                   'Navigating to EKYCBegin',
                                                   tag: 'CreateProfile',
                                                 );
-                                                context.pushNamed(
+                                                await context.pushNamed(
                                                     EKYCBeginWidget.routeName);
                                               } else {
                                                 LoggingService.info(
                                                   'Navigating to Home',
                                                   tag: 'CreateProfile',
                                                 );
-                                                context.pushNamed(
+                                                await context.pushNamed(
                                                     HomeWidget.routeName);
                                               }
                                             } else {
@@ -1233,8 +1234,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                   height: 56,
                                   padding: const EdgeInsets.all(8),
                                   iconPadding:
-                                      const EdgeInsetsDirectional.fromSTEB(
-                                          0, 0, 0, 0),
+EdgeInsetsDirectional.zero,
                                   color: AppTheme.of(context).primary,
                                   textStyle:
                                       AppTheme.of(context).titleMedium.override(

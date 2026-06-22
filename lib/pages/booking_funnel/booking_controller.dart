@@ -13,7 +13,7 @@ class BookingFlowController extends ChangeNotifier {
             const BookingDraft(
               urgency: BookingUrgency.rightNow,
               rooms: 1,
-              cleaningType: CleaningType.standard,
+              cleaningType: ServiceType.standard,
               paymentMethod: BookingPaymentMethod.gcash,
               address: BookingAddress(
                 label: 'Home',
@@ -29,6 +29,7 @@ class BookingFlowController extends ChangeNotifier {
 
   bool isSubmitting = false;
   bool liveSearchTimedOut = false;
+  bool isMatchingActive = false;
   String? activeReferenceId;
   String? lastError;
 
@@ -52,9 +53,9 @@ class BookingFlowController extends ChangeNotifier {
     final roomIncrement = (base * 0.18).clamp(90.0, 320.0);
     final roomSubtotal = (_draft.rooms - 1) * roomIncrement;
     final cleaningTypeAdjustment = switch (_draft.cleaningType) {
-      CleaningType.standard => 0.0,
-      CleaningType.deep => base * 0.25,
-      CleaningType.premium => base * 0.45,
+      ServiceType.standard => 0.0,
+      ServiceType.deep => base * 0.25,
+      ServiceType.premium => base * 0.45,
     };
     final urgencyAdjustment = switch (_draft.urgency) {
       BookingUrgency.rightNow => (base * 0.18).clamp(100.0, 180.0),
@@ -81,7 +82,7 @@ class BookingFlowController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setCleaningType(CleaningType type) {
+  void setServiceType(ServiceType type) {
     _draft = _draft.copyWith(cleaningType: type);
     notifyListeners();
   }
@@ -104,6 +105,16 @@ class BookingFlowController extends ChangeNotifier {
       latitude: latitude,
       longitude: longitude,
     );
+    notifyListeners();
+  }
+
+  void setMatchingActive(bool value) {
+    isMatchingActive = value;
+    notifyListeners();
+  }
+
+  void setLiveSearchTimedOut(bool value) {
+    liveSearchTimedOut = value;
     notifyListeners();
   }
 
@@ -133,9 +144,9 @@ class BookingFlowController extends ChangeNotifier {
       };
 
   String get cleaningTypeLabel => switch (_draft.cleaningType) {
-        CleaningType.standard => 'Standard clean',
-        CleaningType.deep => 'Deep clean',
-        CleaningType.premium => 'Premium clean',
+        ServiceType.standard => 'Standard clean',
+        ServiceType.deep => 'Deep clean',
+        ServiceType.premium => 'Premium clean',
       };
 
   String get selectedServiceLabel => _draft.serviceTitle ?? 'Choose a service';

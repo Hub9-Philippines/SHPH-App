@@ -163,6 +163,35 @@ class BookingsService {
     }
   }
 
+  Future<bool> updateBookingData(
+    String bookingId,
+    Map<String, dynamic> data,
+  ) async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        await _bookingsApi.updateBooking(
+          bookingId,
+          data: data,
+        );
+        return true;
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API updateBookingData failed, falling back to Supabase: $e',
+          tag: 'BookingsService',
+        );
+      }
+    }
+
+    try {
+      await _supabase.from('bookings').update(data).eq('id', bookingId);
+      return true;
+    } catch (e) {
+      LoggingService.error('Error updating booking data: $e',
+          tag: 'BookingsService');
+      return false;
+    }
+  }
+
   Future<bool> cancelBooking(String bookingId) async {
     if (await ApiRowMapper.canUseApi()) {
       try {

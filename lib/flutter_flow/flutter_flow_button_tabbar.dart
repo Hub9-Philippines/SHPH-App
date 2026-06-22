@@ -44,10 +44,10 @@ class _TabLabelBarRenderer extends RenderFlex {
       final childParentData =
           child.parentData! as FlexParentData;
       xOffsets.add(childParentData.offset.dx);
-      assert(child.parentData == childParentData);
+      assert(child.parentData == childParentData, 'child.parentData must match childParentData');
       child = childParentData.nextSibling;
     }
-    assert(textDirection != null);
+    assert(textDirection != null, 'textDirection must not be null');
     switch (textDirection!) {
       case TextDirection.rtl:
         xOffsets.insert(0, size.width);
@@ -138,10 +138,10 @@ class _IndicatorPainter extends CustomPainter {
   int get maxTabIndex => _currentTabOffsets!.length - 2;
 
   double centerOf(int tabIndex) {
-    assert(_currentTabOffsets != null);
-    assert(_currentTabOffsets!.isNotEmpty);
-    assert(tabIndex >= 0);
-    assert(tabIndex <= maxTabIndex);
+    assert(_currentTabOffsets != null, '_currentTabOffsets must not be null');
+    assert(_currentTabOffsets!.isNotEmpty, '_currentTabOffsets must not be empty');
+    assert(tabIndex >= 0, 'tabIndex must be >= 0');
+    assert(tabIndex <= maxTabIndex, 'tabIndex must be <= maxTabIndex');
     return (_currentTabOffsets![tabIndex] + _currentTabOffsets![tabIndex + 1]) /
         2.0;
   }
@@ -430,7 +430,7 @@ class _FlutterFlowButtonTabBarState extends State<FlutterFlowButtonTabBar>
         );
       }
       return true;
-    }());
+    }(), 'TabController must not be null');
 
     if (newController == _controller) {
       return;
@@ -461,7 +461,7 @@ class _FlutterFlowButtonTabBarState extends State<FlutterFlowButtonTabBar>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    assert(debugCheckHasMaterial(context));
+    assert(debugCheckHasMaterial(context), 'Missing Material widget ancestor');
     _updateTabController();
     _initIndicatorPainter();
   }
@@ -570,7 +570,7 @@ class _FlutterFlowButtonTabBarState extends State<FlutterFlowButtonTabBar>
   }
 
   void _handleTabControllerAnimationTick() {
-    assert(mounted);
+    assert(mounted, 'Widget must be mounted');
     if (!_controller!.indexIsChanging && widget.isScrollable) {
       // Sync the TabBar's scroll position with the TabBarView's PageView.
       _currentIndex = _controller!.index;
@@ -608,7 +608,7 @@ class _FlutterFlowButtonTabBarState extends State<FlutterFlowButtonTabBar>
   }
 
   void _handleTap(int index) {
-    assert(index >= 0 && index < widget.tabs.length);
+    assert(index >= 0 && index < widget.tabs.length, 'Tab index out of bounds');
     _controller?.animateTo(index);
     widget.onTap?.call(index);
   }
@@ -765,7 +765,7 @@ class _FlutterFlowButtonTabBarState extends State<FlutterFlowButtonTabBar>
           );
         }
         return true;
-      }());
+      }(), 'Tab count must match tabs.length');
     });
     _debugHasScheduledValidTabsCountCheck = true;
     return true;
@@ -773,7 +773,7 @@ class _FlutterFlowButtonTabBarState extends State<FlutterFlowButtonTabBar>
 
   @override
   Widget build(BuildContext context) {
-    assert(_debugScheduleCheckHasValidTabsCount());
+    assert(_debugScheduleCheckHasValidTabsCount(), 'Tab count validation failed');
 
     if (_controller!.length == 0) {
       return Container(

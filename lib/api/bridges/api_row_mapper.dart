@@ -6,9 +6,9 @@ import '/api/models/service_listing.dart';
 import '/api/shph_token_storage.dart';
 import '/backend/supabase/database/tables/bookings.dart';
 import '/backend/supabase/database/tables/categories.dart';
+import '/backend/supabase/database/tables/profiles.dart';
 import '/backend/supabase/database/tables/reviews.dart';
 import '/backend/supabase/database/tables/service_listings.dart';
-import '/backend/supabase/database/tables/profiles.dart';
 
 /// Maps SHPH API models to existing Supabase row types so UI code stays stable.
 class ApiRowMapper {
@@ -78,6 +78,7 @@ class ApiRowMapper {
       'rating': listing.rating,
       'thumbnail': listing.thumbnail,
       'review_count': listing.reviewCount ?? 0,
+      'is_time_material': listing.isTimeMaterial,
       'created_at': listing.createdAt ?? DateTime.now().toIso8601String(),
     });
   }

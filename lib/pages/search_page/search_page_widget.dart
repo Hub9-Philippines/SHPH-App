@@ -121,7 +121,11 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
 
     try {
       final services = await ServiceListingsTable().queryRows(
-        queryFn: (q) => q.ilike('title', '%$normalizedQuery%'),
+        queryFn: (q) => q
+            .eq('is_available', 'true')
+            .or(
+              'title.ilike.%$normalizedQuery%,category_name.ilike.%$normalizedQuery%,description.ilike.%$normalizedQuery%,provider_name.ilike.%$normalizedQuery%',
+            ),
       );
 
       final results = services.where((service) {
@@ -133,7 +137,19 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
         final matchesRating =
             _selectedRating == null || rating >= double.parse(_selectedRating!);
 
-        return matchesCategory && matchesRating;
+        final matchesQuery = service.title
+                .toLowerCase()
+                .contains(normalizedQuery.toLowerCase()) ||
+            category.toLowerCase().contains(normalizedQuery.toLowerCase()) ||
+            (service.description ?? '')
+                .toLowerCase()
+                .contains(normalizedQuery.toLowerCase()) ||
+            (service.providerName ?? '')
+                .toLowerCase()
+                .contains(normalizedQuery.toLowerCase()) ||
+            _matchesCategory(normalizedQuery, category);
+
+        return matchesCategory && matchesRating && matchesQuery;
       }).toList();
 
       if (_selectedPriceSort != null) {
@@ -185,6 +201,15 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
   void _applyQuickSearch(String value) {
     _searchController.text = value;
     _performSearch(value);
+  }
+
+  void _openCategoryBrowse(String category) {
+    context.pushNamed(
+      ServicesScreen.routeName,
+      extra: <String, dynamic>{
+        'initialCategory': category,
+      },
+    );
   }
 
   void _resetFilters() {
@@ -239,6 +264,8 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
                               ),
                               const SizedBox(height: 16),
                               _buildSearchSummary(),
+                              const SizedBox(height: 14),
+                              _buildQuickCategoryRail(),
                               if (_showFilters) ...[
                                 const SizedBox(height: 16),
                                 _buildFilterPanel(),
@@ -442,7 +469,129 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
                     color: Colors.white.withValues(alpha: 0.82),
                   ),
             ),
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _buildSummaryPill(
+                  icon: Icons.auto_awesome_rounded,
+                  label: _searchController.text.trim().isEmpty
+                      ? 'Smart discovery'
+                      : 'Live search',
+                ),
+                _buildSummaryPill(
+                  icon: Icons.tune_rounded,
+                  label: _selectedCategory ?? 'All categories',
+                ),
+              ],
+            ),
           ],
+        ),
+      );
+
+  Widget _buildSummaryPill({
+    required IconData icon,
+    required String label,
+  }) =>
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.16),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: Colors.white),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: AppTheme.of(context).labelMedium.override(
+                    font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    color: Colors.white,
+                  ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _buildQuickCategoryRail() => SizedBox(
+        height: 40,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          children: [
+            _buildQuickCategoryChip(
+              icon: Icons.cleaning_services_rounded,
+              label: 'Cleaning',
+              onTap: () => _openCategoryBrowse('Cleaning'),
+            ),
+            _buildQuickCategoryChip(
+              icon: Icons.plumbing_rounded,
+              label: 'Plumbing',
+              onTap: () => _openCategoryBrowse('Plumbing'),
+            ),
+            _buildQuickCategoryChip(
+              icon: Icons.electrical_services_rounded,
+              label: 'Electrical',
+              onTap: () => _openCategoryBrowse('Electrical'),
+            ),
+            _buildQuickCategoryChip(
+              icon: Icons.format_paint_rounded,
+              label: 'Painting',
+              onTap: () => _openCategoryBrowse('Painting & Decorating'),
+            ),
+            _buildQuickCategoryChip(
+              icon: Icons.grid_view_rounded,
+              label: 'All services',
+              onTap: () => context.pushNamed(ServicesScreen.routeName),
+            ),
+          ],
+        ),
+      );
+
+  Widget _buildQuickCategoryChip({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) =>
+      Padding(
+        padding: const EdgeInsets.only(right: 10),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(999),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(999),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x12000000),
+                    blurRadius: 12,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Icon(icon, size: 14, color: const Color(0xFF17212B)),
+                  const SizedBox(width: 8),
+                  Text(
+                    label,
+                    style: AppTheme.of(context).bodySmall.override(
+                          font: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600,
+                          ),
+                          color: const Color(0xFF17212B),
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       );
 
@@ -628,6 +777,11 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
                     color: const Color(0xFF6F7B86),
                   ),
             ),
+            const SizedBox(height: 20),
+            FilledButton(
+              onPressed: () => context.pushNamed(ServicesScreen.routeName),
+              child: const Text('Browse all services'),
+            ),
             if (_recentSearches.isNotEmpty) ...[
               const SizedBox(height: 26),
               _buildSuggestionBlock(
@@ -746,12 +900,34 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Try another keyword or loosen your filters.',
+                'Try another keyword, open a broader category, or clear your filters.',
                 textAlign: TextAlign.center,
                 style: AppTheme.of(context).bodySmall.override(
                       font: GoogleFonts.poppins(),
                       color: const Color(0xFF6F7B86),
                     ),
+              ),
+              const SizedBox(height: 18),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                alignment: WrapAlignment.center,
+                children: [
+                  FilledButton(
+                    onPressed: () {
+                      _resetFilters();
+                      _searchController.clear();
+                      _performSearch('');
+                    },
+                    child: const Text('Clear filters'),
+                  ),
+                  OutlinedButton(
+                    onPressed: () => context.pushNamed(
+                      ServicesScreen.routeName,
+                    ),
+                    child: const Text('Browse all services'),
+                  ),
+                ],
               ),
             ],
           ),

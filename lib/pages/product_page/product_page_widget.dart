@@ -8,6 +8,7 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
 import '/services/favorites_service.dart';
+import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
 import 'product_page_model.dart';
 
@@ -64,83 +65,8 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, ProductPageModel.new);
-    print('ProductPage - imageUrl received: ${widget.imageUrl}');
     _checkFavoriteStatus();
     _loadReviews();
-  }
-
-  Future<void> _checkFavoriteStatus() async {
-    if (widget.serviceId == null) {
-      return;
-    }
-    setState(() => _isLoadingFavorite = true);
-    final isFav = await FavoritesService.instance.isFavorite(widget.serviceId!);
-    if (mounted) {
-      setState(() {
-        _isFavorite = isFav;
-        _isLoadingFavorite = false;
-      });
-    }
-  }
-
-  Future<void> _toggleFavorite() async {
-    if (widget.serviceId == null) {
-      return;
-    }
-    setState(() => _isLoadingFavorite = true);
-    final success =
-        await FavoritesService.instance.toggleFavorite(widget.serviceId!);
-    if (mounted) {
-      setState(() {
-        _isFavorite = !_isFavorite;
-        _isLoadingFavorite = false;
-      });
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                _isFavorite ? 'Added to favorites' : 'Removed from favorites'),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _loadReviews() async {
-    if (widget.serviceId == null) {
-      return;
-    }
-    setState(() => _isLoadingReviews = true);
-    try {
-      final response = await ReviewsTable().queryRows(
-        queryFn: (q) => q
-            .eq('service_listing_id', widget.serviceId!)
-            .order('created_at', ascending: false),
-        limit: 3,
-      );
-      if (mounted) {
-        setState(() {
-          _reviews = response;
-          _isLoadingReviews = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isLoadingReviews = false);
-      }
-    }
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Extract parameters from navigation after widget tree is built
-    final extra =
-        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-    if (extra != null) {
-      // Parameters are already set via widget constructor
-    }
   }
 
   @override
@@ -149,87 +75,85 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
     super.dispose();
   }
 
-  Widget _buildReviewCard(BuildContext context, ReviewsRow review) => Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppTheme.of(context).secondaryBackground,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: MediaQuery.sizeOf(context).width * 0.1,
-                  height: MediaQuery.sizeOf(context).width * 0.1,
-                  constraints: const BoxConstraints(
-                    minWidth: 32,
-                    maxWidth: 48,
-                    minHeight: 32,
-                    maxHeight: 48,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.of(context).accent2,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      review.userId.substring(0, 2).toUpperCase(),
-                      style: AppTheme.of(context).bodyMedium.override(
-                            font: GoogleFonts.poppins(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'User',
-                        style: AppTheme.of(context).bodyMedium.override(
-                              font: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                      ),
-                      Row(
-                        children: List.generate(
-                          review.rating,
-                          (index) => const FaIcon(
-                            FontAwesomeIcons.solidStar,
-                            color: Colors.orange,
-                            size: 12,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Text(
-                  _formatDate(review.createdAt),
-                  style: AppTheme.of(context).bodySmall.override(
-                        color: AppTheme.of(context).secondaryText,
-                      ),
-                ),
-              ],
-            ),
-            if (review.comment != null && review.comment!.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Text(
-                review.comment!,
-                style: AppTheme.of(context).bodyMedium.override(
-                      color: AppTheme.of(context).secondaryText,
-                    ),
-              ),
-            ],
-          ],
+  Future<void> _checkFavoriteStatus() async {
+    if (widget.serviceId == null) {
+      return;
+    }
+
+    setState(() => _isLoadingFavorite = true);
+    final isFav = await FavoritesService.instance.isFavorite(widget.serviceId!);
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _isFavorite = isFav;
+      _isLoadingFavorite = false;
+    });
+  }
+
+  Future<void> _toggleFavorite() async {
+    if (widget.serviceId == null) {
+      return;
+    }
+
+    setState(() => _isLoadingFavorite = true);
+    final success =
+        await FavoritesService.instance.toggleFavorite(widget.serviceId!);
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _isFavorite = !_isFavorite;
+      _isLoadingFavorite = false;
+    });
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _isFavorite ? 'Added to favorites' : 'Removed from favorites',
+          ),
+          duration: const Duration(seconds: 2),
         ),
       );
+    }
+  }
+
+  Future<void> _loadReviews() async {
+    if (widget.serviceId == null) {
+      return;
+    }
+
+    setState(() => _isLoadingReviews = true);
+    try {
+      final response = await ReviewsTable().queryRows(
+        queryFn: (q) => q
+            .eq('service_listing_id', widget.serviceId!)
+            .order('created_at', ascending: false),
+        limit: 3,
+      );
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _reviews = response;
+        _isLoadingReviews = false;
+      });
+    } catch (e, stackTrace) {
+      LoggingService.error(
+        'Failed to load service reviews',
+        tag: 'ProductPage',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      if (mounted) {
+        setState(() => _isLoadingReviews = false);
+      }
+    }
+  }
 
   String _formatDate(DateTime date) {
     final now = DateTime.now();
@@ -240,15 +164,17 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
         return '${difference.inMinutes} min ago';
       }
       return '${difference.inHours} hours ago';
-    } else if (difference.inDays == 1) {
-      return '1 day ago';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays} days ago';
-    } else if (difference.inDays < 30) {
-      return '${(difference.inDays / 7).floor()} weeks ago';
-    } else {
-      return '${(difference.inDays / 30).floor()} months ago';
     }
+    if (difference.inDays == 1) {
+      return '1 day ago';
+    }
+    if (difference.inDays < 7) {
+      return '${difference.inDays} days ago';
+    }
+    if (difference.inDays < 30) {
+      return '${(difference.inDays / 7).floor()} weeks ago';
+    }
+    return '${(difference.inDays / 30).floor()} months ago';
   }
 
   @override
@@ -259,521 +185,895 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: AppTheme.of(context).primaryBackground,
-          appBar: AppBar(
-            backgroundColor: AppTheme.of(context).primaryBackground,
-            automaticallyImplyLeading: false,
-            leading: wrapWithModel(
-              model: _model.backButtonModel,
-              updateCallback: () => safeSetState(() {}),
-              child: const BackButtonWidget(),
-            ),
-            title: Text(
-              widget.serviceName,
-              style: AppTheme.of(context).titleLarge.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-                  ),
-            ),
-            actions: [
-              Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 16, 0),
-                child: IconButton(
-                  icon: _isLoadingFavorite
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Icon(
-                          _isFavorite ? Icons.favorite : Icons.favorite_border,
-                          color: _isFavorite
-                              ? AppTheme.of(context).error
-                              : AppTheme.of(context).primaryText,
-                          size: 28,
-                        ),
-                  onPressed: _isLoadingFavorite ? null : _toggleFavorite,
-                ),
-              ),
-            ],
-            centerTitle: true,
-            elevation: 0,
-          ),
-          body: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Hero Image
-                Stack(
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      height: MediaQuery.sizeOf(context).width * 0.6,
-                      constraints: const BoxConstraints(
-                        minHeight: 250,
-                        maxHeight: 400,
-                      ),
-                      child: widget.imageUrl.isNotEmpty
-                          ? Image.network(
-                              widget.imageUrl,
-                              width: double.infinity,
-                              height: double.infinity,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Container(
-                                color: AppTheme.of(context).secondaryBackground,
-                                child: Center(
-                                  child: Icon(
-                                    Icons.image_not_supported,
-                                    size: 64,
-                                    color: AppTheme.of(context).secondaryText,
-                                  ),
-                                ),
-                              ),
-                              loadingBuilder:
-                                  (context, child, loadingProgress) {
-                                if (loadingProgress == null) {
-                                  return child;
-                                }
-                                return Container(
-                                  color:
-                                      AppTheme.of(context).secondaryBackground,
-                                  child: Center(
-                                    child: CircularProgressIndicator(
-                                      value:
-                                          loadingProgress.expectedTotalBytes !=
-                                                  null
-                                              ? loadingProgress
-                                                      .cumulativeBytesLoaded /
-                                                  loadingProgress
-                                                      .expectedTotalBytes!
-                                              : null,
-                                    ),
-                                  ),
-                                );
-                              },
-                            )
-                          : Container(
-                              color: AppTheme.of(context).secondaryBackground,
-                              child: Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.image_not_supported,
-                                      size: 64,
-                                      color: AppTheme.of(context).secondaryText,
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      'No image available',
-                                      style: AppTheme.of(context).bodyMedium,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
+          backgroundColor: const Color(0xFFF4F7FB),
+          body: CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              SliverAppBar(
+                expandedHeight: 360,
+                pinned: true,
+                stretch: true,
+                elevation: 0,
+                surfaceTintColor: Colors.transparent,
+                backgroundColor: const Color(0xFFF4F7FB),
+                leadingWidth: 72,
+                leading: Padding(
+                  padding: const EdgeInsets.only(left: 16, top: 8, bottom: 8),
+                  child: Material(
+                    color: Colors.white.withValues(alpha: 0.94),
+                    borderRadius: BorderRadius.circular(18),
+                    child: wrapWithModel(
+                      model: _model.backButtonModel,
+                      updateCallback: () => safeSetState(() {}),
+                      child: const BackButtonWidget(),
                     ),
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        height: MediaQuery.sizeOf(context).width * 0.2,
-                        constraints: const BoxConstraints(
-                          minHeight: 80,
-                          maxHeight: 150,
-                        ),
+                  ),
+                ),
+                actions: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
+                    child: Material(
+                      color: Colors.white.withValues(alpha: 0.94),
+                      borderRadius: BorderRadius.circular(18),
+                      child: IconButton(
+                        icon: _isLoadingFavorite
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : Icon(
+                                _isFavorite
+                                    ? Icons.favorite_rounded
+                                    : Icons.favorite_border_rounded,
+                                color: _isFavorite
+                                    ? AppTheme.of(context).error
+                                    : const Color(0xFF17212B),
+                                size: 24,
+                              ),
+                        onPressed: _isLoadingFavorite ? null : _toggleFavorite,
+                      ),
+                    ),
+                  ),
+                ],
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      _buildHeroImage(),
+                      DecoratedBox(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                             colors: [
+                              Colors.black.withValues(alpha: 0.14),
                               Colors.transparent,
-                              AppTheme.of(context).primaryBackground,
+                              const Color(0xFFF4F7FB),
                             ],
+                            stops: const [0, 0.45, 1],
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                      SafeArea(
+                        child: Align(
+                          alignment: Alignment.bottomLeft,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 7,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.18),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Text(
+                                    widget.category,
+                                    style: AppTheme.of(context).labelMedium.override(
+                                          font: GoogleFonts.poppins(
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                          color: Colors.white,
+                                        ),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  widget.serviceName,
+                                  style: AppTheme.of(context).headlineMedium.override(
+                                        font: GoogleFonts.poppins(
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                        color: Colors.white,
+                                      ),
+                                ),
+                                const SizedBox(height: 10),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: [
+                                    _heroInfoChip(
+                                      icon: Icons.star_rounded,
+                                      label:
+                                          '${widget.rating.toStringAsFixed(1)} rating',
+                                    ),
+                                    _heroInfoChip(
+                                      icon: Icons.reviews_rounded,
+                                      label: '${widget.reviewCount} reviews',
+                                    ),
+                                    _heroInfoChip(
+                                      icon: Icons.payments_rounded,
+                                      label: widget.price,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 20),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 120),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Service Name
-                      Text(
-                        widget.serviceName,
-                        style: AppTheme.of(context).headlineMedium.override(
-                              font: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.bold),
-                              fontSize: 24,
-                            ),
-                      ),
-                      const SizedBox(height: 8),
-                      // Category
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.of(context)
-                              .primary
-                              .withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
+                      _buildOverviewCard(),
+                      const SizedBox(height: 18),
+                      _buildProviderCard(),
+                      const SizedBox(height: 18),
+                      _buildSectionCard(
+                        title: 'About this service',
+                        subtitle:
+                            'Everything the customer should understand before booking.',
                         child: Text(
-                          widget.category,
-                          style: AppTheme.of(context).bodyMedium.override(
-                                font: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.w500),
-                                color: AppTheme.of(context).primary,
-                              ),
+                          widget.description,
+                          style: AppTheme.of(context)
+                              .bodyMedium
+                              .override(
+                                font: GoogleFonts.poppins(),
+                                color: const Color(0xFF64748B),
+                              )
+                              .copyWith(height: 1.5),
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      // Price and Rating
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              widget.price,
-                              style: AppTheme.of(context).displaySmall.override(
-                                    font: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.bold),
-                                    color: AppTheme.of(context).primary,
-                                    fontSize: 24,
-                                  ),
-                            ),
+                      const SizedBox(height: 18),
+                      _buildTrustCard(),
+                      const SizedBox(height: 18),
+                      _buildReviewsCard(),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          bottomNavigationBar: _buildBottomBar(),
+        ),
+      );
+
+  Widget _buildHeroImage() {
+    if (widget.imageUrl.isEmpty) {
+      return Container(
+        color: const Color(0xFFE8EDF2),
+        child: const Center(
+          child: Icon(
+            Icons.image_not_supported_outlined,
+            size: 68,
+            color: Color(0xFF94A3B8),
+          ),
+        ),
+      );
+    }
+
+    return Image.network(
+      widget.imageUrl,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => Container(
+        color: const Color(0xFFE8EDF2),
+        child: const Center(
+          child: Icon(
+            Icons.image_not_supported_outlined,
+            size: 68,
+            color: Color(0xFF94A3B8),
+          ),
+        ),
+      ),
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) {
+          return child;
+        }
+        return Container(
+          color: const Color(0xFFE8EDF2),
+          child: Center(
+            child: CircularProgressIndicator(
+              value: loadingProgress.expectedTotalBytes != null
+                  ? loadingProgress.cumulativeBytesLoaded /
+                      loadingProgress.expectedTotalBytes!
+                  : null,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _heroInfoChip({
+    required IconData icon,
+    required String label,
+  }) =>
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.16),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: Colors.white),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: AppTheme.of(context).labelMedium.override(
+                    font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    color: Colors.white,
+                  ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _buildOverviewCard() => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x12000000),
+              blurRadius: 20,
+              offset: Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.price,
+                    style: AppTheme.of(context).headlineSmall.override(
+                          font: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w700,
                           ),
-                          const SizedBox(width: 16),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const FaIcon(
-                                FontAwesomeIcons.solidStar,
-                                color: Colors.orange,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                widget.rating.toString(),
-                                style:
-                                    AppTheme.of(context).titleMedium.override(
-                                          font: GoogleFonts.poppins(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '(${widget.reviewCount} reviews)',
-                                style: AppTheme.of(context).bodySmall.override(
-                                      color: AppTheme.of(context).secondaryText,
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ],
+                          color: AppTheme.of(context).primary,
+                        ),
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF7E8),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const FaIcon(
+                        FontAwesomeIcons.solidStar,
+                        color: Color(0xFFFFB020),
+                        size: 14,
                       ),
-                      const SizedBox(height: 24),
-                      // Description
+                      const SizedBox(width: 8),
                       Text(
-                        'Description',
-                        style: AppTheme.of(context).titleMedium.override(
+                        '${widget.rating.toStringAsFixed(1)} • ${widget.reviewCount} reviews',
+                        style: AppTheme.of(context).labelMedium.override(
                               font: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.bold),
+                                fontWeight: FontWeight.w700,
+                              ),
+                              color: const Color(0xFF8A6116),
                             ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        widget.description,
-                        style: AppTheme.of(context).bodyMedium.override(
-                              color: AppTheme.of(context).secondaryText,
-                            ),
-                      ),
-                      const SizedBox(height: 24),
-                      // Provider Info
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: AppTheme.of(context).secondaryBackground,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppTheme.of(context).alternate,
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            GestureDetector(
-                              onTap: () {
-                                // Navigate to provider profile
-                              },
-                              child: Container(
-                                width: MediaQuery.sizeOf(context).width * 0.12,
-                                height: MediaQuery.sizeOf(context).width * 0.12,
-                                constraints: const BoxConstraints(
-                                  minWidth: 40,
-                                  maxWidth: 60,
-                                  minHeight: 40,
-                                  maxHeight: 60,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.of(context).accent1,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: ClipOval(
-                                  child: widget.providerPhoto != null &&
-                                          widget.providerPhoto!.isNotEmpty
-                                      ? Image.network(
-                                          widget.providerPhoto!,
-                                          fit: BoxFit.cover,
-                                          errorBuilder:
-                                              (context, error, stackTrace) =>
-                                                  Center(
-                                            child: FaIcon(
-                                              FontAwesomeIcons.user,
-                                              color: AppTheme.of(context)
-                                                  .primaryText,
-                                              size: 24,
-                                            ),
-                                          ),
-                                        )
-                                      : Center(
-                                          child: FaIcon(
-                                            FontAwesomeIcons.user,
-                                            color: AppTheme.of(context)
-                                                .primaryText,
-                                            size: 24,
-                                          ),
-                                        ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  ...[
-                                    Text(
-                                      widget.providerName,
-                                      style: AppTheme.of(context)
-                                          .bodyMedium
-                                          .override(
-                                            font: GoogleFonts.poppins(
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                    ),
-                                    ...[
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        widget.providerCategory,
-                                        style: AppTheme.of(context)
-                                            .bodySmall
-                                            .override(
-                                              color: AppTheme.of(context)
-                                                  .secondaryText,
-                                            ),
-                                      ),
-                                    ],
-                                  ],
-                                ],
-                              ),
-                            ),
-                            if (widget.isVerified)
-                              FaIcon(
-                                FontAwesomeIcons.checkCircle,
-                                color: AppTheme.of(context).success,
-                                size: 20,
-                              ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      // Reviews Section
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Reviews',
-                            style: AppTheme.of(context).titleMedium.override(
-                                  font: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.bold),
-                                ),
-                          ),
-                          if (widget.reviewCount > 0)
-                            GestureDetector(
-                              onTap: () {
-                                if (widget.serviceId != null) {
-                                  context.pushNamed(
-                                    ReviewsWidget.routeName,
-                                    extra: {
-                                      'serviceId': widget.serviceId,
-                                      'serviceName': widget.serviceName,
-                                    },
-                                  );
-                                }
-                              },
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    'See All',
-                                    style: AppTheme.of(context)
-                                        .bodyMedium
-                                        .override(
-                                          color: AppTheme.of(context).primary,
-                                        ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  const Icon(
-                                    Icons.arrow_forward,
-                                    size: 16,
-                                    color: Colors.blue,
-                                  ),
-                                ],
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      if (_isLoadingReviews)
-                        const Center(child: CircularProgressIndicator())
-                      else if (_reviews.isNotEmpty)
-                        ..._reviews.map((review) => Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: _buildReviewCard(context, review),
-                            ))
-                      else if (widget.reviewCount > 0)
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: AppTheme.of(context).secondaryBackground,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Center(
-                            child: Text(
-                              '${widget.reviewCount} reviews available',
-                              style: AppTheme.of(context).bodyMedium.override(
-                                    color: AppTheme.of(context).secondaryText,
-                                  ),
-                            ),
-                          ),
-                        )
-                      else
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: AppTheme.of(context).secondaryBackground,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Center(
-                            child: Text(
-                              'No reviews yet',
-                              style: AppTheme.of(context).bodyMedium.override(
-                                    color: AppTheme.of(context).secondaryText,
-                                  ),
-                            ),
-                          ),
-                        ),
-                      SizedBox(height: MediaQuery.sizeOf(context).width * 0.1),
                     ],
                   ),
                 ),
               ],
             ),
-          ),
-          // Bottom Action Bar
-          bottomNavigationBar: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.of(context).primaryBackground,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, -2),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                _overviewPill(
+                  icon: Icons.flash_on_rounded,
+                  label: 'Fast booking',
+                ),
+                _overviewPill(
+                  icon: Icons.shield_outlined,
+                  label: widget.isVerified ? 'Verified provider' : 'Open listing',
+                ),
+                _overviewPill(
+                  icon: Icons.category_rounded,
+                  label: widget.category,
                 ),
               ],
             ),
-            child: SafeArea(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: FFButtonWidget(
-                      onPressed: () {
-                        context.pushNamed(
-                          ContactProviderWidget.routeName,
-                          extra: {
-                            'providerName': widget.providerName,
-                            'providerId': widget.providerId,
-                            'providerPhoto': widget.providerPhoto,
-                            'isVerified': widget.isVerified,
-                            'mobileNumber':
-                                null, // TODO: Add mobile number to product page
-                            'serviceName': widget.serviceName,
-                            'serviceCategory': widget.category,
-                            'servicePrice': widget.price,
-                            'serviceDescription': widget.description,
-                          },
-                        );
-                      },
-                      text: 'Contact',
-                      options: FFButtonOptions(
-                        width: double.infinity,
-                        color: AppTheme.of(context).secondaryBackground,
-                        textStyle: AppTheme.of(context).titleMedium.override(
-                              font: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600),
-                              color: AppTheme.of(context).primaryText,
-                            ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
+          ],
+        ),
+      );
+
+  Widget _overviewPill({
+    required IconData icon,
+    required String label,
+  }) =>
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF3F7FA),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: const Color(0xFF475569)),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: AppTheme.of(context).labelMedium.override(
+                    font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    color: const Color(0xFF334155),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 2,
-                    child: FFButtonWidget(
-                      onPressed: () {
-                        context.pushNamed(
-                          BookingWidget.routeName,
-                          extra: <String, dynamic>{
-                            'serviceId': widget.serviceId,
-                            'serviceName': widget.serviceName,
-                            'category': widget.category,
-                            'price': widget.price,
-                            'providerName': widget.providerName,
-                            'providerId': widget.providerId,
-                            'providerPhoto': widget.providerPhoto,
-                            'isVerified': widget.isVerified,
-                            'imageUrl': widget.imageUrl,
-                          },
-                        );
-                      },
-                      text: 'Book Now',
-                      icon: const Icon(Icons.calendar_today),
-                      options: FFButtonOptions(
-                        width: double.infinity,
+            ),
+          ],
+        ),
+      );
+
+  Widget _buildProviderCard() => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x12000000),
+              blurRadius: 20,
+              offset: Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 62,
+              height: 62,
+              decoration: BoxDecoration(
+                color: AppTheme.of(context).primary.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: (widget.providerPhoto ?? '').trim().isNotEmpty
+                  ? Image.network(
+                      widget.providerPhoto!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Icon(
+                        Icons.person_rounded,
                         color: AppTheme.of(context).primary,
-                        textStyle: AppTheme.of(context).titleMedium.override(
-                              font: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600),
-                              color: AppTheme.of(context).primaryText,
-                            ),
-                        borderRadius: BorderRadius.circular(12),
+                        size: 30,
                       ),
+                    )
+                  : Icon(
+                      Icons.person_rounded,
+                      color: AppTheme.of(context).primary,
+                      size: 30,
                     ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          widget.providerName,
+                          style: AppTheme.of(context).titleMedium.override(
+                                font: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                color: const Color(0xFF14213D),
+                              ),
+                        ),
+                      ),
+                      if (widget.isVerified)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFECFDF3),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.verified_rounded,
+                                size: 16,
+                                color: Color(0xFF027A48),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Verified',
+                                style: AppTheme.of(context).labelSmall.override(
+                                      font: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                      color: const Color(0xFF027A48),
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    widget.providerCategory,
+                    style: AppTheme.of(context).bodySmall.override(
+                          font: GoogleFonts.poppins(),
+                          color: const Color(0xFF64748B),
+                        ),
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _openContactProvider,
+                          icon: const Icon(Icons.chat_bubble_outline_rounded),
+                          label: const Text('Contact'),
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(46),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: _openBooking,
+                          icon: const Icon(Icons.calendar_today_rounded),
+                          label: const Text('Book now'),
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size.fromHeight(46),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
+          ],
+        ),
+      );
+
+  Widget _buildSectionCard({
+    required String title,
+    required String subtitle,
+    required Widget child,
+  }) =>
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x12000000),
+              blurRadius: 20,
+              offset: Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: AppTheme.of(context).titleMedium.override(
+                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    color: const Color(0xFF14213D),
+                  ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: AppTheme.of(context).bodySmall.override(
+                    font: GoogleFonts.poppins(),
+                    color: const Color(0xFF64748B),
+                  ),
+            ),
+            const SizedBox(height: 16),
+            child,
+          ],
+        ),
+      );
+
+  Widget _buildTrustCard() => _buildSectionCard(
+        title: 'Why customers book this',
+        subtitle: 'A quick snapshot before the booking flow starts.',
+        child: Column(
+          children: [
+            _trustRow(
+              icon: Icons.bolt_rounded,
+              title: 'Fast handoff',
+              description: 'Go from service details to booking in one step.',
+            ),
+            const SizedBox(height: 14),
+            _trustRow(
+              icon: Icons.star_outline_rounded,
+              title: 'Social proof',
+              description:
+                  '${widget.reviewCount} review${widget.reviewCount == 1 ? '' : 's'} currently attached to this listing.',
+            ),
+            const SizedBox(height: 14),
+            _trustRow(
+              icon: Icons.support_agent_rounded,
+              title: 'Provider contact',
+              description:
+                  'Message the provider first if you want to clarify scope or timing.',
+            ),
+          ],
+        ),
+      );
+
+  Widget _trustRow({
+    required IconData icon,
+    required String title,
+    required String description,
+  }) =>
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF3F7FA),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(icon, color: const Color(0xFF17212B)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTheme.of(context).titleSmall.override(
+                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        color: const Color(0xFF14213D),
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: AppTheme.of(context).bodySmall.override(
+                        font: GoogleFonts.poppins(),
+                        color: const Color(0xFF64748B),
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+
+  Widget _buildReviewsCard() => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x12000000),
+              blurRadius: 20,
+              offset: Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Recent reviews',
+                        style: AppTheme.of(context).titleMedium.override(
+                              font: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w700,
+                              ),
+                              color: const Color(0xFF14213D),
+                            ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Recent customer feedback for this listing.',
+                        style: AppTheme.of(context).bodySmall.override(
+                              font: GoogleFonts.poppins(),
+                              color: const Color(0xFF64748B),
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (widget.reviewCount > 0)
+                  TextButton(
+                    onPressed: widget.serviceId == null ? null : _openAllReviews,
+                    child: const Text('See all'),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (_isLoadingReviews)
+              const Center(child: CircularProgressIndicator())
+            else if (_reviews.isNotEmpty)
+              ..._reviews.map(
+                (review) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _buildReviewCard(context, review),
+                ),
+              )
+            else if (widget.reviewCount > 0)
+              _buildReviewPlaceholder(
+                '${widget.reviewCount} review${widget.reviewCount == 1 ? '' : 's'} available',
+              )
+            else
+              _buildReviewPlaceholder('No reviews yet'),
+          ],
+        ),
+      );
+
+  Widget _buildReviewCard(BuildContext context, ReviewsRow review) => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF7FAFC),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: AppTheme.of(context).primary.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      review.userId.substring(0, 2).toUpperCase(),
+                      style: AppTheme.of(context).bodyMedium.override(
+                            font: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w700,
+                            ),
+                            color: AppTheme.of(context).primary,
+                          ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Customer',
+                        style: AppTheme.of(context).bodyMedium.override(
+                              font: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w700,
+                              ),
+                              color: const Color(0xFF14213D),
+                            ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: List.generate(
+                          review.rating,
+                          (index) => const Padding(
+                            padding: EdgeInsets.only(right: 3),
+                            child: FaIcon(
+                              FontAwesomeIcons.solidStar,
+                              color: Color(0xFFFFB020),
+                              size: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  _formatDate(review.createdAt),
+                  style: AppTheme.of(context).labelSmall.override(
+                        font: GoogleFonts.poppins(),
+                        color: const Color(0xFF94A3B8),
+                      ),
+                ),
+              ],
+            ),
+            if ((review.comment ?? '').trim().isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text(
+                review.comment!.trim(),
+                style: AppTheme.of(context)
+                    .bodyMedium
+                    .override(
+                      font: GoogleFonts.poppins(),
+                      color: const Color(0xFF64748B),
+                    )
+                    .copyWith(height: 1.45),
+              ),
+            ],
+          ],
+        ),
+      );
+
+  Widget _buildReviewPlaceholder(String label) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF7FAFC),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: AppTheme.of(context).bodyMedium.override(
+                font: GoogleFonts.poppins(),
+                color: const Color(0xFF64748B),
+              ),
+        ),
+      );
+
+  Widget _buildBottomBar() => Container(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 18,
+              offset: const Offset(0, -6),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          top: false,
+          child: Row(
+            children: [
+              Expanded(
+                child: FFButtonWidget(
+                  onPressed: _openContactProvider,
+                  text: 'Contact',
+                  options: FFButtonOptions(
+                    width: double.infinity,
+                    height: 54,
+                    color: const Color(0xFFF3F7FA),
+                    textStyle: AppTheme.of(context).titleSmall.override(
+                          font: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w700,
+                          ),
+                          color: const Color(0xFF17212B),
+                        ),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: FFButtonWidget(
+                  onPressed: _openBooking,
+                  text: 'Book Now',
+                  icon: const Icon(Icons.calendar_today_rounded, size: 18),
+                  options: FFButtonOptions(
+                    width: double.infinity,
+                    height: 54,
+                    color: AppTheme.of(context).primary,
+                    textStyle: AppTheme.of(context).titleSmall.override(
+                          font: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w700,
+                          ),
+                          color: Colors.white,
+                        ),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       );
+
+  void _openAllReviews() {
+    if (widget.serviceId == null) {
+      return;
+    }
+
+    context.pushNamed(
+      ReviewsWidget.routeName,
+      extra: {
+        'serviceId': widget.serviceId,
+        'serviceName': widget.serviceName,
+      },
+    );
+  }
+
+  void _openContactProvider() {
+    context.pushNamed(
+      ContactProviderWidget.routeName,
+      extra: {
+        'providerName': widget.providerName,
+        'providerId': widget.providerId,
+        'providerPhoto': widget.providerPhoto,
+        'isVerified': widget.isVerified,
+        'mobileNumber': null,
+        'serviceName': widget.serviceName,
+        'serviceCategory': widget.category,
+        'servicePrice': widget.price,
+        'serviceDescription': widget.description,
+      },
+    );
+  }
+
+  void _openBooking() {
+    context.pushNamed(
+      BookingWidget.routeName,
+      extra: <String, dynamic>{
+        'serviceId': widget.serviceId,
+        'serviceName': widget.serviceName,
+        'category': widget.category,
+        'price': widget.price,
+        'providerName': widget.providerName,
+        'providerId': widget.providerId,
+        'providerPhoto': widget.providerPhoto,
+        'isVerified': widget.isVerified,
+        'imageUrl': widget.imageUrl,
+      },
+    );
+  }
 }

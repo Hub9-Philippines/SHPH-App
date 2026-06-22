@@ -3,8 +3,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:provider/provider.dart';
 
-import '/backend/supabase/supabase.dart';
 import '/api/shph_api.dart';
+import '/backend/supabase/supabase.dart';
 import '/flutter_flow/token_refresh_manager.dart';
 import '/router/app_router.dart';
 import '/theme/app_theme.dart';
@@ -14,6 +14,7 @@ import 'auth/supabase_auth/auth_util.dart';
 import 'auth/supabase_auth/supabase_user_provider.dart';
 import 'flutter_flow/flutter_flow_util.dart';
 import 'index.dart';
+import 'l10n/app_localizations.dart';
 import 'services/error_handler.dart';
 
 void main() async {
@@ -64,6 +65,7 @@ class _MyAppState extends State<MyApp> {
 
   late AppStateNotifier _appStateNotifier;
   late GoRouter _router;
+  Locale _locale = const Locale('en', '');
 
   String getRoute([RouteMatch? routeMatch]) {
     final lastMatch =
@@ -101,10 +103,27 @@ class _MyAppState extends State<MyApp> {
       const Duration(milliseconds: 1000),
       () => _appStateNotifier.stopShowingSplashImage(),
     );
+
+    widget.appState.addListener(_onAppStateChanged);
+    _syncLocale();
+  }
+
+  void _onAppStateChanged() {
+    _syncLocale();
+  }
+
+  void _syncLocale() {
+    final localeString = widget.appState.locale;
+    final parts = localeString.split('_');
+    final newLocale = Locale(parts.first, parts.length > 1 ? parts.last : '');
+    if (newLocale != _locale) {
+      safeSetState(() => _locale = newLocale);
+    }
   }
 
   @override
   void dispose() {
+    widget.appState.removeListener(_onAppStateChanged);
     super.dispose();
   }
 
@@ -113,6 +132,19 @@ class _MyAppState extends State<MyApp> {
         AppTheme.saveThemeMode(mode);
       });
 
+  List<Locale> get _supportedLocales => const [
+        Locale('en', ''),
+        Locale('es', ''),
+        Locale('fr', ''),
+        Locale('de', ''),
+        Locale('it', ''),
+        Locale('pt', ''),
+        Locale('zh', ''),
+        Locale('ja', ''),
+        Locale('ko', ''),
+        Locale('ar', ''),
+      ];
+
   @override
   Widget build(BuildContext context) =>
       ChangeNotifierProvider<FFAppState>.value(
@@ -120,12 +152,14 @@ class _MyAppState extends State<MyApp> {
         child: MaterialApp.router(
           debugShowCheckedModeBanner: false,
           title: 'SerbisyoHub PH',
+          locale: _locale,
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
+            AppLocalizations.delegate,
           ],
-          supportedLocales: const [Locale('en', '')],
+          supportedLocales: _supportedLocales,
           theme: ThemeData(
             brightness: Brightness.light,
             useMaterial3: false,

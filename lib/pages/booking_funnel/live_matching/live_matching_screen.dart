@@ -73,83 +73,92 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
         widget.serviceTitle ?? draft?.serviceTitle ?? 'Service request';
     final matchingStage = _matchingStage(_secondsRemaining);
 
-    return BookingStatusScaffold(
-      showMap: widget.showMap,
-      location: location,
-      markerHue: BitmapDescriptor.hueAzure,
-      overlayOpacityTop: 0,
-      overlayOpacityMiddle: 0.03,
-      overlayOpacityBottom: 0.08,
-      topCard: _StatusCard(
-        secondsRemaining: _secondsRemaining,
-        timedOut: _timedOut,
-        serviceTitle: serviceTitle,
-        stageLabel: matchingStage.label,
-        stageSubtitle: matchingStage.subtitle,
-      ),
-      center: _timedOut
-          ? null
-          : AnimatedBuilder(
-              animation: _controller,
-              builder: (context, _) {
-                final progress = _controller.value * 3;
-                return IgnorePointer(
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      for (var ringIndex = 0; ringIndex < 3; ringIndex++)
-                        _RippleRing(
-                          progress: (progress + ringIndex * 0.33) % 1.0,
-                          ringIndex: ringIndex,
+    void _onBackOrCancel() {
+      booking?.setMatchingActive(true);
+      booking?.setLiveSearchTimedOut(true);
+      if (mounted) Navigator.of(context).pop();
+    }
+
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _onBackOrCancel();
+      },
+      child: BookingStatusScaffold(
+        showMap: widget.showMap,
+        location: location,
+        markerHue: BitmapDescriptor.hueAzure,
+        isDraggable: true,
+        topCard: _StatusCard(
+          secondsRemaining: _secondsRemaining,
+          timedOut: _timedOut,
+          serviceTitle: serviceTitle,
+          stageLabel: matchingStage.label,
+          stageSubtitle: matchingStage.subtitle,
+        ),
+        center: _timedOut
+            ? null
+            : AnimatedBuilder(
+                animation: _controller,
+                builder: (context, _) {
+                  final progress = _controller.value * 3;
+                  return IgnorePointer(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        for (var ringIndex = 0; ringIndex < 3; ringIndex++)
+                          _RippleRing(
+                            progress: (progress + ringIndex * 0.33) % 1.0,
+                            ringIndex: ringIndex,
+                          ),
+                        Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            color: AppTheme.of(context)
+                                .primary
+                                .withValues(alpha: 0.18),
+                            shape: BoxShape.circle,
+                          ),
                         ),
-                      Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          color: AppTheme.of(context)
-                              .primary
-                              .withValues(alpha: 0.18),
-                          shape: BoxShape.circle,
+                        Container(
+                          width: 18,
+                          height: 18,
+                          decoration: BoxDecoration(
+                            color: AppTheme.of(context)
+                                .primary
+                                .withValues(alpha: 0.34),
+                            shape: BoxShape.circle,
+                          ),
                         ),
-                      ),
-                      Container(
-                        width: 18,
-                        height: 18,
-                        decoration: BoxDecoration(
-                          color: AppTheme.of(context)
-                              .primary
-                              .withValues(alpha: 0.34),
-                          shape: BoxShape.circle,
+                        Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: AppTheme.of(context).primary,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.of(context)
+                                    .primary
+                                    .withValues(alpha: 0.45),
+                                blurRadius: 18,
+                                spreadRadius: 6,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: AppTheme.of(context).primary,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppTheme.of(context)
-                                  .primary
-                                  .withValues(alpha: 0.45),
-                              blurRadius: 18,
-                              spreadRadius: 6,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-      bottomSheet: BookingStatusBottomSheet(
-        child: _timedOut
+                      ],
+                    ),
+                  );
+                },
+              ),
+        bottomSheet: _timedOut
             ? _TimeoutSheet(
                 onAdjustBooking: () => Navigator.of(context).pop(),
-                onBackHome: () => Navigator.of(context, rootNavigator: true)
-                    .pushAndRemoveUntil(
+                onBackHome: () =>
+                    Navigator.of(context, rootNavigator: true)
+                        .pushAndRemoveUntil(
                   MaterialPageRoute(
                     builder: (_) => const NavBarPage(
                       initialPage: 'Home',
@@ -166,6 +175,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
                 addressLine:
                     '${draft?.address.line1 ?? 'Location loading'}${(draft?.address.city ?? '').isNotEmpty ? ', ${draft!.address.city}' : ''}',
                 referenceId: booking?.activeReferenceId,
+                onCancel: _onBackOrCancel,
               ),
       ),
     );
@@ -360,6 +370,7 @@ class _SearchingSheet extends StatelessWidget {
     required this.stageSubtitle,
     required this.addressLabel,
     required this.addressLine,
+    required this.onCancel,
     this.referenceId,
   });
 
@@ -367,6 +378,7 @@ class _SearchingSheet extends StatelessWidget {
   final String stageSubtitle;
   final String addressLabel;
   final String addressLine;
+  final VoidCallback onCancel;
   final String? referenceId;
 
   @override
@@ -387,69 +399,6 @@ class _SearchingSheet extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF6FBFF),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: theme.primary.withValues(alpha: 0.16),
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: theme.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(
-                  Icons.radar_rounded,
-                  color: theme.primary,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Live search in progress',
-                      style: theme.bodyMedium.override(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Keeping your pinned location active while we scan nearby providers.',
-                      style: theme.bodySmall.override(
-                        color: theme.secondaryText,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 14),
-        Text(
-          'Searching nearby providers',
-          style: theme.titleMedium.override(
-            font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'Stay on this screen while we look for the closest available professional.',
-          style: theme.bodyMedium.override(
-            color: theme.secondaryText,
-          ),
-        ),
-        const SizedBox(height: 14),
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(14),
@@ -480,6 +429,20 @@ class _SearchingSheet extends StatelessWidget {
             ],
           ),
         ),
+        const SizedBox(height: 14),
+        Text(
+          'Searching nearby providers',
+          style: theme.titleMedium.override(
+            font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Stay on this screen while we look for the closest available professional.',
+          style: theme.bodyMedium.override(
+            color: theme.secondaryText,
+          ),
+        ),
         const SizedBox(height: 16),
         _MetaRow(
           icon: Icons.place_rounded,
@@ -494,6 +457,20 @@ class _SearchingSheet extends StatelessWidget {
             subtitle: referenceId!,
           ),
         ],
+        const SizedBox(height: 20),
+        SizedBox(
+          width: double.infinity,
+          height: 54,
+          child: OutlinedButton(
+            onPressed: onCancel,
+            style: OutlinedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            child: const Text('Cancel search'),
+          ),
+        ),
       ],
     );
   }

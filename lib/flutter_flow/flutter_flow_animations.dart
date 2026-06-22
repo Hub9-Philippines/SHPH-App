@@ -87,8 +87,8 @@ class TiltEffect extends Effect<Offset> {
           delay: delay,
           duration: duration,
           curve: curve,
-          begin: begin ?? const Offset(0, 0),
-          end: end ?? const Offset(0, 0),
+          begin: begin ?? Offset.zero,
+          end: end ?? Offset.zero,
         );
 
   @override

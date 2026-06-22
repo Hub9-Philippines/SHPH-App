@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/theme/app_theme.dart';
 import '/services/logging_service.dart';
+import '/theme/app_theme.dart';
 
 class ReviewsRatingsWidget extends StatefulWidget {
   const ReviewsRatingsWidget({super.key});
@@ -16,17 +18,12 @@ class ReviewsRatingsWidget extends StatefulWidget {
 }
 
 class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
-  List<Map<String, dynamic>> reviews = [];
-  bool isLoading = true;
-  Map<String, dynamic> ratingStats = {
-    'average': 0.0,
-    'total': 0,
-    'fiveStar': 0,
-    'fourStar': 0,
-    'threeStar': 0,
-    'twoStar': 0,
-    'oneStar': 0,
-  };
+  final _supabase = Supabase.instance.client;
+
+  List<Map<String, dynamic>> _reviews = const [];
+  bool _isLoading = true;
+  String? _errorMessage;
+  _ReviewStats _stats = const _ReviewStats();
 
   @override
   void initState() {
@@ -35,16 +32,23 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
   }
 
   Future<void> _loadReviews() async {
-    setState(() => isLoading = true);
+    safeSetState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
+      final userId = _supabase.auth.currentUser?.id;
       if (userId == null) {
-        setState(() => isLoading = false);
+        safeSetState(() {
+          _reviews = const [];
+          _stats = const _ReviewStats();
+          _isLoading = false;
+        });
         return;
       }
 
-      // Fetch reviews from bookings with ratings
-      final response = await Supabase.instance.client
+      final response = await _supabase
           .from('bookings')
           .select('''
             *,
@@ -53,409 +57,833 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
           ''')
           .eq('provider_id', userId)
           .not('rating', 'is', 'null')
-          .order('rating_created_at', ascending: false);
+          .order('rating_created_at', ascending: false)
+          .order('completed_at', ascending: false)
+          .order('updated_at', ascending: false);
 
-      // Calculate stats
-      double totalRating = 0;
-      int fiveStar = 0, fourStar = 0, threeStar = 0, twoStar = 0, oneStar = 0;
+      final reviews = List<Map<String, dynamic>>.from(response)
+          .where((item) => _readRating(item) > 0)
+          .toList();
 
-      for (final review in response) {
-        final rating = review['rating'] as int? ?? 0;
-        totalRating += rating;
-
-        switch (rating) {
-          case 5:
-            fiveStar++;
-            break;
-          case 4:
-            fourStar++;
-            break;
-          case 3:
-            threeStar++;
-            break;
-          case 2:
-            twoStar++;
-            break;
-          case 1:
-            oneStar++;
-            break;
-        }
-      }
-
-      final totalReviews = response.length;
-      final averageRating = totalReviews > 0 ? totalRating / totalReviews : 0.0;
-
-      setState(() {
-        reviews = List<Map<String, dynamic>>.from(response);
-        ratingStats = {
-          'average': averageRating,
-          'total': totalReviews,
-          'fiveStar': fiveStar,
-          'fourStar': fourStar,
-          'threeStar': threeStar,
-          'twoStar': twoStar,
-          'oneStar': oneStar,
-        };
-        isLoading = false;
+      safeSetState(() {
+        _reviews = reviews;
+        _stats = _buildStats(reviews);
+        _isLoading = false;
       });
-    } catch (e) {
-      LoggingService.error('Error loading reviews: $e', tag: 'ReviewsRatings');
-      setState(() => isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading reviews: $e')),
+    } catch (e, stackTrace) {
+      LoggingService.error(
+        'Error loading provider reviews',
+        tag: 'ReviewsRatings',
+        error: e,
+        stackTrace: stackTrace,
       );
+      if (!mounted) {
+        return;
+      }
+      safeSetState(() {
+        _isLoading = false;
+        _errorMessage = 'We could not load your reviews right now.';
+      });
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Reviews & Ratings',
-          style: AppTheme.of(context).titleLarge.override(
-                font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-              ),
-        ),
-        backgroundColor: AppTheme.of(context).primaryBackground,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadReviews,
-          ),
-        ],
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadReviews,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                child: Column(
-                  children: [
-                    // Rating Overview
-                    Container(
-                      margin: const EdgeInsets.all(16),
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            AppTheme.of(context).primary,
-                            AppTheme.of(context).primary.withValues(alpha: 0.8),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                ratingStats['average'].toStringAsFixed(1),
-                                style:
-                                    AppTheme.of(context).displayMedium.override(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                              ),
-                              const SizedBox(width: 8),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: List.generate(5, (index) {
-                                      return Icon(
-                                        index < ratingStats['average'].round()
-                                            ? Icons.star
-                                            : Icons.star_border,
-                                        color: Colors.amber,
-                                        size: 20,
-                                      );
-                                    }),
-                                  ),
-                                  Text(
-                                    '${ratingStats['total']} reviews',
-                                    style: AppTheme.of(context)
-                                        .bodyMedium
-                                        .override(
-                                          color: Colors.white70,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
+  int _readRating(Map<String, dynamic> review) {
+    final value = review['rating'];
+    if (value is int) {
+      return value.clamp(0, 5);
+    }
+    if (value is num) {
+      return value.round().clamp(0, 5);
+    }
+    return 0;
+  }
 
-                    // Rating Distribution
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Rating Distribution',
-                            style: AppTheme.of(context).titleMedium.override(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                          const SizedBox(height: 16),
-                          _buildRatingBar(
-                              5, ratingStats['fiveStar'], ratingStats['total']),
-                          _buildRatingBar(
-                              4, ratingStats['fourStar'], ratingStats['total']),
-                          _buildRatingBar(3, ratingStats['threeStar'],
-                              ratingStats['total']),
-                          _buildRatingBar(
-                              2, ratingStats['twoStar'], ratingStats['total']),
-                          _buildRatingBar(
-                              1, ratingStats['oneStar'], ratingStats['total']),
-                        ],
-                      ),
-                    ),
+  String? _reviewText(Map<String, dynamic> review) {
+    final text = (review['review'] ?? review['comment'])?.toString().trim();
+    return text == null || text.isEmpty ? null : text;
+  }
 
-                    const SizedBox(height: 24),
+  DateTime? _reviewDate(Map<String, dynamic> review) {
+    final raw = review['rating_created_at'] ??
+        review['completed_at'] ??
+        review['updated_at'] ??
+        review['created_at'];
+    final value = raw?.toString();
+    if (value == null || value.isEmpty) {
+      return null;
+    }
+    return DateTime.tryParse(value);
+  }
 
-                    // Reviews List
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        children: [
-                          Text(
-                            'Recent Reviews',
-                            style: AppTheme.of(context).titleMedium.override(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                          const Spacer(),
-                          Text(
-                            '${reviews.length} reviews',
-                            style: AppTheme.of(context).bodyMedium.override(
-                                  color: AppTheme.of(context).secondaryText,
-                                ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
+  String _clientName(Map<String, dynamic> review) {
+    final profile = review['profiles'] as Map<String, dynamic>?;
+    return (profile?['display_name'] ??
+            profile?['full_name'] ??
+            profile?['first_name'] ??
+            'Client')
+        .toString();
+  }
 
-                    if (reviews.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.all(32),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.star_outline,
-                              size: 64,
-                              color: AppTheme.of(context).secondaryText,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No reviews yet',
-                              style: AppTheme.of(context).bodyLarge.override(
-                                    color: AppTheme.of(context).secondaryText,
-                                  ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Complete jobs to get reviews from clients',
-                              style: AppTheme.of(context).bodySmall.override(
-                                    color: AppTheme.of(context).secondaryText,
-                                  ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      )
-                    else
-                      ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: reviews.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (context, index) {
-                          return _buildReviewCard(reviews[index]);
-                        },
-                      ),
+  String? _clientPhoto(Map<String, dynamic> review) {
+    final profile = review['profiles'] as Map<String, dynamic>?;
+    final value = (profile?['photo_url'] ?? profile?['avatar_url'])
+        ?.toString()
+        .trim();
+    return value == null || value.isEmpty ? null : value;
+  }
 
-                    const SizedBox(height: 32),
-                  ],
-                ),
-              ),
-            ),
+  String _serviceName(Map<String, dynamic> review) {
+    final listing = review['service_listings'] as Map<String, dynamic>?;
+    return (listing?['title'] ?? listing?['name'] ?? 'Unknown Service')
+        .toString();
+  }
+
+  String _serviceCategory(Map<String, dynamic> review) {
+    final listing = review['service_listings'] as Map<String, dynamic>?;
+    final value = (listing?['category_name'] ??
+            listing?['category'] ??
+            listing?['service_category'])
+        ?.toString()
+        .trim();
+    return value == null || value.isEmpty ? 'Completed service' : value;
+  }
+
+  _ReviewStats _buildStats(List<Map<String, dynamic>> reviews) {
+    var totalRating = 0.0;
+    var fiveStar = 0;
+    var fourStar = 0;
+    var threeStar = 0;
+    var twoStar = 0;
+    var oneStar = 0;
+    var withComment = 0;
+
+    for (final review in reviews) {
+      final rating = _readRating(review);
+      totalRating += rating;
+      if (_reviewText(review) != null) {
+        withComment++;
+      }
+      switch (rating) {
+        case 5:
+          fiveStar++;
+          break;
+        case 4:
+          fourStar++;
+          break;
+        case 3:
+          threeStar++;
+          break;
+        case 2:
+          twoStar++;
+          break;
+        case 1:
+          oneStar++;
+          break;
+      }
+    }
+
+    final total = reviews.length;
+    final average = total == 0 ? 0.0 : totalRating / total;
+
+    return _ReviewStats(
+      average: average,
+      total: total,
+      fiveStar: fiveStar,
+      fourStar: fourStar,
+      threeStar: threeStar,
+      twoStar: twoStar,
+      oneStar: oneStar,
+      withComment: withComment,
     );
   }
 
-  Widget _buildRatingBar(int stars, int count, int total) {
-    final percentage = total > 0 ? count / total : 0.0;
+  double _ratio(int count) => _stats.total == 0 ? 0 : count / _stats.total;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
+  String _dateLabel(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+    if (difference.inDays < 1) {
+      return 'Today';
+    }
+    if (difference.inDays == 1) {
+      return 'Yesterday';
+    }
+    if (difference.inDays < 7) {
+      return '${difference.inDays} days ago';
+    }
+    if (difference.inDays < 30) {
+      return '${(difference.inDays / 7).floor()} weeks ago';
+    }
+    return DateFormat('MMM d, yyyy').format(date);
+  }
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+        onTap: () {
+          FocusScope.of(context).unfocus();
+          FocusManager.instance.primaryFocus?.unfocus();
+        },
+        child: Scaffold(
+          backgroundColor: const Color(0xFFF4F7FB),
+          body: SafeArea(
+            child: _isLoading
+                ? Center(
+                    child: CircularProgressIndicator(
+                      color: AppTheme.of(context).primary,
+                    ),
+                  )
+                : _errorMessage != null
+                    ? _buildMessageState(
+                        context,
+                        icon: Icons.rate_review_outlined,
+                        title: 'Could not load reviews',
+                        subtitle: _errorMessage!,
+                        actionLabel: 'Try again',
+                        onPressed: _loadReviews,
+                        accent: AppTheme.of(context).error,
+                      )
+                    : RefreshIndicator(
+                        color: AppTheme.of(context).primary,
+                        onRefresh: _loadReviews,
+                        child: ListView(
+                          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+                          children: [
+                            _buildTopBar(context),
+                            const SizedBox(height: 18),
+                            _buildHeroCard(context),
+                            const SizedBox(height: 18),
+                            _buildHighlights(context),
+                            const SizedBox(height: 18),
+                            _buildDistributionCard(context),
+                            const SizedBox(height: 20),
+                            _buildSectionHeader(context),
+                            const SizedBox(height: 12),
+                            if (_reviews.isEmpty)
+                              _buildMessageState(
+                                context,
+                                icon: Icons.star_outline_rounded,
+                                title: 'No reviews yet',
+                                subtitle:
+                                    'Complete more jobs and invite feedback to start building social proof here.',
+                                actionLabel: 'Refresh',
+                                onPressed: _loadReviews,
+                                accent: AppTheme.of(context).primary,
+                                compact: true,
+                              )
+                            else
+                              ..._reviews.map(
+                                (review) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: _buildReviewCard(context, review),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+          ),
+        ),
+      );
+
+  Widget _buildTopBar(BuildContext context) => Row(
         children: [
-          SizedBox(
-            width: 40,
-            child: Text(
-              '$stars ★',
-              style: AppTheme.of(context).bodySmall,
+          Material(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            child: const BackButtonWidget(),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Reviews & Ratings',
+                  style: AppTheme.of(context).titleLarge.override(
+                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        color: const Color(0xFF14213D),
+                      ),
+                ),
+                Text(
+                  'Track client sentiment and the quality signals behind your profile.',
+                  style: AppTheme.of(context).bodySmall.override(
+                        font: GoogleFonts.poppins(),
+                        color: const Color(0xFF64748B),
+                      ),
+                ),
+              ],
             ),
           ),
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: percentage,
-                minHeight: 8,
-                backgroundColor: AppTheme.of(context).primaryBackground,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  stars >= 4
-                      ? AppTheme.of(context).success
-                      : stars >= 3
-                          ? AppTheme.of(context).warning
-                          : AppTheme.of(context).error,
+          IconButton.filledTonal(
+            onPressed: _loadReviews,
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: AppTheme.of(context).primary,
+            ),
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+        ],
+      );
+
+  Widget _buildHeroCard(BuildContext context) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(22),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [
+              Color(0xFF1D3557),
+              Color(0xFF2B4D73),
+              Color(0xFF4F7DA8),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x1A1D3557),
+              blurRadius: 24,
+              offset: Offset(0, 14),
+            ),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 82,
+              height: 82,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Center(
+                child: Text(
+                  _stats.average.toStringAsFixed(1),
+                  style: AppTheme.of(context).headlineMedium.override(
+                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        color: Colors.white,
+                      ),
                 ),
               ),
+            ),
+            const SizedBox(width: 18),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Wrap(
+                    spacing: 4,
+                    children: List.generate(
+                      5,
+                      (index) => Icon(
+                        index < _stats.average.round()
+                            ? Icons.star_rounded
+                            : Icons.star_border_rounded,
+                        color: const Color(0xFFFFC857),
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${_stats.total} total reviews',
+                    style: AppTheme.of(context).titleMedium.override(
+                          font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                          color: Colors.white,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _stats.total == 0
+                        ? 'Your rating will appear here as clients leave feedback.'
+                        : '${_stats.withComment} reviews include written comments.',
+                    style: AppTheme.of(context).bodyMedium.override(
+                          font: GoogleFonts.poppins(),
+                          color: Colors.white.withValues(alpha: 0.82),
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _buildHighlights(BuildContext context) => Row(
+        children: [
+          Expanded(
+            child: _HighlightCard(
+              title: '5-Star',
+              value: '${_stats.fiveStar}',
+              subtitle: '${(_ratio(_stats.fiveStar) * 100).round()}% share',
+              icon: Icons.workspace_premium_rounded,
+              color: const Color(0xFF16A34A),
             ),
           ),
           const SizedBox(width: 12),
-          SizedBox(
-            width: 40,
-            child: Text(
-              '$count',
-              style: AppTheme.of(context).bodySmall.override(
-                    color: AppTheme.of(context).secondaryText,
-                  ),
-              textAlign: TextAlign.right,
+          Expanded(
+            child: _HighlightCard(
+              title: 'With Comment',
+              value: '${_stats.withComment}',
+              subtitle: 'Written feedback received',
+              icon: Icons.chat_bubble_outline_rounded,
+              color: const Color(0xFFF59E0B),
             ),
           ),
         ],
-      ),
-    );
-  }
+      );
 
-  Widget _buildReviewCard(Map<String, dynamic> review) {
-    final profile = review['profiles'] as Map<String, dynamic>?;
-    final serviceListing = review['service_listings'] as Map<String, dynamic>?;
+  Widget _buildDistributionCard(BuildContext context) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(26),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x12000000),
+              blurRadius: 18,
+              offset: Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Rating Distribution',
+              style: AppTheme.of(context).titleMedium.override(
+                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    color: const Color(0xFF14213D),
+                  ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'See how client ratings are spread across completed jobs.',
+              style: AppTheme.of(context).bodySmall.override(
+                    font: GoogleFonts.poppins(),
+                    color: const Color(0xFF64748B),
+                  ),
+            ),
+            const SizedBox(height: 16),
+            _DistributionRow(
+              stars: 5,
+              count: _stats.fiveStar,
+              total: _stats.total,
+              color: const Color(0xFF16A34A),
+            ),
+            const SizedBox(height: 10),
+            _DistributionRow(
+              stars: 4,
+              count: _stats.fourStar,
+              total: _stats.total,
+              color: const Color(0xFF65A30D),
+            ),
+            const SizedBox(height: 10),
+            _DistributionRow(
+              stars: 3,
+              count: _stats.threeStar,
+              total: _stats.total,
+              color: const Color(0xFFF59E0B),
+            ),
+            const SizedBox(height: 10),
+            _DistributionRow(
+              stars: 2,
+              count: _stats.twoStar,
+              total: _stats.total,
+              color: const Color(0xFFF97316),
+            ),
+            const SizedBox(height: 10),
+            _DistributionRow(
+              stars: 1,
+              count: _stats.oneStar,
+              total: _stats.total,
+              color: const Color(0xFFEF4444),
+            ),
+          ],
+        ),
+      );
 
-    final clientName =
-        profile?['display_name'] ?? profile?['first_name'] ?? 'Unknown Client';
-    final clientPhoto = profile?['photo_url'];
-    final serviceName = serviceListing?['name'] ?? 'Unknown Service';
-    final rating = review['rating'] as int? ?? 0;
-    final reviewText = review['review'] as String?;
-    final createdAt = review['rating_created_at'] != null
-        ? DateTime.parse(review['rating_created_at'])
-        : null;
+  Widget _buildSectionHeader(BuildContext context) => Row(
+        children: [
+          Text(
+            'Recent Reviews',
+            style: AppTheme.of(context).titleMedium.override(
+                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                  color: const Color(0xFF14213D),
+                ),
+          ),
+          const Spacer(),
+          Text(
+            '${_reviews.length} total',
+            style: AppTheme.of(context).bodyMedium.override(
+                  font: GoogleFonts.poppins(),
+                  color: const Color(0xFF64748B),
+                ),
+          ),
+        ],
+      );
+
+  Widget _buildReviewCard(BuildContext context, Map<String, dynamic> review) {
+    final clientName = _clientName(review);
+    final clientPhoto = _clientPhoto(review);
+    final serviceName = _serviceName(review);
+    final serviceCategory = _serviceCategory(review);
+    final rating = _readRating(review);
+    final text = _reviewText(review);
+    final date = _reviewDate(review);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppTheme.of(context).secondaryBackground,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppTheme.of(context).primaryText.withValues(alpha: 0.1),
-          width: 1,
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(26),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x12000000),
+            blurRadius: 18,
+            offset: Offset(0, 10),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 52,
+                height: 52,
                 decoration: BoxDecoration(
-                  color: AppTheme.of(context).primary,
+                  color: AppTheme.of(context).primary.withValues(alpha: 0.10),
                   shape: BoxShape.circle,
-                  image: clientPhoto != null
-                      ? DecorationImage(
+                  image: clientPhoto == null
+                      ? null
+                      : DecorationImage(
                           fit: BoxFit.cover,
                           image: NetworkImage(clientPhoto),
-                        )
-                      : null,
+                        ),
                 ),
                 child: clientPhoto == null
-                    ? const Icon(Icons.person, color: Colors.white, size: 24)
+                    ? Icon(
+                        Icons.person_rounded,
+                        color: AppTheme.of(context).primary,
+                      )
                     : null,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       clientName,
-                      style: AppTheme.of(context).bodyLarge.override(
-                            fontWeight: FontWeight.w600,
+                      style: AppTheme.of(context).titleSmall.override(
+                            font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                            color: const Color(0xFF14213D),
                           ),
                     ),
+                    const SizedBox(height: 4),
                     Text(
-                      serviceName,
+                      '$serviceName • $serviceCategory',
                       style: AppTheme.of(context).bodySmall.override(
-                            color: AppTheme.of(context).secondaryText,
+                            font: GoogleFonts.poppins(),
+                            color: const Color(0xFF64748B),
                           ),
                     ),
                   ],
                 ),
               ),
-              Row(
-                children: List.generate(5, (index) {
-                  return Icon(
-                    index < rating ? Icons.star : Icons.star_border,
-                    color: Colors.amber,
-                    size: 18,
-                  );
-                }),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF5DB),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.star_rounded,
+                      size: 16,
+                      color: Color(0xFFF59E0B),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '$rating/5',
+                      style: AppTheme.of(context).labelMedium.override(
+                            font: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w700,
+                            ),
+                            color: const Color(0xFF9A6700),
+                          ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-          if (reviewText != null && reviewText.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(
-              reviewText,
-              style: AppTheme.of(context).bodyMedium,
+          if (text != null) ...[
+            const SizedBox(height: 14),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Text(
+                text,
+                style: AppTheme.of(context).bodyMedium.override(
+                      font: GoogleFonts.poppins(),
+                      color: const Color(0xFF334155),
+                    ),
+              ),
             ),
           ],
-          if (createdAt != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              _formatDate(createdAt),
-              style: AppTheme.of(context).bodySmall.override(
-                    color: AppTheme.of(context).secondaryText,
-                  ),
-            ),
-          ],
+          const SizedBox(height: 12),
+          Text(
+            date == null ? 'Date unavailable' : _dateLabel(date),
+            style: AppTheme.of(context).labelSmall.override(
+                  font: GoogleFonts.poppins(),
+                  color: const Color(0xFF94A3B8),
+                ),
+          ),
         ],
       ),
     );
   }
 
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final difference = now.difference(date);
+  Widget _buildMessageState(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required String actionLabel,
+    required VoidCallback onPressed,
+    required Color accent,
+    bool compact = false,
+  }) =>
+      Center(
+        child: Container(
+          width: double.infinity,
+          constraints: const BoxConstraints(maxWidth: 420),
+          padding: EdgeInsets.all(compact ? 24 : 28),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x12000000),
+                blurRadius: 18,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Icon(icon, size: 30, color: accent),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: AppTheme.of(context).titleMedium.override(
+                      font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                      color: const Color(0xFF14213D),
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                subtitle,
+                textAlign: TextAlign.center,
+                style: AppTheme.of(context).bodyMedium.override(
+                      font: GoogleFonts.poppins(),
+                      color: const Color(0xFF64748B),
+                    ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: compact ? 140 : double.infinity,
+                child: FilledButton(
+                  onPressed: onPressed,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: accent,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: Text(
+                    actionLabel,
+                    style: AppTheme.of(context).labelLarge.override(
+                          font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                          color: Colors.white,
+                        ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+}
 
-    if (difference.inDays < 1) {
-      return 'Today';
-    } else if (difference.inDays == 1) {
-      return 'Yesterday';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays} days ago';
-    } else if (difference.inDays < 30) {
-      return '${(difference.inDays / 7).floor()} weeks ago';
-    } else {
-      return '${date.month}/${date.day}/${date.year}';
-    }
+class _ReviewStats {
+  const _ReviewStats({
+    this.average = 0,
+    this.total = 0,
+    this.fiveStar = 0,
+    this.fourStar = 0,
+    this.threeStar = 0,
+    this.twoStar = 0,
+    this.oneStar = 0,
+    this.withComment = 0,
+  });
+
+  final double average;
+  final int total;
+  final int fiveStar;
+  final int fourStar;
+  final int threeStar;
+  final int twoStar;
+  final int oneStar;
+  final int withComment;
+}
+
+class _HighlightCard extends StatelessWidget {
+  const _HighlightCard({
+    required this.title,
+    required this.value,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+  });
+
+  final String title;
+  final String value;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x12000000),
+              blurRadius: 18,
+              offset: Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(icon, color: color),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              title,
+              style: AppTheme.of(context).bodySmall.override(
+                    font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    color: const Color(0xFF64748B),
+                  ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              value,
+              style: AppTheme.of(context).titleMedium.override(
+                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    color: const Color(0xFF14213D),
+                  ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: AppTheme.of(context).labelSmall.override(
+                    font: GoogleFonts.poppins(),
+                    color: const Color(0xFF94A3B8),
+                  ),
+            ),
+          ],
+        ),
+      );
+}
+
+class _DistributionRow extends StatelessWidget {
+  const _DistributionRow({
+    required this.stars,
+    required this.count,
+    required this.total,
+    required this.color,
+  });
+
+  final int stars;
+  final int count;
+  final int total;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final ratio = total == 0 ? 0.0 : count / total;
+    return Row(
+      children: [
+        SizedBox(
+          width: 52,
+          child: Text(
+            '$stars stars',
+            style: AppTheme.of(context).bodySmall.override(
+                  font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                  color: const Color(0xFF64748B),
+                ),
+          ),
+        ),
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: ratio,
+              minHeight: 10,
+              backgroundColor: const Color(0xFFEFF3F7),
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        SizedBox(
+          width: 44,
+          child: Text(
+            '$count',
+            textAlign: TextAlign.right,
+            style: AppTheme.of(context).bodySmall.override(
+                  font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                  color: const Color(0xFF334155),
+                ),
+          ),
+        ),
+      ],
+    );
   }
 }

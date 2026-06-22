@@ -177,7 +177,7 @@ class _PinLocationWidgetState extends State<PinLocationWidget> {
                             alignment: Alignment.center,
                             children: [
                               Transform.translate(
-                                offset: const Offset(0, 0),
+                                offset: Offset.zero,
                                 child: Container(
                                   width: 10,
                                   height: 5,

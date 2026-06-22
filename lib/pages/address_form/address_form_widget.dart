@@ -1,5 +1,5 @@
-import 'package:easy_debounce/easy_debounce.dart';
 import 'package:collection/collection.dart';
+import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -142,19 +142,18 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
         await _restoreGeographicSelectionFromCodes();
 
         if (_model.latitude == null || _model.longitude == null) {
-          getCurrentUserLocation(
+          final loc = await getCurrentUserLocation(
             defaultLocation: const LatLng(14.5995, 120.9842),
-          ).then((loc) {
-            if (mounted) {
-              setState(() {
-                if (_model.latitude == null) {
-                  _model.latitude = loc.latitude;
-                  _model.longitude = loc.longitude;
-                  _model.selectedAddress = 'Current device location';
-                }
-              });
-            }
-          });
+          );
+          if (mounted) {
+            setState(() {
+              if (_model.latitude == null) {
+                _model.latitude = loc.latitude;
+                _model.longitude = loc.longitude;
+                _model.selectedAddress = 'Current device location';
+              }
+            });
+          }
         }
       }
     } catch (e) {
@@ -248,6 +247,13 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
     }
 
     try {
+      if (_model.isDefault) {
+        await AddressesTable().update(
+          data: {'is_default': false},
+          matchingRows: (q) => q.eq('user_id', currentUserUid),
+        );
+      }
+
       final addressData = {
         'user_id': currentUserUid,
         'full_name': _model.fullNameTextFieldTextController?.text,
@@ -269,24 +275,23 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
       };
 
       if (_model.editingAddressId != null) {
-        // Update existing address
-        await AddressesTable().update(
+        final updatedRows = await AddressesTable().update(
           data: addressData,
           matchingRows: (q) => q.eq('id', _model.editingAddressId!),
+          returnRows: true,
         );
+        final updatedAddress =
+            updatedRows.isNotEmpty ? updatedRows.first : null;
 
-        // Sync FFAppState active selected address if the edited address is the currently selected one
         final editingId = int.tryParse(_model.editingAddressId ?? '');
-        if (editingId != null && FFAppState().selectedAddressId == editingId) {
-          FFAppState().setSelectedAddress(
-            id: editingId,
-            label: _model.labelTextFieldTextController?.text ?? '',
-            line1: _model.streetAddressTextFieldTextController?.text ?? '',
-            city: _model.cityTextFieldTextController?.text ?? '',
-            latitude: _model.latitude,
-            longitude: _model.longitude,
-            locationMode: 'saved',
-          );
+        final shouldRefreshSelectedAddress =
+            updatedAddress != null &&
+                ((editingId != null &&
+                        FFAppState().selectedAddressId == editingId) ||
+                    (_model.isDefault &&
+                        FFAppState().selectedLocationMode == 'saved'));
+        if (shouldRefreshSelectedAddress) {
+          FFAppState().setSelectedAddressFromRow(updatedAddress);
         }
 
         if (mounted) {
@@ -295,8 +300,10 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
           );
         }
       } else {
-        // Create new address
-        await AddressesTable().insert(addressData);
+        final insertedAddress = await AddressesTable().insert(addressData);
+        if (_model.isDefault || !FFAppState().hasSelectedLocation) {
+          FFAppState().setSelectedAddressFromRow(insertedAddress);
+        }
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Address added successfully')),
@@ -613,7 +620,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
             color: _model.labelTextFieldTextController?.text == label
-                ? AppTheme.of(context).primary.withOpacity(0.1)
+                ? AppTheme.of(context).primary.withValues(alpha: 0.1)
                 : AppTheme.of(context).secondaryBackground,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
@@ -759,7 +766,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: _model.selectedRegion == null
-                        ? AppTheme.of(context).alternate.withOpacity(0.5)
+                        ? AppTheme.of(context).alternate.withValues(alpha: 0.5)
                         : AppTheme.of(context).alternate,
                     width: 1,
                   ),
@@ -779,7 +786,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                     Icon(
                       Icons.chevron_right,
                       color: _model.selectedRegion == null
-                          ? AppTheme.of(context).secondaryText.withOpacity(0.5)
+                          ? AppTheme.of(context).secondaryText.withValues(alpha: 0.5)
                           : AppTheme.of(context).secondaryText,
                     ),
                   ],
@@ -842,7 +849,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                   border: Border.all(
                     color: (_model.selectedRegion == null &&
                             _model.selectedProvince == null)
-                        ? AppTheme.of(context).alternate.withOpacity(0.5)
+                        ? AppTheme.of(context).alternate.withValues(alpha: 0.5)
                         : AppTheme.of(context).alternate,
                     width: 1,
                   ),
@@ -864,7 +871,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                       Icons.chevron_right,
                       color: (_model.selectedRegion == null &&
                               _model.selectedProvince == null)
-                          ? AppTheme.of(context).secondaryText.withOpacity(0.5)
+                          ? AppTheme.of(context).secondaryText.withValues(alpha: 0.5)
                           : AppTheme.of(context).secondaryText,
                     ),
                   ],
@@ -1066,7 +1073,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: _model.selectedCityMunicipality == null
-                        ? AppTheme.of(context).alternate.withOpacity(0.5)
+                        ? AppTheme.of(context).alternate.withValues(alpha: 0.5)
                         : AppTheme.of(context).alternate,
                     width: 1,
                   ),
@@ -1086,7 +1093,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                     Icon(
                       Icons.chevron_right,
                       color: _model.selectedCityMunicipality == null
-                          ? AppTheme.of(context).secondaryText.withOpacity(0.5)
+                          ? AppTheme.of(context).secondaryText.withValues(alpha: 0.5)
                           : AppTheme.of(context).secondaryText,
                     ),
                   ],
@@ -1110,6 +1117,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
       );
     }
 
+    if (!mounted) return;
     final result = await context.pushNamed(
       PinLocationWidget.routeName,
       extra: startLocation,
@@ -1196,7 +1204,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: AppTheme.of(context).primary.withOpacity(0.1),
+              color: AppTheme.of(context).primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -1260,18 +1268,39 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
           TextButton(
             onPressed: () async {
               try {
+                final editingId = int.tryParse(_model.editingAddressId ?? '');
+                final deletedSelectedAddress =
+                    FFAppState().selectedLocationMode == 'saved' &&
+                        editingId != null &&
+                        FFAppState().selectedAddressId == editingId;
+
                 await AddressesTable().delete(
                   matchingRows: (q) => q.eq('id', _model.editingAddressId!),
                 );
-                if (mounted) {
-                  Navigator.pop(context);
-                  context.pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Address deleted successfully')),
+                FFAppState().clearGetAddressCache();
+
+                if (deletedSelectedAddress) {
+                  final remainingAddresses = await AddressesTable().queryRows(
+                    queryFn: (q) => q
+                        .eq('user_id', currentUserUid)
+                        .order('is_default', ascending: false),
                   );
+                  final nextAddress =
+                      FFAppState().syncSelectedSavedAddress(remainingAddresses);
+                  if (nextAddress == null) {
+                    FFAppState().clearSelectedAddress();
+                  }
                 }
+
+                if (!context.mounted) return;
+                Navigator.pop(context);
+                context.pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text('Address deleted successfully')),
+                );
               } catch (e) {
+                if (!context.mounted) return;
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Error deleting address: $e')),

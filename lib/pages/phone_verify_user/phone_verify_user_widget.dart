@@ -236,6 +236,7 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                           }
 
                           // Handle post-auth navigation based on profile completeness and account type
+                          if (!context.mounted) return;
                           await PostAuthNavigationFlow()
                               .handlePostAuthNavigation(
                             context: context,
@@ -247,8 +248,7 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                           width: double.infinity,
                           height: 50,
                           padding: const EdgeInsets.all(8),
-                          iconPadding: const EdgeInsetsDirectional.fromSTEB(
-                              0, 0, 0, 0),
+                          iconPadding: EdgeInsetsDirectional.zero,
                           color: AppTheme.of(context).primary,
                           textStyle:
                               AppTheme.of(context).titleSmall.override(

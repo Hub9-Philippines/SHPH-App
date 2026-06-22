@@ -24,7 +24,6 @@ class FavoritesWidget extends StatefulWidget {
 class _FavoritesWidgetState extends State<FavoritesWidget> {
   late FavoritesModel _model;
   late Future<List<ServiceListingsRow>> _favoritesFuture;
-
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
@@ -57,79 +56,155 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: AppTheme.of(context).primaryBackground,
-          appBar: AppBar(
-            backgroundColor: AppTheme.of(context).primaryBackground,
-            automaticallyImplyLeading: false,
-            leading: wrapWithModel(
-              model: _model.backButtonModel,
-              updateCallback: () => safeSetState(() {}),
-              child: const BackButtonWidget(),
-            ),
-            title: Text(
-              'Favorites',
-              style: AppTheme.of(context).titleLarge.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-                  ),
-            ),
-            centerTitle: true,
-            elevation: 0,
-          ),
-          body: FutureBuilder<List<ServiceListingsRow>>(
-            future: _favoritesFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              if (snapshot.hasError) {
-                return Center(
-                  child: Text(
-                    'Error loading favorites',
-                    style: AppTheme.of(context).bodyMedium,
-                  ),
-                );
-              }
-
-              final favorites = snapshot.data ?? [];
-
-              if (favorites.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+          backgroundColor: const Color(0xFFF4F7FB),
+          body: SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: Row(
                     children: [
-                      Icon(
-                        Icons.favorite_border,
-                        size: 64,
-                        color: AppTheme.of(context).secondaryText,
+                      Material(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        child: wrapWithModel(
+                          model: _model.backButtonModel,
+                          updateCallback: () => safeSetState(() {}),
+                          child: const BackButtonWidget(),
+                        ),
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No favorites yet',
-                        style: AppTheme.of(context).titleMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Save services you love',
-                        style: AppTheme.of(context).bodySmall,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Favorites',
+                              style: AppTheme.of(context).titleLarge.override(
+                                    font: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    color: const Color(0xFF14213D),
+                                  ),
+                            ),
+                            Text(
+                              'Quick access to the services you want to revisit.',
+                              style: AppTheme.of(context).bodySmall.override(
+                                    font: GoogleFonts.poppins(),
+                                    color: const Color(0xFF64748B),
+                                  ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
-                );
-              }
-
-              return RefreshIndicator(
-                onRefresh: _refreshFavorites,
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: favorites.length,
-                  itemBuilder: (context, index) {
-                    final service = favorites[index];
-                    return _buildServiceCard(service);
-                  },
                 ),
-              );
-            },
+                Expanded(
+                  child: FutureBuilder<List<ServiceListingsRow>>(
+                    future: _favoritesFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      if (snapshot.hasError) {
+                        return _buildMessageState(
+                          context,
+                          icon: Icons.error_outline_rounded,
+                          title: 'Error loading favorites',
+                          subtitle:
+                              'Something went wrong while loading your saved services.',
+                        );
+                      }
+
+                      final favorites = snapshot.data ?? [];
+                      if (favorites.isEmpty) {
+                        return _buildMessageState(
+                          context,
+                          icon: Icons.favorite_border_rounded,
+                          title: 'No favorites yet',
+                          subtitle:
+                              'Save the services you love so they are easy to book again.',
+                        );
+                      }
+
+                      return RefreshIndicator(
+                        onRefresh: _refreshFavorites,
+                        child: ListView.separated(
+                          padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+                          itemCount: favorites.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 12),
+                          itemBuilder: (context, index) =>
+                              _buildServiceCard(favorites[index]),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+  Widget _buildMessageState(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) =>
+      Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Container(
+            width: double.infinity,
+            constraints: const BoxConstraints(maxWidth: 420),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x12000000),
+                  blurRadius: 18,
+                  offset: Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: AppTheme.of(context).primary.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Icon(icon, size: 30, color: AppTheme.of(context).primary),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: AppTheme.of(context).titleMedium.override(
+                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        color: const Color(0xFF14213D),
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  subtitle,
+                  textAlign: TextAlign.center,
+                  style: AppTheme.of(context).bodyMedium.override(
+                        font: GoogleFonts.poppins(),
+                        color: const Color(0xFF64748B),
+                      ),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -153,84 +228,106 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
           },
         ),
         child: Container(
-          margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: AppTheme.of(context).secondaryBackground,
-            borderRadius: BorderRadius.circular(12),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(26),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x12000000),
+                blurRadius: 18,
+                offset: Offset(0, 10),
+              ),
+            ],
           ),
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(14),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    service.thumbnail ?? '',
-                    width: 80,
-                    height: 80,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      width: 80,
-                      height: 80,
-                      color: AppTheme.of(context).secondaryText,
-                      child: Icon(
-                        Icons.image_not_supported,
-                        color: AppTheme.of(context).primaryBackground,
-                      ),
-                    ),
-                  ),
+                  borderRadius: BorderRadius.circular(18),
+                  child: (service.thumbnail ?? '').trim().isNotEmpty
+                      ? Image.network(
+                          service.thumbnail!,
+                          width: 88,
+                          height: 88,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => _imageFallback(context),
+                        )
+                      : _imageFallback(context),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         service.title,
-                        style: AppTheme.of(context).titleSmall.override(
+                        style: AppTheme.of(context).titleMedium.override(
                               font: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600),
+                                fontWeight: FontWeight.w700,
+                              ),
+                              color: const Color(0xFF14213D),
                             ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        service.categoryName ?? 'Service',
-                        style: AppTheme.of(context).bodySmall.override(
-                              color: AppTheme.of(context).secondaryText,
-                            ),
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.of(context).primary.withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          service.categoryName ?? 'Service',
+                          style: AppTheme.of(context).labelSmall.override(
+                                font: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                color: AppTheme.of(context).primary,
+                              ),
+                        ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 10),
                       Row(
                         children: [
                           const Icon(
-                            Icons.star,
+                            Icons.star_rounded,
                             size: 16,
-                            color: Colors.amber,
+                            color: Color(0xFFFFB020),
                           ),
                           const SizedBox(width: 4),
                           Text(
                             _parseRating(service.rating).toStringAsFixed(1),
-                            style: AppTheme.of(context).bodySmall,
+                            style: AppTheme.of(context).bodySmall.override(
+                                  font: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  color: const Color(0xFF14213D),
+                                ),
                           ),
                           const SizedBox(width: 8),
                           Text(
                             '(${service.reviewCount ?? 0})',
                             style: AppTheme.of(context).bodySmall.override(
-                                  color: AppTheme.of(context).secondaryText,
+                                  font: GoogleFonts.poppins(),
+                                  color: const Color(0xFF64748B),
                                 ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 10),
                       Text(
                         _formatPrice(service.basePrice, service.priceUnit),
-                        style: AppTheme.of(context).bodyMedium.override(
+                        style: AppTheme.of(context).titleSmall.override(
                               color: AppTheme.of(context).primary,
                               font: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600),
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                       ),
                     ],
@@ -242,13 +339,27 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
         ),
       );
 
+  Widget _imageFallback(BuildContext context) => Container(
+        width: 88,
+        height: 88,
+        color: const Color(0xFFE7ECF1),
+        child: Icon(
+          Icons.image_not_supported_outlined,
+          color: AppTheme.of(context).secondaryText,
+        ),
+      );
+
   String _formatPrice(double? price, String? unit) {
-    if (price == null) return '₱0';
-    return '₱${price.toStringAsFixed(0)}${unit != null ? ' / $unit' : ''}';
+    if (price == null) {
+      return 'PHP 0';
+    }
+    return 'PHP ${price.toStringAsFixed(0)}${unit != null ? ' / $unit' : ''}';
   }
 
   double _parseRating(String? rating) {
-    if (rating == null) return 0;
+    if (rating == null) {
+      return 0;
+    }
     return double.tryParse(rating) ?? 0.0;
   }
 }

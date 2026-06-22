@@ -22,8 +22,8 @@ class BookingSetupScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.arrow_back_rounded,
-              size: 24, color: Colors.black),
+          icon: Icon(Icons.arrow_back_rounded,
+              size: 24, color: theme.primaryText),
         ),
         titleSpacing: 0,
         title: Column(
@@ -99,7 +99,7 @@ class BookingSetupScreen extends StatelessWidget {
                           controller.draft.serviceCategoryName,
                         ),
                         selected: controller.draft.cleaningType,
-                        onChanged: controller.setCleaningType,
+                        onChanged: controller.setServiceType,
                       ),
                       const SizedBox(height: 18),
                       const _SectionLabel(title: 'Live estimate'),
@@ -542,9 +542,9 @@ class _ChoiceGroup extends StatelessWidget {
   });
 
   final String title;
-  final List<(CleaningType, String)> options;
-  final CleaningType selected;
-  final ValueChanged<CleaningType> onChanged;
+  final List<(ServiceType, String)> options;
+  final ServiceType selected;
+  final ValueChanged<ServiceType> onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -612,19 +612,19 @@ String _quantityHint(String categoryName) {
   return 'How many units, rooms, or tasks do you need?';
 }
 
-List<(CleaningType, String)> _serviceLevelOptions(String? categoryName) {
+List<(ServiceType, String)> _serviceLevelOptions(String? categoryName) {
   final normalized = (categoryName ?? '').toLowerCase();
   if (normalized.contains('clean')) {
     return const [
-      (CleaningType.standard, 'Standard'),
-      (CleaningType.deep, 'Deep'),
-      (CleaningType.premium, 'Premium'),
+      (ServiceType.standard, 'Standard'),
+      (ServiceType.deep, 'Deep'),
+      (ServiceType.premium, 'Premium'),
     ];
   }
   return const [
-    (CleaningType.standard, 'Basic'),
-    (CleaningType.deep, 'Priority'),
-    (CleaningType.premium, 'Express'),
+    (ServiceType.standard, 'Basic'),
+    (ServiceType.deep, 'Priority'),
+    (ServiceType.premium, 'Express'),
   ];
 }
 

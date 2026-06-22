@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '/services/chat_service.dart';
+
 import '/components/back_button/back_button_model.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/services/chat_service.dart';
+import '/services/logging_service.dart';
 import 'chat_page_widget.dart' show ChatPageWidget;
 
 class ChatPageModel extends FlutterFlowModel<ChatPageWidget> {
@@ -14,6 +18,9 @@ class ChatPageModel extends FlutterFlowModel<ChatPageWidget> {
   // Messages list - populated from Supabase
   List<Map<String, dynamic>> messages = [];
   RealtimeChannel? _messagesChannel;
+  bool isLoading = true;
+
+  bool _isClient = true;
 
   // Callback for widget rebuild
   VoidCallback? onStateChanged;
@@ -24,9 +31,12 @@ class ChatPageModel extends FlutterFlowModel<ChatPageWidget> {
   }
 
   // Initialize Supabase real-time subscription for chat messages
-  void initializeChatSubscription(String roomId) {
+  Future<void> initializeChatSubscription(String roomId) async {
+    // Fetch room details to determine if current user is client or provider
+    await _resolveUserRole(roomId);
+
     // Fetch initial messages
-    _fetchMessages(roomId);
+    unawaited(_fetchMessages(roomId));
 
     // Set up real-time subscription
     _messagesChannel = Supabase.instance.client
@@ -45,27 +55,41 @@ class ChatPageModel extends FlutterFlowModel<ChatPageWidget> {
         .subscribe();
   }
 
-  Future<void> _fetchMessages(String roomId) async {
-    try {
-      final response = await ChatService.instance.getMessages(roomId);
-      if (response.isNotEmpty) {
-        messages = response
-            .map((msg) => {
-                  'text': msg['message_text'] ?? msg['content'] ?? msg['text'],
-                  'isMe': msg['sender_id'] ==
-                          Supabase.instance.client.auth.currentUser?.id ||
-                      msg['sender_id'] == 'client',
-                  'time': _formatTime(_parseDateTime(msg['created_at'] ??
-                      msg['createdAt'] ??
-                      msg['timestamp'])),
-                })
-            .toList();
-        onStateChanged?.call();
-      }
-    } catch (e) {
-      print('Error fetching messages: $e');
+  Future<void> _resolveUserRole(String roomId) async {
+    final room = await ChatService.instance.getRoom(roomId);
+    if (room != null) {
+      final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+      _isClient = currentUserId != null && room['client_id'] == currentUserId;
     }
   }
+
+  Future<void> _fetchMessages(String roomId) async {
+    try {
+      isLoading = true;
+      onStateChanged?.call();
+      final response = await ChatService.instance.getMessages(roomId);
+
+      messages = response
+          .map((msg) => {
+                'text': msg['message_text'] ?? msg['content'] ?? msg['text'],
+                'isMe': _isSenderMe(msg['sender_id'] as String? ?? ''),
+                'time': _formatTime(_parseDateTime(
+                  msg['created_at'] ?? msg['createdAt'] ?? msg['timestamp'],
+                )),
+                'status': 'delivered',
+              })
+          .toList();
+    } catch (e) {
+      messages = [];
+      LoggingService.error('Error fetching messages: $e', tag: 'ChatPage');
+    } finally {
+      isLoading = false;
+      onStateChanged?.call();
+    }
+  }
+
+  bool _isSenderMe(String senderId) =>
+      _isClient ? senderId == 'client' : senderId == 'provider';
 
   void _handleMessageChange(PostgresChangePayload payload) {
     final eventType = payload.eventType;
@@ -73,9 +97,10 @@ class ChatPageModel extends FlutterFlowModel<ChatPageWidget> {
 
     if (eventType == PostgresChangeEvent.insert ||
         eventType == PostgresChangeEvent.update) {
+      final senderId = (record['sender_id'] ?? '') as String;
       final newMessage = {
-        'text': record['message_text'] as String,
-        'isMe': record['sender_id'] == 'client',
+        'text': (record['message_text'] ?? record['content'] ?? '') as String,
+        'isMe': _isSenderMe(senderId),
         'time': _formatTime(_parseDateTime(record['created_at'])),
         'status': 'delivered',
       };
@@ -96,6 +121,12 @@ class ChatPageModel extends FlutterFlowModel<ChatPageWidget> {
         onStateChanged?.call();
       }
     }
+  }
+
+  Future<void> markThreadRead(String roomId) async {
+    try {
+      await ChatService.instance.markRead(roomId);
+    } catch (_) {}
   }
 
   DateTime _parseDateTime(dynamic value) {
@@ -138,23 +169,12 @@ class ChatPageModel extends FlutterFlowModel<ChatPageWidget> {
     messages.add(optimisticMessage);
     onStateChanged?.call();
 
-    try {
-      await ChatService.instance.sendMessage(roomId, content);
+    final success = await ChatService.instance.sendMessage(roomId, content);
 
-      // Update message status to 'sent'
-      final index = messages.indexWhere((msg) => msg['tempId'] == tempId);
-      if (index != -1) {
-        messages[index]['status'] = 'sent';
-        onStateChanged?.call();
-      }
-    } catch (e) {
-      print('Error sending message: $e');
-      // Update message status to 'failed'
-      final index = messages.indexWhere((msg) => msg['tempId'] == tempId);
-      if (index != -1) {
-        messages[index]['status'] = 'failed';
-        onStateChanged?.call();
-      }
+    final index = messages.indexWhere((msg) => msg['tempId'] == tempId);
+    if (index != -1) {
+      messages[index]['status'] = success ? 'sent' : 'failed';
+      onStateChanged?.call();
     }
   }
 

@@ -53,40 +53,40 @@ String? serializeParam(
         data = param.toString();
       case ParamType.double:
         data = param.toString();
-      case ParamType.String:
+      case ParamType.string:
         data = param;
       case ParamType.bool:
         data = param ? 'true' : 'false';
-      case ParamType.DateTime:
+      case ParamType.dateTime:
         data = (param as DateTime).millisecondsSinceEpoch.toString();
-      case ParamType.DateTimeRange:
+      case ParamType.dateTimeRange:
         data = dateTimeRangeToString(param as DateTimeRange);
-      case ParamType.LatLng:
+      case ParamType.latLng:
         data = (param as LatLng).serialize();
-      case ParamType.Color:
+      case ParamType.color:
         data = fromCssColor(param as String) as String?;
-      case ParamType.FFPlace:
+      case ParamType.ffPlace:
         data = placeToString(param as FFPlace);
-      case ParamType.FFUploadedFile:
+      case ParamType.ffUploadedFile:
         data = uploadedFileToString(param as FFUploadedFile);
-      case ParamType.JSON:
+      case ParamType.json:
         data = json.encode(param);
 
-      case ParamType.DataStruct:
+      case ParamType.dataStruct:
         data = param is Struct ? param.toString() : null;
 
-      case ParamType.SupabaseRow:
+      case ParamType.supabaseRow:
         return json.encode((param as SupabaseDataRow).data);
-      case ParamType.Document:
+      case ParamType.document:
         // TODO: Handle this case.
         throw UnimplementedError();
-      case ParamType.DocumentReference:
+      case ParamType.documentReference:
         // TODO: Handle this case.
         throw UnimplementedError();
     }
     return data;
   } catch (e) {
-    print('Error serializing parameter: $e');
+    debugPrint('Error serializing parameter: $e');
     return null;
   }
 }
@@ -147,20 +147,20 @@ FFUploadedFile uploadedFileFromString(String uploadedFileStr) =>
 enum ParamType {
   int,
   double,
-  String,
+  string,
   bool,
-  DateTime,
-  DateTimeRange,
-  LatLng,
-  Color,
-  FFPlace,
-  FFUploadedFile,
-  JSON,
+  dateTime,
+  dateTimeRange,
+  latLng,
+  color,
+  ffPlace,
+  ffUploadedFile,
+  json,
 
-  Document,
-  DocumentReference,
-  DataStruct,
-  SupabaseRow,
+  document,
+  documentReference,
+  dataStruct,
+  supabaseRow,
 }
 
 dynamic deserializeParam<T>(
@@ -198,29 +198,29 @@ dynamic deserializeParam<T>(
         return int.tryParse(param);
       case ParamType.double:
         return double.tryParse(param);
-      case ParamType.String:
+      case ParamType.string:
         return param;
       case ParamType.bool:
         return param == 'true';
-      case ParamType.DateTime:
+      case ParamType.dateTime:
         final milliseconds = int.tryParse(param);
         return milliseconds != null
             ? DateTime.fromMillisecondsSinceEpoch(milliseconds)
             : null;
-      case ParamType.DateTimeRange:
+      case ParamType.dateTimeRange:
         return dateTimeRangeFromString(param);
-      case ParamType.LatLng:
+      case ParamType.latLng:
         return latLngFromString(param);
-      case ParamType.Color:
+      case ParamType.color:
         return fromCssColor(param);
-      case ParamType.FFPlace:
+      case ParamType.ffPlace:
         return placeFromString(param);
-      case ParamType.FFUploadedFile:
+      case ParamType.ffUploadedFile:
         return uploadedFileFromString(param);
-      case ParamType.JSON:
+      case ParamType.json:
         return json.decode(param);
 
-      case ParamType.SupabaseRow:
+      case ParamType.supabaseRow:
         final data = json.decode(param) as Map<String, dynamic>;
         switch (T) {
           case ProfilesRow:
@@ -231,7 +231,7 @@ dynamic deserializeParam<T>(
             return null;
         }
 
-      case ParamType.DataStruct:
+      case ParamType.dataStruct:
         final data = json.decode(param) as Map<String, dynamic>? ?? {};
         return structBuilder != null ? structBuilder(data.toString()) : null;
 
@@ -239,7 +239,7 @@ dynamic deserializeParam<T>(
         return null;
     }
   } catch (e) {
-    print('Error deserializing parameter: $e');
+    debugPrint('Error deserializing parameter: $e');
     return null;
   }
 }

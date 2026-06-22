@@ -70,14 +70,20 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
       allServices = services
           .map((service) => {
                 'id': service.id,
+                'serviceId': service.id,
                 'title': service.title,
                 'category': service.categoryName ?? 'Service',
+                'description': service.description ?? '',
                 'price': service.basePrice != null
                     ? 'PHP ${service.basePrice}${service.priceUnit ?? ''}'
                     : 'PHP 0',
                 'rating': double.tryParse(service.rating ?? '0') ?? 0.0,
                 'reviewCount': service.reviewCount ?? 0,
                 'imageUrl': service.thumbnail ?? '',
+                'providerId': service.provider?.toString() ?? '',
+                'providerName': service.providerName ?? 'Provider',
+                'providerPhoto': service.providerPhoto ?? '',
+                'isTimeMaterial': service.isTimeMaterial ?? false,
               })
           .toList();
 

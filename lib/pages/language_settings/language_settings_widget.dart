@@ -20,41 +20,54 @@ class LanguageSettingsWidget extends StatefulWidget {
 
 class _LanguageSettingsWidgetState extends State<LanguageSettingsWidget> {
   late LanguageSettingsModel _model;
-  String _selectedLanguage = 'English';
-
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  String _selectedLanguage = 'English';
+  String _selectedLocale = 'en';
 
-  final List<Map<String, String>> _languages = [
-    {'code': 'en', 'name': 'English', 'flag': '🇺🇸'},
-    {'code': 'es', 'name': 'Español', 'flag': '🇪🇸'},
-    {'code': 'fr', 'name': 'Français', 'flag': '🇫🇷'},
-    {'code': 'de', 'name': 'Deutsch', 'flag': '🇩🇪'},
-    {'code': 'it', 'name': 'Italiano', 'flag': '🇮🇹'},
-    {'code': 'pt', 'name': 'Português', 'flag': '🇵🇹'},
-    {'code': 'zh', 'name': '中文', 'flag': '🇨🇳'},
-    {'code': 'ja', 'name': '日本語', 'flag': '🇯🇵'},
-    {'code': 'ko', 'name': '한국어', 'flag': '🇰🇷'},
-    {'code': 'ar', 'name': 'العربية', 'flag': '🇸🇦'},
+  static const List<Map<String, String>> _languages = [
+    {'code': 'en', 'name': 'English', 'flag': 'EN'},
+    {'code': 'es', 'name': 'Spanish', 'flag': 'ES'},
+    {'code': 'fr', 'name': 'French', 'flag': 'FR'},
+    {'code': 'de', 'name': 'German', 'flag': 'DE'},
+    {'code': 'it', 'name': 'Italian', 'flag': 'IT'},
+    {'code': 'pt', 'name': 'Portuguese', 'flag': 'PT'},
+    {'code': 'zh', 'name': 'Chinese', 'flag': 'ZH'},
+    {'code': 'ja', 'name': 'Japanese', 'flag': 'JA'},
+    {'code': 'ko', 'name': 'Korean', 'flag': 'KO'},
+    {'code': 'ar', 'name': 'Arabic', 'flag': 'AR'},
   ];
 
   @override
   void initState() {
     super.initState();
     _model = createModel(context, LanguageSettingsModel.new);
-    _loadSavedLanguage();
+    _selectedLocale = FFAppState().locale;
+    _selectedLanguage = _localeToName(_selectedLocale);
   }
 
-  void _loadSavedLanguage() {
-    // TODO: Load saved language from shared preferences or database
-    setState(() {
-      _selectedLanguage = 'English';
-    });
+  String _localeToName(String code) {
+    for (final lang in _languages) {
+      if (lang['code'] == code) return lang['name']!;
+    }
+    return 'English';
   }
 
   void _saveLanguage(String language) {
-    // TODO: Save language to shared preferences or database
+    String? newCode;
+    for (final lang in _languages) {
+      if (lang['name'] == language) {
+        newCode = lang['code'];
+        break;
+      }
+    }
+    if (newCode == null) return;
+
+    FFAppState().locale = newCode;
+    if (!mounted) return;
+
     setState(() {
       _selectedLanguage = language;
+      _selectedLocale = newCode!;
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Language changed to $language')),
@@ -75,72 +88,187 @@ class _LanguageSettingsWidgetState extends State<LanguageSettingsWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: AppTheme.of(context).primaryBackground,
-          appBar: AppBar(
-            backgroundColor: AppTheme.of(context).primaryBackground,
-            automaticallyImplyLeading: false,
-            leading: wrapWithModel(
-              model: _model.backButtonModel,
-              updateCallback: () => safeSetState(() {}),
-              child: const BackButtonWidget(),
-            ),
-            title: Text(
-              'Language',
-              style: AppTheme.of(context).titleLarge.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-                  ),
-            ),
-            centerTitle: true,
-            elevation: 0,
-          ),
+          backgroundColor: const Color(0xFFF4F7FB),
           body: SafeArea(
-            top: true,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: ListView.builder(
-                itemCount: _languages.length,
-                itemBuilder: (context, index) {
-                  final language = _languages[index];
-                  final isSelected = _selectedLanguage == language['name'];
-                  return _buildLanguageOption(language, isSelected);
-                },
-              ),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: Row(
+                    children: [
+                      Material(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        child: wrapWithModel(
+                          model: _model.backButtonModel,
+                          updateCallback: () => safeSetState(() {}),
+                          child: const BackButtonWidget(),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Language',
+                              style: AppTheme.of(context).titleLarge.override(
+                                    font: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    color: const Color(0xFF14213D),
+                                  ),
+                            ),
+                            Text(
+                              'Choose the preferred language for your app experience.',
+                              style: AppTheme.of(context).bodySmall.override(
+                                    font: GoogleFonts.poppins(),
+                                    color: const Color(0xFF64748B),
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(22),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [
+                              Color(0xFF0F8A6C),
+                              Color(0xFF17B890),
+                              Color(0xFF73D8B4),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(30),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x220F8A6C),
+                              blurRadius: 24,
+                              offset: Offset(0, 14),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Current language',
+                              style: AppTheme.of(context).bodySmall.override(
+                                    font: GoogleFonts.poppins(),
+                                    color: Colors.white.withValues(alpha: 0.82),
+                                  ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              _selectedLanguage,
+                              style: AppTheme.of(context).headlineSmall.override(
+                                    font: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    color: Colors.white,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      ..._languages.map(
+                        (language) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _buildLanguageOption(
+                            language,
+                            _selectedLanguage == language['name'],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
       );
 
-  Widget _buildLanguageOption(Map<String, String> language, bool isSelected) => Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: AppTheme.of(context).secondaryBackground,
-          borderRadius: BorderRadius.circular(12),
-          border: isSelected
-              ? Border.all(
-                  color: AppTheme.of(context).primary,
-                  width: 2,
-                )
-              : null,
-        ),
-        child: ListTile(
+  Widget _buildLanguageOption(
+    Map<String, String> language,
+    bool isSelected,
+  ) =>
+      Material(
+        color: Colors.transparent,
+        child: InkWell(
           onTap: () => _saveLanguage(language['name']!),
-          leading: Text(
-            language['flag']!,
-            style: const TextStyle(fontSize: 32),
-          ),
-          title: Text(
-            language['name']!,
-            style: AppTheme.of(context).titleMedium.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+          borderRadius: BorderRadius.circular(24),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: isSelected
+                    ? AppTheme.of(context).primary
+                    : const Color(0xFFE2E8F0),
+                width: isSelected ? 1.6 : 1,
+              ),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x12000000),
+                  blurRadius: 18,
+                  offset: Offset(0, 10),
                 ),
+              ],
+            ),
+            child: ListTile(
+              onTap: () => _saveLanguage(language['name']!),
+              leading: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppTheme.of(context).primary.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Center(
+                  child: Text(
+                    language['flag']!,
+                    style: AppTheme.of(context).labelLarge.override(
+                          font: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w700,
+                          ),
+                          color: AppTheme.of(context).primary,
+                        ),
+                  ),
+                ),
+              ),
+              title: Text(
+                language['name']!,
+                style: AppTheme.of(context).titleMedium.override(
+                      font: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w700,
+                      ),
+                      color: const Color(0xFF14213D),
+                    ),
+              ),
+              trailing: isSelected
+                  ? Icon(
+                      Icons.check_circle_rounded,
+                      color: AppTheme.of(context).primary,
+                      size: 28,
+                    )
+                  : const Icon(
+                      Icons.chevron_right_rounded,
+                      color: Color(0xFF94A3B8),
+                    ),
+            ),
           ),
-          trailing: isSelected
-              ? Icon(
-                  Icons.check_circle,
-                  color: AppTheme.of(context).primary,
-                  size: 28,
-                )
-              : null,
         ),
       );
 }

@@ -29,6 +29,7 @@ class ServiceListingService {
       rating: row.rating,
       thumbnail: row.thumbnail,
       reviewCount: row.reviewCount,
+      isTimeMaterial: row.isTimeMaterial ?? false,
     );
   }
 
@@ -37,7 +38,8 @@ class ServiceListingService {
     return _rowToServiceListing(row);
   }
 
-  Future<List<ServiceListing>> fetchRecommendedServices({int limit = 10}) async {
+  Future<List<ServiceListing>> fetchRecommendedServices(
+      {int limit = 10}) async {
     if (await ApiRowMapper.canUseApi()) {
       try {
         final page = await _servicesApi.listListings(

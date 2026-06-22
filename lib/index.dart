@@ -21,7 +21,6 @@ export '/pages/edit_profile/edit_profile_widget.dart' show EditProfileWidget;
 export '/pages/favorites/favorites_widget.dart' show FavoritesWidget;
 export '/pages/forgot_password/forgot_password_widget.dart'
     show ForgotPasswordWidget;
-export '/pages/i_d_verify/i_d_verify_widget.dart' show IDVerifyWidget;
 export '/pages/language_settings/language_settings_widget.dart'
     show LanguageSettingsWidget;
 export '/pages/my_notifications/my_notifications_widget.dart'
@@ -31,6 +30,8 @@ export '/pages/onboarding/onboarding_widget.dart' show OnboardingWidget;
 export '/pages/phone_verify_user/phone_verify_user_widget.dart'
     show PhoneVerifyUserWidget;
 export '/pages/pin_location/pin_location_widget.dart' show PinLocationWidget;
+export '/pages/privacy_policy/privacy_policy_widget.dart' show PrivacyPolicyWidget;
+export '/pages/terms_of_service/terms_of_service_widget.dart' show TermsOfServiceWidget;
 export '/pages/pro_verification/document_scan_widget.dart'
     show DocumentScanWidget;
 export '/pages/pro_verification/face_verification_screen.dart'
@@ -71,5 +72,11 @@ export 'main/pro_dashboard/service_history_widget.dart'
     show ServiceHistoryWidget;
 export 'main/profile/profile_widget.dart' show ProfileWidget;
 export 'main/services/services_widget.dart' show ServicesScreen;
-export 'pages/booking_funnel/booking_flow_screen.dart'
-    show CleaningBookingFlowScreen;
+export 'pages/booking_funnel/booking_flow_screen.dart' show BookingFlowScreen;
+export 'pages/tm_flow/tm_active_job_screen.dart' show TMActiveJobScreen;
+export 'pages/tm_flow/tm_broadcast_screen.dart' show TMBroadcastScreen;
+export 'pages/tm_flow/tm_estimate_screen.dart' show TMEstimateScreen;
+export 'pages/tm_flow/tm_invoice_screen.dart' show TMInvoiceScreen;
+export 'pages/tm_flow/tm_payment_screen.dart' show TMPaymentScreen;
+export 'pages/tm_flow/tm_rating_screen.dart' show TMRatingScreen;
+export 'pages/tm_flow/tm_sub_category_screen.dart' show TMSubCategoryScreen;

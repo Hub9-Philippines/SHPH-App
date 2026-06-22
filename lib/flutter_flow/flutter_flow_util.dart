@@ -256,7 +256,7 @@ Future<LatLng> getCurrentUserLocation(
     }
     return loc ?? defaultLocation;
   }).onError((error, _) {
-    print('Error querying user location: $error');
+    debugPrint('Error querying user location: $error');
     return defaultLocation;
   });
 }
@@ -443,14 +443,14 @@ String roundTo(double value, int decimalPoints) {
 }
 
 double computeGradientAlignmentX(double evaluatedAngle) {
-  evaluatedAngle %= 360;
-  final rads = evaluatedAngle * pi / 180;
+  final angle = evaluatedAngle % 360;
+  final rads = angle * pi / 180;
   double x;
-  if (evaluatedAngle < 45 || evaluatedAngle > 315) {
+  if (angle < 45 || angle > 315) {
     x = sin(2 * rads);
-  } else if (45 <= evaluatedAngle && evaluatedAngle <= 135) {
+  } else if (45 <= angle && angle <= 135) {
     x = 1;
-  } else if (135 <= evaluatedAngle && evaluatedAngle <= 225) {
+  } else if (135 <= angle && angle <= 225) {
     x = sin(-2 * rads);
   } else {
     x = -1;
@@ -459,17 +459,17 @@ double computeGradientAlignmentX(double evaluatedAngle) {
 }
 
 double computeGradientAlignmentY(double evaluatedAngle) {
-  evaluatedAngle %= 360;
-  final rads = evaluatedAngle * pi / 180;
+  final angle = evaluatedAngle % 360;
+  final rads = angle * pi / 180;
   double y;
-  if (evaluatedAngle < 45 || evaluatedAngle > 315) {
+  if (angle < 45 || angle > 315) {
     y = -1;
-  } else if (45 <= evaluatedAngle && evaluatedAngle <= 135) {
+  } else if (45 <= angle && angle <= 135) {
     y = sin(-2 * rads);
-  } else if (135 <= evaluatedAngle && evaluatedAngle <= 225) {
-    y = 1;
-  } else {
+  } else if (135 <= angle && angle <= 225) {
     y = sin(2 * rads);
+  } else {
+    y = 1;
   }
   return double.parse(roundTo(y, 2));
 }

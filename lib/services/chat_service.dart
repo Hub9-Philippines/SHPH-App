@@ -32,10 +32,12 @@ class ChatService {
     try {
       // Fallback: query Supabase chat_rooms
       final userId = _supabase.auth.currentUser?.id;
-      if (userId == null) return [];
+      if (userId == null) {
+        return [];
+      }
 
       final chatRoomsResponse = await _supabase.from('chat_rooms').select();
-      final rooms = List<Map<String, dynamic>>.from(chatRoomsResponse ?? []);
+      final rooms = List<Map<String, dynamic>>.from(chatRoomsResponse);
       return rooms;
     } catch (e) {
       LoggingService.error('Supabase getChatRooms failed: $e',
@@ -67,7 +69,7 @@ class ChatService {
           .select()
           .eq('chat_room_id', threadId)
           .order('created_at', ascending: true);
-      return List<Map<String, dynamic>>.from(response ?? []);
+      return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       LoggingService.error('Supabase getMessages failed: $e',
           tag: 'ChatService');
@@ -87,17 +89,55 @@ class ChatService {
     }
 
     try {
-      await _supabase.from('chat_messages').insert({
+      final currentUserId = _supabase.auth.currentUser?.id;
+      if (currentUserId == null) {
+        return false;
+      }
+
+      final room = await _supabase
+          .from('chat_rooms')
+          .select('client_id')
+          .eq('id', threadId)
+          .maybeSingle();
+      if (room == null) {
+        return false;
+      }
+
+      final isClient = room['client_id'] == currentUserId;
+
+      final insertedMessage = await _supabase.from('chat_messages').insert({
         'chat_room_id': threadId,
-        'sender_id': _supabase.auth.currentUser?.id ?? 'client',
+        'sender_id': isClient ? 'client' : 'provider',
         'message_text': content,
-      });
+      }).select('id').maybeSingle();
+
+      await _supabase.from('chat_rooms').update({
+        'updated_at': DateTime.now().toIso8601String(),
+        if (insertedMessage?['id'] != null)
+          'last_message_id': insertedMessage!['id'],
+      }).eq('id', threadId);
       return true;
     } catch (e) {
       LoggingService.error('Supabase sendMessage failed: $e',
           tag: 'ChatService');
       return false;
     }
+  }
+
+  Future<Map<String, dynamic>?> getRoom(String threadId) async {
+    try {
+      final room = await _supabase
+          .from('chat_rooms')
+          .select()
+          .eq('id', threadId)
+          .maybeSingle();
+      if (room != null) {
+        return Map<String, dynamic>.from(room);
+      }
+    } catch (e) {
+      LoggingService.error('Supabase getRoom failed: $e', tag: 'ChatService');
+    }
+    return null;
   }
 
   Future<void> markRead(String threadId) async {
@@ -113,7 +153,9 @@ class ChatService {
 
     try {
       final currentUserId = _supabase.auth.currentUser?.id;
-      if (currentUserId == null) return;
+      if (currentUserId == null) {
+        return;
+      }
 
       await _supabase
           .from('chat_messages')
@@ -143,7 +185,9 @@ class ChatService {
           .select()
           .eq('booking_id', bookingId)
           .maybeSingle();
-      if (response != null) return Map<String, dynamic>.from(response);
+      if (response != null) {
+        return Map<String, dynamic>.from(response);
+      }
 
       // Create a new chat room
       final insert = await _supabase
@@ -153,12 +197,63 @@ class ChatService {
           })
           .select()
           .maybeSingle();
-      if (insert != null) return Map<String, dynamic>.from(insert);
+      if (insert != null) {
+        return Map<String, dynamic>.from(insert);
+      }
       return null;
     } catch (e) {
       LoggingService.error('Supabase getOrCreateThread failed: $e',
           tag: 'ChatService');
       return null;
     }
+  }
+
+  Future<Map<String, dynamic>?> getOrCreateDirectThread({
+    required String providerId,
+    String? providerName,
+    String? providerPhoto,
+  }) async {
+    final currentUserId = _supabase.auth.currentUser?.id;
+    if (currentUserId == null || providerId.isEmpty) {
+      return null;
+    }
+
+    try {
+      final existing = await _supabase
+          .from('chat_rooms')
+          .select()
+          .eq('client_id', currentUserId)
+          .eq('provider_id', providerId)
+          .maybeSingle();
+      if (existing != null) {
+        return Map<String, dynamic>.from(existing);
+      }
+
+      final insertPayload = <String, dynamic>{
+        'client_id': currentUserId,
+        'provider_id': providerId,
+        'updated_at': DateTime.now().toIso8601String(),
+        if ((providerName ?? '').trim().isNotEmpty)
+          'provider_name': providerName!.trim(),
+        if ((providerPhoto ?? '').trim().isNotEmpty)
+          'provider_photo': providerPhoto!.trim(),
+      };
+
+      final created = await _supabase
+          .from('chat_rooms')
+          .insert(insertPayload)
+          .select()
+          .maybeSingle();
+      if (created != null) {
+        return Map<String, dynamic>.from(created);
+      }
+    } catch (e) {
+      LoggingService.error(
+        'Supabase getOrCreateDirectThread failed: $e',
+        tag: 'ChatService',
+      );
+    }
+
+    return null;
   }
 }

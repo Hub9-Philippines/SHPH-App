@@ -1,0 +1,15 @@
+[project]
+name = "serbisyohubph"
+
+[functions]
+enabled = true
+
+[functions.dispatch_timeout_management]
+enabled = true
+verify_jwt = false
+import_map = "./functions/dispatch_timeout_management/deno.json"
+
+[cron]
+# Run the timeout management function every 60 seconds
+[functions.dispatch_timeout_management.schedule]
+schedule = "* * * * *"

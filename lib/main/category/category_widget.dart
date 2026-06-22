@@ -102,44 +102,6 @@ class _CategoryWidgetState extends State<CategoryWidget> {
                         ],
                       ),
                       const SizedBox(height: 18),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              Color(0xFF0F8A6C),
-                              Color(0xFF17B890),
-                              Color(0xFF73D8B4),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(28),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Explore by category',
-                              style: AppTheme.of(context).titleLarge.override(
-                                    font: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                    color: Colors.white,
-                                  ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              'Browse available services faster, then jump straight into results.',
-                              style: AppTheme.of(context).bodyMedium.override(
-                                    font: GoogleFonts.poppins(),
-                                    color: Colors.white.withValues(alpha: 0.84),
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ),
                     ],
                   ),
                 ),

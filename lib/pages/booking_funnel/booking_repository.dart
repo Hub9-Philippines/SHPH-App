@@ -1,6 +1,3 @@
-import 'dart:math' as math;
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '/backend/supabase/supabase.dart';
@@ -10,33 +7,6 @@ import 'booking_models.dart';
 abstract class BookingRepository {
   Future<String> broadcastLiveSearch(BookingDraft draft);
   Future<String> reserveScheduledSlot(BookingDraft draft);
-}
-
-class MockBookingRepository implements BookingRepository {
-  MockBookingRepository({
-    Duration simulatedLatency = const Duration(milliseconds: 900),
-  }) : _simulatedLatency = simulatedLatency;
-
-  final Duration _simulatedLatency;
-  final _random = math.Random();
-
-  @override
-  Future<String> broadcastLiveSearch(BookingDraft draft) async {
-    await Future.delayed(_simulatedLatency);
-    if (kDebugMode) {
-      debugPrint('Broadcasting live search for ${draft.rooms} room(s)');
-    }
-    return 'live_${DateTime.now().millisecondsSinceEpoch}_${_random.nextInt(999)}';
-  }
-
-  @override
-  Future<String> reserveScheduledSlot(BookingDraft draft) async {
-    await Future.delayed(_simulatedLatency);
-    if (kDebugMode) {
-      debugPrint('Reserving scheduled slot on ${draft.scheduledDate}');
-    }
-    return 'reservation_${DateTime.now().millisecondsSinceEpoch}_${_random.nextInt(999)}';
-  }
 }
 
 class ShphBookingRepository implements BookingRepository {
@@ -147,9 +117,9 @@ class ShphBookingRepository implements BookingRepository {
     const base = 599.0;
     final roomSubtotal = (draft.rooms - 1) * 180.0;
     final typeAdjustment = switch (draft.cleaningType) {
-      CleaningType.standard => 0.0,
-      CleaningType.deep => 220.0,
-      CleaningType.premium => 390.0,
+      ServiceType.standard => 0.0,
+      ServiceType.deep => 220.0,
+      ServiceType.premium => 390.0,
     };
     final urgencyAdjustment = switch (draft.urgency) {
       BookingUrgency.rightNow => 120.0,

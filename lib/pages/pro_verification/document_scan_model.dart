@@ -1,11 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '/services/profiles_service.dart';
-
 import '/components/back_button/back_button_model.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/services/profiles_service.dart';
 import 'document_scan_widget.dart' show DocumentScanWidget;
 
 class DocumentScanModel extends FlutterFlowModel<DocumentScanWidget> {

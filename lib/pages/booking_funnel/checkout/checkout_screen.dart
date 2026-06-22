@@ -33,41 +33,74 @@ class CheckoutScreen extends StatelessWidget {
           final isImmediate = !isScheduled;
           final location = gmaps.LatLng(draft.latitude, draft.longitude);
 
+          final showWaiting = controller.isMatchingActive;
+
           return BookingStatusScaffold(
             showMap: showLiveMap,
             location: location,
             markerHue: gmaps.BitmapDescriptor.hueRose,
-            topCard: _CheckoutTopCard(
-              serviceTitle: controller.selectedServiceLabel,
-              title: isScheduled
-                  ? 'Review scheduled booking'
-                  : 'Review live request',
-              subtitle: isScheduled
-                  ? 'Confirm the slot, pinned address, and payment before we reserve it.'
-                  : 'Confirm the pinned address and payment before we start searching nearby providers.',
-              onBack: () => Navigator.of(context).pop(),
-            ),
             bottomSheet: BookingStatusBottomSheet(
-              child: _CheckoutSheet(
-                controller: controller,
-                quote: quote,
-                isScheduled: isScheduled,
-                isImmediate: isImmediate,
-                onSubmit: controller.isSubmitting
-                    ? null
-                    : () async {
-                        await _submit(context, controller);
+              child: showWaiting
+                  ? _MatchingWaitingSheet(
+                      controller: controller,
+                      quote: quote,
+                      isScheduled: isScheduled,
+                      scheduleLabel: isScheduled
+                          ? _formatSchedule(draft)
+                          : _asapLabel(draft),
+                      serviceLevelLabel:
+                          _serviceLevelLabel(draft.serviceCategoryName),
+                      quantityLabel: _quantityLabel(draft.serviceCategoryName),
+                      onResume: () {
+                        controller.setMatchingActive(false);
+                        unawaited(
+                          Navigator.of(context).push(
+                            buildBookingFlowRoute(
+                              ChangeNotifierProvider.value(
+                                value: controller,
+                                child: LiveMatchingScreen(
+                                  showMap: showLiveMap,
+                                  serviceTitle:
+                                      controller.selectedServiceLabel,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
                       },
-                onPickAddress: () async {
-                  await _pickAddress(context, controller);
-                },
-                buttonLabel: _buttonLabel(draft),
-                scheduleLabel:
-                    isScheduled ? _formatSchedule(draft) : _asapLabel(draft),
-                quantityLabel: _quantityLabel(draft.serviceCategoryName),
-                serviceLevelLabel:
-                    _serviceLevelLabel(draft.serviceCategoryName),
-              ),
+                      onCancel: () {
+                        controller.setMatchingActive(false);
+                        controller.setLiveSearchTimedOut(false);
+                      },
+                    )
+                  : _CheckoutSheet(
+                      controller: controller,
+                      quote: quote,
+                      isScheduled: isScheduled,
+                      isImmediate: isImmediate,
+                      title: isScheduled
+                          ? 'Review scheduled booking'
+                          : 'Review live request',
+                      subtitle: isScheduled
+                          ? 'Confirm the slot, pinned address, and payment before we reserve it.'
+                          : 'Confirm the pinned address and payment before we start searching nearby providers.',
+                      onSubmit: controller.isSubmitting
+                          ? null
+                          : () async {
+                              await _submit(context, controller);
+                            },
+                      onPickAddress: () async {
+                        await _pickAddress(context, controller);
+                      },
+                      onBack: () => Navigator.of(context).pop(),
+                      buttonLabel: _buttonLabel(draft),
+                      scheduleLabel: isScheduled
+                          ? _formatSchedule(draft)
+                          : _asapLabel(draft),
+                      quantityLabel: _quantityLabel(draft.serviceCategoryName),
+                      serviceLevelLabel:
+                          _serviceLevelLabel(draft.serviceCategoryName),
+                    ),
             ),
           );
         },
@@ -243,96 +276,20 @@ class CheckoutScreen extends StatelessWidget {
   }
 }
 
-class _CheckoutTopCard extends StatelessWidget {
-  const _CheckoutTopCard({
-    required this.serviceTitle,
-    required this.title,
-    required this.subtitle,
-    required this.onBack,
-  });
-
-  final String serviceTitle;
-  final String title;
-  final String subtitle;
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
-    return SafeArea(
-      bottom: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: theme.primaryBackground.withValues(alpha: 0.94),
-            borderRadius: BorderRadius.circular(26),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.10),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              IconButton(
-                onPressed: onBack,
-                style: IconButton.styleFrom(
-                  backgroundColor: theme.secondaryBackground,
-                ),
-                icon: const Icon(Icons.arrow_back_rounded),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      serviceTitle,
-                      style: theme.bodyLarge.override(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      title,
-                      style: theme.titleMedium.override(
-                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: theme.bodySmall.override(
-                        color: theme.secondaryText,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _CheckoutSheet extends StatelessWidget {
   const _CheckoutSheet({
     required this.controller,
     required this.quote,
     required this.isScheduled,
     required this.isImmediate,
+    required this.title,
+    required this.subtitle,
     required this.buttonLabel,
     required this.scheduleLabel,
     required this.quantityLabel,
     required this.serviceLevelLabel,
     required this.onPickAddress,
+    required this.onBack,
     required this.onSubmit,
   });
 
@@ -340,11 +297,14 @@ class _CheckoutSheet extends StatelessWidget {
   final BookingQuote quote;
   final bool isScheduled;
   final bool isImmediate;
+  final String title;
+  final String subtitle;
   final String buttonLabel;
   final String scheduleLabel;
   final String quantityLabel;
   final String serviceLevelLabel;
   final Future<void> Function() onPickAddress;
+  final VoidCallback onBack;
   final Future<void> Function()? onSubmit;
 
   @override
@@ -354,6 +314,7 @@ class _CheckoutSheet extends StatelessWidget {
 
     return Column(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           width: 42,
@@ -362,6 +323,40 @@ class _CheckoutSheet extends StatelessWidget {
             color: theme.alternate,
             borderRadius: BorderRadius.circular(999),
           ),
+        ),
+        const SizedBox(height: 14),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            IconButton(
+              onPressed: onBack,
+              style: IconButton.styleFrom(
+                backgroundColor: theme.secondaryBackground,
+              ),
+              icon: const Icon(Icons.arrow_back_rounded),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.titleMedium.override(
+                      font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: theme.bodySmall.override(
+                      color: theme.secondaryText,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 14),
         Flexible(
@@ -433,8 +428,8 @@ class _CheckoutSheet extends StatelessWidget {
                     _Pill(
                       label: 'COD',
                       selected: draft.paymentMethod == BookingPaymentMethod.cod,
-                      onTap: () =>
-                          controller.setPaymentMethod(BookingPaymentMethod.cod),
+                      onTap: () => controller
+                          .setPaymentMethod(BookingPaymentMethod.cod),
                     ),
                   ],
                 ),
@@ -485,6 +480,187 @@ class _CheckoutSheet extends StatelessWidget {
   }
 }
 
+class _MatchingWaitingSheet extends StatelessWidget {
+  const _MatchingWaitingSheet({
+    required this.controller,
+    required this.quote,
+    required this.isScheduled,
+    required this.scheduleLabel,
+    required this.quantityLabel,
+    required this.serviceLevelLabel,
+    required this.onResume,
+    required this.onCancel,
+  });
+
+  final BookingFlowController controller;
+  final BookingQuote quote;
+  final bool isScheduled;
+  final String scheduleLabel;
+  final String quantityLabel;
+  final String serviceLevelLabel;
+  final VoidCallback onResume;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+    final draft = controller.draft;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Center(
+          child: Container(
+            width: 42,
+            height: 5,
+            decoration: BoxDecoration(
+              color: theme.alternate,
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: theme.primary,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Live matching active',
+              style: theme.labelLarge.override(
+                color: theme.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Text(
+          draft.serviceTitle ?? 'Service request',
+          style: theme.titleMedium.override(
+            font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.place_rounded, size: 16, color: theme.secondaryText),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Text(
+                '${draft.address.label} — ${draft.address.line1}, ${draft.address.city}',
+                style: theme.bodySmall.override(color: theme.secondaryText),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: theme.secondaryBackground,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: theme.alternate),
+          ),
+          child: Column(
+            children: [
+              _WaitingInfoRow(label: 'Dispatch', value: scheduleLabel),
+              const SizedBox(height: 8),
+              _WaitingInfoRow(label: quantityLabel, value: '${draft.rooms}'),
+              const SizedBox(height: 8),
+              _WaitingInfoRow(
+                label: serviceLevelLabel,
+                value: controller.cleaningTypeLabel,
+              ),
+              const Divider(height: 20),
+              _WaitingInfoRow(
+                label: 'Estimated total',
+                value: 'PHP ${quote.total.toStringAsFixed(0)}',
+                valueStyle: theme.titleMedium.override(
+                  fontWeight: FontWeight.w700,
+                  color: theme.primary,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        SizedBox(
+          width: double.infinity,
+          height: 54,
+          child: ElevatedButton(
+            onPressed: onResume,
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            child: Text(
+              'Return to live matching',
+              style: theme.titleSmall.override(
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
+          height: 44,
+          child: TextButton(
+            onPressed: onCancel,
+            child: Text(
+              'Cancel matching',
+              style: theme.bodyMedium.override(
+                color: theme.secondaryText,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _WaitingInfoRow extends StatelessWidget {
+  const _WaitingInfoRow({
+    required this.label,
+    required this.value,
+    this.valueStyle,
+  });
+
+  final String label;
+  final String value;
+  final TextStyle? valueStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: theme.bodySmall.override(color: theme.secondaryText),
+        ),
+        Text(
+          value,
+          style: valueStyle ??
+              theme.bodySmall.override(fontWeight: FontWeight.w600),
+        ),
+      ],
+    );
+  }
+}
+
 class _ModeBanner extends StatelessWidget {
   const _ModeBanner({
     required this.isScheduled,
@@ -504,12 +680,12 @@ class _ModeBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: isScheduled
             ? theme.primary.withValues(alpha: 0.08)
-            : const Color(0xFFF6FBFF),
+            : theme.primary.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
           color: isScheduled
               ? theme.primary.withValues(alpha: 0.28)
-              : const Color(0xFFD8E8F8),
+              : theme.primary.withValues(alpha: 0.18),
         ),
       ),
       child: Row(
@@ -521,7 +697,7 @@ class _ModeBanner extends StatelessWidget {
             decoration: BoxDecoration(
               color: isScheduled
                   ? theme.primary.withValues(alpha: 0.14)
-                  : const Color(0xFFE6F3FF),
+                  : theme.alternate,
               shape: BoxShape.circle,
             ),
             child: Icon(

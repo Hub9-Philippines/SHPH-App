@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/components/back_button/back_button_widget.dart';
-import '/pages/pro_verification/document_scan_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
@@ -374,7 +373,7 @@ class _IDVerifyWidgetState extends State<IDVerifyWidget> {
                       FFButtonWidget(
                         onPressed: () async {
                           // Navigate to unified document scan page
-                          context.pushNamed(DocumentScanWidget.routeName);
+                          await context.pushNamed(DocumentScanWidget.routeName);
                         },
                         text: 'Start Document Scanner',
                         icon: const Icon(

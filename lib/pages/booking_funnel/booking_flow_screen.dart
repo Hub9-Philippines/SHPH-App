@@ -20,22 +20,31 @@ import 'widgets/booking_flow_route.dart';
 import 'widgets/location_confirmation_panel.dart';
 import 'widgets/time_selection_panel.dart';
 
-class CleaningBookingFlowScreen extends StatelessWidget {
-  const CleaningBookingFlowScreen({required this.selectedService, super.key});
+class BookingFlowScreen extends StatelessWidget {
+  const BookingFlowScreen({
+    required this.selectedService,
+    this.initialUrgency,
+    this.initialScheduledDate,
+    this.initialScheduledTime,
+    super.key,
+  });
 
   static String routeName = 'BookingFlow';
   static String routePath = '/booking-flow';
 
   final ServiceListing selectedService;
+  final BookingUrgency? initialUrgency;
+  final DateTime? initialScheduledDate;
+  final TimeOfDay? initialScheduledTime;
 
   @override
   Widget build(BuildContext context) => ChangeNotifierProvider(
         create: (_) {
           final appState = FFAppState();
           final initialDraft = BookingDraft(
-            urgency: BookingUrgency.rightNow,
+            urgency: initialUrgency ?? BookingUrgency.rightNow,
             rooms: 1,
-            cleaningType: CleaningType.standard,
+            cleaningType: ServiceType.standard,
             paymentMethod: BookingPaymentMethod.gcash,
             address: BookingAddress(
               label: appState.selectedAddressLabel.isNotEmpty
@@ -57,6 +66,8 @@ class CleaningBookingFlowScreen extends StatelessWidget {
             serviceImageUrl: selectedService.thumbnail,
             serviceBasePrice: selectedService.basePrice,
             servicePriceUnit: selectedService.priceUnit,
+            scheduledDate: initialScheduledDate,
+            scheduledTime: initialScheduledTime,
           );
           return BookingFlowController(initialDraft: initialDraft);
         },

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '/flutter_flow/flutter_flow_util.dart';
 import '/theme/app_theme.dart';
 
@@ -14,6 +15,8 @@ class HelpSupportWidget extends StatefulWidget {
 }
 
 class _HelpSupportWidgetState extends State<HelpSupportWidget> {
+  static const _supportEmail = 'support@serbisyohubph.com';
+
   final List<Map<String, dynamic>> faqs = [
     {
       'question': 'How do I accept a job request?',
@@ -58,8 +61,7 @@ class _HelpSupportWidgetState extends State<HelpSupportWidget> {
   ];
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+  Widget build(BuildContext context) => Scaffold(
       appBar: AppBar(
         title: Text(
           'Help & Support',
@@ -116,12 +118,9 @@ class _HelpSupportWidgetState extends State<HelpSupportWidget> {
                         child: _buildContactButton(
                           icon: Icons.email,
                           label: 'Email Us',
-                          onTap: () {
-                            // TODO: Open email
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Opening email...')),
-                            );
-                          },
+                          onTap: () => _openSupportEmail(
+                            subject: 'Provider Support Request',
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -129,11 +128,22 @@ class _HelpSupportWidgetState extends State<HelpSupportWidget> {
                         child: _buildContactButton(
                           icon: Icons.chat,
                           label: 'Live Chat',
-                          onTap: () {
-                            // TODO: Open live chat
-                            ScaffoldMessenger.of(context).showSnackBar(
+                          onTap: () async {
+                            final messenger = ScaffoldMessenger.of(context);
+                            await _openSupportEmail(
+                              subject: 'Provider Live Support Request',
+                              body:
+                                  'Please describe your issue and include any booking or account details that can help the support team assist you faster.',
+                            );
+                            if (!mounted) {
+                              return;
+                            }
+                            messenger.showSnackBar(
                               const SnackBar(
-                                  content: Text('Live chat coming soon')),
+                                content: Text(
+                                  'Live support is currently routed to support email.',
+                                ),
+                              ),
                             );
                           },
                         ),
@@ -166,9 +176,7 @@ class _HelpSupportWidgetState extends State<HelpSupportWidget> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               itemCount: faqs.length,
               separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                return _buildFaqCard(faqs[index]);
-              },
+              itemBuilder: (context, index) => _buildFaqCard(faqs[index]),
             ),
 
             const SizedBox(height: 32),
@@ -176,14 +184,24 @@ class _HelpSupportWidgetState extends State<HelpSupportWidget> {
         ),
       ),
     );
+
+  Future<void> _openSupportEmail({
+    required String subject,
+    String? body,
+  }) async {
+    final encodedSubject = Uri.encodeComponent(subject);
+    final encodedBody = Uri.encodeComponent(body ?? '');
+    await launchURL(
+      'mailto:$_supportEmail?subject=$encodedSubject&body=$encodedBody',
+    );
   }
 
   Widget _buildContactButton({
     required IconData icon,
     required String label,
     required VoidCallback onTap,
-  }) {
-    return GestureDetector(
+  }) =>
+      GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -211,10 +229,8 @@ class _HelpSupportWidgetState extends State<HelpSupportWidget> {
         ),
       ),
     );
-  }
 
-  Widget _buildFaqCard(Map<String, dynamic> faq) {
-    return ExpansionTile(
+  Widget _buildFaqCard(Map<String, dynamic> faq) => ExpansionTile(
       tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       collapsedBackgroundColor: AppTheme.of(context).secondaryBackground,
       backgroundColor: AppTheme.of(context).secondaryBackground,
@@ -242,5 +258,4 @@ class _HelpSupportWidgetState extends State<HelpSupportWidget> {
         ),
       ],
     );
-  }
 }

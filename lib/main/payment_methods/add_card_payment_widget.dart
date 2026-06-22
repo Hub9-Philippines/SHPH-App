@@ -70,6 +70,18 @@ class _AddCardPaymentWidgetState extends State<AddCardPaymentWidget> {
     }
 
     try {
+      final existingMethods = await PaymentMethodsTable().queryRows(
+        queryFn: (q) => q.eq('user_id', userId),
+      );
+      final shouldBeDefault = _model.isDefault || existingMethods.isEmpty;
+
+      if (shouldBeDefault) {
+        await PaymentMethodsTable().update(
+          data: {'is_default': false},
+          matchingRows: (f) => f.eq('user_id', userId),
+        );
+      }
+
       final cardNumber = _model.cardNumberController.text.replaceAll(' ', '');
       final lastFour = cardNumber.length >= 4
           ? cardNumber.substring(cardNumber.length - 4)
@@ -82,7 +94,7 @@ class _AddCardPaymentWidgetState extends State<AddCardPaymentWidget> {
             'provider': _model.selectedProvider,
             'expiry_month': _model.expiryMonthController.text,
             'expiry_year': _model.expiryYearController.text,
-            'is_default': _model.isDefault,
+            'is_default': shouldBeDefault,
           },
           matchingRows: (f) => f.eq('id', widget.paymentMethod!.id),
         );
@@ -95,7 +107,7 @@ class _AddCardPaymentWidgetState extends State<AddCardPaymentWidget> {
           'last_four': lastFour,
           'expiry_month': _model.expiryMonthController.text,
           'expiry_year': _model.expiryYearController.text,
-          'is_default': _model.isDefault,
+          'is_default': shouldBeDefault,
         });
       }
 

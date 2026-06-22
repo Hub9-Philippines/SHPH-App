@@ -50,6 +50,12 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
     _model = createModel(context, BookingPaymentModel.new);
   }
 
+  @override
+  void dispose() {
+    _model.dispose();
+    super.dispose();
+  }
+
   Future<void> _confirmPayment() async {
     if (_selectedPaymentMethod == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -77,9 +83,13 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
         paymentStatus: paymentStatus,
       );
 
-      if (booking != null && mounted) {
+      if (!mounted) {
+        return;
+      }
+
+      if (booking != null) {
         context.go('/booking-success');
-      } else if (mounted) {
+      } else {
         setState(() {
           _model.isLoading = false;
           _model.errorMessage = 'Failed to create booking. Please try again.';
@@ -104,12 +114,6 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
   }
 
   @override
-  void dispose() {
-    _model.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) => GestureDetector(
         onTap: () {
           FocusScope.of(context).unfocus();
@@ -117,163 +121,123 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: const Color(0xFFF5F7FA),
-          appBar: AppBar(
-            backgroundColor: const Color(0xFFF5F7FA),
-            automaticallyImplyLeading: false,
-            leading: wrapWithModel(
-              model: _model.backButtonModel,
-              updateCallback: () => safeSetState(() {}),
-              child: const BackButtonWidget(),
-            ),
-            title: Text(
-              'Select Payment',
-              style: AppTheme.of(context).titleLarge.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                    color: const Color(0xFF16202A),
-                  ),
-            ),
-            centerTitle: true,
-            elevation: 0,
-          ),
-          body: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 140),
-            children: [
-              _buildServiceHero(context),
-              const SizedBox(height: 18),
-              _buildEscrowNotice(context),
-              const SizedBox(height: 18),
-              Text(
-                'Choose how you want to pay',
-                style: AppTheme.of(context).titleMedium.override(
-                      font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                      color: const Color(0xFF16202A),
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Card, wallet, and QR payments are protected through escrow until the job is completed.',
-                style: AppTheme.of(context).bodySmall.override(
-                      font: GoogleFonts.poppins(),
-                      color: const Color(0xFF6F7B86),
-                    ),
-              ),
-              const SizedBox(height: 16),
-              _buildPaymentOption(
-                value: 'card',
-                icon: Icons.credit_card_rounded,
-                label: 'Credit / Debit Card',
-                sublabel: 'Visa, Mastercard',
-                tint: const Color(0xFF1B74E4),
-              ),
-              const SizedBox(height: 12),
-              _buildPaymentOption(
-                value: 'ewallet',
-                icon: Icons.account_balance_wallet_rounded,
-                label: 'E-Wallets',
-                sublabel: 'GCash, Maya',
-                tint: const Color(0xFF0F8A6C),
-              ),
-              const SizedBox(height: 12),
-              _buildPaymentOption(
-                value: 'qr',
-                icon: Icons.qr_code_rounded,
-                label: 'QR Ph Code',
-                sublabel: 'Standard Philippine digital QR',
-                tint: const Color(0xFF7C5CFC),
-              ),
-              const SizedBox(height: 12),
-              _buildPaymentOption(
-                value: 'cash',
-                icon: Icons.payments_rounded,
-                label: 'Cash on Completion',
-                sublabel: 'Pay the pro directly after the job',
-                tint: const Color(0xFFEF6C57),
-              ),
-            ],
-          ),
-          bottomNavigationBar: Container(
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0x12000000),
-                  blurRadius: 20,
-                  offset: Offset(0, -8),
-                ),
-              ],
-            ),
-            child: SafeArea(
-              top: false,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Total',
-                              style: AppTheme.of(context).bodySmall.override(
-                                    font: GoogleFonts.poppins(),
-                                    color: const Color(0xFF6F7B86),
-                                  ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              widget.price ?? 'PHP 0',
-                              style: AppTheme.of(context).titleLarge.override(
-                                    font: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                    color: AppTheme.of(context).primary,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: FFButtonWidget(
-                          onPressed: _model.isLoading ? null : _confirmPayment,
-                          text: _model.isLoading
-                              ? 'Processing...'
-                              : 'Confirm Payment',
-                          options: FFButtonOptions(
-                            width: double.infinity,
-                            height: 54,
-                            color: _model.isLoading
-                                ? AppTheme.of(context).alternate
-                                : AppTheme.of(context).primary,
-                            textStyle: AppTheme.of(context).titleSmall.override(
-                                  font: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                  color: Colors.white,
-                                ),
-                            borderRadius: BorderRadius.circular(18),
+          backgroundColor: const Color(0xFFF4F7FB),
+          body: CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(
+                child: SafeArea(
+                  bottom: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: Row(
+                      children: [
+                        Material(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(18),
+                          child: wrapWithModel(
+                            model: _model.backButtonModel,
+                            updateCallback: () => safeSetState(() {}),
+                            child: const BackButtonWidget(),
                           ),
                         ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Select Payment',
+                                style: AppTheme.of(context).titleLarge.override(
+                                      font: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                      color: const Color(0xFF14213D),
+                                    ),
+                              ),
+                              Text(
+                                'Review the booking and choose how you want to pay.',
+                                style: AppTheme.of(context).bodySmall.override(
+                                      font: GoogleFonts.poppins(),
+                                      color: const Color(0xFF64748B),
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 130),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildServiceHero(context),
+                      const SizedBox(height: 18),
+                      _buildScheduleSummary(),
+                      const SizedBox(height: 18),
+                      _buildEscrowNotice(context),
+                      const SizedBox(height: 18),
+                      Text(
+                        'Choose how you want to pay',
+                        style: AppTheme.of(context).titleMedium.override(
+                              font: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w700,
+                              ),
+                              color: const Color(0xFF14213D),
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Card, wallet, and QR payments are protected through escrow until the job is completed.',
+                        style: AppTheme.of(context).bodySmall.override(
+                              font: GoogleFonts.poppins(),
+                              color: const Color(0xFF64748B),
+                            ),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildPaymentOption(
+                        value: 'card',
+                        icon: Icons.credit_card_rounded,
+                        label: 'Credit / Debit Card',
+                        sublabel: 'Visa, Mastercard',
+                        tint: const Color(0xFF1B74E4),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildPaymentOption(
+                        value: 'ewallet',
+                        icon: Icons.account_balance_wallet_rounded,
+                        label: 'E-Wallets',
+                        sublabel: 'GCash, Maya',
+                        tint: const Color(0xFF0F8A6C),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildPaymentOption(
+                        value: 'qr',
+                        icon: Icons.qr_code_rounded,
+                        label: 'QR Ph Code',
+                        sublabel: 'Standard Philippine digital QR',
+                        tint: const Color(0xFF7C5CFC),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildPaymentOption(
+                        value: 'cash',
+                        icon: Icons.payments_rounded,
+                        label: 'Cash on Completion',
+                        sublabel: 'Pay the pro directly after the job',
+                        tint: const Color(0xFFEF6C57),
                       ),
                     ],
                   ),
-                  if (_model.errorMessage != null) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      _model.errorMessage!,
-                      style: AppTheme.of(context).bodySmall.override(
-                            color: AppTheme.of(context).error,
-                          ),
-                    ),
-                  ],
-                ],
+                ),
               ),
-            ),
+            ],
           ),
+          bottomNavigationBar: _buildBottomBar(),
         ),
       );
 
@@ -290,17 +254,24 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
               Color(0xFF2F5368),
             ],
           ),
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x1A17212B),
+              blurRadius: 24,
+              offset: Offset(0, 14),
+            ),
+          ],
         ),
         child: Row(
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(22),
               child: widget.imageUrl != null
                   ? Image.network(
                       widget.imageUrl!,
-                      width: 88,
-                      height: 88,
+                      width: 92,
+                      height: 92,
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) =>
                           _paymentImageFallback(context),
@@ -312,30 +283,40 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.16),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      widget.category ?? 'Service',
+                      style: AppTheme.of(context).labelMedium.override(
+                            font: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w700,
+                            ),
+                            color: Colors.white,
+                          ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   Text(
                     widget.serviceName ?? 'Service',
                     style: AppTheme.of(context).titleLarge.override(
-                          font:
-                              GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                          font: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w700,
+                          ),
                           color: Colors.white,
-                        ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    widget.category ?? 'Service',
-                    style: AppTheme.of(context).bodySmall.override(
-                          font: GoogleFonts.poppins(),
-                          color: Colors.white.withValues(alpha: 0.78),
                         ),
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    widget.bookingDate != null
-                        ? '${DateTime.parse(widget.bookingDate!).day}/${DateTime.parse(widget.bookingDate!).month}/${DateTime.parse(widget.bookingDate!).year} at ${widget.bookingTime}'
-                        : 'Date & Time',
-                    style: AppTheme.of(context).labelLarge.override(
-                          font:
-                              GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    widget.price ?? 'PHP 0',
+                    style: AppTheme.of(context).headlineSmall.override(
+                          font: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w700,
+                          ),
                           color: Colors.white,
                         ),
                   ),
@@ -344,6 +325,99 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
             ),
           ],
         ),
+      );
+
+  Widget _buildScheduleSummary() => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x12000000),
+              blurRadius: 20,
+              offset: Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Booking summary',
+              style: AppTheme.of(context).titleMedium.override(
+                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    color: const Color(0xFF14213D),
+                  ),
+            ),
+            const SizedBox(height: 14),
+            _summaryRow(
+              icon: Icons.calendar_today_rounded,
+              label: 'Date',
+              value: _formattedBookingDate,
+            ),
+            const SizedBox(height: 12),
+            _summaryRow(
+              icon: Icons.access_time_rounded,
+              label: 'Time',
+              value: widget.bookingTime ?? 'Not set',
+            ),
+            if ((widget.notes ?? '').trim().isNotEmpty) ...[
+              const SizedBox(height: 12),
+              _summaryRow(
+                icon: Icons.sticky_note_2_outlined,
+                label: 'Notes',
+                value: widget.notes!.trim(),
+              ),
+            ],
+          ],
+        ),
+      );
+
+  Widget _summaryRow({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) =>
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF3F7FA),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(icon, color: const Color(0xFF334155)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: AppTheme.of(context).bodySmall.override(
+                        font: GoogleFonts.poppins(),
+                        color: const Color(0xFF64748B),
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: AppTheme.of(context).bodyMedium.override(
+                        font: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w700,
+                        ),
+                        color: const Color(0xFF14213D),
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ],
       );
 
   Widget _buildEscrowNotice(BuildContext context) => Container(
@@ -396,6 +470,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
         onTap: () {
           setState(() {
             _selectedPaymentMethod = value;
+            _model.errorMessage = null;
           });
         },
         borderRadius: BorderRadius.circular(24),
@@ -420,21 +495,15 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
           child: Row(
             children: [
               Container(
-                width: 50,
-                height: 50,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   color: tint.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Center(
-                  child: Icon(
-                    icon,
-                    color: tint,
-                    size: 22,
-                  ),
-                ),
+                child: Icon(icon, color: tint),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -445,7 +514,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                             font: GoogleFonts.poppins(
                               fontWeight: FontWeight.w700,
                             ),
-                            color: const Color(0xFF16202A),
+                            color: const Color(0xFF14213D),
                           ),
                     ),
                     const SizedBox(height: 4),
@@ -453,18 +522,36 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                       sublabel,
                       style: AppTheme.of(context).bodySmall.override(
                             font: GoogleFonts.poppins(),
-                            color: const Color(0xFF6F7B86),
+                            color: const Color(0xFF64748B),
                           ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 12),
-              Icon(
-                isSelected
-                    ? Icons.radio_button_checked_rounded
-                    : Icons.radio_button_off_rounded,
-                color: isSelected ? tint : const Color(0xFF9AA6B2),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isSelected ? tint : const Color(0xFFCBD5E1),
+                    width: 2,
+                  ),
+                ),
+                child: isSelected
+                    ? Center(
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: tint,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      )
+                    : null,
               ),
             ],
           ),
@@ -474,12 +561,125 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
   }
 
   Widget _paymentImageFallback(BuildContext context) => Container(
-        width: 88,
-        height: 88,
-        color: Colors.white.withValues(alpha: 0.14),
+        width: 92,
+        height: 92,
+        color: Colors.white.withValues(alpha: 0.16),
         child: const Icon(
           Icons.image_not_supported_outlined,
           color: Colors.white,
+          size: 34,
         ),
       );
+
+  Widget _buildBottomBar() => Container(
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          boxShadow: [
+            BoxShadow(
+              color: Color(0x12000000),
+              blurRadius: 20,
+              offset: Offset(0, -8),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Total',
+                          style: AppTheme.of(context).bodySmall.override(
+                                font: GoogleFonts.poppins(),
+                                color: const Color(0xFF64748B),
+                              ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.price ?? 'PHP 0',
+                          style: AppTheme.of(context).titleLarge.override(
+                                font: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                color: AppTheme.of(context).primary,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: FFButtonWidget(
+                      onPressed: _model.isLoading ? null : _confirmPayment,
+                      text:
+                          _model.isLoading ? 'Processing...' : 'Confirm Payment',
+                      options: FFButtonOptions(
+                        width: double.infinity,
+                        height: 54,
+                        color: _model.isLoading
+                            ? AppTheme.of(context).alternate
+                            : AppTheme.of(context).primary,
+                        textStyle: AppTheme.of(context).titleSmall.override(
+                              font: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w700,
+                              ),
+                              color: Colors.white,
+                            ),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (_model.errorMessage != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  _model.errorMessage!,
+                  style: AppTheme.of(context).bodySmall.override(
+                        font: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        color: AppTheme.of(context).error,
+                      ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+
+  String get _formattedBookingDate {
+    if (widget.bookingDate == null) {
+      return 'Not set';
+    }
+
+    final date = DateTime.tryParse(widget.bookingDate!);
+    if (date == null) {
+      return widget.bookingDate!;
+    }
+
+    const monthNames = <String>[
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${monthNames[date.month - 1]} ${date.day}, ${date.year}';
+  }
 }

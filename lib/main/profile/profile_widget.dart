@@ -274,7 +274,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Account',
+                  'Profile Hub',
                   style: AppTheme.of(context).headlineSmall.override(
                         font: GoogleFonts.poppins(
                           fontWeight: FontWeight.w700,
@@ -284,7 +284,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Manage your profile, saved places, and preferences.',
+                  'Manage your account, saved places, payments, and preferences.',
                   style: AppTheme.of(context).bodySmall.override(
                         font: GoogleFonts.poppins(),
                         color: const Color(0xFF66727E),
@@ -308,7 +308,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
               ],
             ),
             child: Icon(
-              Icons.person_outline_rounded,
+              Icons.tune_rounded,
               color: AppTheme.of(context).primary,
             ),
           ),
@@ -490,10 +490,10 @@ class _ProfileWidgetState extends State<ProfileWidget> {
             ),
             child: Row(
               children: [
-                Expanded(
+                const Expanded(
                   child: _ProfileMetric(
-                    label: 'Profile',
-                    value: 'Ready',
+                    label: 'Account',
+                    value: 'Active',
                     icon: Icons.verified_user_rounded,
                   ),
                 ),
@@ -504,7 +504,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                 ),
                 Expanded(
                   child: _ProfileMetric(
-                    label: 'Location',
+                    label: 'Places',
                     value: FFAppState().hasSelectedLocation ? 'Set' : 'Add',
                     icon: Icons.pin_drop_rounded,
                   ),
@@ -534,7 +534,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
           Expanded(
             child: _ProfileQuickAction(
               icon: Icons.location_city_rounded,
-              label: 'Addresses',
+              label: 'Locations',
               tint: const Color(0xFF129575),
               onTap: () => context.pushNamed(AddressesWidget.routeName),
             ),
@@ -552,7 +552,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
           Expanded(
             child: _ProfileQuickAction(
               icon: Icons.support_agent_rounded,
-              label: 'Support',
+              label: 'Settings',
               tint: const Color(0xFFEF6C57),
               onTap: () => context.pushNamed(SettingsWidget.routeName),
             ),
@@ -585,6 +585,10 @@ class _ProfileWidgetState extends State<ProfileWidget> {
     if (selectedMedia == null ||
         !selectedMedia
             .every((m) => validateFileFormat(m.storagePath, context))) {
+      return;
+    }
+
+    if (!mounted) {
       return;
     }
 
@@ -700,39 +704,37 @@ class _ProfileSection extends StatelessWidget {
   final List<Widget> children;
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 10),
-          child: Text(
-            title,
-            style: AppTheme.of(context).labelLarge.override(
-                  font: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w700,
+  Widget build(BuildContext context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 10),
+            child: Text(
+              title,
+              style: AppTheme.of(context).labelLarge.override(
+                    font: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w700,
+                    ),
+                    color: const Color(0xFF6A7681),
                   ),
-                  color: const Color(0xFF6A7681),
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x12000000),
+                  blurRadius: 20,
+                  offset: Offset(0, 10),
                 ),
+              ],
+            ),
+            child: Column(children: children),
           ),
-        ),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x12000000),
-                blurRadius: 20,
-                offset: Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Column(children: children),
-        ),
-      ],
-    );
-  }
+        ],
+      );
 }
 
 class _ProfileQuickAction extends StatelessWidget {
@@ -749,53 +751,51 @@ class _ProfileQuickAction extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(22),
-        child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(22),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x12000000),
-                blurRadius: 18,
-                offset: Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: tint.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
+  Widget build(BuildContext context) => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(22),
+          child: Ink(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x12000000),
+                  blurRadius: 18,
+                  offset: Offset(0, 10),
                 ),
-                child: Icon(icon, color: tint),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: AppTheme.of(context).labelLarge.override(
-                      font: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w600,
+              ],
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: tint.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(icon, color: tint),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: AppTheme.of(context).labelLarge.override(
+                        font: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        color: const Color(0xFF16202A),
                       ),
-                      color: const Color(0xFF16202A),
-                    ),
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-    );
-  }
+      );
 }
 
 class _ProfileMenuTile extends StatelessWidget {
@@ -818,62 +818,60 @@ class _ProfileMenuTile extends StatelessWidget {
   final Color? titleColor;
 
   @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(24),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: iconBackground ?? iconTint.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(16),
+  Widget build(BuildContext context) => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: iconBackground ?? iconTint.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(icon, color: iconTint, size: 24),
                 ),
-                child: Icon(icon, color: iconTint, size: 24),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: AppTheme.of(context).titleSmall.override(
-                            font: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w600,
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: AppTheme.of(context).titleSmall.override(
+                              font: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w600,
+                              ),
+                              color: titleColor ?? const Color(0xFF16202A),
                             ),
-                            color: titleColor ?? const Color(0xFF16202A),
-                          ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: AppTheme.of(context).bodySmall.override(
-                            font: GoogleFonts.poppins(),
-                            color: const Color(0xFF6F7B86),
-                          ),
-                    ),
-                  ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: AppTheme.of(context).bodySmall.override(
+                              font: GoogleFonts.poppins(),
+                              color: const Color(0xFF6F7B86),
+                            ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              const Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: Color(0xFF8A97A4),
-                size: 16,
-              ),
-            ],
+                const SizedBox(width: 12),
+                const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: Color(0xFF8A97A4),
+                  size: 16,
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-    );
-  }
+      );
 }
 
 class _ProfileToggleTile extends StatelessWidget {
@@ -894,58 +892,56 @@ class _ProfileToggleTile extends StatelessWidget {
   final ValueChanged<bool> onChanged;
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: iconTint.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(16),
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: iconTint.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(icon, color: iconTint, size: 24),
             ),
-            child: Icon(icon, color: iconTint, size: 24),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppTheme.of(context).titleSmall.override(
-                        font: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w600,
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTheme.of(context).titleSmall.override(
+                          font: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600,
+                          ),
+                          color: const Color(0xFF16202A),
                         ),
-                        color: const Color(0xFF16202A),
-                      ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: AppTheme.of(context).bodySmall.override(
-                        font: GoogleFonts.poppins(),
-                        color: const Color(0xFF6F7B86),
-                      ),
-                ),
-              ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: AppTheme.of(context).bodySmall.override(
+                          font: GoogleFonts.poppins(),
+                          color: const Color(0xFF6F7B86),
+                        ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Switch.adaptive(
-            value: value,
-            onChanged: onChanged,
-            activeThumbColor: AppTheme.of(context).primary,
-            activeTrackColor: AppTheme.of(context).primary,
-            inactiveTrackColor: AppTheme.of(context).alternate,
-            inactiveThumbColor: AppTheme.of(context).secondaryBackground,
-          ),
-        ],
-      ),
-    );
-  }
+            const SizedBox(width: 12),
+            Switch.adaptive(
+              value: value,
+              onChanged: onChanged,
+              activeThumbColor: AppTheme.of(context).primary,
+              activeTrackColor: AppTheme.of(context).primary,
+              inactiveTrackColor: AppTheme.of(context).alternate,
+              inactiveThumbColor: AppTheme.of(context).secondaryBackground,
+            ),
+          ],
+        ),
+      );
 }
 
 class _ProfileMetric extends StatelessWidget {
@@ -960,29 +956,27 @@ class _ProfileMetric extends StatelessWidget {
   final IconData icon;
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(icon, color: Colors.white.withValues(alpha: 0.92), size: 18),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: AppTheme.of(context).labelLarge.override(
-                font: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w700,
+  Widget build(BuildContext context) => Column(
+        children: [
+          Icon(icon, color: Colors.white.withValues(alpha: 0.92), size: 18),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: AppTheme.of(context).labelLarge.override(
+                  font: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w700,
+                  ),
+                  color: Colors.white,
                 ),
-                color: Colors.white,
-              ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: AppTheme.of(context).bodySmall.override(
-                font: GoogleFonts.poppins(),
-                color: Colors.white.withValues(alpha: 0.78),
-              ),
-        ),
-      ],
-    );
-  }
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: AppTheme.of(context).bodySmall.override(
+                  font: GoogleFonts.poppins(),
+                  color: Colors.white.withValues(alpha: 0.78),
+                ),
+          ),
+        ],
+      );
 }

@@ -374,7 +374,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                         ),
                       ),
                       Align(
-                        alignment: const AlignmentDirectional(0, 1),
+                        alignment: AlignmentDirectional.bottomCenter,
                         child: Padding(
                           padding: const EdgeInsetsDirectional.fromSTEB(
                               0, 0, 0, 16),
@@ -415,11 +415,11 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                     'Next button pressed, current page: ${_model.pageViewCurrentIndex}',
                     tag: 'Onboarding',
                   );
-                  if (_model.pageViewCurrentIndex.toString() == '2') {
-                    // Mark onboarding as completed when navigating from last page
-                    FFAppState().hasCompletedOnboarding = true;
-                    context.pushNamed(SignOptionsWidget.routeName);
-                  } else {
+                    if (_model.pageViewCurrentIndex.toString() == '2') {
+                      // Mark onboarding as completed when navigating from last page
+                      FFAppState().hasCompletedOnboarding = true;
+                      await context.pushNamed(SignOptionsWidget.routeName);
+                    } else {
                     await _model.pageViewController?.nextPage(
                       duration: const Duration(milliseconds: 300),
                       curve: Curves.ease,
@@ -432,7 +432,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                   height: 52,
                   padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 0),
                   iconPadding:
-                      const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
+                      EdgeInsetsDirectional.zero,
                   color: AppTheme.of(context).primary,
                   textStyle: AppTheme.of(context).titleSmall.override(
                         font: GoogleFonts.poppins(

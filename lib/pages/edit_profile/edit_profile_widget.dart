@@ -3,11 +3,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '/auth/supabase_auth/auth_util.dart';
-import '/backend/supabase/supabase.dart';
-import '/services/profiles_service.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import '/services/profiles_service.dart';
 import '/theme/app_theme.dart';
 import 'edit_profile_model.dart';
 
@@ -66,7 +65,7 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
         _phoneController.text = profile.phoneNumber ?? '';
       }
     } catch (e) {
-      print('Error loading profile: $e');
+      debugPrint('Error loading profile: $e');
     }
   }
 

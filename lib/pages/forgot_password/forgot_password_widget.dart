@@ -2,6 +2,7 @@ import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/auth/supabase_auth/auth_util.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/components/reset_link_sent/reset_link_sent_widget.dart';
 import '/flutter_flow/custom_functions.dart' as functions;
@@ -9,6 +10,7 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
 import '/theme/app_theme.dart';
+import '../../auth/supabase_auth/supabase_auth_manager.dart';
 import 'forgot_password_model.dart';
 
 export 'forgot_password_model.dart';
@@ -368,14 +370,20 @@ class _ForgotPasswordWidgetState extends State<ForgotPasswordWidget> {
                                     !_model.isEmailvalid)
                                 ? null
                                 : () async {
+                                    await (authManager as SupabaseAuthManager)
+                                        .resetPassword(
+                                      email: _model
+                                          .emailTextFieldTextController.text,
+                                      context: context,
+                                    );
+                                    if (!context.mounted) return;
                                     await showDialog(
                                       context: context,
                                       builder: (dialogContext) => Dialog(
                                           elevation: 0,
                                           insetPadding: EdgeInsets.zero,
                                           backgroundColor: Colors.transparent,
-                                          alignment: const AlignmentDirectional(
-                                                  0, -1)
+                                          alignment: AlignmentDirectional.topCenter
                                               .resolve(
                                                   Directionality.of(context)),
                                           child: GestureDetector(
@@ -396,8 +404,7 @@ class _ForgotPasswordWidgetState extends State<ForgotPasswordWidget> {
                               height: 52,
                               padding: const EdgeInsetsDirectional.fromSTEB(
                                   16, 0, 16, 0),
-                              iconPadding: const EdgeInsetsDirectional.fromSTEB(
-                                  0, 0, 0, 0),
+                              iconPadding: EdgeInsetsDirectional.zero,
                               color: AppTheme.of(context).primary,
                               textStyle: AppTheme.of(context)
                                   .titleMedium
@@ -462,7 +469,7 @@ class _ForgotPasswordWidgetState extends State<ForgotPasswordWidget> {
                               hoverColor: Colors.transparent,
                               highlightColor: Colors.transparent,
                               onTap: () async {
-                                context.pushNamed(SignupWidget.routeName);
+                                await context.pushNamed(SigninWidget.routeName);
                               },
                               child: Text(
                                 'Sign In',

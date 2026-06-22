@@ -122,7 +122,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                         zoomControlsEnabled: false,
                         mapToolbarEnabled: false,
                         compassEnabled: false,
-                        //markers: _homeMarkers(appState),
+                        markers: _homeMarkers(appState),
                         padding: mapPadding,
                         onMapCreated: (controller) {
                           _mapController = controller;
@@ -178,8 +178,10 @@ class _HomeWidgetState extends State<HomeWidget> {
     _addressFuture = FFAppState()
         .getAddress(
       uniqueQueryKey: 'address_$currentUserUid',
-      requestFn: () => AddressesTable().querySingleRow(
-        queryFn: (q) => q.eqOrNull('user_id', currentUserUid),
+      requestFn: () => AddressesTable().queryRows(
+        queryFn: (q) => q
+            .eqOrNull('user_id', currentUserUid)
+            .order('is_default', ascending: false),
       ),
     )
         .catchError((error) {
@@ -191,6 +193,13 @@ class _HomeWidgetState extends State<HomeWidget> {
       return <AddressesRow>[];
     }).then((rows) {
       if (rows.isEmpty) {
+        final appState = FFAppState();
+        if (appState.selectedLocationMode == 'saved') {
+          appState.clearSelectedAddress();
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _loadDeviceLocation(forceUseDevice: true);
+          });
+        }
         return rows;
       }
 
@@ -199,25 +208,10 @@ class _HomeWidgetState extends State<HomeWidget> {
         return rows;
       }
 
-      AddressesRow? selectedRow;
-
-      final selectedId = appState.selectedAddressId;
-      if (selectedId != null) {
-        for (final row in rows) {
-          if (row.id == selectedId) {
-            selectedRow = row;
-            break;
-          }
-        }
+      final selectedRow = appState.syncSelectedSavedAddress(rows);
+      if (selectedRow == null) {
+        return rows;
       }
-
-      selectedRow ??= rows.cast<AddressesRow?>().firstWhere(
-            (row) => row?.isDefault == true,
-            orElse: () => null,
-          );
-      selectedRow ??= rows.first;
-
-      appState.setSelectedAddressFromRow(selectedRow);
       final latitude = selectedRow.latitude;
       final longitude = selectedRow.longitude;
       if (latitude != null && longitude != null && mounted) {
@@ -771,9 +765,18 @@ class _HomeWidgetState extends State<HomeWidget> {
       return;
     }
 
+    if (selectedService.isTimeMaterial) {
+      await Navigator.of(context).push(
+        buildBookingFlowRoute(
+          TMSubCategoryScreen(selectedService: selectedService),
+        ),
+      );
+      return;
+    }
+
     await Navigator.of(context).push(
       buildBookingFlowRoute(
-        CleaningBookingFlowScreen(selectedService: selectedService),
+        BookingFlowScreen(selectedService: selectedService),
       ),
     );
   }

@@ -4,8 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/backend/supabase/database/tables/payment_methods.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/index.dart';
 import '/services/chat_service.dart';
+import '/services/dispatch/dispatch_models.dart';
+import '/services/dispatch/dispatch_service.dart';
 import '/services/logging_service.dart';
 import '/services/pro_bookings_service.dart';
 import '/theme/app_theme.dart';
@@ -153,14 +157,49 @@ class ProJobsWidget extends StatefulWidget {
 
 class _ProJobsWidgetState extends State<ProJobsWidget> {
   List<Map<String, dynamic>> jobRequests = [];
+  List<ProviderOfferView> dispatchOffers = [];
   bool isLoading = true;
+  bool isLoadingDispatch = true;
   String? loadError;
+  String? dispatchLoadError;
   final ProBookingsService _bookingsService = ProBookingsService.instance;
+  StreamSubscription<List<ProviderOfferView>>? _offerSubscription;
 
   @override
   void initState() {
     super.initState();
     _loadJobRequests();
+    _subscribeDispatchOffers();
+  }
+
+  @override
+  void dispose() {
+    _offerSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _subscribeDispatchOffers() {
+    final stream = DispatchService.instance.watchProviderOffers();
+    _offerSubscription = stream.listen(
+      (offers) {
+        if (!mounted) {
+          return;
+        }
+        setState(() {
+          dispatchOffers = offers;
+          isLoadingDispatch = false;
+        });
+      },
+      onError: (e) {
+        if (!mounted) {
+          return;
+        }
+        setState(() {
+          isLoadingDispatch = false;
+          dispatchLoadError = 'Could not load dispatch offers.';
+        });
+      },
+    );
   }
 
   Future<void> _loadJobRequests() async {
@@ -218,6 +257,39 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
     }
   }
 
+  Future<void> _acceptDispatchOffer(String jobId) async {
+    final success = await DispatchService.instance.acceptOffer(jobId);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            success ? 'Offer accepted — job confirmed' : 'Failed to accept offer',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _rejectDispatchOffer(String jobId) async {
+    final success = await DispatchService.instance.rejectOffer(jobId);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            success ? 'Offer declined' : 'Failed to decline offer',
+          ),
+        ),
+      );
+    }
+  }
+
+  String _requestTypeLabel(Map<String, dynamic> job) {
+    if (_bookingsService.isTimeMaterialBooking(job)) {
+      return 'TIME-MATERIAL';
+    }
+    return 'SCHEDULED';
+  }
+
   @override
   Widget build(BuildContext context) {
     final pendingToday = jobRequests
@@ -263,6 +335,31 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
               ],
             ),
             const SizedBox(height: 16),
+            if (dispatchOffers.isNotEmpty) ...[
+              _buildSectionHeader(context, 'Live Dispatch Offers'),
+              const SizedBox(height: 10),
+              ...dispatchOffers.map(
+                (offer) => Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: _buildDispatchOfferCard(context, offer),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+            if (isLoadingDispatch)
+              const Padding(
+                padding: EdgeInsets.only(top: 12, bottom: 12),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (dispatchLoadError != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _DashboardMessageCard(
+                  icon: Icons.sensors_off_outlined,
+                  title: 'Dispatch unavailable',
+                  message: dispatchLoadError!,
+                ),
+              ),
             if (isLoading)
               const Padding(
                 padding: EdgeInsets.only(top: 60),
@@ -296,6 +393,189 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
     );
   }
 
+  Widget _buildSectionHeader(BuildContext context, String title) => Padding(
+        padding: const EdgeInsets.only(left: 8),
+        child: Text(
+          title,
+          style: AppTheme.of(context).labelLarge.override(
+                font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                color: const Color(0xFF64748B),
+              ),
+        ),
+      );
+
+  Widget _buildDispatchOfferCard(BuildContext context, ProviderOfferView view) {
+    final theme = AppTheme.of(context);
+    final serviceType = view.job.serviceType;
+    final clientName = view.clientDisplayName ?? 'A client';
+    final elapsed = DateTime.now().difference(view.offer.offeredAt);
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0F766E), Color(0xFF14B8A6)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x1A0F766E),
+            blurRadius: 24,
+            offset: Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.16),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(
+                        Icons.bolt_rounded,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Dispatch match',
+                            style: theme.labelMedium.override(
+                              font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                              color: Colors.white.withValues(alpha: 0.82),
+                            ),
+                          ),
+                          Text(
+                            'New offer available',
+                            style: theme.titleSmall.override(
+                              font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        '${elapsed.inSeconds ~/ 60}m ago',
+                        style: theme.labelSmall.override(
+                          font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Icon(Icons.person_outline, size: 16, color: Colors.white.withValues(alpha: 0.82)),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        clientName,
+                        style: theme.bodyMedium.override(
+                          font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Icon(Icons.build_outlined, size: 16, color: Colors.white.withValues(alpha: 0.82)),
+                    const SizedBox(width: 6),
+                    Text(
+                      serviceType,
+                      style: theme.bodySmall.override(
+                        font: GoogleFonts.poppins(),
+                        color: Colors.white.withValues(alpha: 0.90),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 44,
+                        child: Material(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          child: InkWell(
+                            onTap: () => _acceptDispatchOffer(view.job.id),
+                            borderRadius: BorderRadius.circular(12),
+                            child: Center(
+                              child: Text(
+                                'Accept',
+                                style: theme.bodyMedium.override(
+                                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                                  color: const Color(0xFF0F766E),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: SizedBox(
+                        height: 44,
+                        child: OutlinedButton(
+                          onPressed: () => _rejectDispatchOffer(view.job.id),
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(
+                              color: Colors.white.withValues(alpha: 0.50),
+                            ),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            'Decline',
+                            style: theme.bodyMedium.override(
+                              font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildJobCard(BuildContext context, Map<String, dynamic> job) {
     final isPending = job['status'] == 'pending';
 
@@ -306,14 +586,18 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
     final clientName =
         profile?['display_name'] ?? profile?['first_name'] ?? 'Unknown Client';
     final clientPhoto = profile?['photo_url'];
-    final serviceName =
-        serviceListing?['title'] ?? serviceListing?['name'] ?? 'Unknown Service';
+    final serviceName = serviceListing?['title'] ??
+        serviceListing?['name'] ??
+        'Unknown Service';
     final location = _bookingLocationText(address);
     final bookingDate = _parseDate(job['booking_date']) ?? DateTime.now();
     final bookingTime = job['booking_time'] ?? 'N/A';
     final price = (job['total_price'] as num?)?.toDouble() ?? 0.0;
     final jobId = job['id'] as String?;
     final status = job['status']?.toString();
+    final isTm = _bookingsService.isTimeMaterialBooking(job);
+    final tmSubCategory = _bookingsService.tmSubCategoryTitle(job);
+    final tmStageLabel = _bookingsService.tmStageLabel(job);
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -363,6 +647,28 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
                             font: GoogleFonts.poppins(),
                             color: const Color(0xFF64748B),
                           ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _InlineInfoChip(
+                          label: _requestTypeLabel(job),
+                          backgroundColor: isTm
+                              ? const Color(0xFFE0F2FE)
+                              : const Color(0xFFF1F5F9),
+                          foregroundColor: isTm
+                              ? const Color(0xFF0369A1)
+                              : const Color(0xFF475569),
+                        ),
+                        if (isTm)
+                          _InlineInfoChip(
+                            label: tmSubCategory ?? tmStageLabel,
+                            backgroundColor: const Color(0xFFECFDF5),
+                            foregroundColor: const Color(0xFF047857),
+                          ),
+                      ],
                     ),
                   ],
                 ),
@@ -417,7 +723,7 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
               ),
               const SizedBox(width: 4),
               Text(
-                '₱${price.toStringAsFixed(0)}',
+                'PHP ${price.toStringAsFixed(0)}',
                 style: AppTheme.of(context).bodyMedium.override(
                       color: AppTheme.of(context).primary,
                       fontWeight: FontWeight.w600,
@@ -538,6 +844,97 @@ class _ProScheduleWidgetState extends State<ProScheduleWidget> {
     }
   }
 
+  Future<void> _startTmJob(String jobId) async {
+    final success = await _bookingsService.markJobInProgress(jobId);
+    if (success) {
+      await _loadScheduledJobs();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('TM job marked in progress')),
+        );
+      }
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to start TM job')),
+      );
+    }
+  }
+
+  Future<void> _requestTmHardware(String jobId) async {
+    final costController = TextEditingController(text: '350');
+    final descriptionController = TextEditingController(
+      text: 'Replacement component needed to complete the repair safely.',
+    );
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Request Hardware Approval'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: descriptionController,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                labelText: 'Description',
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: costController,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              decoration: const InputDecoration(
+                labelText: 'Additional Cost',
+                prefixText: 'Php ',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Send Request'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    final additionalCost = double.tryParse(costController.text.trim()) ?? 0;
+    final description = descriptionController.text.trim();
+    final success = await _bookingsService.requestTMHardware(
+      bookingId: jobId,
+      title: 'Hardware Parts Required',
+      description: description.isEmpty
+          ? 'Additional hardware is required to complete the job.'
+          : description,
+      additionalCost: additionalCost,
+    );
+
+    if (success) {
+      await _loadScheduledJobs();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Hardware approval request sent')),
+        );
+      }
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to send hardware request')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
         backgroundColor: const Color(0xFFF4F7FB),
@@ -569,14 +966,15 @@ class _ProScheduleWidgetState extends State<ProScheduleWidget> {
                         child: ListView.separated(
                           padding: const EdgeInsets.all(16),
                           itemCount: scheduledJobs.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 16),
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 16),
                           itemBuilder: (context, index) {
                             final job = scheduledJobs[index];
                             return _buildScheduleCard(context, job);
                           },
-                        ),
-                      ),
-      );
+                    ),
+                  ),
+              );
 
   Widget _buildScheduleCard(BuildContext context, Map<String, dynamic> job) {
     final serviceListing = job['service_listings'] as Map<String, dynamic>?;
@@ -586,8 +984,9 @@ class _ProScheduleWidgetState extends State<ProScheduleWidget> {
     final clientName =
         profile?['display_name'] ?? profile?['first_name'] ?? 'Unknown Client';
     final clientPhoto = profile?['photo_url'];
-    final serviceName =
-        serviceListing?['title'] ?? serviceListing?['name'] ?? 'Unknown Service';
+    final serviceName = serviceListing?['title'] ??
+        serviceListing?['name'] ??
+        'Unknown Service';
     final location = _bookingLocationText(address);
     final bookingDate = _parseDate(job['booking_date']) ?? DateTime.now();
     final bookingTime = job['booking_time'] ?? 'N/A';
@@ -595,6 +994,10 @@ class _ProScheduleWidgetState extends State<ProScheduleWidget> {
     final jobId = job['id'] as String?;
     final status = job['status'] as String? ?? 'accepted';
     final isCompleted = status == 'completed';
+    final isTm = _bookingsService.isTimeMaterialBooking(job);
+    final tmSubCategory = _bookingsService.tmSubCategoryTitle(job);
+    final tmStageLabel = _bookingsService.tmStageLabel(job);
+    final isInProgress = status == 'in_progress';
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -672,6 +1075,28 @@ class _ProScheduleWidgetState extends State<ProScheduleWidget> {
                             color: AppTheme.of(context).secondaryText,
                           ),
                     ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _InlineInfoChip(
+                          label: isTm ? 'TIME-MATERIAL' : 'SCHEDULED',
+                          backgroundColor: isTm
+                              ? const Color(0xFFE0F2FE)
+                              : const Color(0xFFF1F5F9),
+                          foregroundColor: isTm
+                              ? const Color(0xFF0369A1)
+                              : const Color(0xFF475569),
+                        ),
+                        if (isTm)
+                          _InlineInfoChip(
+                            label: tmSubCategory ?? tmStageLabel,
+                            backgroundColor: const Color(0xFFECFDF5),
+                            foregroundColor: const Color(0xFF047857),
+                          ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -723,7 +1148,7 @@ class _ProScheduleWidgetState extends State<ProScheduleWidget> {
               ),
               const SizedBox(width: 4),
               Text(
-                '₱${price.toStringAsFixed(0)}',
+                'PHP ${price.toStringAsFixed(0)}',
                 style: AppTheme.of(context).bodyMedium.override(
                       color: AppTheme.of(context).primary,
                       fontWeight: FontWeight.w600,
@@ -736,6 +1161,56 @@ class _ProScheduleWidgetState extends State<ProScheduleWidget> {
           Row(
             mainAxisSize: MainAxisSize.max,
             children: [
+              if (!isCompleted && isTm && !isInProgress) ...[
+                Expanded(
+                  child: Container(
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppTheme.of(context).info,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: InkWell(
+                      onTap: jobId != null ? () => _startTmJob(jobId) : null,
+                      child: Center(
+                        child: Text(
+                          'Start TM Job',
+                          style: AppTheme.of(context).bodyMedium.override(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
+              if (!isCompleted && isTm && isInProgress) ...[
+                Expanded(
+                  child: Container(
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF59E0B),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: InkWell(
+                      onTap: jobId != null
+                          ? () => _requestTmHardware(jobId)
+                          : null,
+                      child: Center(
+                        child: Text(
+                          'Request Hardware',
+                          style: AppTheme.of(context).bodyMedium.override(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
               if (!isCompleted) ...[
                 Expanded(
                   child: Container(
@@ -771,12 +1246,15 @@ class _ProScheduleWidgetState extends State<ProScheduleWidget> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: InkWell(
-                    onTap: () {
-                      // TODO: Navigate to job details
-                    },
+                    onTap: jobId == null
+                        ? null
+                        : () => context.pushNamed(
+                              BookingDetailsWidget.routeName,
+                              extra: {'bookingId': jobId},
+                            ),
                     child: Center(
                       child: Text(
-                        isCompleted ? 'Completed ✓' : 'View Details',
+                        isCompleted ? 'Completed' : 'View Details',
                         style: AppTheme.of(context).bodyMedium.override(
                               color: isCompleted
                                   ? AppTheme.of(context).success
@@ -801,12 +1279,7 @@ class _ProScheduleWidgetState extends State<ProScheduleWidget> {
                   ),
                 ),
                 child: InkWell(
-                  onTap: () {
-                    // TODO: Call client - would need phone number
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Calling client...')),
-                    );
-                  },
+                  onTap: () => _callClient(job),
                   child: Icon(
                     Icons.phone,
                     color: AppTheme.of(context).primary,
@@ -819,6 +1292,39 @@ class _ProScheduleWidgetState extends State<ProScheduleWidget> {
         ],
       ),
     );
+  }
+
+  Future<void> _callClient(Map<String, dynamic> job) async {
+    final profile = job['profiles'] as Map<String, dynamic>?;
+    final phone = (profile?['phone_number'] as String?)?.trim() ?? '';
+    if (phone.isEmpty) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Client phone number is not available for this job.'),
+        ),
+      );
+      return;
+    }
+
+    try {
+      await launchURL('tel:$phone');
+    } catch (e, stackTrace) {
+      LoggingService.error(
+        'Failed to launch client dialer',
+        tag: 'ProSchedule',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not launch phone dialer')),
+      );
+    }
   }
 }
 
@@ -877,6 +1383,126 @@ class _ProEarningsWidgetState extends State<ProEarningsWidget> {
           ?.cast<Map<String, dynamic>>() ??
       [];
 
+  Future<void> _handleCashOut() async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User not authenticated')),
+      );
+      return;
+    }
+
+    try {
+      final methods = await PaymentMethodsTable().queryRows(
+        queryFn: (q) => q.eq('user_id', userId),
+      );
+      if (!mounted) {
+        return;
+      }
+
+      final hasEwallet = methods.any((method) => method.type == 'ewallet');
+      final action = await showModalBottomSheet<String>(
+        context: context,
+        backgroundColor: Colors.transparent,
+        builder: (context) => Container(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 42,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD6DBE1),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  'Cash Out Setup',
+                  style: AppTheme.of(context).titleMedium.override(
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  hasEwallet
+                      ? 'Your payout wallet is ready to review. Automated provider cash-out is not enabled yet, but you can manage the wallet that will be used for payouts.'
+                      : 'Link an e-wallet first so your provider payout destination is ready when cash-out processing is enabled.',
+                  style: AppTheme.of(context).bodyMedium.override(
+                        color: AppTheme.of(context).secondaryText,
+                      ),
+                ),
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () =>
+                        Navigator.of(context).pop(hasEwallet ? 'manage' : 'add'),
+                    child: Text(
+                      hasEwallet ? 'Manage Payout Wallet' : 'Add Payout Wallet',
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop('later'),
+                    child: const Text('Maybe Later'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      if (action == 'add') {
+        await context.pushNamed(AddEwalletPaymentWidget.routeName);
+        return;
+      }
+
+      if (action == 'manage') {
+        await context.pushNamed(PaymentMethodsWidget.routeName);
+      }
+    } catch (e, stackTrace) {
+      LoggingService.error(
+        'Failed to open cash-out setup',
+        tag: 'ProEarnings',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open cash-out setup')),
+      );
+    }
+  }
+
+  double get _weeklyDelta => thisWeek - lastWeek;
+  bool get _isWeeklyTrendPositive => _weeklyDelta >= 0;
+
+  String _currency(double amount) => 'PHP ${amount.toStringAsFixed(2)}';
+
   @override
   Widget build(BuildContext context) => Scaffold(
       backgroundColor: const Color(0xFFF4F7FB),
@@ -890,290 +1516,549 @@ class _ProEarningsWidgetState extends State<ProEarningsWidget> {
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _loadEarnings,
-              child: SingleChildScrollView(
+              child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    // Balance Card
-                    Padding(
-                      padding:
-                          const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 16),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsetsDirectional.fromSTEB(
-                            24, 24, 24, 24),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              AppTheme.of(context).primary,
-                              AppTheme.of(context)
-                                  .primary
-                                  .withValues(alpha: 0.8),
-                            ],
-                            begin: AlignmentDirectional.topStart,
-                            end: AlignmentDirectional.bottomEnd,
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Total Earnings',
-                              style: AppTheme.of(context).bodyMedium.override(
-                                    color: Colors.white70,
-                                  ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '₱${totalEarnings.toStringAsFixed(2)}',
-                              style: AppTheme.of(context).displaySmall.override(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '$totalJobs jobs completed',
-                              style: AppTheme.of(context).bodySmall.override(
-                                    color: Colors.white70,
-                                  ),
-                            ),
-                            const SizedBox(height: 16),
-                            Row(
-                              mainAxisSize: MainAxisSize.max,
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    height: 48,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: InkWell(
-                                      onTap: () {
-                                        // TODO: Navigate to cash out page
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content: Text(
-                                                  'Cash out feature coming soon')),
-                                        );
-                                      },
-                                      child: Center(
-                                        child: Text(
-                                          'Cash Out',
-                                          style: AppTheme.of(context)
-                                              .bodyMedium
-                                              .override(
-                                                color: AppTheme.of(context)
-                                                    .primary,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    // Weekly Summary
-                    Padding(
-                      padding:
-                          const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 16),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsetsDirectional.fromSTEB(
-                            20, 20, 20, 20),
-                        decoration: BoxDecoration(
-                          color: AppTheme.of(context).secondaryBackground,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppTheme.of(context)
-                                .primaryText
-                                .withValues(alpha: 0.1),
-                            width: 1,
-                          ),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'This Week',
-                              style: AppTheme.of(context).titleMedium.override(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
-                            const SizedBox(height: 16),
-                            Row(
-                              mainAxisSize: MainAxisSize.max,
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Earnings',
-                                      style: AppTheme.of(context)
-                                          .bodySmall
-                                          .override(
-                                            color: AppTheme.of(context)
-                                                .secondaryText,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      '₱${thisWeek.toStringAsFixed(2)}',
-                                      style: AppTheme.of(context)
-                                          .headlineMedium
-                                          .override(
-                                            color: AppTheme.of(context).success,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                                Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      'vs Last Week',
-                                      style: AppTheme.of(context)
-                                          .bodySmall
-                                          .override(
-                                            color: AppTheme.of(context)
-                                                .secondaryText,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.trending_up,
-                                          size: 16,
-                                          color: AppTheme.of(context).success,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          '+₱${(thisWeek - lastWeek).toStringAsFixed(2)}',
-                                          style: AppTheme.of(context)
-                                              .bodyMedium
-                                              .override(
-                                                color: AppTheme.of(context)
-                                                    .success,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    // Recent Transactions
-                    Padding(
-                      padding:
-                          const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 16),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.max,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Recent Transactions',
-                            style: AppTheme.of(context).titleMedium.override(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                          const SizedBox(height: 16),
-                          ListView.separated(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: recentTransactions.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(height: 12),
-                            itemBuilder: (context, index) {
-                              final transaction = recentTransactions[index];
-                              return _buildTransactionCard(
-                                  context, transaction);
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                  ],
-                ),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+                children: [
+                  _buildEarningsHero(context),
+                  const SizedBox(height: 16),
+                  _buildEarningsHighlights(context),
+                  const SizedBox(height: 16),
+                  _buildWeeklySummaryCard(context),
+                  const SizedBox(height: 16),
+                  _buildRecentTransactionsSection(context),
+                ],
               ),
             ));
-}
 
-Widget _buildTransactionCard(
-    BuildContext context, Map<String, dynamic> transaction) {
-  final isEarning = transaction['type'] == 'earning';
-
-  return Container(
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: AppTheme.of(context).secondaryBackground,
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(
-        color: AppTheme.of(context).primaryText.withValues(alpha: 0.1),
-        width: 1,
-      ),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.max,
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                transaction['description'],
-                style: AppTheme.of(context).bodyMedium.override(
-                      fontWeight: FontWeight.w600,
-                    ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+  Widget _buildEarningsHero(BuildContext context) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [
+              Color(0xFF0E6B58),
+              Color(0xFF169873),
+              Color(0xFF69C8A1),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x220E6B58),
+              blurRadius: 24,
+              offset: Offset(0, 14),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Total Earnings',
+              style: AppTheme.of(context).bodyMedium.override(
+                    color: Colors.white.withValues(alpha: 0.78),
+                  ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _currency(totalEarnings),
+              style: AppTheme.of(context).displaySmall.override(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '$totalJobs jobs completed',
+              style: AppTheme.of(context).bodySmall.override(
+                    color: Colors.white.withValues(alpha: 0.78),
+                  ),
+            ),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                Expanded(
+                  child: _MiniHeroMetric(
+                    label: 'This month',
+                    value: _currency(thisMonth),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _MiniHeroMetric(
+                    label: 'Last month',
+                    value: _currency(lastMonth),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: _handleCashOut,
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: AppTheme.of(context).primary,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+                child: Text(
+                  'Cash Out Setup',
+                  style: AppTheme.of(context).labelLarge.override(
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.of(context).primary,
+                      ),
+                ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                transaction['date'],
-                style: AppTheme.of(context).bodySmall.override(
+            ),
+          ],
+        ),
+      );
+
+  Widget _buildEarningsHighlights(BuildContext context) => Row(
+        children: [
+          Expanded(
+            child: _DashboardStatCard(
+              title: 'This Week',
+              value: _currency(thisWeek),
+              subtitle: 'Current 7-day earnings',
+              icon: Icons.calendar_view_week_rounded,
+              color: const Color(0xFF2563EB),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _DashboardStatCard(
+              title: 'Weekly Delta',
+              value:
+                  '${_isWeeklyTrendPositive ? '+' : '-'}${_currency(_weeklyDelta.abs())}',
+              subtitle: _isWeeklyTrendPositive
+                  ? 'Ahead of last week'
+                  : 'Behind last week',
+              icon: _isWeeklyTrendPositive
+                  ? Icons.trending_up_rounded
+                  : Icons.trending_down_rounded,
+              color: _isWeeklyTrendPositive
+                  ? const Color(0xFF16A34A)
+                  : const Color(0xFFEF4444),
+            ),
+          ),
+        ],
+      );
+
+  Widget _buildWeeklySummaryCard(BuildContext context) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x12000000),
+              blurRadius: 18,
+              offset: Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Weekly Summary',
+              style: AppTheme.of(context).titleMedium.override(
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF14213D),
+                  ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Compare this week against your recent earning pace.',
+              style: AppTheme.of(context).bodySmall.override(
+                    color: const Color(0xFF64748B),
+                  ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _SummaryValueTile(
+                    label: 'This week',
+                    value: _currency(thisWeek),
+                    valueColor: AppTheme.of(context).success,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _SummaryValueTile(
+                    label: 'Last week',
+                    value: _currency(lastWeek),
+                    valueColor: const Color(0xFF64748B),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: (_isWeeklyTrendPositive
+                        ? const Color(0xFFECFDF3)
+                        : const Color(0xFFFEF2F2))
+                    .withValues(alpha: 0.95),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    _isWeeklyTrendPositive
+                        ? Icons.trending_up_rounded
+                        : Icons.trending_down_rounded,
+                    color: _isWeeklyTrendPositive
+                        ? const Color(0xFF027A48)
+                        : const Color(0xFFB42318),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      _isWeeklyTrendPositive
+                          ? 'You earned ${_currency(_weeklyDelta.abs())} more than last week.'
+                          : 'You earned ${_currency(_weeklyDelta.abs())} less than last week.',
+                      style: AppTheme.of(context).bodySmall.override(
+                            color: _isWeeklyTrendPositive
+                                ? const Color(0xFF027A48)
+                                : const Color(0xFFB42318),
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _buildRecentTransactionsSection(BuildContext context) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x12000000),
+              blurRadius: 18,
+              offset: Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'Recent Transactions',
+                  style: AppTheme.of(context).titleMedium.override(
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF14213D),
+                      ),
+                ),
+                const Spacer(),
+                Text(
+                  '${recentTransactions.length} items',
+                  style: AppTheme.of(context).bodySmall.override(
+                        color: const Color(0xFF64748B),
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'A quick view of your latest completed-job earnings.',
+              style: AppTheme.of(context).bodySmall.override(
+                    color: const Color(0xFF64748B),
+                  ),
+            ),
+            const SizedBox(height: 16),
+            if (recentTransactions.isEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(22),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.receipt_long_outlined,
+                      size: 36,
                       color: AppTheme.of(context).secondaryText,
                     ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'No transactions yet',
+                      style: AppTheme.of(context).titleSmall.override(
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF14213D),
+                          ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Completed jobs will start appearing here as your earning history grows.',
+                      textAlign: TextAlign.center,
+                      style: AppTheme.of(context).bodySmall.override(
+                            color: const Color(0xFF64748B),
+                          ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              ...recentTransactions.map(
+                (transaction) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _buildTransactionCard(context, transaction),
+                ),
               ),
-            ],
+          ],
+        ),
+      );
+
+  Widget _buildTransactionCard(
+    BuildContext context,
+    Map<String, dynamic> transaction,
+  ) {
+    final isEarning = transaction['type'] == 'earning';
+    final amount = (transaction['amount'] as num?)?.toDouble() ?? 0.0;
+    final serviceName =
+        (transaction['serviceName'] ?? transaction['description'] ?? 'Transaction')
+            .toString();
+    final clientName = (transaction['clientName'] ?? '').toString().trim();
+    final date = (transaction['date'] ?? 'Unknown date').toString();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: (isEarning
+                      ? AppTheme.of(context).success
+                      : AppTheme.of(context).error)
+                  .withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(
+              isEarning
+                  ? Icons.south_west_rounded
+                  : Icons.north_east_rounded,
+              color: isEarning
+                  ? AppTheme.of(context).success
+                  : AppTheme.of(context).error,
+            ),
           ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  serviceName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.of(context).titleSmall.override(
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF14213D),
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  clientName.isEmpty ? date : '$clientName • $date',
+                  style: AppTheme.of(context).bodySmall.override(
+                        color: const Color(0xFF64748B),
+                      ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            '${isEarning ? '+' : '-'}${_currency(amount.abs())}',
+            style: AppTheme.of(context).titleSmall.override(
+                  color: isEarning
+                      ? AppTheme.of(context).success
+                      : AppTheme.of(context).error,
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniHeroMetric extends StatelessWidget {
+  const _MiniHeroMetric({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(18),
         ),
-        Text(
-          '${isEarning ? '+' : ''}₱${transaction['amount'].toStringAsFixed(2)}',
-          style: AppTheme.of(context).bodyLarge.override(
-                color: isEarning
-                    ? AppTheme.of(context).success
-                    : AppTheme.of(context).error,
-                fontWeight: FontWeight.bold,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: AppTheme.of(context).bodySmall.override(
+                    color: Colors.white.withValues(alpha: 0.78),
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              value,
+              style: AppTheme.of(context).titleSmall.override(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+          ],
+        ),
+      );
+}
+
+class _DashboardStatCard extends StatelessWidget {
+  const _DashboardStatCard({
+    required this.title,
+    required this.value,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+  });
+
+  final String title;
+  final String value;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x12000000),
+              blurRadius: 18,
+              offset: Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
               ),
+              child: Icon(icon, color: color),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              title,
+              style: AppTheme.of(context).bodySmall.override(
+                    color: const Color(0xFF64748B),
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              value,
+              style: AppTheme.of(context).titleMedium.override(
+                    color: const Color(0xFF14213D),
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: AppTheme.of(context).labelSmall.override(
+                    color: const Color(0xFF94A3B8),
+                  ),
+            ),
+          ],
         ),
-      ],
-    ),
-  );
+      );
+}
+
+class _SummaryValueTile extends StatelessWidget {
+  const _SummaryValueTile({
+    required this.label,
+    required this.value,
+    required this.valueColor,
+  });
+
+  final String label;
+  final String value;
+  final Color valueColor;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: AppTheme.of(context).bodySmall.override(
+                    color: const Color(0xFF64748B),
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              value,
+              style: AppTheme.of(context).titleSmall.override(
+                    color: valueColor,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+          ],
+        ),
+      );
 }
 
 class ProMessagesWidget extends StatefulWidget {
@@ -1184,122 +2069,96 @@ class ProMessagesWidget extends StatefulWidget {
 }
 
 class _ProMessagesWidgetState extends State<ProMessagesWidget> {
-  List<Map<String, dynamic>> chatRooms = [];
-  bool isLoading = true;
+  List<Map<String, dynamic>> _chatRooms = const [];
+  bool _isLoading = true;
   StreamSubscription? _chatRoomsSubscription;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loadChatRooms();
     _subscribeToChatRooms();
+    _searchController.addListener(() {
+      if (mounted) {
+        safeSetState(() {});
+      }
+    });
   }
 
   @override
   void dispose() {
     _chatRoomsSubscription?.cancel();
+    _searchController.dispose();
     super.dispose();
   }
 
   Future<void> _loadChatRooms() async {
-    setState(() => isLoading = true);
+    safeSetState(() => _isLoading = true);
     try {
-      // Try REST API first via ChatService
-      try {
-        final apiRooms = await ChatService.instance.getChatRooms();
-        if (apiRooms.isNotEmpty) {
-          if (mounted) {
-            setState(() {
-              chatRooms = apiRooms;
-              isLoading = false;
-            });
-          }
-          return;
-        }
-      } catch (_) {
-        // ignore and fall back to Supabase
-      }
       final userId = Supabase.instance.client.auth.currentUser?.id;
       if (userId == null) {
-        setState(() => isLoading = false);
+        safeSetState(() {
+          _chatRooms = const [];
+          _isLoading = false;
+        });
         return;
       }
 
-      // Get the service_listing IDs for this pro user
-      final serviceListingsResponse = await Supabase.instance.client
-          .from('service_listings')
-          .select('id')
-          .eq('provider', userId);
-
-      final serviceIds = (serviceListingsResponse as List)
-          .map((sl) => sl['id'] as int)
-          .toList();
-
-      if (serviceIds.isEmpty) {
-        if (mounted) {
-          setState(() {
-            chatRooms = [];
-            isLoading = false;
-          });
-        }
-        return;
+      var rooms = <Map<String, dynamic>>[];
+      try {
+        final apiRooms = await ChatService.instance.getChatRooms();
+        rooms = apiRooms
+            .where(
+              (room) => _stringValue(room['provider_id']) == userId,
+            )
+            .map(_normalizeChatRoom)
+            .whereType<Map<String, dynamic>>()
+            .toList();
+      } catch (_) {
+        rooms = const [];
       }
 
-      // Fetch chat rooms for any of this pro's services
-      final chatRoomsResponse = await Supabase.instance.client
-          .from('chat_rooms')
-          .select('*')
-          .filter('provider_id', 'in', serviceIds)
-          .order('updated_at', ascending: false);
+      if (rooms.isEmpty) {
+        final chatRoomsResponse = await Supabase.instance.client
+            .from('chat_rooms')
+            .select('''
+              *,
+              profiles!chat_rooms_client_id_fkey(
+                id,
+                display_name,
+                first_name,
+                photo_url
+              )
+            ''')
+            .eq('provider_id', userId)
+            .order('updated_at', ascending: false);
 
-      final rooms = List<Map<String, dynamic>>.from(chatRoomsResponse);
-
-      // Fetch customer profiles and last messages separately
-      for (final room in rooms) {
-        final clientId = room['client_id'];
-        final lastMessageId = room['last_message_id'];
-
-        // Fetch customer profile
-        if (clientId != null) {
-          try {
-            final profileResponse = await Supabase.instance.client
-                .from('profiles')
-                .select('id, display_name, first_name, photo_url')
-                .eq('id', clientId)
-                .maybeSingle();
-            room['customer'] = profileResponse;
-          } catch (profileError) {
-            room['customer'] = null;
-          }
-        }
-
-        // Fetch last message
-        if (lastMessageId != null) {
-          try {
-            final messageResponse = await Supabase.instance.client
-                .from('chat_messages')
-                .select('content, created_at')
-                .eq('id', lastMessageId)
-                .maybeSingle();
-            room['last_message'] = messageResponse;
-          } catch (messageError) {
-            room['last_message'] = null;
-          }
-        }
+        rooms = List<Map<String, dynamic>>.from(chatRoomsResponse)
+            .map(_normalizeChatRoom)
+            .whereType<Map<String, dynamic>>()
+            .toList();
       }
+
+      rooms.sort(_sortChatRoomsByActivity);
 
       if (mounted) {
-        setState(() {
-          chatRooms = rooms;
-          isLoading = false;
+        safeSetState(() {
+          _chatRooms = rooms;
+          _isLoading = false;
         });
       }
-    } catch (e) {
-      LoggingService.error('Error loading chat rooms: $e', tag: 'ProMessages');
+    } catch (e, stackTrace) {
+      LoggingService.error(
+        'Error loading chat rooms',
+        tag: 'ProMessages',
+        error: e,
+        stackTrace: stackTrace,
+      );
       if (mounted) {
-        setState(() => isLoading = false);
+        safeSetState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading messages: $e')),
+          const SnackBar(content: Text('Error loading messages')),
         );
       }
     }
@@ -1341,87 +2200,536 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
     return '${dateTime.month}/${dateTime.day}/${dateTime.year}';
   }
 
+  Map<String, dynamic>? _normalizeChatRoom(Map<String, dynamic> room) {
+    final roomId = _stringValue(room['id']);
+    if (roomId == null) {
+      return null;
+    }
+
+    final customer = _normalizeCustomer(room);
+    final lastMessage = _normalizeLastMessage(room);
+    return <String, dynamic>{
+      ...room,
+      'id': roomId,
+      'customer': customer,
+      'last_message': lastMessage,
+      'updated_at': _stringValue(room['updated_at']),
+      'unread_provider_count': _readUnreadCount(room),
+    };
+  }
+
+  Map<String, dynamic>? _normalizeCustomer(Map<String, dynamic> room) {
+    final nested = room['customer'] ??
+        room['profiles'] ??
+        room['client'] ??
+        room['client_profile'] ??
+        room['profiles!chat_rooms_client_id_fkey'];
+    if (nested is Map<String, dynamic>) {
+      return nested;
+    }
+    if (nested is Map) {
+      return nested.map((key, value) => MapEntry('$key', value));
+    }
+
+    final clientId = _stringValue(room['client_id']) ?? _stringValue(room['other_user_id']);
+    final displayName = _stringValue(room['client_name']) ??
+        _stringValue(room['other_user_name']) ??
+        _stringValue(room['customer_name']) ??
+        _stringValue(room['display_name']) ??
+        'Customer';
+    final photoUrl = _stringValue(room['client_photo']) ??
+        _stringValue(room['other_user_photo']) ??
+        _stringValue(room['customer_photo']) ??
+        _stringValue(room['photo_url']);
+    return <String, dynamic>{
+      'id': clientId,
+      'display_name': displayName,
+      'photo_url': photoUrl,
+    };
+  }
+
+  Map<String, dynamic>? _normalizeLastMessage(Map<String, dynamic> room) {
+    final nested = room['last_message'] ?? room['lastMessage'];
+    if (nested is Map<String, dynamic>) {
+      return _normalizedMessageMap(nested);
+    }
+    if (nested is Map) {
+      return _normalizedMessageMap(
+        nested.map((key, value) => MapEntry('$key', value)),
+      );
+    }
+
+    final content = _stringValue(room['last_message_text']) ??
+        _stringValue(room['message_text']) ??
+        _stringValue(room['content']);
+    final createdAt = _stringValue(room['last_message_at']) ??
+        _stringValue(room['last_message_created_at']) ??
+        _stringValue(room['updated_at']);
+
+    if (content == null && createdAt == null) {
+      return null;
+    }
+    return <String, dynamic>{
+      'content': content,
+      'created_at': createdAt,
+    };
+  }
+
+  Map<String, dynamic> _normalizedMessageMap(Map<String, dynamic> map) =>
+      <String, dynamic>{
+        'content': _stringValue(map['content']) ??
+            _stringValue(map['message_text']) ??
+            _stringValue(map['body']),
+        'created_at': _stringValue(map['created_at']) ??
+            _stringValue(map['sent_at']) ??
+            _stringValue(map['updated_at']),
+      };
+
+  int _readUnreadCount(Map<String, dynamic> room) {
+    final raw = room['unread_provider_count'] ??
+        room['unread_count'] ??
+        room['unread'];
+    if (raw is int) {
+      return raw;
+    }
+    if (raw is num) {
+      return raw.toInt();
+    }
+    return 0;
+  }
+
+  String? _stringValue(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+    final text = value.toString().trim();
+    return text.isEmpty ? null : text;
+  }
+
+  DateTime? _parseRoomDate(String? value) =>
+      value == null ? null : DateTime.tryParse(value);
+
+  int _sortChatRoomsByActivity(
+    Map<String, dynamic> a,
+    Map<String, dynamic> b,
+  ) {
+    final aLast = _parseRoomDate(
+      _stringValue((a['last_message'] as Map<String, dynamic>?)?['created_at']) ??
+          _stringValue(a['updated_at']),
+    );
+    final bLast = _parseRoomDate(
+      _stringValue((b['last_message'] as Map<String, dynamic>?)?['created_at']) ??
+          _stringValue(b['updated_at']),
+    );
+    if (aLast == null && bLast == null) {
+      return 0;
+    }
+    if (aLast == null) {
+      return 1;
+    }
+    if (bLast == null) {
+      return -1;
+    }
+    return bLast.compareTo(aLast);
+  }
+
   void _navigateToChat(Map<String, dynamic> chatRoom) {
     final customer = chatRoom['customer'] as Map<String, dynamic>?;
-    if (customer == null) {
+    final roomId = _stringValue(chatRoom['id']);
+    if (customer == null || roomId == null) {
       return;
     }
 
     context.pushNamed(
-      'ChatPage',
-      queryParameters: {
-        'chatRoomId': chatRoom['id'].toString(),
-        'otherUserId': customer['id'].toString(),
-        'otherUserName':
+      ChatPageWidget.routeName,
+      pathParameters: {'roomId': roomId},
+      extra: <String, dynamic>{
+        'providerName':
             customer['display_name'] ?? customer['first_name'] ?? 'Customer',
-        'otherUserPhoto': customer['photo_url']?.toString() ?? '',
+        'providerPhoto': customer['photo_url']?.toString(),
       },
     );
   }
 
+  List<Map<String, dynamic>> get _filteredChatRooms {
+    final query = _searchController.text.trim().toLowerCase();
+    if (query.isEmpty) {
+      return _chatRooms;
+    }
+
+    return _chatRooms.where((chatRoom) {
+      final customer = chatRoom['customer'] as Map<String, dynamic>?;
+      final customerName =
+          customer?['display_name'] ?? customer?['first_name'] ?? 'Customer';
+      final lastMessage = chatRoom['last_message'] as Map<String, dynamic>?;
+
+      return customerName.toString().toLowerCase().contains(query) ||
+          (lastMessage?['content']?.toString().toLowerCase().contains(query) ??
+              false);
+    }).toList();
+  }
+
+  int get _unreadConversations => _chatRooms.fold<int>(
+        0,
+        (total, room) => total + ((room['unread_provider_count'] ?? 0) as int),
+      );
+
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'Messages',
-            style: AppTheme.of(context).titleLarge.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        backgroundColor: const Color(0xFFF4F7FB),
+        body: SafeArea(
+          child: RefreshIndicator(
+            color: AppTheme.of(context).primary,
+            onRefresh: _loadChatRooms,
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
+              ),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 14, 20, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Messages',
+                                    style: AppTheme.of(context)
+                                        .headlineSmall
+                                        .override(
+                                          font: GoogleFonts.poppins(
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                          color: const Color(0xFF0F172A),
+                                        ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Keep customer conversations responsive and professional.',
+                                    style:
+                                        AppTheme.of(context).bodySmall.override(
+                                              font: GoogleFonts.poppins(),
+                                              color: const Color(0xFF64748B),
+                                            ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            IconButton.filledTonal(
+                              onPressed: _loadChatRooms,
+                              style: IconButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: AppTheme.of(context).primary,
+                              ),
+                              icon: const Icon(Icons.refresh_rounded),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 18),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(22),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [
+                                Color(0xFF0F172A),
+                                Color(0xFF134E4A),
+                                Color(0xFF0F8A6C),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(28),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x200F172A),
+                                blurRadius: 28,
+                                offset: Offset(0, 16),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 54,
+                                    height: 54,
+                                    decoration: BoxDecoration(
+                                      color:
+                                          Colors.white.withValues(alpha: 0.16),
+                                      borderRadius: BorderRadius.circular(18),
+                                    ),
+                                    child: const Icon(
+                                      Icons.chat_bubble_rounded,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Text(
+                                      'Reply faster, reduce missed leads, and keep jobs moving.',
+                                      style: AppTheme.of(context)
+                                          .titleMedium
+                                          .override(
+                                            font: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                            color: Colors.white,
+                                          ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _buildMessageStat(
+                                      context,
+                                      label: 'Threads',
+                                      value: _chatRooms.length.toString(),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: _buildMessageStat(
+                                      context,
+                                      label: 'Unread',
+                                      value: _unreadConversations.toString(),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(22),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x0F000000),
+                                blurRadius: 18,
+                                offset: Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          child: TextFormField(
+                            controller: _searchController,
+                            decoration: InputDecoration(
+                              hintText: 'Search customer conversations',
+                              prefixIcon: const Icon(Icons.search_rounded),
+                              suffixIcon: _searchController.text.isEmpty
+                                  ? null
+                                  : IconButton(
+                                      onPressed: _searchController.clear,
+                                      icon: const Icon(Icons.close_rounded),
+                                    ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(22),
+                                borderSide: BorderSide.none,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(22),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(22),
+                                borderSide: BorderSide(
+                                  color: AppTheme.of(context)
+                                      .primary
+                                      .withValues(alpha: 0.22),
+                                  width: 1.4,
+                                ),
+                              ),
+                              filled: true,
+                              fillColor: Colors.white,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 18,
+                                vertical: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Recent conversations',
+                                style: AppTheme.of(context)
+                                    .titleMedium
+                                    .override(
+                                      font: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                      color: const Color(0xFF0F172A),
+                                    ),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 7,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE8F7F2),
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Text(
+                                '${_filteredChatRooms.length} threads',
+                                style: AppTheme.of(context).labelSmall.override(
+                                      font: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                      color: const Color(0xFF0F8A6C),
+                                    ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                    ),
+                  ),
                 ),
+                if (_isLoading)
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                    sliver: SliverList.separated(
+                      itemCount: 4,
+                      itemBuilder: (_, __) => Container(
+                        height: 96,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                      ),
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    ),
+                  )
+                else if (_filteredChatRooms.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: _buildEmptyState(),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                    sliver: SliverList.separated(
+                      itemCount: _filteredChatRooms.length,
+                      itemBuilder: (context, index) => _buildChatRoomCard(
+                        context,
+                        _filteredChatRooms[index],
+                      ),
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    ),
+                  ),
+              ],
+            ),
           ),
-          backgroundColor: AppTheme.of(context).primaryBackground,
-          elevation: 0,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _loadChatRooms,
+        ),
+      );
+
+  Widget _buildMessageStat(
+    BuildContext context, {
+    required String label,
+    required String value,
+  }) =>
+      Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: AppTheme.of(context).bodySmall.override(
+                    font: GoogleFonts.poppins(),
+                    color: Colors.white.withValues(alpha: 0.82),
+                  ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              value,
+              style: AppTheme.of(context).titleLarge.override(
+                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    color: Colors.white,
+                  ),
             ),
           ],
         ),
-        body: isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : RefreshIndicator(
-                onRefresh: _loadChatRooms,
-                child: chatRooms.isEmpty
-                    ? _buildEmptyState()
-                    : ListView.separated(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: chatRooms.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (context, index) {
-                          final chatRoom = chatRooms[index];
-                          return _buildChatRoomCard(context, chatRoom);
-                        },
-                      ),
-              ),
       );
 
   Widget _buildEmptyState() => Center(
         child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.chat_bubble_outline,
-                size: 64,
-                color: AppTheme.of(context).secondaryText,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'No messages yet',
-                style: AppTheme.of(context).titleMedium.override(
-                      color: AppTheme.of(context).secondaryText,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Your conversations with customers will appear here',
-                style: AppTheme.of(context).bodyMedium.override(
-                      color: AppTheme.of(context).secondaryText,
-                    ),
-                textAlign: TextAlign.center,
-              ),
-            ],
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(28),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x12000000),
+                  blurRadius: 18,
+                  offset: Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 68,
+                  height: 68,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEAF6F2),
+                    borderRadius: BorderRadius.circular(22),
+                  ),
+                  child: Icon(
+                    Icons.chat_bubble_outline_rounded,
+                    size: 32,
+                    color: AppTheme.of(context).primary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  _searchController.text.isEmpty
+                      ? 'No messages yet'
+                      : 'No conversations matched',
+                  style: AppTheme.of(context).titleMedium.override(
+                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        color: const Color(0xFF0F172A),
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _searchController.text.isEmpty
+                      ? 'Customer conversations will appear here as soon as new leads or active bookings open a thread.'
+                      : 'Try a different customer name or keyword.',
+                  style: AppTheme.of(context).bodyMedium.override(
+                        font: GoogleFonts.poppins(),
+                        color: const Color(0xFF64748B),
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -1434,9 +2742,10 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
     final customerName =
         customer?['display_name'] ?? customer?['first_name'] ?? 'Customer';
     final customerPhoto = customer?['photo_url'];
-    final lastMessageText = lastMessage?['content'] ?? 'No messages yet';
+    final lastMessageText =
+        lastMessage?['content'] ?? chatRoom['last_message_text'] ?? 'No messages yet';
     final lastMessageTime = lastMessage?['created_at'] != null
-        ? DateTime.parse(lastMessage!['created_at'])
+        ? DateTime.tryParse(lastMessage!['created_at'].toString())
         : null;
     final unreadCount = chatRoom['unread_provider_count'] ?? 0;
 
@@ -1445,23 +2754,23 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppTheme.of(context).secondaryBackground,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppTheme.of(context).primaryText.withValues(alpha: 0.1),
-            width: 1,
-          ),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x12000000),
+              blurRadius: 18,
+              offset: Offset(0, 10),
+            ),
+          ],
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Container(
-              width: 60,
-              height: 60,
+              width: 58,
+              height: 58,
               decoration: BoxDecoration(
-                color: AppTheme.of(context).primary,
+                color: AppTheme.of(context).primary.withValues(alpha: 0.12),
                 image: customerPhoto != null
                     ? DecorationImage(
                         fit: BoxFit.cover,
@@ -1471,64 +2780,101 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
                 shape: BoxShape.circle,
               ),
               child: customerPhoto == null
-                  ? const Icon(Icons.person, color: Colors.white, size: 30)
+                  ? Icon(
+                      Icons.person,
+                      color: AppTheme.of(context).primary,
+                      size: 30,
+                    )
                   : null,
             ),
             Expanded(
               child: Padding(
                 padding: const EdgeInsetsDirectional.fromSTEB(12, 0, 12, 0),
                 child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      customerName,
-                      style: AppTheme.of(context).bodyLarge.override(
-                            fontWeight: FontWeight.w600,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            customerName,
+                            style: AppTheme.of(context).bodyLarge.override(
+                                  font: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                  color: const Color(0xFF0F172A),
+                                ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _formatTime(lastMessageTime),
+                          style: AppTheme.of(context).bodySmall.override(
+                                font: GoogleFonts.poppins(),
+                                color: const Color(0xFF94A3B8),
+                              ),
+                        ),
+                      ],
                     ),
+                    const SizedBox(height: 6),
                     Text(
                       lastMessageText,
                       style: AppTheme.of(context).bodyMedium.override(
-                            color: AppTheme.of(context).secondaryText,
-                            fontSize: 14,
+                            font: GoogleFonts.poppins(),
+                            color: const Color(0xFF64748B),
                           ),
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        'Customer',
+                        style: AppTheme.of(context).labelSmall.override(
+                              font: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w700,
+                              ),
+                              color: const Color(0xFF475569),
+                            ),
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  _formatTime(lastMessageTime),
-                  style: AppTheme.of(context).bodySmall.override(
-                        color: const Color(0xFF767676),
-                      ),
+            const SizedBox(width: 8),
+            if (unreadCount > 0)
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppTheme.of(context).primary,
+                  borderRadius: BorderRadius.circular(999),
                 ),
-                if (unreadCount > 0)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppTheme.of(context).primary,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      unreadCount.toString(),
-                      style: AppTheme.of(context).bodySmall.override(
-                            color: Colors.white,
-                            fontSize: 10,
-                          ),
-                    ),
+                child: Text(
+                  unreadCount.toString(),
+                  style: AppTheme.of(context).labelSmall.override(
+                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        color: Colors.white,
                   ),
-              ],
-            ),
+                ),
+              ),
+            if (unreadCount <= 0)
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 16,
+                color: AppTheme.of(context).secondaryText,
+              ),
           ],
         ),
       ),
@@ -1550,6 +2896,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
   double hourlyRate = 500;
   final TextEditingController _rateController =
       TextEditingController(text: '500');
+  bool _isSavingRate = false;
 
   @override
   void initState() {
@@ -1564,11 +2911,15 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
   }
 
   Future<void> _loadProfile() async {
-    setState(() => isLoading = true);
+    if (mounted) {
+      setState(() => isLoading = true);
+    }
     try {
       final userId = Supabase.instance.client.auth.currentUser?.id;
       if (userId == null) {
-        setState(() => isLoading = false);
+        if (mounted) {
+          setState(() => isLoading = false);
+        }
         return;
       }
 
@@ -1578,14 +2929,23 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
           .eq('id', userId)
           .single();
 
+      if (!mounted) {
+        return;
+      }
+
       setState(() {
         profileData = response;
-        isAvailable = response['is_available'] ?? true;
+        isAvailable = response['is_available'] as bool? ?? true;
         hourlyRate = (response['hourly_rate'] as num?)?.toDouble() ?? 500.0;
         _rateController.text = hourlyRate.toStringAsFixed(0);
         isLoading = false;
       });
     } catch (e) {
+      LoggingService.error('Error loading provider profile: $e',
+          tag: 'ProProfile');
+      if (!mounted) {
+        return;
+      }
       setState(() => isLoading = false);
     }
   }
@@ -1601,19 +2961,80 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
           .from('profiles')
           .update({'is_available': value}).eq('id', userId);
 
+      if (!mounted) {
+        return;
+      }
+
       setState(() => isAvailable = value);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            value
+                ? 'You are live and visible to customers.'
+                : 'You are paused for new requests.',
+          ),
+        ),
+      );
     } catch (e) {
+      LoggingService.error('Error updating provider availability: $e',
+          tag: 'ProProfile');
       if (!mounted) {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating availability: $e')),
+        const SnackBar(content: Text('Unable to update availability right now')),
+      );
+    }
+  }
+
+  Future<void> _saveHourlyRate() async {
+    final parsedRate = double.tryParse(_rateController.text.trim());
+    if (parsedRate == null || parsedRate <= 0) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a valid hourly rate')),
+      );
+      return;
+    }
+
+    try {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) {
+        return;
+      }
+
+      setState(() => _isSavingRate = true);
+      await Supabase.instance.client
+          .from('profiles')
+          .update({'hourly_rate': parsedRate}).eq('id', userId);
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        hourlyRate = parsedRate;
+        _isSavingRate = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Hourly rate updated')),
+      );
+    } catch (e) {
+      LoggingService.error('Error updating provider hourly rate: $e',
+          tag: 'ProProfile');
+      if (!mounted) {
+        return;
+      }
+      setState(() => _isSavingRate = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to update hourly rate right now')),
       );
     }
   }
 
   Future<void> _logout() async {
-    // Show confirmation dialog
     final shouldLogout = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -1643,7 +3064,6 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
       ),
     );
 
-    // If user cancelled, don't logout
     if (shouldLogout != true) {
       return;
     }
@@ -1654,11 +3074,12 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
         context.go('/');
       }
     } catch (e) {
+      LoggingService.error('Error logging out provider: $e', tag: 'ProProfile');
       if (!mounted) {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error logging out: $e')),
+        const SnackBar(content: Text('Unable to log out right now')),
       );
     }
   }
@@ -1669,170 +3090,224 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
         appBar: _buildDashboardAppBar(
           context,
           title: 'Profile',
-          subtitle: 'Manage your provider presence, pricing, and availability.',
+          subtitle:
+              'Manage your provider presence, pricing, service area, and trust signals.',
           onRefresh: _loadProfile,
         ),
         body: isLoading
             ? const Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-                child: Column(
+            : RefreshIndicator(
+                onRefresh: _loadProfile,
+                child: SingleChildScrollView(
+                  child: Column(
                   mainAxisSize: MainAxisSize.max,
                   children: [
                     // Profile Header
                     Padding(
                       padding:
                           const EdgeInsetsDirectional.fromSTEB(24, 24, 24, 24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          Stack(
-                            children: [
-                              Container(
-                                width: 100,
-                                height: 100,
-                                decoration: BoxDecoration(
-                                  color: AppTheme.of(context).primary,
-                                  image: profileData?['photo_url'] != null
-                                      ? DecorationImage(
-                                          fit: BoxFit.cover,
-                                          image: NetworkImage(
-                                              profileData!['photo_url']),
-                                        )
-                                      : null,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: profileData?['photo_url'] == null
-                                    ? const Icon(Icons.person,
-                                        color: Colors.white, size: 50)
-                                    : null,
-                              ),
-                              Positioned(
-                                bottom: 0,
-                                right: 0,
-                                child: GestureDetector(
-                                  onTap: () =>
-                                      context.pushNamed('ProEditProfile'),
-                                  child: Container(
-                                    width: 36,
-                                    height: 36,
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.of(context).primary,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: Colors.white,
-                                        width: 2,
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(22),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [
+                              Color(0xFF0F172A),
+                              Color(0xFF164E63),
+                              Color(0xFF0F8A6C),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(30),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x1F0F172A),
+                              blurRadius: 28,
+                              offset: Offset(0, 18),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Stack(
+                                  children: [
+                                    _DashboardAvatar(
+                                      imageUrl:
+                                          profileData?['photo_url']?.toString(),
+                                      size: 88,
+                                    ),
+                                    Positioned(
+                                      bottom: 0,
+                                      right: 0,
+                                      child: GestureDetector(
+                                        onTap: () => context
+                                            .pushNamed(ProEditProfileWidget.routeName),
+                                        child: Container(
+                                          width: 34,
+                                          height: 34,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: const Color(0xFF0F8A6C),
+                                              width: 2,
+                                            ),
+                                          ),
+                                          child: const Icon(
+                                            Icons.edit_rounded,
+                                            color: Color(0xFF0F8A6C),
+                                            size: 18,
+                                          ),
+                                        ),
                                       ),
                                     ),
-                                    child: const Icon(
-                                      Icons.camera_alt,
-                                      color: Colors.white,
-                                      size: 18,
-                                    ),
+                                  ],
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        profileData?['display_name'] ??
+                                            profileData?['first_name'] ??
+                                            'Service Provider',
+                                        style: AppTheme.of(context)
+                                            .headlineSmall
+                                            .override(
+                                              font: GoogleFonts.poppins(
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                              color: Colors.white,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        profileData?['service_category'] ??
+                                            profileData?['skill_profession'] ??
+                                            'Professional Service Provider',
+                                        style: AppTheme.of(context)
+                                            .bodyMedium
+                                            .override(
+                                              font: GoogleFonts.poppins(),
+                                              color: Colors.white
+                                                  .withValues(alpha: 0.84),
+                                            ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 7,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color:
+                                              (profileData?['verification_status'] ==
+                                                      'verified')
+                                                  ? const Color(0xFFECFDF3)
+                                                  : const Color(0xFFFFF7ED),
+                                          borderRadius:
+                                              BorderRadius.circular(999),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              (profileData?[
+                                                          'verification_status'] ==
+                                                      'verified')
+                                                  ? Icons.verified_rounded
+                                                  : Icons.hourglass_top_rounded,
+                                              size: 16,
+                                              color: (profileData?[
+                                                          'verification_status'] ==
+                                                      'verified')
+                                                  ? const Color(0xFF027A48)
+                                                  : const Color(0xFFC2410C),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              (profileData?[
+                                                          'verification_status'] ==
+                                                      'verified')
+                                                  ? 'Verified provider'
+                                                  : 'Verification pending',
+                                              style: AppTheme.of(context)
+                                                  .labelSmall
+                                                  .override(
+                                                    font: GoogleFonts.poppins(
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                    ),
+                                                    color: (profileData?[
+                                                                'verification_status'] ==
+                                                            'verified')
+                                                        ? const Color(
+                                                            0xFF027A48)
+                                                        : const Color(
+                                                            0xFFC2410C),
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            profileData?['display_name'] ??
-                                profileData?['first_name'] ??
-                                'Service Provider',
-                            style: AppTheme.of(context).headlineMedium.override(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            profileData?['service_category'] ??
-                                'Professional Service Provider',
-                            style: AppTheme.of(context).bodyMedium.override(
-                                  color: AppTheme.of(context).secondaryText,
-                                ),
-                          ),
-                          const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: (profileData?['verification_status'] ==
-                                      'verified')
-                                  ? AppTheme.of(context)
-                                      .success
-                                      .withValues(alpha: 0.1)
-                                  : AppTheme.of(context)
-                                      .warning
-                                      .withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  (profileData?['verification_status'] ==
-                                          'verified')
-                                      ? Icons.verified
-                                      : Icons.pending,
-                                  size: 16,
-                                  color: (profileData?['verification_status'] ==
-                                          'verified')
-                                      ? AppTheme.of(context).success
-                                      : AppTheme.of(context).warning,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  (profileData?['verification_status'] ==
-                                          'verified')
-                                      ? 'Verified Provider'
-                                      : 'Pending Verification',
-                                  style:
-                                      AppTheme.of(context).bodySmall.override(
-                                            color: (profileData?[
-                                                        'verification_status'] ==
-                                                    'verified')
-                                                ? AppTheme.of(context).success
-                                                : AppTheme.of(context).warning,
-                                            fontWeight: FontWeight.w600,
-                                          ),
                                 ),
                               ],
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 18),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildProviderHeroStat(
+                                    label: 'Availability',
+                                    value: isAvailable ? 'Live' : 'Paused',
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: _buildProviderHeroStat(
+                                    label: 'Rate',
+                                    value: 'PHP ${hourlyRate.toStringAsFixed(0)}',
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: _buildProviderHeroStat(
+                                    label: 'Location',
+                                    value: profileData?['latitude'] != null
+                                        ? 'Pinned'
+                                        : 'Unset',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     // Create Service Button
                     Padding(
                       padding:
                           const EdgeInsetsDirectional.fromSTEB(24, 0, 24, 16),
-                      child: Container(
+                      child: SizedBox(
                         width: double.infinity,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: AppTheme.of(context).primary,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: InkWell(
-                          onTap: () => context.pushNamed('CreateService'),
-                          child: Center(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(
-                                  Icons.add_circle_outline,
-                                  color: Colors.white,
-                                  size: 24,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Create a Service',
-                                  style:
-                                      AppTheme.of(context).titleSmall.override(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                ),
-                              ],
+                        child: FilledButton.icon(
+                          onPressed: () =>
+                              context.pushNamed(CreateServiceWidget.routeName),
+                          icon: const Icon(Icons.add_business_rounded),
+                          label: const Text('Create a Service'),
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size.fromHeight(56),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18),
                             ),
                           ),
                         ),
@@ -1857,14 +3332,15 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: AppTheme.of(context).secondaryBackground,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: AppTheme.of(context)
-                                    .primaryText
-                                    .withValues(alpha: 0.1),
-                                width: 1,
-                              ),
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x12000000),
+                                  blurRadius: 18,
+                                  offset: Offset(0, 10),
+                                ),
+                              ],
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.max,
@@ -1879,19 +3355,22 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                       style: AppTheme.of(context)
                                           .bodyLarge
                                           .override(
-                                            fontWeight: FontWeight.w600,
+                                            font: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                            color: const Color(0xFF0F172A),
                                           ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       isAvailable
-                                          ? 'Available for bookings'
-                                          : 'Not accepting bookings',
+                                          ? 'You are visible to customers and can receive bookings.'
+                                          : 'You are hidden from new booking requests right now.',
                                       style: AppTheme.of(context)
                                           .bodySmall
                                           .override(
-                                            color: AppTheme.of(context)
-                                                .secondaryText,
+                                            font: GoogleFonts.poppins(),
+                                            color: const Color(0xFF64748B),
                                           ),
                                     ),
                                   ],
@@ -1910,14 +3389,15 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: AppTheme.of(context).secondaryBackground,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: AppTheme.of(context)
-                                    .primaryText
-                                    .withValues(alpha: 0.1),
-                                width: 1,
-                              ),
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x12000000),
+                                  blurRadius: 18,
+                                  offset: Offset(0, 10),
+                                ),
+                              ],
                             ),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
@@ -1927,8 +3407,19 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                   'Hourly Rate',
                                   style:
                                       AppTheme.of(context).bodyLarge.override(
-                                            fontWeight: FontWeight.w600,
+                                            font: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                            color: const Color(0xFF0F172A),
                                           ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Keep your pricing current so quotes and customer expectations stay aligned.',
+                                  style: AppTheme.of(context).bodySmall.override(
+                                        font: GoogleFonts.poppins(),
+                                        color: const Color(0xFF64748B),
+                                      ),
                                 ),
                                 const SizedBox(height: 12),
                                 Row(
@@ -1938,19 +3429,16 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                       width: 80,
                                       height: 48,
                                       decoration: BoxDecoration(
-                                        color: AppTheme.of(context)
-                                            .primaryBackground,
-                                        borderRadius: BorderRadius.circular(8),
+                                        color: const Color(0xFFF8FAFC),
+                                        borderRadius: BorderRadius.circular(16),
                                         border: Border.all(
-                                          color: AppTheme.of(context)
-                                              .primaryText
-                                              .withValues(alpha: 0.2),
+                                          color: const Color(0xFFE2E8F0),
                                           width: 1,
                                         ),
                                       ),
                                       child: Center(
                                         child: Text(
-                                          '₱',
+                                          'â‚±',
                                           style: AppTheme.of(context)
                                               .bodyLarge
                                               .override(
@@ -1966,35 +3454,35 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                         keyboardType: TextInputType.number,
                                         decoration: InputDecoration(
                                           hintText: '500',
+                                          filled: true,
+                                          fillColor: const Color(0xFFF8FAFC),
                                           border: OutlineInputBorder(
                                             borderRadius:
-                                                BorderRadius.circular(8),
-                                            borderSide: BorderSide(
-                                              color: AppTheme.of(context)
-                                                  .primaryText
-                                                  .withValues(alpha: 0.2),
-                                            ),
+                                                BorderRadius.circular(16),
+                                            borderSide: BorderSide.none,
                                           ),
                                           enabledBorder: OutlineInputBorder(
                                             borderRadius:
-                                                BorderRadius.circular(8),
-                                            borderSide: BorderSide(
-                                              color: AppTheme.of(context)
-                                                  .primaryText
-                                                  .withValues(alpha: 0.2),
-                                            ),
+                                                BorderRadius.circular(16),
+                                            borderSide: BorderSide.none,
                                           ),
                                           focusedBorder: OutlineInputBorder(
                                             borderRadius:
-                                                BorderRadius.circular(8),
+                                                BorderRadius.circular(16),
                                             borderSide: BorderSide(
                                               color:
                                                   AppTheme.of(context).primary,
-                                              width: 2,
+                                              width: 1.5,
                                             ),
                                           ),
                                         ),
-                                        style: AppTheme.of(context).bodyLarge,
+                                        style: AppTheme.of(context)
+                                            .bodyLarge
+                                            .override(
+                                              font: GoogleFonts.poppins(
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
                                       ),
                                     ),
                                   ],
@@ -2005,36 +3493,133 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                   height: 44,
                                   decoration: BoxDecoration(
                                     color: AppTheme.of(context).primary,
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(16),
                                   ),
                                   child: InkWell(
-                                    onTap: () {
-                                      setState(() {
-                                        hourlyRate = double.tryParse(
-                                                _rateController.text) ??
-                                            500.00;
-                                      });
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                            content:
-                                                Text('Hourly rate updated')),
-                                      );
-                                    },
+                                    onTap: _isSavingRate ? null : _saveHourlyRate,
                                     child: Center(
                                       child: Text(
-                                        'Update Rate',
+                                        _isSavingRate
+                                            ? 'Saving...'
+                                            : 'Update Rate',
                                         style: AppTheme.of(context)
                                             .bodyMedium
                                             .override(
+                                              font: GoogleFonts.poppins(
+                                                fontWeight: FontWeight.w700,
+                                              ),
                                               color: Colors.white,
-                                              fontWeight: FontWeight.w600,
                                             ),
                                       ),
                                     ),
                                   ),
                                 ),
                               ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Service Location
+                    Padding(
+                      padding:
+                          const EdgeInsetsDirectional.fromSTEB(24, 0, 24, 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Service Location',
+                            style: AppTheme.of(context).titleMedium.override(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                          const SizedBox(height: 12),
+                          GestureDetector(
+                            onTap: () async {
+                              await context
+                                  .pushNamed(ProEditProfileWidget.routeName);
+                              await _loadProfile();
+                            },
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(24),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x12000000),
+                                    blurRadius: 18,
+                                    offset: Offset(0, 10),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 42,
+                                    height: 42,
+                                    decoration: BoxDecoration(
+                                      color: profileData?['latitude'] != null
+                                          ? const Color(0xFFEAF6F2)
+                                          : const Color(0xFFF1F5F9),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: Icon(
+                                      profileData?['latitude'] != null
+                                          ? Icons.place_rounded
+                                          : Icons.location_off_outlined,
+                                      size: 20,
+                                      color: profileData?['latitude'] != null
+                                          ? AppTheme.of(context).primary
+                                          : const Color(0xFF64748B),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          profileData?['latitude'] != null
+                                              ? 'Pinned service area'
+                                              : 'Service location not set',
+                                          style: AppTheme.of(context)
+                                              .bodySmall
+                                              .override(
+                                                font: GoogleFonts.poppins(),
+                                                color: const Color(0xFF64748B),
+                                              ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          profileData?['location_label']
+                                                  as String? ??
+                                              (profileData?['latitude'] != null
+                                                  ? '${(profileData!['latitude'] as num).toStringAsFixed(5)}, ${(profileData!['longitude'] as num).toStringAsFixed(5)}'
+                                                  : 'Tap to set your service location'),
+                                          style: AppTheme.of(context)
+                                              .bodyMedium
+                                              .override(
+                                                font: GoogleFonts.poppins(
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                                color: const Color(0xFF0F172A),
+                                              ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(
+                                    Icons.chevron_right_rounded,
+                                    size: 20,
+                                    color: Color(0xFF94A3B8),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],
@@ -2059,31 +3644,35 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                             context,
                             Icons.edit_outlined,
                             'Edit Profile',
-                            () => context.pushNamed('ProEditProfile'),
+                            () => context
+                                .pushNamed(ProEditProfileWidget.routeName),
                           ),
                           _buildMenuOption(
                             context,
                             Icons.description_outlined,
                             'Service History',
-                            () => context.pushNamed('ServiceHistory'),
+                            () =>
+                                context.pushNamed(ServiceHistoryWidget.routeName),
                           ),
                           _buildMenuOption(
                             context,
                             Icons.star_outline,
                             'Reviews & Ratings',
-                            () => context.pushNamed('ReviewsRatings'),
+                            () => context
+                                .pushNamed(ReviewsRatingsWidget.routeName),
                           ),
                           _buildMenuOption(
                             context,
                             Icons.help_outline,
                             'Help & Support',
-                            () => context.pushNamed('HelpSupport'),
+                            () =>
+                                context.pushNamed(HelpSupportWidget.routeName),
                           ),
                           _buildMenuOption(
                             context,
                             Icons.info_outline,
                             'About',
-                            () => context.pushNamed('About'),
+                            () => context.pushNamed(AboutWidget.routeName),
                           ),
                           const SizedBox(height: 16),
                           // Logout Button
@@ -2115,6 +3704,38 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                   ],
                 ),
               ),
+            ));
+
+  Widget _buildProviderHeroStat({
+    required String label,
+    required String value,
+  }) =>
+      Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: AppTheme.of(context).bodySmall.override(
+                    font: GoogleFonts.poppins(),
+                    color: Colors.white.withValues(alpha: 0.78),
+                  ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              value,
+              style: AppTheme.of(context).titleMedium.override(
+                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    color: Colors.white,
+                  ),
+            ),
+          ],
+        ),
       );
 
   Widget _buildMenuOption(
@@ -2128,34 +3749,46 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
         child: Container(
           padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 16),
           decoration: BoxDecoration(
-            color: AppTheme.of(context).secondaryBackground,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: AppTheme.of(context).primaryText.withValues(alpha: 0.1),
-              width: 1,
-            ),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x12000000),
+                blurRadius: 18,
+                offset: Offset(0, 10),
+              ),
+            ],
           ),
           child: Row(
             mainAxisSize: MainAxisSize.max,
             children: [
-              Icon(
-                icon,
-                size: 24,
-                color: AppTheme.of(context).primaryText,
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  icon,
+                  size: 22,
+                  color: const Color(0xFF0F172A),
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: Text(
                   title,
                   style: AppTheme.of(context).bodyLarge.override(
-                        fontWeight: FontWeight.w500,
+                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        color: const Color(0xFF0F172A),
                       ),
                 ),
               ),
-              Icon(
-                Icons.chevron_right,
+              const Icon(
+                Icons.chevron_right_rounded,
                 size: 20,
-                color: AppTheme.of(context).secondaryText,
+                color: Color(0xFF94A3B8),
               ),
             ],
           ),
@@ -2318,7 +3951,8 @@ class _DashboardHeroCard extends StatelessWidget {
                                 stat.label,
                                 style: AppTheme.of(context).bodySmall.override(
                                       font: GoogleFonts.poppins(),
-                                      color: Colors.white.withValues(alpha: 0.78),
+                                      color:
+                                          Colors.white.withValues(alpha: 0.78),
                                     ),
                               ),
                               const SizedBox(height: 4),
@@ -2453,8 +4087,10 @@ class _StatusPill extends StatelessWidget {
     final (background, foreground) = switch (normalized) {
       'pending' => (const Color(0xFFFFF7ED), const Color(0xFFC2410C)),
       'completed' => (const Color(0xFFECFDF3), const Color(0xFF027A48)),
-      'accepted' || 'confirmed' || 'in_progress' =>
-        (const Color(0xFFEFF6FF), const Color(0xFF1D4ED8)),
+      'accepted' || 'confirmed' || 'in_progress' => (
+          const Color(0xFFEFF6FF),
+          const Color(0xFF1D4ED8)
+        ),
       _ => (const Color(0xFFF1F5F9), const Color(0xFF475569)),
     };
 
@@ -2474,6 +4110,34 @@ class _StatusPill extends StatelessWidget {
       ),
     );
   }
+}
+
+class _InlineInfoChip extends StatelessWidget {
+  const _InlineInfoChip({
+    required this.label,
+    required this.backgroundColor,
+    required this.foregroundColor,
+  });
+
+  final String label;
+  final Color backgroundColor;
+  final Color foregroundColor;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          label,
+          style: AppTheme.of(context).labelSmall.override(
+                color: foregroundColor,
+                fontWeight: FontWeight.w700,
+              ),
+        ),
+      );
 }
 
 DateTime? _parseDate(dynamic raw) {

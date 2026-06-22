@@ -51,7 +51,9 @@ class _AddressesWidgetState extends State<AddressesWidget> {
       return;
     }
     _addressesFuture = AddressesTable().queryRows(
-      queryFn: (q) => q.eq('user_id', currentUserUid),
+      queryFn: (q) => q
+          .eq('user_id', currentUserUid)
+          .order('is_default', ascending: false),
     );
   }
 
@@ -153,8 +155,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                               16,
                               0,
                             ),
-                            iconPadding: const EdgeInsetsDirectional.fromSTEB(
-                                0, 0, 0, 0),
+                            iconPadding: EdgeInsetsDirectional.zero,
                             color: AppTheme.of(context).primary,
                             textStyle: AppTheme.of(context).titleSmall.override(
                                   font: GoogleFonts.poppins(
@@ -383,16 +384,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(24),
-          onTap: () async {
-            await context.push(
-              AddressFormWidget.routePath,
-              extra: {'addressId': address.id},
-            );
-            _loadAddresses();
-            if (mounted) {
-              safeSetState(() {});
-            }
-          },
+          onTap: () => _selectAddress(address),
           child: Padding(
             padding: const EdgeInsets.all(18),
             child: Column(
@@ -615,6 +607,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
         matchingRows: (q) => q.eq('id', addressId),
       );
 
+      FFAppState().clearGetAddressCache();
       _loadAddresses();
       if (mounted) {
         safeSetState(() {});
@@ -660,9 +653,26 @@ class _AddressesWidgetState extends State<AddressesWidget> {
     }
 
     try {
+      final deletedSelectedAddress = FFAppState().selectedLocationMode == 'saved' &&
+          FFAppState().selectedAddressId == address.id;
       await AddressesTable().delete(
         matchingRows: (q) => q.eq('id', address.id),
       );
+      FFAppState().clearGetAddressCache();
+
+      final remainingAddresses = await AddressesTable().queryRows(
+        queryFn: (q) => q
+            .eq('user_id', currentUserUid)
+            .order('is_default', ascending: false),
+      );
+      if (deletedSelectedAddress) {
+        final nextAddress =
+            FFAppState().syncSelectedSavedAddress(remainingAddresses);
+        if (nextAddress == null) {
+          FFAppState().clearSelectedAddress();
+        }
+      }
+
       _loadAddresses();
       if (mounted) {
         safeSetState(() {});
@@ -677,6 +687,18 @@ class _AddressesWidgetState extends State<AddressesWidget> {
         );
       }
     }
+  }
+
+  void _selectAddress(AddressesRow address) {
+    FFAppState().setSelectedAddressFromRow(address);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '${address.addressLine2?.trim().isNotEmpty == true ? address.addressLine2!.trim() : 'Saved address'} selected for bookings',
+        ),
+      ),
+    );
+    safeSetState(() {});
   }
 
   IconData _getIconForLabel(String? label) {

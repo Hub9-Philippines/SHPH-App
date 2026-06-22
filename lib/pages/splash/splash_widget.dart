@@ -40,6 +40,7 @@ class _SplashWidgetState extends State<SplashWidget> {
       // Check if onboarding has been completed
       final hasCompletedOnboarding = FFAppState().hasCompletedOnboarding;
 
+      if (!mounted) return;
       if (hasCompletedOnboarding) {
         // Go to sign options if onboarding is done
         context.goNamed(

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 enum BookingUrgency { rightNow, laterToday, scheduled }
 
-enum CleaningType { standard, deep, premium }
+enum ServiceType { standard, deep, premium }
 
 enum BookingPaymentMethod { gcash, card, cod }
 
@@ -53,7 +53,7 @@ class BookingDraft {
   final String? servicePriceUnit;
   final BookingUrgency urgency;
   final int rooms;
-  final CleaningType cleaningType;
+  final ServiceType cleaningType;
   final BookingPaymentMethod paymentMethod;
   final BookingAddress address;
   final double latitude;
@@ -73,7 +73,7 @@ class BookingDraft {
     String? servicePriceUnit,
     BookingUrgency? urgency,
     int? rooms,
-    CleaningType? cleaningType,
+    ServiceType? cleaningType,
     BookingPaymentMethod? paymentMethod,
     BookingAddress? address,
     double? latitude,

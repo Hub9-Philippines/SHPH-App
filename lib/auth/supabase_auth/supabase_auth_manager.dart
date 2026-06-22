@@ -61,6 +61,7 @@ class SupabaseAuthManager extends AuthManager
 
       await signOut();
     } catch (e) {
+      if (!context.mounted) return;
       if (e is AuthException) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -93,6 +94,7 @@ class SupabaseAuthManager extends AuthManager
       await currentUser?.refreshUser();
     } on AuthException catch (e) {
       AuthLogger.error('Email update failed', tag: 'UpdateEmail', error: e);
+      if (!context.mounted) return;
       if (e.message.contains('Token has expired') ||
           e.message.contains('Auth session missing')) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -128,12 +130,14 @@ class SupabaseAuthManager extends AuthManager
         UserAttributes(password: newPassword),
       );
 
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Password updated successfully')),
       );
     } on AuthException catch (e) {
       AuthLogger.error('Password update failed',
           tag: 'UpdatePassword', error: e);
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       if (e.message.contains('Token has expired') ||
           e.message.contains('Auth session missing')) {
@@ -161,11 +165,13 @@ class SupabaseAuthManager extends AuthManager
     try {
       await Supabase.instance.client.auth.resetPasswordForEmail(email);
 
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Password reset email sent')),
       );
     } on AuthException catch (e) {
       AuthLogger.error('Password reset failed', tag: 'ResetPassword', error: e);
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -220,15 +226,38 @@ class SupabaseAuthManager extends AuthManager
     BuildContext context,
     String email,
     String password,
-  ) =>
-      _signInOrCreateAccount(
-        context,
-        () => Supabase.instance.client.auth.signUp(
-          email: email,
-          password: password,
-        ),
-        'EMAIL',
-      );
+  ) async {
+    final user = await _signInOrCreateAccount(
+      context,
+      () => Supabase.instance.client.auth.signUp(
+        email: email,
+        password: password,
+      ),
+      'EMAIL',
+    );
+
+    if (user != null && user.uid != null) {
+      try {
+        await Supabase.instance.client
+            .from('profiles')
+            .select()
+            .eq('id', user.uid!)
+            .single();
+      } catch (_) {
+        final roleToUse = FFAppState().tempsignuprole.isNotEmpty
+            ? FFAppState().tempsignuprole
+            : 'client';
+        await Supabase.instance.client.from('profiles').insert({
+          'id': user.uid!,
+          'role': roleToUse,
+          'email': email,
+          'is_profile_complete': false,
+        });
+      }
+    }
+
+    return user;
+  }
 
   @override
   Future<BaseAuthUser?> signInAnonymously(
@@ -263,6 +292,7 @@ class SupabaseAuthManager extends AuthManager
       }
     } catch (e) {
       AuthLogger.error('Google sign-in failed', tag: 'GoogleSignIn', error: e);
+      if (!context.mounted) return null;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
             content: Text('Unable to sign in with Google. Please try again.')),
@@ -294,6 +324,7 @@ class SupabaseAuthManager extends AuthManager
       }
     } catch (e) {
       AuthLogger.error('Apple sign-in failed', tag: 'AppleSignIn', error: e);
+      if (!context.mounted) return null;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
             content: Text('Unable to sign in with Apple. Please try again.')),
@@ -325,6 +356,7 @@ class SupabaseAuthManager extends AuthManager
       }
     } catch (e) {
       AuthLogger.error('GitHub sign-in failed', tag: 'GithubSignIn', error: e);
+      if (!context.mounted) return null;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
             content: Text('Unable to sign in with GitHub. Please try again.')),
@@ -534,6 +566,7 @@ class SupabaseAuthManager extends AuthManager
     } on AuthException catch (e) {
       AuthLogger.error('SMS code verification failed',
           tag: 'PhoneAuth', error: e);
+      if (!context.mounted) return null;
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -566,6 +599,7 @@ class SupabaseAuthManager extends AuthManager
       const errorMsg =
           'Authentication failed. Please check your credentials and try again.';
 
+      if (!context.mounted) return null;
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text(errorMsg)),
@@ -574,6 +608,7 @@ class SupabaseAuthManager extends AuthManager
     } catch (e) {
       AuthLogger.error('Unexpected error during authentication',
           tag: authProvider, error: e);
+      if (!context.mounted) return null;
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

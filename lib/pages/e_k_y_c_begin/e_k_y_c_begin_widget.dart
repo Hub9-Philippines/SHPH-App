@@ -95,7 +95,7 @@ class _EKYCBeginWidgetState extends State<EKYCBeginWidget> {
                             shape: BoxShape.circle,
                           ),
                           child: Align(
-                            alignment: const AlignmentDirectional(0, 0),
+                            alignment: AlignmentDirectional.center,
                             child: Icon(
                               Icons.verified_user_rounded,
                               color: AppTheme.of(context).primary,
@@ -197,8 +197,7 @@ class _EKYCBeginWidgetState extends State<EKYCBeginWidget> {
                                           ),
                                           child: Align(
                                             alignment:
-                                                const AlignmentDirectional(
-                                                    0, 0),
+                                                AlignmentDirectional.center,
                                             child: Icon(
                                               Icons.face_rounded,
                                               color:
@@ -296,8 +295,7 @@ class _EKYCBeginWidgetState extends State<EKYCBeginWidget> {
                                           ),
                                           child: Align(
                                             alignment:
-                                                const AlignmentDirectional(
-                                                    0, 0),
+                                                AlignmentDirectional.center,
                                             child: Icon(
                                               Icons.credit_card_rounded,
                                               color:
@@ -426,7 +424,7 @@ class _EKYCBeginWidgetState extends State<EKYCBeginWidget> {
                     padding: const EdgeInsetsDirectional.fromSTEB(0, 10, 0, 0),
                     child: FFButtonWidget(
                       onPressed: () async {
-                        context.pushNamed(DocumentScanWidget.routeName);
+                        await context.pushNamed(DocumentScanWidget.routeName);
                       },
                       text: 'Start Document Scan',
                       options: FFButtonOptions(
@@ -434,7 +432,7 @@ class _EKYCBeginWidgetState extends State<EKYCBeginWidget> {
                         height: 52,
                         padding: const EdgeInsets.all(8),
                         iconPadding:
-                            const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
+                            EdgeInsetsDirectional.zero,
                         color: AppTheme.of(context).primary,
                         textStyle: AppTheme.of(context).titleSmall.override(
                               font: GoogleFonts.poppins(

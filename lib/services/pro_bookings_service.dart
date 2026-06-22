@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '/api/bridges/api_row_mapper.dart';
 import '/api/resources/bookings_api.dart';
 import '/backend/supabase/supabase.dart';
@@ -7,11 +9,89 @@ import '/services/logging_service.dart';
 class ProBookingsService {
   ProBookingsService._();
   static final ProBookingsService instance = ProBookingsService._();
+  static const _tmMetaPrefix = 'TM_META:';
 
   final _supabase = Supabase.instance.client;
   final _bookingsApi = ShphBookingsApi.instance;
 
   String? get _currentUserId => _supabase.auth.currentUser?.id;
+
+  bool isTimeMaterialBooking(Map<String, dynamic> booking) =>
+      tmMetadata(booking)['flow'] == 'tm';
+
+  Map<String, dynamic> tmMetadata(Map<String, dynamic> booking) {
+    final notes = booking['notes'] as String?;
+    if (notes == null || !notes.contains(_tmMetaPrefix)) {
+      return <String, dynamic>{};
+    }
+    final index = notes.indexOf(_tmMetaPrefix);
+    final jsonText = notes.substring(index + _tmMetaPrefix.length).trim();
+    try {
+      final decoded = jsonDecode(jsonText);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
+      if (decoded is Map) {
+        return decoded.map(
+          (key, value) => MapEntry(key.toString(), value),
+        );
+      }
+    } catch (_) {}
+    return <String, dynamic>{};
+  }
+
+  String? tmSubCategoryTitle(Map<String, dynamic> booking) =>
+      tmMetadata(booking)['sub_category_title'] as String?;
+
+  String? tmStage(Map<String, dynamic> booking) =>
+      tmMetadata(booking)['stage'] as String?;
+
+  String tmStageLabel(Map<String, dynamic> booking) {
+    final stage = tmStage(booking) ?? '';
+    return switch (stage) {
+      'broadcast' => 'Awaiting provider',
+      'matched' => 'Matched',
+      'provider_accepted' => 'Accepted',
+      'in_progress' => 'In progress',
+      'hardware_pending' => 'Hardware pending',
+      'hardware_approved' => 'Hardware approved',
+      'completed' => 'Completed',
+      'paid' => 'Paid',
+      'rated' => 'Rated',
+      _ => 'TM request',
+    };
+  }
+
+  Future<bool> markJobInProgress(String bookingId) =>
+      _updateBookingAndTmMetadata(
+        bookingId,
+        status: 'in_progress',
+        metadataUpdates: {
+          'flow': 'tm',
+          'stage': 'in_progress',
+        },
+      );
+
+  Future<bool> requestTMHardware({
+    required String bookingId,
+    required String title,
+    required String description,
+    required double additionalCost,
+  }) =>
+      _updateBookingAndTmMetadata(
+        bookingId,
+        status: 'in_progress',
+        metadataUpdates: {
+          'flow': 'tm',
+          'stage': 'hardware_pending',
+          'hardware_request': {
+            'id': 'provider-${DateTime.now().millisecondsSinceEpoch}',
+            'title': title,
+            'description': description,
+            'additional_cost': additionalCost,
+          },
+        },
+      );
 
   Future<List<Map<String, dynamic>>> _fetchProviderBookingsFromApi() async {
     final page = await _bookingsApi.listBookings();
@@ -67,15 +147,13 @@ class ProBookingsService {
     if (await ApiRowMapper.canUseApi()) {
       try {
         final bookings = await _fetchProviderBookingsFromApi();
-        return bookings
-            .where((booking) {
-              final status = booking['status'] as String?;
-              return status == 'accepted' ||
-                  status == 'confirmed' ||
-                  status == 'in_progress' ||
-                  status == 'completed';
-            })
-            .toList();
+        return bookings.where((booking) {
+          final status = booking['status'] as String?;
+          return status == 'accepted' ||
+              status == 'confirmed' ||
+              status == 'in_progress' ||
+              status == 'completed';
+        }).toList();
       } catch (e) {
         LoggingService.error(
           'SHPH API getScheduledJobs failed, falling back to Supabase: $e',
@@ -147,15 +225,15 @@ class ProBookingsService {
       final lastMonth = DateTime(now.year, now.month - 1);
       final thisWeekStart = now.subtract(Duration(days: now.weekday - 1));
 
-      double totalEarnings = 0;
-      double thisMonthEarnings = 0;
-      double lastMonthEarnings = 0;
-      double thisWeekEarnings = 0;
-      double lastWeekEarnings = 0;
+      var totalEarnings = 0.0;
+      var thisMonthEarnings = 0.0;
+      var lastMonthEarnings = 0.0;
+      var thisWeekEarnings = 0.0;
+      var lastWeekEarnings = 0.0;
 
       // Weekly data for chart
       final weeklyData = <Map<String, dynamic>>[];
-      for (int i = 4; i >= 0; i--) {
+      for (var i = 4; i >= 0; i--) {
         final weekStart = thisWeekStart.subtract(Duration(days: i * 7));
         final weekEnd = weekStart.add(const Duration(days: 6));
         weeklyData.add({
@@ -211,7 +289,7 @@ class ProBookingsService {
           }
 
           // Weekly data
-          for (int i = 0; i < weeklyData.length; i++) {
+          for (var i = 0; i < weeklyData.length; i++) {
             final week = weeklyData[i];
             if (completedAt.isAfter(week['start']) &&
                 completedAt
@@ -284,6 +362,13 @@ class ProBookingsService {
     if (await ApiRowMapper.canUseApi()) {
       try {
         await _bookingsApi.acceptBooking(bookingId);
+        await _updateBookingAndTmMetadata(
+          bookingId,
+          metadataUpdates: {
+            'flow': 'tm',
+            'stage': 'provider_accepted',
+          },
+        );
         LoggingService.info('Job accepted via API: $bookingId',
             tag: 'ProBookingsService');
         return true;
@@ -296,10 +381,17 @@ class ProBookingsService {
     }
 
     try {
-      await _supabase.from('bookings').update({
-        'status': 'accepted',
-        'accepted_at': DateTime.now().toIso8601String(),
-      }).eq('id', bookingId);
+      await _updateBookingAndTmMetadata(
+        bookingId,
+        status: 'accepted',
+        extraData: {
+          'accepted_at': DateTime.now().toIso8601String(),
+        },
+        metadataUpdates: {
+          'flow': 'tm',
+          'stage': 'provider_accepted',
+        },
+      );
 
       LoggingService.info('Job accepted: $bookingId',
           tag: 'ProBookingsService');
@@ -316,6 +408,14 @@ class ProBookingsService {
     if (await ApiRowMapper.canUseApi()) {
       try {
         await _bookingsApi.rejectBooking(bookingId, reason: reason);
+        await _updateBookingAndTmMetadata(
+          bookingId,
+          metadataUpdates: {
+            'flow': 'tm',
+            'stage': 'rejected',
+            if (reason != null && reason.isNotEmpty) 'rejection_reason': reason,
+          },
+        );
         LoggingService.info('Job rejected via API: $bookingId',
             tag: 'ProBookingsService');
         return true;
@@ -328,11 +428,19 @@ class ProBookingsService {
     }
 
     try {
-      await _supabase.from('bookings').update({
-        'status': 'rejected',
-        'rejected_at': DateTime.now().toIso8601String(),
-        'rejection_reason': reason,
-      }).eq('id', bookingId);
+      await _updateBookingAndTmMetadata(
+        bookingId,
+        status: 'rejected',
+        extraData: {
+          'rejected_at': DateTime.now().toIso8601String(),
+          'rejection_reason': reason,
+        },
+        metadataUpdates: {
+          'flow': 'tm',
+          'stage': 'rejected',
+          if (reason != null && reason.isNotEmpty) 'rejection_reason': reason,
+        },
+      );
 
       LoggingService.info('Job rejected: $bookingId',
           tag: 'ProBookingsService');
@@ -352,6 +460,13 @@ class ProBookingsService {
           bookingId,
           data: {'status': 'completed'},
         );
+        await _updateBookingAndTmMetadata(
+          bookingId,
+          metadataUpdates: {
+            'flow': 'tm',
+            'stage': 'completed',
+          },
+        );
         LoggingService.info('Job completed via API: $bookingId',
             tag: 'ProBookingsService');
         return true;
@@ -364,10 +479,17 @@ class ProBookingsService {
     }
 
     try {
-      await _supabase.from('bookings').update({
-        'status': 'completed',
-        'completed_at': DateTime.now().toIso8601String(),
-      }).eq('id', bookingId);
+      await _updateBookingAndTmMetadata(
+        bookingId,
+        status: 'completed',
+        extraData: {
+          'completed_at': DateTime.now().toIso8601String(),
+        },
+        metadataUpdates: {
+          'flow': 'tm',
+          'stage': 'completed',
+        },
+      );
 
       LoggingService.info('Job completed: $bookingId',
           tag: 'ProBookingsService');
@@ -384,19 +506,23 @@ class ProBookingsService {
     if (await ApiRowMapper.canUseApi()) {
       try {
         final bookings = await _fetchProviderBookingsFromApi();
-        int pending = 0;
-        int accepted = 0;
-        int completed = 0;
+        var pending = 0;
+        var accepted = 0;
+        var completed = 0;
 
         for (final booking in bookings) {
           final status = booking['status'] as String?;
-          if (status == 'pending') pending++;
+          if (status == 'pending') {
+            pending++;
+          }
           if (status == 'accepted' ||
               status == 'confirmed' ||
               status == 'in_progress') {
             accepted++;
           }
-          if (status == 'completed') completed++;
+          if (status == 'completed') {
+            completed++;
+          }
         }
 
         return {
@@ -424,15 +550,21 @@ class ProBookingsService {
           .select('status')
           .eq('provider_id', userId);
 
-      int pending = 0;
-      int accepted = 0;
-      int completed = 0;
+      var pending = 0;
+      var accepted = 0;
+      var completed = 0;
 
       for (final booking in response) {
         final status = booking['status'] as String?;
-        if (status == 'pending') pending++;
-        if (status == 'accepted' || status == 'in_progress') accepted++;
-        if (status == 'completed') completed++;
+        if (status == 'pending') {
+          pending++;
+        }
+        if (status == 'accepted' || status == 'in_progress') {
+          accepted++;
+        }
+        if (status == 'completed') {
+          completed++;
+        }
       }
 
       return {
@@ -446,5 +578,57 @@ class ProBookingsService {
           tag: 'ProBookingsService');
       return {'pending': 0, 'accepted': 0, 'completed': 0, 'total': 0};
     }
+  }
+
+  Future<bool> _updateBookingAndTmMetadata(
+    String bookingId, {
+    String? status,
+    Map<String, dynamic>? extraData,
+    Map<String, dynamic>? metadataUpdates,
+  }) async {
+    try {
+      final response = await _supabase
+          .from('bookings')
+          .select('notes')
+          .eq('id', bookingId)
+          .maybeSingle();
+
+      final existingNotes = response?['notes'] as String?;
+      final mergedNotes = metadataUpdates == null
+          ? existingNotes
+          : _mergeTmMetadata(existingNotes, metadataUpdates);
+
+      final updateData = <String, dynamic>{
+        if (status != null) 'status': status,
+        if (extraData != null) ...extraData,
+        if (mergedNotes != null) 'notes': mergedNotes,
+      };
+
+      if (updateData.isEmpty) {
+        return true;
+      }
+
+      await _supabase.from('bookings').update(updateData).eq('id', bookingId);
+      return true;
+    } catch (e) {
+      LoggingService.error('Error updating TM booking metadata: $e',
+          tag: 'ProBookingsService');
+      return false;
+    }
+  }
+
+  String _mergeTmMetadata(
+    String? existingNotes,
+    Map<String, dynamic> updates,
+  ) {
+    final raw = existingNotes ?? '';
+    final index = raw.indexOf(_tmMetaPrefix);
+    final humanReadable =
+        index >= 0 ? raw.substring(0, index).trimRight() : raw.trim();
+    final current = tmMetadata({'notes': existingNotes})..addAll(updates);
+    if (humanReadable.isEmpty) {
+      return '$_tmMetaPrefix${jsonEncode(current)}';
+    }
+    return '$humanReadable\n$_tmMetaPrefix${jsonEncode(current)}';
   }
 }

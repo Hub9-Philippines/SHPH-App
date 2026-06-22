@@ -5,7 +5,8 @@ class ServiceListingsTable extends SupabaseTable<ServiceListingsRow> {
   String get tableName => 'service_listings';
 
   @override
-  ServiceListingsRow createRow(Map<String, dynamic> data) => ServiceListingsRow(data);
+  ServiceListingsRow createRow(Map<String, dynamic> data) =>
+      ServiceListingsRow(data);
 }
 
 class ServiceListingsRow extends SupabaseDataRow {
@@ -58,6 +59,9 @@ class ServiceListingsRow extends SupabaseDataRow {
 
   int? get reviewCount => getField<int>('review_count');
   set reviewCount(int? value) => setField<int>('review_count', value);
+
+  bool? get isTimeMaterial => getField<bool>('is_time_material');
+  set isTimeMaterial(bool? value) => setField<bool>('is_time_material', value);
 
   DateTime get createdAt => getField<DateTime>('created_at')!;
   set createdAt(DateTime value) => setField<DateTime>('created_at', value);

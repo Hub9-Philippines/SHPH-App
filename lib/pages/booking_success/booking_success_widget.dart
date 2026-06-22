@@ -37,10 +37,12 @@ class _BookingSuccessWidgetState extends State<BookingSuccessWidget>
     _scaleAnimation = Tween<double>(
       begin: 0,
       end: 1,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.elasticOut,
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.elasticOut,
+      ),
+    );
 
     _animationController.forward();
   }
@@ -54,18 +56,18 @@ class _BookingSuccessWidgetState extends State<BookingSuccessWidget>
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        backgroundColor: const Color(0xFFF5F7FA),
+        backgroundColor: const Color(0xFFF4F7FB),
         body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: Container(
                 width: double.infinity,
-                constraints: const BoxConstraints(maxWidth: 460),
+                constraints: const BoxConstraints(maxWidth: 480),
                 padding: const EdgeInsets.all(28),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(32),
+                  borderRadius: BorderRadius.circular(34),
                   boxShadow: const [
                     BoxShadow(
                       color: Color(0x12000000),
@@ -78,7 +80,7 @@ class _BookingSuccessWidgetState extends State<BookingSuccessWidget>
                   children: [
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(22),
+                      padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
                           begin: Alignment.topLeft,
@@ -89,7 +91,7 @@ class _BookingSuccessWidgetState extends State<BookingSuccessWidget>
                             Color(0xFF73D8B4),
                           ],
                         ),
-                        borderRadius: BorderRadius.circular(28),
+                        borderRadius: BorderRadius.circular(30),
                       ),
                       child: Column(
                         children: [
@@ -102,7 +104,7 @@ class _BookingSuccessWidgetState extends State<BookingSuccessWidget>
                                 color: Colors.white.withValues(alpha: 0.18),
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.38),
+                                  color: Colors.white.withValues(alpha: 0.36),
                                 ),
                               ),
                               child: const Icon(
@@ -114,7 +116,7 @@ class _BookingSuccessWidgetState extends State<BookingSuccessWidget>
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            'Booking Confirmed!',
+                            'Booking Confirmed',
                             textAlign: TextAlign.center,
                             style: AppTheme.of(context).headlineMedium.override(
                                   font: GoogleFonts.poppins(
@@ -125,73 +127,33 @@ class _BookingSuccessWidgetState extends State<BookingSuccessWidget>
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Your booking has been created successfully and the provider will be notified shortly.',
+                            'Your request has been created successfully and the provider will be notified shortly.',
                             textAlign: TextAlign.center,
                             style: AppTheme.of(context).bodyMedium.override(
-                                  color: Colors.white.withValues(alpha: 0.84),
+                                  font: GoogleFonts.poppins(),
+                                  color: Colors.white.withValues(alpha: 0.86),
                                 ),
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 22),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF6FBFF),
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(
-                          color: AppTheme.of(context)
-                              .primary
-                              .withValues(alpha: 0.16),
-                        ),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: AppTheme.of(context)
-                                  .primary
-                                  .withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: Icon(
-                              Icons.notifications_active_rounded,
-                              color: AppTheme.of(context).primary,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'What happens next',
-                                  style:
-                                      AppTheme.of(context).titleSmall.override(
-                                            font: GoogleFonts.poppins(
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                            color: const Color(0xFF16202A),
-                                          ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'You can track the request from your bookings page and we will keep you updated as the status changes.',
-                                  style:
-                                      AppTheme.of(context).bodySmall.override(
-                                            color: const Color(0xFF6F7B86),
-                                          ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                    _buildInfoCard(
+                      icon: Icons.notifications_active_rounded,
+                      title: 'What happens next',
+                      description:
+                          'You can track the request from your bookings page and we will keep you updated as the status changes.',
+                      accent: AppTheme.of(context).primary,
+                      background: const Color(0xFFF6FBFF),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildInfoCard(
+                      icon: Icons.shield_outlined,
+                      title: 'Payment protection',
+                      description:
+                          'Escrow-enabled payments stay protected until the work is completed and confirmed.',
+                      accent: const Color(0xFF1B74E4),
+                      background: const Color(0xFFEAF4FF),
                     ),
                     const SizedBox(height: 24),
                     FFButtonWidget(
@@ -213,16 +175,27 @@ class _BookingSuccessWidgetState extends State<BookingSuccessWidget>
                       ),
                     ),
                     const SizedBox(height: 14),
-                    TextButton(
+                    OutlinedButton(
                       onPressed: () {
                         context.go('/home');
                       },
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 52),
+                        side: BorderSide(
+                          color: AppTheme.of(context).primary.withValues(
+                                alpha: 0.18,
+                              ),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                      ),
                       child: Text(
                         'Back to Home',
                         style: AppTheme.of(context).bodyMedium.override(
                               color: AppTheme.of(context).primary,
                               font: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                       ),
@@ -232,6 +205,62 @@ class _BookingSuccessWidgetState extends State<BookingSuccessWidget>
               ),
             ),
           ),
+        ),
+      );
+
+  Widget _buildInfoCard({
+    required IconData icon,
+    required String title,
+    required String description,
+    required Color accent,
+    required Color background,
+  }) =>
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: accent.withValues(alpha: 0.16)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(icon, color: accent),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTheme.of(context).titleSmall.override(
+                          font: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w700,
+                          ),
+                          color: const Color(0xFF14213D),
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: AppTheme.of(context).bodySmall.override(
+                          font: GoogleFonts.poppins(),
+                          color: const Color(0xFF64748B),
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       );
 }

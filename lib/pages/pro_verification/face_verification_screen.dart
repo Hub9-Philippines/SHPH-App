@@ -8,8 +8,8 @@ import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../services/face_verification/face_verification_service.dart';
 import '/services/profiles_service.dart';
+import '../../services/face_verification/face_verification_service.dart';
 
 /// Enum representing the states of the face verification process
 enum VerificationState {
@@ -118,7 +118,7 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
         await _cameraController!.dispose();
         _cameraController = null;
       }
-      _faceDetector?.close();
+      await _faceDetector?.close();
       _faceDetector = null;
 
       // Small delay to ensure camera is fully released

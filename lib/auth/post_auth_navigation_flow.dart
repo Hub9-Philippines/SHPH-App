@@ -99,7 +99,7 @@ class PostAuthNavigationFlow {
             tag: 'PostAuthNavigationFlow',
           );
           if (context.mounted) {
-            context.pushNamed(EKYCBeginWidget.routeName);
+            await context.pushNamed(EKYCBeginWidget.routeName);
           }
         }
       } else {

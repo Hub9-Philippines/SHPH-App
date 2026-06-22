@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/index.dart';
 import '/theme/app_theme.dart';
 
 class AboutWidget extends StatefulWidget {
@@ -14,12 +15,15 @@ class AboutWidget extends StatefulWidget {
 }
 
 class _AboutWidgetState extends State<AboutWidget> {
+  static const _supportEmail = 'support@serbisyohubph.com';
+  static const _websiteUrl = 'https://api.serbisyohub.ph';
+  static const _facebookUrl = 'https://www.facebook.com/SerbisyoHub/';
+
   final String appVersion = '1.0.0';
   final String buildNumber = '100';
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+  Widget build(BuildContext context) => Scaffold(
       appBar: AppBar(
         title: Text(
           'About',
@@ -98,24 +102,12 @@ class _AboutWidgetState extends State<AboutWidget> {
                 _buildLinkTile(
                   icon: Icons.description_outlined,
                   title: 'Terms of Service',
-                  onTap: () {
-                    // TODO: Navigate to Terms of Service
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('Terms of Service coming soon')),
-                    );
-                  },
+                  onTap: () => context.pushNamed(TermsOfServiceWidget.routeName),
                 ),
                 _buildLinkTile(
                   icon: Icons.privacy_tip_outlined,
                   title: 'Privacy Policy',
-                  onTap: () {
-                    // TODO: Navigate to Privacy Policy
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('Privacy Policy coming soon')),
-                    );
-                  },
+                  onTap: () => context.pushNamed(PrivacyPolicyWidget.routeName),
                 ),
               ],
             ),
@@ -126,33 +118,35 @@ class _AboutWidgetState extends State<AboutWidget> {
                 _buildLinkTile(
                   icon: Icons.language,
                   title: 'Website',
-                  subtitle: 'www.serbisyohub.ph',
-                  onTap: () {
-                    // TODO: Open website
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Opening website...')),
-                    );
-                  },
+                  subtitle: 'api.serbisyohub.ph',
+                  onTap: () => launchURL(_websiteUrl),
                 ),
                 _buildLinkTile(
                   icon: Icons.facebook,
                   title: 'Facebook',
                   subtitle: '@SerbisyoHub',
-                  onTap: () {
-                    // TODO: Open Facebook
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Opening Facebook...')),
-                    );
-                  },
+                  onTap: () => launchURL(_facebookUrl),
                 ),
                 _buildLinkTile(
                   icon: Icons.alternate_email,
                   title: 'Instagram',
                   subtitle: '@serbisyohub',
-                  onTap: () {
-                    // TODO: Open Instagram
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Opening Instagram...')),
+                  onTap: () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    await _openSupportEmail(
+                      subject: 'Request Official Instagram Link',
+                      body:
+                          'Hello SerbisyoHub team,\n\nPlease share the current official Instagram profile link.',
+                    );
+                    if (!mounted) {
+                      return;
+                    }
+                    messenger.showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Instagram access is currently routed to support email.',
+                        ),
+                      ),
                     );
                   },
                 ),
@@ -174,13 +168,23 @@ class _AboutWidgetState extends State<AboutWidget> {
         ),
       ),
     );
+
+  Future<void> _openSupportEmail({
+    required String subject,
+    String? body,
+  }) async {
+    final encodedSubject = Uri.encodeComponent(subject);
+    final encodedBody = Uri.encodeComponent(body ?? '');
+    await launchURL(
+      'mailto:$_supportEmail?subject=$encodedSubject&body=$encodedBody',
+    );
   }
 
   Widget _buildSection({
     required String title,
     required List<Widget> children,
-  }) {
-    return Padding(
+  }) =>
+      Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -207,15 +211,14 @@ class _AboutWidgetState extends State<AboutWidget> {
         ],
       ),
     );
-  }
 
   Widget _buildLinkTile({
     required IconData icon,
     required String title,
-    String? subtitle,
     required VoidCallback onTap,
-  }) {
-    return ListTile(
+    String? subtitle,
+  }) =>
+      ListTile(
       leading: Icon(
         icon,
         color: AppTheme.of(context).primary,
@@ -236,5 +239,4 @@ class _AboutWidgetState extends State<AboutWidget> {
       ),
       onTap: onTap,
     );
-  }
 }

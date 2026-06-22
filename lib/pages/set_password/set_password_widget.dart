@@ -374,8 +374,7 @@ class _SetPasswordWidgetState extends State<SetPasswordWidget> {
                                           elevation: 0,
                                           insetPadding: EdgeInsets.zero,
                                           backgroundColor: Colors.transparent,
-                                          alignment: const AlignmentDirectional(
-                                                  0, -1)
+                                          alignment: AlignmentDirectional.topCenter
                                               .resolve(
                                                   Directionality.of(context)),
                                           child: GestureDetector(
@@ -396,8 +395,7 @@ class _SetPasswordWidgetState extends State<SetPasswordWidget> {
                               height: 52,
                               padding: const EdgeInsetsDirectional.fromSTEB(
                                   16, 0, 16, 0),
-                              iconPadding: const EdgeInsetsDirectional.fromSTEB(
-                                  0, 0, 0, 0),
+                              iconPadding: EdgeInsetsDirectional.zero,
                               color: AppTheme.of(context).primary,
                               textStyle: AppTheme.of(context)
                                   .titleMedium
@@ -462,7 +460,7 @@ class _SetPasswordWidgetState extends State<SetPasswordWidget> {
                               hoverColor: Colors.transparent,
                               highlightColor: Colors.transparent,
                               onTap: () async {
-                                context.pushNamed(SignupWidget.routeName);
+                                await context.pushNamed(SignupWidget.routeName);
                               },
                               child: Text(
                                 'Sign In',

@@ -60,77 +60,9 @@ class MessagesModel extends FlutterFlowModel<MessagesWidget> {
 
   @override
   void initState(BuildContext context) {
-    _initializeMockData();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadChatRooms();
     });
-  }
-
-  void _initializeMockData() {
-    final now = DateTime.now();
-
-    chatRooms = [
-      ChatRoom(
-        id: '00000000-0000-0000-0000-000000000001',
-        providerName: 'Maria Santos',
-        providerPhoto:
-            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
-        lastMessage: 'Thank you for the booking! See you tomorrow.',
-        lastMessageTime: now.subtract(const Duration(hours: 2)),
-        unreadCount: 2,
-      ),
-      ChatRoom(
-        id: '00000000-0000-0000-0000-000000000002',
-        providerName: 'Anna Cruz',
-        providerPhoto:
-            'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100',
-        lastMessage: 'The paint colors look great!',
-        lastMessageTime: now.subtract(const Duration(days: 1)),
-        unreadCount: 0,
-      ),
-      ChatRoom(
-        id: '00000000-0000-0000-0000-000000000003',
-        providerName: 'Jose Reyes',
-        providerPhoto:
-            'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100',
-        lastMessage: 'Is the leak fixed?',
-        lastMessageTime: now.subtract(const Duration(days: 3)),
-        unreadCount: 1,
-      ),
-    ];
-
-    callHistory = [
-      CallHistory(
-        id: '1',
-        providerName: 'Maria Santos',
-        providerPhoto:
-            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
-        callType: 'voice',
-        callStatus: 'missed',
-        durationSeconds: 0,
-        createdAt: now.subtract(const Duration(hours: 5)),
-      ),
-      CallHistory(
-        id: '2',
-        providerName: 'Anna Cruz',
-        providerPhoto:
-            'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100',
-        callType: 'video',
-        callStatus: 'incoming',
-        durationSeconds: 180,
-        createdAt: now.subtract(const Duration(days: 1)),
-      ),
-      CallHistory(
-        id: '3',
-        providerName: 'Jose Reyes',
-        providerPhoto:
-            'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100',
-        callType: 'voice',
-        callStatus: 'outgoing',
-        durationSeconds: 45,
-        createdAt: now.subtract(const Duration(days: 2)),
-      ),
-    ];
   }
 
   Future<void> _loadChatRooms() async {
@@ -186,6 +118,8 @@ class MessagesModel extends FlutterFlowModel<MessagesWidget> {
       onStateChanged?.call();
     }
   }
+
+  Future<void> reload() => _loadChatRooms();
 
   @override
   void dispose() {

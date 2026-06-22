@@ -332,21 +332,19 @@ String _getStoragePath(
   bool isVideo, [
   int? index,
 ]) {
-  pathPrefix ??= _firebasePathPrefix();
-  pathPrefix = _removeTrailingSlash(pathPrefix);
+  final prefix = _removeTrailingSlash(pathPrefix ?? _firebasePathPrefix());
   final timestamp = DateTime.now().microsecondsSinceEpoch;
   // Workaround fixed by https://github.com/flutter/plugins/pull/3685
   // (not yet in stable).
   final ext = isVideo ? 'mp4' : filePath.split('.').last;
   final indexStr = index != null ? '_$index' : '';
-  return '$pathPrefix/$timestamp$indexStr.$ext';
+  return '$prefix/$timestamp$indexStr.$ext';
 }
 
 String getSignatureStoragePath([String? pathPrefix]) {
-  pathPrefix ??= _firebasePathPrefix();
-  pathPrefix = _removeTrailingSlash(pathPrefix);
+  final prefix = _removeTrailingSlash(pathPrefix ?? _firebasePathPrefix());
   final timestamp = DateTime.now().microsecondsSinceEpoch;
-  return '$pathPrefix/signature_$timestamp.png';
+  return '$prefix/signature_$timestamp.png';
 }
 
 void showUploadMessage(

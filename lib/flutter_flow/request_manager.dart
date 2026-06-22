@@ -14,21 +14,21 @@ class FutureRequestManager<T> {
     required Future<T> Function() requestFn, String? uniqueQueryKey,
     bool? overrideCache,
   }) {
-    uniqueQueryKey = _requestKey(uniqueQueryKey);
+    final key = _requestKey(uniqueQueryKey);
     overrideCache ??= false;
 
     // If we don't want to use the cache, clear it for this request.
     if (overrideCache) {
-      clearRequest(uniqueQueryKey);
+      clearRequest(key);
     }
     // Remove the first cached result if we have reached the specified limit,
     // since we will be adding another.
-    if (!_requests.containsKey(uniqueQueryKey) &&
+    if (!_requests.containsKey(key) &&
         _requests.length >= cacheLimit) {
       _requests.remove(_requests.keys.first);
     }
     // Return the cached query result or set it to the new value.
-    return _requests[uniqueQueryKey] ??= requestFn();
+    return _requests[key] ??= requestFn();
   }
 
   void clearRequest(String? key) => _requests.remove(_requestKey(key));
@@ -46,17 +46,17 @@ class StreamRequestManager<T> {
     required Stream<T> Function() requestFn, String? uniqueQueryKey,
     bool? overrideCache,
   }) {
-    uniqueQueryKey = _requestKey(uniqueQueryKey);
+    final key = _requestKey(uniqueQueryKey);
     overrideCache ??= false;
 
     // If we don't want to use the cache, clear it for this request.
     if (overrideCache) {
-      clearRequest(uniqueQueryKey);
+      clearRequest(key);
     }
 
     // If this request was made previously, return its value stream.
-    if (_streamSubjects.containsKey(uniqueQueryKey)) {
-      return _streamSubjects[uniqueQueryKey]!.stream;
+    if (_streamSubjects.containsKey(key)) {
+      return _streamSubjects[key]!.stream;
     }
 
     // Remove the first cached result if we have reached the specified limit,
@@ -67,18 +67,18 @@ class StreamRequestManager<T> {
 
     // Create a subscription that stores the latest result in the behavior subject.
     final streamSubject = BehaviorSubject<T>();
-    _requestSubscriptions[uniqueQueryKey] = requestFn()
+    _requestSubscriptions[key] = requestFn()
         .asBroadcastStream()
         .listen(streamSubject.add);
-    _streamSubjects[uniqueQueryKey] = streamSubject;
+    _streamSubjects[key] = streamSubject;
 
     return streamSubject.stream;
   }
 
   void clearRequest(String? key) {
-    key = _requestKey(key);
-    _streamSubjects.remove(key)?.close();
-    _requestSubscriptions.remove(key)?.cancel();
+    final resolvedKey = _requestKey(key);
+    _streamSubjects.remove(resolvedKey)?.close();
+    _requestSubscriptions.remove(resolvedKey)?.cancel();
   }
 
   void clear() => {
