@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
+import '/app_state.dart';
 import '/backend/supabase/supabase.dart';
 import '/models/service_listing.dart';
 import '/services/bookings_service.dart';
 import '/services/logging_service.dart';
+import '/utils/geo_utils.dart';
 
 import 'tm_models.dart';
 
@@ -147,17 +149,18 @@ class PersistentMockTMRepository implements TMRepository {
     required String stage,
     required int searchRadiusKm,
     required int attempt,
-  }) => _persistMetadata(
-    requestId,
-    service: service,
-    subCategory: subCategory,
-    metadata: {
-      'flow': 'tm',
-      'stage': stage,
-      'search_radius_km': searchRadiusKm,
-      'search_attempt': attempt,
-    },
-  );
+  }) =>
+      _persistMetadata(
+        requestId,
+        service: service,
+        subCategory: subCategory,
+        metadata: {
+          'flow': 'tm',
+          'stage': stage,
+          'search_radius_km': searchRadiusKm,
+          'search_attempt': attempt,
+        },
+      );
 
   @override
   Future<TMProviderProfile?> findProvider({
@@ -213,6 +216,8 @@ class PersistentMockTMRepository implements TMRepository {
           'completed_jobs': provider.completedJobs,
           'eta_minutes': provider.etaMinutes,
           'vehicle_label': provider.vehicleLabel,
+          'latitude': provider.latitude,
+          'longitude': provider.longitude,
         },
       },
       status: 'accepted',
@@ -311,14 +316,15 @@ class PersistentMockTMRepository implements TMRepository {
     required String requestId,
     required ServiceListing service,
     required TMSubCategoryOption subCategory,
-  }) => _persistMetadata(
-    requestId,
-    service: service,
-    subCategory: subCategory,
-    metadata: {'flow': 'tm', 'stage': 'completed'},
-    status: 'completed',
-    extraData: {'completed_at': DateTime.now().toIso8601String()},
-  );
+  }) =>
+      _persistMetadata(
+        requestId,
+        service: service,
+        subCategory: subCategory,
+        metadata: {'flow': 'tm', 'stage': 'completed'},
+        status: 'completed',
+        extraData: {'completed_at': DateTime.now().toIso8601String()},
+      );
 
   @override
   Future<bool> cancelBroadcast({
@@ -326,19 +332,20 @@ class PersistentMockTMRepository implements TMRepository {
     required ServiceListing service,
     required TMSubCategoryOption subCategory,
     required String reason,
-  }) => _persistMetadata(
-    requestId,
-    service: service,
-    subCategory: subCategory,
-    metadata: {
-      'flow': 'tm',
-      'stage': 'cancelled',
-      'cancel_reason': reason,
-      'cancelled_at': DateTime.now().toIso8601String(),
-    },
-    status: 'cancelled',
-    extraData: {'cancelled_at': DateTime.now().toIso8601String()},
-  );
+  }) =>
+      _persistMetadata(
+        requestId,
+        service: service,
+        subCategory: subCategory,
+        metadata: {
+          'flow': 'tm',
+          'stage': 'cancelled',
+          'cancel_reason': reason,
+          'cancelled_at': DateTime.now().toIso8601String(),
+        },
+        status: 'cancelled',
+        extraData: {'cancelled_at': DateTime.now().toIso8601String()},
+      );
 
   @override
   Future<bool> processPayment({
@@ -425,8 +432,7 @@ class PersistentMockTMRepository implements TMRepository {
             ? null
             : TMHardwareRequest(
                 id: hardwareMap['id']?.toString() ?? 'hardware',
-                title:
-                    hardwareMap['title']?.toString() ??
+                title: hardwareMap['title']?.toString() ??
                     'Hardware Parts Required',
                 description: hardwareMap['description']?.toString() ?? '',
                 additionalCost: _toDouble(hardwareMap['additional_cost']) ?? 0,
@@ -439,44 +445,42 @@ class PersistentMockTMRepository implements TMRepository {
   }
 
   @override
-  Stream<TMBookingSnapshot?> watchBookingSnapshot(String requestId) => Supabase
-      .instance
-      .client
-      .from('bookings')
-      .stream(primaryKey: ['id'])
-      .eq('id', requestId)
-      .map((rows) {
-        if (rows.isEmpty) {
-          return null;
-        }
+  Stream<TMBookingSnapshot?> watchBookingSnapshot(String requestId) =>
+      Supabase.instance.client
+          .from('bookings')
+          .stream(primaryKey: ['id'])
+          .eq('id', requestId)
+          .map((rows) {
+            if (rows.isEmpty) {
+              return null;
+            }
 
-        final booking = BookingsRow(rows.first);
-        final metadata = _extractMetadata(booking.notes);
-        final providerMap = metadata['provider'] as Map<String, dynamic>?;
-        final hardwareMap =
-            metadata['hardware_request'] as Map<String, dynamic>?;
+            final booking = BookingsRow(rows.first);
+            final metadata = _extractMetadata(booking.notes);
+            final providerMap = metadata['provider'] as Map<String, dynamic>?;
+            final hardwareMap =
+                metadata['hardware_request'] as Map<String, dynamic>?;
 
-        return TMBookingSnapshot(
-          requestId: booking.id,
-          status: booking.status,
-          stage: metadata['stage'] as String?,
-          dispatchMode: metadata['dispatch_mode'] as String?,
-          paymentStatus: booking.paymentStatus,
-          totalPrice: booking.totalPrice,
-          provider: _providerFromMap(providerMap),
-          hardwareRequest: hardwareMap == null
-              ? null
-              : TMHardwareRequest(
-                  id: hardwareMap['id']?.toString() ?? 'hardware',
-                  title:
-                      hardwareMap['title']?.toString() ??
-                      'Hardware Parts Required',
-                  description: hardwareMap['description']?.toString() ?? '',
-                  additionalCost:
-                      _toDouble(hardwareMap['additional_cost']) ?? 0,
-                ),
-        );
-      });
+            return TMBookingSnapshot(
+              requestId: booking.id,
+              status: booking.status,
+              stage: metadata['stage'] as String?,
+              dispatchMode: metadata['dispatch_mode'] as String?,
+              paymentStatus: booking.paymentStatus,
+              totalPrice: booking.totalPrice,
+              provider: _providerFromMap(providerMap),
+              hardwareRequest: hardwareMap == null
+                  ? null
+                  : TMHardwareRequest(
+                      id: hardwareMap['id']?.toString() ?? 'hardware',
+                      title: hardwareMap['title']?.toString() ??
+                          'Hardware Parts Required',
+                      description: hardwareMap['description']?.toString() ?? '',
+                      additionalCost:
+                          _toDouble(hardwareMap['additional_cost']) ?? 0,
+                    ),
+            );
+          });
 
   Future<bool> _persistMetadata(
     String requestId, {
@@ -525,6 +529,8 @@ class PersistentMockTMRepository implements TMRepository {
       completedJobs: (providerMap['completed_jobs'] as num?)?.toInt() ?? 0,
       etaMinutes: (providerMap['eta_minutes'] as num?)?.toInt() ?? 0,
       vehicleLabel: providerMap['vehicle_label']?.toString() ?? 'Service unit',
+      latitude: _toDouble(providerMap['latitude']),
+      longitude: _toDouble(providerMap['longitude']),
     );
   }
 
@@ -535,6 +541,23 @@ class PersistentMockTMRepository implements TMRepository {
     required int attempt,
   }) async {
     try {
+      final appState = FFAppState();
+      final clientLat = appState.selectedLatitude;
+      final clientLng = appState.selectedLongitude;
+
+      if (!GeoUtils.hasValidLocation(clientLat, clientLng)) {
+        LoggingService.debug(
+          'No valid pinned location — using Manila fallback',
+          tag: 'TMRepository',
+        );
+      }
+      final originLat = GeoUtils.hasValidLocation(clientLat, clientLng)
+          ? clientLat!
+          : GeoUtils.fallbackLat;
+      final originLng = GeoUtils.hasValidLocation(clientLat, clientLng)
+          ? clientLng!
+          : GeoUtils.fallbackLng;
+
       final profiles = await Supabase.instance.client
           .from('profiles')
           .select(
@@ -543,25 +566,49 @@ class PersistentMockTMRepository implements TMRepository {
           .eq('role', 'provider')
           .limit(attempt == 1 ? 25 : 50);
 
-      final candidates =
-          List<Map<String, dynamic>>.from(
-            profiles,
-          ).where(_isEligibleProvider).toList()..sort(
-            (a, b) =>
-                _providerScore(
-                  b,
-                  service: service,
-                  subCategory: subCategory,
-                ).compareTo(
-                  _providerScore(a, service: service, subCategory: subCategory),
-                ),
+      final candidates = List<Map<String, dynamic>>.from(profiles)
+          .where(_isEligibleProvider)
+          .where((p) {
+        final pLat = (p['latitude'] as num?)?.toDouble();
+        final pLng = (p['longitude'] as num?)?.toDouble();
+        if (pLat == null || pLng == null) return false;
+
+        final dist = GeoUtils.calculateDistance(
+          originLat,
+          originLng,
+          pLat,
+          pLng,
+        );
+        p['_distanceKm'] = dist;
+        return dist <= searchRadiusKm;
+      }).toList()
+        ..sort((a, b) {
+          final distA = a['_distanceKm'] as double;
+          final distB = b['_distanceKm'] as double;
+          final scoreA = _providerScore(
+            a,
+            service: service,
+            subCategory: subCategory,
+            distanceKm: distA,
           );
+          final scoreB = _providerScore(
+            b,
+            service: service,
+            subCategory: subCategory,
+            distanceKm: distB,
+          );
+          return scoreB.compareTo(scoreA);
+        });
 
       if (candidates.isEmpty) {
         return null;
       }
 
       final best = candidates.first;
+      final bestDist = best['_distanceKm'] as double;
+      final bestLat = (best['latitude'] as num?)?.toDouble();
+      final bestLng = (best['longitude'] as num?)?.toDouble();
+
       return TMProviderProfile(
         id: best['id']?.toString() ?? '',
         name: (best['display_name'] ?? best['first_name'] ?? 'Provider')
@@ -569,10 +616,12 @@ class PersistentMockTMRepository implements TMRepository {
         specialty: (best['skill_profession'] ?? subCategory.title).toString(),
         rating: best['is_verified'] == true ? 4.9 : 4.7,
         completedJobs: 120 + _random.nextInt(120),
-        etaMinutes: searchRadiusKm <= 4 ? 12 : 18,
-        vehicleLabel: searchRadiusKm <= 4
+        etaMinutes: GeoUtils.calculateETA(bestDist),
+        vehicleLabel: bestDist <= 4
             ? 'Nearby service unit'
             : 'Expanded-area service unit',
+        latitude: bestLat,
+        longitude: bestLng,
       );
     } catch (e) {
       LoggingService.error(
@@ -591,18 +640,19 @@ class PersistentMockTMRepository implements TMRepository {
     return true;
   }
 
-  int _providerScore(
+  double _providerScore(
     Map<String, dynamic> profile, {
     required ServiceListing service,
     required TMSubCategoryOption subCategory,
+    required double distanceKm,
   }) {
-    final profession = (profile['skill_profession']?.toString() ?? '')
-        .toLowerCase();
+    final profession =
+        (profile['skill_profession']?.toString() ?? '').toLowerCase();
     final serviceTitle = service.title.toLowerCase();
     final category = (service.categoryName ?? '').toLowerCase();
     final subCategoryTitle = subCategory.title.toLowerCase();
 
-    var score = 0;
+    double score = 0;
     if (profession.contains(subCategoryTitle)) {
       score += 6;
     }
@@ -615,7 +665,8 @@ class PersistentMockTMRepository implements TMRepository {
     if (profile['is_verified'] == true) {
       score += 2;
     }
-    return score;
+    score -= distanceKm * 1.5;
+    return score.clamp(0, double.infinity);
   }
 
   String _buildNotes({
@@ -665,12 +716,13 @@ class PersistentMockTMRepository implements TMRepository {
   String _humanSummary(
     ServiceListing service,
     TMSubCategoryOption subCategory,
-  ) => [
-    'Time-material service request',
-    'Service: ${service.title}',
-    'Sub-category: ${subCategory.title}',
-    'Estimate: ${subCategory.estimateLabel}',
-  ].join(' | ');
+  ) =>
+      [
+        'Time-material service request',
+        'Service: ${service.title}',
+        'Sub-category: ${subCategory.title}',
+        'Estimate: ${subCategory.estimateLabel}',
+      ].join(' | ');
 
   String _timeString(DateTime dateTime) {
     final hour = dateTime.hour.toString().padLeft(2, '0');

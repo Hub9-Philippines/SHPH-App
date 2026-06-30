@@ -111,15 +111,28 @@ class MessagesModel extends FlutterFlowModel<MessagesWidget> {
           unreadCount: unreadCount,
         );
       }).toList();
+
+      _syncUnreadCount();
     } catch (e) {
       chatRooms = const [];
+      _syncUnreadCount();
     } finally {
       isLoading = false;
       onStateChanged?.call();
     }
   }
 
-  Future<void> reload() => _loadChatRooms();
+  Future<void> reload() {
+    _syncUnreadCount();
+    return _loadChatRooms();
+  }
+
+  void _syncUnreadCount() {
+    final total = chatRooms
+        .where((room) => room.unreadCount > 0)
+        .fold<int>(0, (sum, room) => sum + room.unreadCount);
+    FFAppState().unreadConversations = total;
+  }
 
   @override
   void dispose() {

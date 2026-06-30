@@ -459,6 +459,11 @@ class AppRouter {
             builder: (context, state) => const ProEditProfileWidget(),
           ),
           GoRoute(
+            path: EditProfileWidget.routePath,
+            name: EditProfileWidget.routeName,
+            builder: (context, state) => const EditProfileWidget(),
+          ),
+          GoRoute(
             path: ServiceHistoryWidget.routePath,
             name: ServiceHistoryWidget.routeName,
             builder: (context, state) => const ServiceHistoryWidget(),

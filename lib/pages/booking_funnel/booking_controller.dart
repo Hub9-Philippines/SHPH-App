@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '/app_state.dart';
 import '/models/service_listing.dart';
+import '/services/logging_service.dart';
+import '/services/nearby_pro_mock_data.dart';
+import '/utils/geo_utils.dart';
 import 'booking_models.dart';
 import 'booking_repository.dart';
 
@@ -22,10 +26,21 @@ class BookingFlowController extends ChangeNotifier {
               ),
               latitude: 14.5995,
               longitude: 120.9842,
-            );
+            ),
+        _isLoadingData = true {
+    // Flip the loading flag after the current microtask so the skeleton
+    // renders for exactly one frame before the real content appears.
+    Future.microtask(() {
+      _isLoadingData = false;
+      notifyListeners();
+    });
+  }
 
   final BookingRepository repository;
   BookingDraft _draft;
+
+  bool _isLoadingData;
+  bool get isLoadingData => _isLoadingData;
 
   bool isSubmitting = false;
   bool liveSearchTimedOut = false;
@@ -163,7 +178,58 @@ class BookingFlowController extends ChangeNotifier {
     liveSearchTimedOut = false;
     lastError = null;
     notifyListeners();
+
     try {
+      // --- Location validation gate ---
+      final appState = FFAppState();
+      final rawLat = appState.selectedLatitude;
+      final rawLng = appState.selectedLongitude;
+
+      if (!GeoUtils.hasValidLocation(rawLat, rawLng)) {
+        LoggingService.debug(
+          'No valid pinned location for live search — using Manila fallback',
+          tag: 'BookingFlowController',
+        );
+      }
+      final originLat = GeoUtils.hasValidLocation(rawLat, rawLng)
+          ? rawLat!
+          : GeoUtils.fallbackLat;
+      final originLng = GeoUtils.hasValidLocation(rawLat, rawLng)
+          ? rawLng!
+          : GeoUtils.fallbackLng;
+
+      _draft = _draft.copyWith(
+        latitude: originLat,
+        longitude: originLng,
+      );
+
+      // --- Proximity gate: ensure at least one provider exists within 10 km ---
+      const nearbyThresholdKm = 10.0;
+      final mockNearby = NearbyProMockData.instance.generateNearbyPros(
+        serviceId: _draft.serviceListingId ?? 0,
+        category: _draft.serviceCategoryName ?? 'Service',
+        count: 3,
+      );
+      final hasProviderNearby = mockNearby.any((pro) {
+        final proLat = pro['providerLatitude'] as double?;
+        final proLng = pro['providerLongitude'] as double?;
+        if (proLat == null || proLng == null) return false;
+        final dist = GeoUtils.calculateDistance(
+          originLat, originLng, proLat, proLng,
+        );
+        return dist <= nearbyThresholdKm;
+      });
+
+      if (!hasProviderNearby) {
+        lastError =
+            'No providers available within 10 km of your location. '
+            'Try expanding your search area or scheduling for later.';
+        isSubmitting = false;
+        notifyListeners();
+        return false;
+      }
+      // --- End proximity gate ---
+
       activeReferenceId = await repository.broadcastLiveSearch(_draft);
       _draft = _draft.copyWith(liveSearchToken: activeReferenceId);
       return true;

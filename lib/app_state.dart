@@ -121,11 +121,32 @@ class FFAppState extends ChangeNotifier {
   String _selectedLocationMode = 'device';
   String get selectedLocationMode => _selectedLocationMode;
 
+  double _nearestProviderDistance = 99.0;
+  double get nearestProviderDistance => _nearestProviderDistance;
+  set nearestProviderDistance(double value) {
+    _nearestProviderDistance = value;
+    prefs.setDouble('ff_nearestProviderDistance', value);
+  }
+
   String _locale = 'en';
   String get locale => _locale;
   set locale(String value) {
     _locale = value;
     prefs.setString('ff_locale', value);
+    notifyListeners();
+  }
+
+  int _notificationCount = 0;
+  int get notificationCount => _notificationCount;
+  set notificationCount(int value) {
+    _notificationCount = value;
+    notifyListeners();
+  }
+
+  int _unreadConversations = 0;
+  int get unreadConversations => _unreadConversations;
+  set unreadConversations(int value) {
+    _unreadConversations = value;
     notifyListeners();
   }
 

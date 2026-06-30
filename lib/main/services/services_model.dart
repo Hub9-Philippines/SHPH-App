@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '/backend/supabase/database/tables/service_listings.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/logging_service.dart';
+import '/services/nearby_pro_mock_data.dart';
 import 'services_widget.dart' show ServicesScreen;
 
 class ServicesModel extends FlutterFlowModel<ServicesScreen> {
@@ -67,25 +68,40 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
             q.eq('is_available', 'true').order('rating', ascending: false),
       );
 
-      allServices = services
-          .map((service) => {
-                'id': service.id,
-                'serviceId': service.id,
-                'title': service.title,
-                'category': service.categoryName ?? 'Service',
-                'description': service.description ?? '',
-                'price': service.basePrice != null
-                    ? 'PHP ${service.basePrice}${service.priceUnit ?? ''}'
-                    : 'PHP 0',
-                'rating': double.tryParse(service.rating ?? '0') ?? 0.0,
-                'reviewCount': service.reviewCount ?? 0,
-                'imageUrl': service.thumbnail ?? '',
-                'providerId': service.provider?.toString() ?? '',
-                'providerName': service.providerName ?? 'Provider',
-                'providerPhoto': service.providerPhoto ?? '',
-                'isTimeMaterial': service.isTimeMaterial ?? false,
-              })
-          .toList();
+      allServices = services.map((service) {
+        final nearByPros = NearbyProMockData.instance.generateNearbyPros(
+          serviceId: service.id,
+          category: service.categoryName ?? 'Service',
+          count: 3,
+        );
+        final nearest = nearByPros.isNotEmpty ? nearByPros.first : null;
+
+        return {
+          'id': service.id,
+          'serviceId': service.id,
+          'title': service.title,
+          'category': service.categoryName ?? 'Service',
+          'description': service.description ?? '',
+          'price': service.basePrice != null
+              ? 'PHP ${service.basePrice}${service.priceUnit ?? ''}'
+              : 'PHP 0',
+          'rating': double.tryParse(service.rating ?? '0') ?? 0.0,
+          'reviewCount': service.reviewCount ?? 0,
+          'imageUrl': service.thumbnail ?? '',
+          'providerId':
+              nearest?['providerId'] ?? service.provider?.toString() ?? '',
+          'providerName':
+              nearest?['providerName'] ?? service.providerName ?? 'Provider',
+          'providerPhoto':
+              nearest?['providerPhoto'] ?? service.providerPhoto ?? '',
+          'isTimeMaterial': service.isTimeMaterial ?? false,
+          'distanceKm': nearest?['distanceKm'] ?? 99.0,
+          'distanceText': nearest?['distanceText'] ?? 'Unknown',
+          'providerLatitude': nearest?['providerLatitude'],
+          'providerLongitude': nearest?['providerLongitude'],
+          'nearbyPros': nearByPros,
+        };
+      }).toList();
 
       filteredServices = List.from(allServices);
     } catch (e, stackTrace) {
@@ -116,13 +132,11 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
     }
 
     if (searchQuery.isNotEmpty) {
-      filteredServices = filteredServices
-          .where((service) {
-            final query = searchQuery.toLowerCase();
-            return (service['title'] as String).toLowerCase().contains(query) ||
-                (service['category'] as String).toLowerCase().contains(query);
-          })
-          .toList();
+      filteredServices = filteredServices.where((service) {
+        final query = searchQuery.toLowerCase();
+        return (service['title'] as String).toLowerCase().contains(query) ||
+            (service['category'] as String).toLowerCase().contains(query);
+      }).toList();
     }
 
     switch (selectedFilter) {
@@ -155,9 +169,9 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
         break;
       case 'nearest':
         filteredServices.sort((a, b) {
-          final ratingA = a['rating'] as double;
-          final ratingB = b['rating'] as double;
-          return ratingB.compareTo(ratingA);
+          final distA = a['distanceKm'] as double;
+          final distB = b['distanceKm'] as double;
+          return distA.compareTo(distB);
         });
         break;
       default:
@@ -201,7 +215,8 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
       return true;
     }
 
-    if (_categoryAlias(selectedNormalized) == _categoryAlias(actualNormalized)) {
+    if (_categoryAlias(selectedNormalized) ==
+        _categoryAlias(actualNormalized)) {
       return true;
     }
 

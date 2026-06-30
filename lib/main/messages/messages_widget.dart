@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/custom_code/widgets/index.dart' as custom_widgets;
 import '/flutter_flow/flutter_flow_util.dart';
-import '/index.dart' show CallHistoryDetailsPageWidget, ChatPageWidget;
+import '/index.dart' show CallHistoryDetailsPageWidget, ChatPageWidget, MyNotificationsWidget;
 import '/theme/app_theme.dart';
 import 'messages_model.dart';
 
@@ -78,10 +78,6 @@ class _MessagesWidgetState extends State<MessagesWidget> {
         )
         .toList();
   }
-
-  int get _unreadConversations => _model.chatRooms
-      .where((room) => room.unreadCount > 0)
-      .fold(0, (total, room) => total + room.unreadCount);
 
   @override
   Widget build(BuildContext context) => GestureDetector(
@@ -209,6 +205,17 @@ class _MessagesWidgetState extends State<MessagesWidget> {
               ],
             ),
           ),
+          IconButton.filledTonal(
+            onPressed: () => context.pushNamed(
+              MyNotificationsWidget.routeName,
+            ),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: AppTheme.of(context).primary,
+            ),
+            icon: const Icon(Icons.tune_rounded),
+          ),
+          const SizedBox(width: 8),
           IconButton.filledTonal(
             onPressed: _model.reload,
             style: IconButton.styleFrom(

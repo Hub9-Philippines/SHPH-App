@@ -6,6 +6,8 @@ import 'package:flutter/scheduler.dart';
 import '/app_state.dart';
 import '/models/service_listing.dart';
 import '/pages/dispatch/dispatch_repository.dart';
+import '/services/logging_service.dart';
+import '/utils/geo_utils.dart';
 
 import 'tm_catalog.dart';
 import 'tm_models.dart';
@@ -15,13 +17,20 @@ enum TMBroadcastStage { idle, nearbySearch, expandedSearch, failed }
 
 class TMFlowController extends ChangeNotifier {
   TMFlowController({required this.selectedService, TMRepository? repository})
-    : repository =
-          repository ??
-          DispatchTMRepository(
-            clientLatitude: FFAppState().selectedLatitude,
-            clientLongitude: FFAppState().selectedLongitude,
-          ),
-      _subCategories = tmSubCategoriesForService(selectedService);
+      : repository = repository ?? _createDispatchRepository(),
+        _subCategories = tmSubCategoriesForService(selectedService);
+
+  static DispatchTMRepository _createDispatchRepository() {
+    final appState = FFAppState();
+    final lat = appState.selectedLatitude;
+    final lng = appState.selectedLongitude;
+    return DispatchTMRepository(
+      clientLatitude:
+          GeoUtils.hasValidLocation(lat, lng) ? lat! : GeoUtils.fallbackLat,
+      clientLongitude:
+          GeoUtils.hasValidLocation(lat, lng) ? lng! : GeoUtils.fallbackLng,
+    );
+  }
 
   final ServiceListing selectedService;
   final TMRepository repository;
@@ -144,6 +153,15 @@ class TMFlowController extends ChangeNotifier {
     final option = _selectedSubCategory;
     if (option == null) {
       return;
+    }
+
+    final appState = FFAppState();
+    if (!GeoUtils.hasValidLocation(
+        appState.selectedLatitude, appState.selectedLongitude)) {
+      LoggingService.debug(
+        'No valid pinned location for broadcast — search will use Manila fallback',
+        tag: 'TMFlowController',
+      );
     }
 
     _searchCycleId++;
@@ -529,7 +547,8 @@ class TMFlowController extends ChangeNotifier {
       _secondsRemaining = 0;
       _broadcastStage = TMBroadcastStage.failed;
       notifyListeners();
-    })..start();
+    })
+      ..start();
   }
 
   void _startSnapshotStream(int cycleId) {

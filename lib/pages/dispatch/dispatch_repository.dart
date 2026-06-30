@@ -2,12 +2,14 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
+import '/app_state.dart';
 import '/backend/supabase/supabase.dart';
 import '/models/service_listing.dart';
 import '/pages/tm_flow/tm_models.dart';
 import '/pages/tm_flow/tm_repository.dart';
 import '/services/bookings_service.dart';
 import '/services/logging_service.dart';
+import '/utils/geo_utils.dart';
 
 /// A [TMRepository] implementation that uses the server-authoritative
 /// dispatch engine (job_requests + dispatch_offers + match_best_provider).
@@ -29,9 +31,9 @@ class DispatchTMRepository implements TMRepository {
     this.matchTimeout = const Duration(seconds: 120),
     double? clientLatitude,
     double? clientLongitude,
-  }) : _bookingsService = bookingsService ?? BookingsService.instance,
-       _clientLatitude = clientLatitude,
-       _clientLongitude = clientLongitude;
+  })  : _bookingsService = bookingsService ?? BookingsService.instance,
+        _clientLatitude = clientLatitude,
+        _clientLongitude = clientLongitude;
 
   static const _metaPrefix = 'TM_META:';
 
@@ -136,17 +138,18 @@ class DispatchTMRepository implements TMRepository {
     required String stage,
     required int searchRadiusKm,
     required int attempt,
-  }) => _persistMetadata(
-    requestId,
-    service: service,
-    subCategory: subCategory,
-    metadata: {
-      'flow': 'tm',
-      'stage': stage,
-      'search_radius_km': searchRadiusKm,
-      'search_attempt': attempt,
-    },
-  );
+  }) =>
+      _persistMetadata(
+        requestId,
+        service: service,
+        subCategory: subCategory,
+        metadata: {
+          'flow': 'tm',
+          'stage': stage,
+          'search_radius_km': searchRadiusKm,
+          'search_attempt': attempt,
+        },
+      );
 
   /// Waits for the server to match a provider via the dispatch engine.
   ///
@@ -266,6 +269,8 @@ class DispatchTMRepository implements TMRepository {
               'completed_jobs': provider.completedJobs,
               'eta_minutes': provider.etaMinutes,
               'vehicle_label': provider.vehicleLabel,
+              'latitude': provider.latitude,
+              'longitude': provider.longitude,
             },
           },
           status: 'accepted',
@@ -380,13 +385,10 @@ class DispatchTMRepository implements TMRepository {
     // Also mark job_request as completed
     try {
       final supabase = Supabase.instance.client;
-      await supabase
-          .from('job_requests')
-          .update({
-            'status': 'completed',
-            'completed_at': DateTime.now().toIso8601String(),
-          })
-          .eq('booking_id', requestId);
+      await supabase.from('job_requests').update({
+        'status': 'completed',
+        'completed_at': DateTime.now().toIso8601String(),
+      }).eq('booking_id', requestId);
     } catch (e) {
       LoggingService.error(
         'Failed to mark job_request completed: $e',
@@ -409,8 +411,7 @@ class DispatchTMRepository implements TMRepository {
       final supabase = Supabase.instance.client;
       await supabase
           .from('job_requests')
-          .update({'status': 'cancelled'})
-          .eq('booking_id', requestId);
+          .update({'status': 'cancelled'}).eq('booking_id', requestId);
     } catch (e) {
       LoggingService.error(
         'Failed to cancel job_request: $e',
@@ -521,8 +522,7 @@ class DispatchTMRepository implements TMRepository {
             ? null
             : TMHardwareRequest(
                 id: hardwareMap['id']?.toString() ?? 'hardware',
-                title:
-                    hardwareMap['title']?.toString() ??
+                title: hardwareMap['title']?.toString() ??
                     'Hardware Parts Required',
                 description: hardwareMap['description']?.toString() ?? '',
                 additionalCost: _toDouble(hardwareMap['additional_cost']) ?? 0,
@@ -538,44 +538,42 @@ class DispatchTMRepository implements TMRepository {
   }
 
   @override
-  Stream<TMBookingSnapshot?> watchBookingSnapshot(String requestId) => Supabase
-      .instance
-      .client
-      .from('bookings')
-      .stream(primaryKey: ['id'])
-      .eq('id', requestId)
-      .map((rows) {
-        if (rows.isEmpty) {
-          return null;
-        }
+  Stream<TMBookingSnapshot?> watchBookingSnapshot(String requestId) =>
+      Supabase.instance.client
+          .from('bookings')
+          .stream(primaryKey: ['id'])
+          .eq('id', requestId)
+          .map((rows) {
+            if (rows.isEmpty) {
+              return null;
+            }
 
-        final booking = BookingsRow(rows.first);
-        final metadata = _extractMetadata(booking.notes);
-        final providerMap = metadata['provider'] as Map<String, dynamic>?;
-        final hardwareMap =
-            metadata['hardware_request'] as Map<String, dynamic>?;
+            final booking = BookingsRow(rows.first);
+            final metadata = _extractMetadata(booking.notes);
+            final providerMap = metadata['provider'] as Map<String, dynamic>?;
+            final hardwareMap =
+                metadata['hardware_request'] as Map<String, dynamic>?;
 
-        return TMBookingSnapshot(
-          requestId: booking.id,
-          status: booking.status,
-          stage: metadata['stage'] as String?,
-          dispatchMode: metadata['dispatch_mode'] as String?,
-          paymentStatus: booking.paymentStatus,
-          totalPrice: booking.totalPrice,
-          provider: _providerFromMap(providerMap),
-          hardwareRequest: hardwareMap == null
-              ? null
-              : TMHardwareRequest(
-                  id: hardwareMap['id']?.toString() ?? 'hardware',
-                  title:
-                      hardwareMap['title']?.toString() ??
-                      'Hardware Parts Required',
-                  description: hardwareMap['description']?.toString() ?? '',
-                  additionalCost:
-                      _toDouble(hardwareMap['additional_cost']) ?? 0,
-                ),
-        );
-      });
+            return TMBookingSnapshot(
+              requestId: booking.id,
+              status: booking.status,
+              stage: metadata['stage'] as String?,
+              dispatchMode: metadata['dispatch_mode'] as String?,
+              paymentStatus: booking.paymentStatus,
+              totalPrice: booking.totalPrice,
+              provider: _providerFromMap(providerMap),
+              hardwareRequest: hardwareMap == null
+                  ? null
+                  : TMHardwareRequest(
+                      id: hardwareMap['id']?.toString() ?? 'hardware',
+                      title: hardwareMap['title']?.toString() ??
+                          'Hardware Parts Required',
+                      description: hardwareMap['description']?.toString() ?? '',
+                      additionalCost:
+                          _toDouble(hardwareMap['additional_cost']) ?? 0,
+                    ),
+            );
+          });
 
   // ---------------------------------------------------------------
   //  Private helpers
@@ -600,33 +598,30 @@ class DispatchTMRepository implements TMRepository {
         return null;
       }
 
-      // Calculate approximate ETA from distance if client coords available
-      var etaMinutes = 15;
-      if (_clientLatitude != null && _clientLongitude != null) {
-        final pLat = (profile['latitude'] as num?)?.toDouble();
-        final pLng = (profile['longitude'] as num?)?.toDouble();
-        if (pLat != null && pLng != null) {
-          const kmPerDegree = 111.0;
-          final dLat = (_clientLatitude! - pLat) * kmPerDegree;
-          final dLng = (_clientLongitude! - pLng) * kmPerDegree;
-          final distanceKm = dLat * dLat + dLng * dLng; // rough 2D
-          // Assume avg speed 30 km/h in city
-          etaMinutes = (distanceKm / 30 * 60).round().clamp(5, 60);
-        }
-      }
+      final pLat = (profile['latitude'] as num?)?.toDouble();
+      final pLng = (profile['longitude'] as num?)?.toDouble();
+
+      final originLat = _clientLatitude ?? GeoUtils.fallbackLat;
+      final originLng = _clientLongitude ?? GeoUtils.fallbackLng;
+
+      final distanceKm = (pLat != null && pLng != null)
+          ? GeoUtils.calculateDistance(originLat, originLng, pLat, pLng)
+          : searchRadiusKm.toDouble();
 
       return TMProviderProfile(
         id: providerId,
         name: (profile['display_name'] ?? profile['first_name'] ?? 'Provider')
             .toString(),
-        specialty: (profile['skill_profession'] ?? 'Service Provider')
-            .toString(),
+        specialty:
+            (profile['skill_profession'] ?? 'Service Provider').toString(),
         rating: profile['is_verified'] == true ? 4.9 : 4.7,
         completedJobs: 120 + _random.nextInt(120),
-        etaMinutes: etaMinutes,
-        vehicleLabel: searchRadiusKm <= 4
+        etaMinutes: GeoUtils.calculateETA(distanceKm),
+        vehicleLabel: distanceKm <= 4
             ? 'Nearby service unit'
             : 'Expanded-area service unit',
+        latitude: pLat,
+        longitude: pLng,
       );
     } catch (e) {
       LoggingService.error(
@@ -684,6 +679,8 @@ class DispatchTMRepository implements TMRepository {
       completedJobs: (providerMap['completed_jobs'] as num?)?.toInt() ?? 0,
       etaMinutes: (providerMap['eta_minutes'] as num?)?.toInt() ?? 0,
       vehicleLabel: providerMap['vehicle_label']?.toString() ?? 'Service unit',
+      latitude: _toDouble(providerMap['latitude']),
+      longitude: _toDouble(providerMap['longitude']),
     );
   }
 
@@ -721,6 +718,8 @@ class DispatchTMRepository implements TMRepository {
           'completed_jobs': provider.completedJobs,
           'eta_minutes': provider.etaMinutes,
           'vehicle_label': provider.vehicleLabel,
+          'latitude': provider.latitude,
+          'longitude': provider.longitude,
         },
       },
       status: 'accepted',
@@ -740,6 +739,9 @@ class DispatchTMRepository implements TMRepository {
     required int attempt,
   }) async {
     try {
+      final originLat = _clientLatitude ?? GeoUtils.fallbackLat;
+      final originLng = _clientLongitude ?? GeoUtils.fallbackLng;
+
       final profiles = await Supabase.instance.client
           .from('profiles')
           .select(
@@ -748,25 +750,49 @@ class DispatchTMRepository implements TMRepository {
           .eq('role', 'provider')
           .limit(attempt == 1 ? 25 : 50);
 
-      final candidates =
-          List<Map<String, dynamic>>.from(
-            profiles,
-          ).where(_isEligibleProvider).toList()..sort(
-            (a, b) =>
-                _providerScore(
-                  b,
-                  service: service,
-                  subCategory: subCategory,
-                ).compareTo(
-                  _providerScore(a, service: service, subCategory: subCategory),
-                ),
+      final candidates = List<Map<String, dynamic>>.from(profiles)
+          .where(_isEligibleProvider)
+          .where((p) {
+        final pLat = (p['latitude'] as num?)?.toDouble();
+        final pLng = (p['longitude'] as num?)?.toDouble();
+        if (pLat == null || pLng == null) return false;
+
+        final dist = GeoUtils.calculateDistance(
+          originLat,
+          originLng,
+          pLat,
+          pLng,
+        );
+        p['_distanceKm'] = dist;
+        return dist <= searchRadiusKm;
+      }).toList()
+        ..sort((a, b) {
+          final distA = a['_distanceKm'] as double;
+          final distB = b['_distanceKm'] as double;
+          final scoreA = _providerScore(
+            a,
+            service: service,
+            subCategory: subCategory,
+            distanceKm: distA,
           );
+          final scoreB = _providerScore(
+            b,
+            service: service,
+            subCategory: subCategory,
+            distanceKm: distB,
+          );
+          return scoreB.compareTo(scoreA);
+        });
 
       if (candidates.isEmpty) {
         return null;
       }
 
       final best = candidates.first;
+      final bestDist = best['_distanceKm'] as double;
+      final bestLat = (best['latitude'] as num?)?.toDouble();
+      final bestLng = (best['longitude'] as num?)?.toDouble();
+
       return TMProviderProfile(
         id: best['id']?.toString() ?? '',
         name: (best['display_name'] ?? best['first_name'] ?? 'Provider')
@@ -774,10 +800,12 @@ class DispatchTMRepository implements TMRepository {
         specialty: (best['skill_profession'] ?? subCategory.title).toString(),
         rating: best['is_verified'] == true ? 4.9 : 4.7,
         completedJobs: 120 + _random.nextInt(120),
-        etaMinutes: searchRadiusKm <= 4 ? 12 : 18,
-        vehicleLabel: searchRadiusKm <= 4
+        etaMinutes: GeoUtils.calculateETA(bestDist),
+        vehicleLabel: bestDist <= 4
             ? 'Nearby service unit'
             : 'Expanded-area service unit',
+        latitude: bestLat,
+        longitude: bestLng,
       );
     } catch (e) {
       LoggingService.error(
@@ -796,18 +824,19 @@ class DispatchTMRepository implements TMRepository {
     return true;
   }
 
-  int _providerScore(
+  double _providerScore(
     Map<String, dynamic> profile, {
     required ServiceListing service,
     required TMSubCategoryOption subCategory,
+    required double distanceKm,
   }) {
-    final profession = (profile['skill_profession']?.toString() ?? '')
-        .toLowerCase();
+    final profession =
+        (profile['skill_profession']?.toString() ?? '').toLowerCase();
     final serviceTitle = service.title.toLowerCase();
     final category = (service.categoryName ?? '').toLowerCase();
     final subCategoryTitle = subCategory.title.toLowerCase();
 
-    var score = 0;
+    double score = 0;
     if (profession.contains(subCategoryTitle)) {
       score += 6;
     }
@@ -820,7 +849,8 @@ class DispatchTMRepository implements TMRepository {
     if (profile['is_verified'] == true) {
       score += 2;
     }
-    return score;
+    score -= distanceKm * 1.5;
+    return score.clamp(0, double.infinity);
   }
 
   String _buildNotes({
@@ -870,12 +900,13 @@ class DispatchTMRepository implements TMRepository {
   String _humanSummary(
     ServiceListing service,
     TMSubCategoryOption subCategory,
-  ) => [
-    'Time-material service request',
-    'Service: ${service.title}',
-    'Sub-category: ${subCategory.title}',
-    'Estimate: ${subCategory.estimateLabel}',
-  ].join(' | ');
+  ) =>
+      [
+        'Time-material service request',
+        'Service: ${service.title}',
+        'Sub-category: ${subCategory.title}',
+        'Estimate: ${subCategory.estimateLabel}',
+      ].join(' | ');
 
   String _timeString(DateTime dateTime) {
     final hour = dateTime.hour.toString().padLeft(2, '0');

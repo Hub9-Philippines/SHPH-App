@@ -11,8 +11,6 @@ class HomeModel extends FlutterFlowModel<HomeWidget> {
   // Model for categoriesgrid component.
   late CategoriesgridModel categoriesgridModel;
 
-  // Notification count
-  int notificationCount = 0;
   bool isLoadingNotifications = false;
 
   // Favorites tracking (local state - needs database integration)
@@ -31,7 +29,7 @@ class HomeModel extends FlutterFlowModel<HomeWidget> {
     try {
       // TODO: Replace with actual database query when notifications table is available
       // For testing, return sample count
-      notificationCount = 2; // Sample: 2 unread notifications
+      FFAppState().notificationCount = 2; // Sample: 2 unread notifications
       
       // Uncomment when notifications table is available:
       // final notifications = await NotificationsTable().queryRows(
@@ -39,10 +37,10 @@ class HomeModel extends FlutterFlowModel<HomeWidget> {
       //       .eq('user_id', currentUserUid)
       //       .eq('is_read', false),
       // );
-      // notificationCount = notifications.length;
+      // FFAppState().notificationCount = notifications.length;
     } catch (e) {
       // On error, default to 0
-      notificationCount = 0;
+      FFAppState().notificationCount = 0;
     } finally {
       isLoadingNotifications = false;
     }

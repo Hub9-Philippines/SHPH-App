@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/index.dart';
+import '/models/service_listing.dart';
 import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
+import '/utils/geo_utils.dart';
+import '../../pages/booking_funnel/booking_controller.dart';
+import '../../pages/booking_funnel/booking_models.dart';
+import '../../pages/booking_funnel/express_checkout_screen.dart';
+import '../../pages/booking_funnel/widgets/booking_flow_route.dart';
 import 'services_model.dart';
 
 export 'services_model.dart';
@@ -37,7 +43,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
     'recommended': 'Recommended',
     'topRated': 'Top rated',
     'lowestPrice': 'Lowest price',
-    'nearest': 'Popular nearby',
+    'nearest': 'Nearest first',
   };
 
   @override
@@ -584,26 +590,67 @@ class _ServicesScreenState extends State<ServicesScreen> {
     );
   }
 
+  void _openExpressCheckout(
+      BuildContext context, Map<String, dynamic> service) {
+    final appState = FFAppState();
+    final lat = appState.selectedLatitude ?? GeoUtils.fallbackLat;
+    final lng = appState.selectedLongitude ?? GeoUtils.fallbackLng;
+    final controller = BookingFlowController(
+      initialDraft: BookingDraft(
+        urgency: BookingUrgency.rightNow,
+        rooms: 1,
+        cleaningType: ServiceType.standard,
+        paymentMethod: BookingPaymentMethod.gcash,
+        address: BookingAddress(
+          label: appState.selectedAddressLabel.isNotEmpty
+              ? appState.selectedAddressLabel
+              : 'Pinned location',
+          line1: appState.selectedAddressLine1.isNotEmpty
+              ? appState.selectedAddressLine1
+              : 'Pinned address',
+          city: appState.selectedAddressCity.isNotEmpty
+              ? appState.selectedAddressCity
+              : 'Metro Manila',
+        ),
+        latitude: lat,
+        longitude: lng,
+      ),
+    );
+    controller.setService(ServiceListing(
+      id: service['id'] as int,
+      title: service['title'] as String,
+      categoryName: service['category'] as String?,
+      description: service['description'] as String?,
+      basePrice: double.tryParse(
+          (service['price'] as String).replaceAll(RegExp(r'[^0-9.]'), '')),
+      thumbnail: service['imageUrl'] as String?,
+      isTimeMaterial: service['isTimeMaterial'] as bool? ?? false,
+    ));
+    Navigator.of(context).push(
+      buildBookingFlowRoute(
+        ChangeNotifierProvider.value(
+          value: controller,
+          child: ExpressCheckoutScreen(
+            service: ServiceListing(
+              id: service['id'] as int,
+              title: service['title'] as String,
+              categoryName: service['category'] as String?,
+              description: service['description'] as String?,
+              basePrice: double.tryParse(
+                  (service['price'] as String).replaceAll(RegExp(r'[^0-9.]'), '')),
+              thumbnail: service['imageUrl'] as String?,
+              isTimeMaterial: service['isTimeMaterial'] as bool? ?? false,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildServiceCard(
           BuildContext context, Map<String, dynamic> service) =>
       GestureDetector(
-        onTap: () => context.pushNamed(
-          ProductPageWidget.routeName,
-          extra: <String, dynamic>{
-            'serviceName': service['title'] as String,
-            'category': service['category'] as String,
-            'price': service['price'] as String,
-            'rating': service['rating'] as double,
-            'reviewCount': service['reviewCount'] as int,
-            'imageUrl': service['imageUrl'] as String,
-            'description':
-                'Professional service for your needs. Quality work guaranteed.',
-            'providerId': service['providerId']?.toString() ?? '',
-            'providerName': service['providerName'] as String? ?? 'Provider',
-            'providerPhoto': service['providerPhoto'] as String?,
-            'providerCategory': service['category'] as String? ?? 'Service',
-          },
-        ),
+        onTap: () => _openExpressCheckout(context, service),
         child: Container(
           margin: const EdgeInsets.only(bottom: 14),
           decoration: BoxDecoration(
@@ -678,6 +725,28 @@ class _ServicesScreenState extends State<ServicesScreen> {
                               ),
                         ),
                       ),
+                      if (_model.selectedFilter == 'nearest' &&
+                          service['distanceText'] != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.location_on_rounded,
+                                size: 14,
+                                color: AppTheme.of(context).primary,
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                service['distanceText'] as String,
+                                style: AppTheme.of(context).labelSmall.override(
+                                      font: GoogleFonts.poppins(),
+                                      color: AppTheme.of(context).primary,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
                       const SizedBox(height: 10),
                       Row(
                         children: [

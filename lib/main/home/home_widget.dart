@@ -13,6 +13,10 @@ import '/index.dart';
 import '/models/service_listing.dart';
 import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
+import '/utils/geo_utils.dart';
+import '/pages/booking_funnel/booking_controller.dart';
+import '/pages/booking_funnel/booking_models.dart';
+import '/pages/booking_funnel/express_checkout_screen.dart';
 import '../../pages/booking_funnel/widgets/booking_flow_route.dart';
 import '../../pages/booking_funnel/widgets/service_selection_panel.dart';
 import 'home_model.dart';
@@ -364,7 +368,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                                   ),
                                 ),
                               ),
-                              if (_model.notificationCount > 0)
+                              if (FFAppState().notificationCount > 0)
                                 Positioned(
                                   top: 0,
                                   right: -2,
@@ -382,9 +386,11 @@ class _HomeWidgetState extends State<HomeWidget> {
                                       ),
                                     ),
                                     child: Text(
-                                      _model.notificationCount > 99
+                                      FFAppState().notificationCount > 99
                                           ? '99+'
-                                          : _model.notificationCount.toString(),
+                                          : FFAppState()
+                                              .notificationCount
+                                              .toString(),
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 9,
@@ -757,28 +763,47 @@ class _HomeWidgetState extends State<HomeWidget> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => ServiceSelectionPanel(
-        locationLabel: _addressText(FFAppState()),
-      ),
+      builder: (_) => const ServiceSelectionPanel(),
     );
     if (!mounted || selectedService == null) {
       return;
     }
 
-    if (selectedService.isTimeMaterial) {
-      await Navigator.of(context).push(
-        buildBookingFlowRoute(
-          TMSubCategoryScreen(selectedService: selectedService),
-        ),
-      );
-      return;
-    }
-
     await Navigator.of(context).push(
       buildBookingFlowRoute(
-        BookingFlowScreen(selectedService: selectedService),
+        ChangeNotifierProvider(
+          create: (_) => _buildController(selectedService),
+          child: ExpressCheckoutScreen(service: selectedService),
+        ),
       ),
     );
+  }
+
+  BookingFlowController _buildController(ServiceListing service) {
+    final appState = FFAppState();
+    final lat = appState.selectedLatitude ?? GeoUtils.fallbackLat;
+    final lng = appState.selectedLongitude ?? GeoUtils.fallbackLng;
+    return BookingFlowController(
+      initialDraft: BookingDraft(
+        urgency: BookingUrgency.rightNow,
+        rooms: 1,
+        cleaningType: ServiceType.standard,
+        paymentMethod: BookingPaymentMethod.gcash,
+        address: BookingAddress(
+          label: appState.selectedAddressLabel.isNotEmpty
+              ? appState.selectedAddressLabel
+              : 'Pinned location',
+          line1: appState.selectedAddressLine1.isNotEmpty
+              ? appState.selectedAddressLine1
+              : 'Pinned address',
+          city: appState.selectedAddressCity.isNotEmpty
+              ? appState.selectedAddressCity
+              : 'Metro Manila',
+        ),
+        latitude: lat,
+        longitude: lng,
+      ),
+    )..setService(service);
   }
 
   Future<void> _openSearchPage() async {

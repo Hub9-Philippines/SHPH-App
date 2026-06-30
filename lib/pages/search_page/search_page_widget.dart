@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '/app_state.dart';
 import '/backend/supabase/database/tables/bookings.dart';
 import '/backend/supabase/database/tables/service_listings.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
+import '/models/service_listing.dart';
 import '/services/bookings_service.dart';
 import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
+import '/utils/geo_utils.dart';
+import '../booking_funnel/booking_controller.dart';
+import '../booking_funnel/booking_models.dart';
+import '../booking_funnel/express_checkout_screen.dart';
+import '../booking_funnel/widgets/booking_flow_route.dart';
 import 'search_page_model.dart';
 
 export 'search_page_model.dart';
@@ -934,27 +942,56 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
         ),
       );
 
-  Widget _buildServiceCard(ServiceListingsRow service) => GestureDetector(
-        onTap: () => context.pushNamed(
-          ProductPageWidget.routeName,
-          extra: <String, dynamic>{
-            'serviceName': service.title,
-            'category': service.categoryName ?? 'Service',
-            'price': service.basePrice != null
-                ? 'PHP ${service.basePrice}${service.priceUnit ?? ''}'
-                : 'PHP 0',
-            'rating': double.tryParse(service.rating ?? '0') ?? 0.0,
-            'reviewCount': service.reviewCount ?? 0,
-            'imageUrl': service.thumbnail ?? '',
-            'description':
-                service.description ?? 'Professional service for your needs.',
-            'serviceId': service.id,
-            'providerId': service.provider?.toString() ?? '',
-            'providerName': service.providerName ?? 'Provider',
-            'providerPhoto': service.providerPhoto,
-            'providerCategory': service.categoryName ?? 'Service',
-          },
+  void _openExpressCheckout(BuildContext context, ServiceListingsRow row) {
+    final appState = FFAppState();
+    final lat = appState.selectedLatitude ?? GeoUtils.fallbackLat;
+    final lng = appState.selectedLongitude ?? GeoUtils.fallbackLng;
+    final listing = ServiceListing(
+      id: row.id,
+      title: row.title,
+      categoryName: row.categoryName,
+      description: row.description,
+      basePrice: row.basePrice,
+      priceUnit: row.priceUnit,
+      thumbnail: row.thumbnail,
+      rating: row.rating,
+      reviewCount: row.reviewCount,
+      isTimeMaterial: row.isTimeMaterial ?? false,
+    );
+    final controller = BookingFlowController(
+      initialDraft: BookingDraft(
+        urgency: BookingUrgency.rightNow,
+        rooms: 1,
+        cleaningType: ServiceType.standard,
+        paymentMethod: BookingPaymentMethod.gcash,
+        address: BookingAddress(
+          label: appState.selectedAddressLabel.isNotEmpty
+              ? appState.selectedAddressLabel
+              : 'Pinned location',
+          line1: appState.selectedAddressLine1.isNotEmpty
+              ? appState.selectedAddressLine1
+              : 'Pinned address',
+          city: appState.selectedAddressCity.isNotEmpty
+              ? appState.selectedAddressCity
+              : 'Metro Manila',
         ),
+        latitude: lat,
+        longitude: lng,
+      ),
+    );
+    controller.setService(listing);
+    Navigator.of(context).push(
+      buildBookingFlowRoute(
+        ChangeNotifierProvider.value(
+          value: controller,
+          child: ExpressCheckoutScreen(service: listing),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildServiceCard(ServiceListingsRow service) => GestureDetector(
+        onTap: () => _openExpressCheckout(context, service),
         child: Container(
           margin: const EdgeInsets.only(bottom: 14),
           decoration: BoxDecoration(

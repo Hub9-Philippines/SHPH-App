@@ -203,6 +203,39 @@ class _NavBarPageState extends State<NavBarPage> {
     _currentPage = widget.page;
   }
 
+  Widget _buildMessagesIcon(BuildContext context) {
+    final count = FFAppState().unreadConversations;
+    if (count <= 0) {
+      return const Icon(Icons.chat_outlined, size: 24);
+    }
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        const Icon(Icons.chat_outlined, size: 24),
+        Positioned(
+          top: -4,
+          right: -6,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+            decoration: BoxDecoration(
+              color: AppTheme.of(context).error,
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: Colors.white, width: 1.5),
+            ),
+            child: Text(
+              count > 99 ? '99+' : count.toString(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 9,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final tabs = {
@@ -217,60 +250,60 @@ class _NavBarPageState extends State<NavBarPage> {
     return Scaffold(
       resizeToAvoidBottomInset: !widget.disableResizeToAvoidBottomInset,
       body: _currentPage ?? tabs[_currentPageName],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: currentIndex,
-        onTap: (i) => safeSetState(() {
-          _currentPage = null;
-          _currentPageName = tabs.keys.toList()[i];
-        }),
-        backgroundColor: AppTheme.of(context).primaryBackground,
-        selectedItemColor: AppTheme.of(context).primary,
-        unselectedItemColor: AppTheme.of(context).secondaryText,
-        showSelectedLabels: true,
-        showUnselectedLabels: true,
-        type: BottomNavigationBarType.fixed,
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.home_outlined,
-              size: 24,
+      bottomNavigationBar: ListenableBuilder(
+        listenable: FFAppState(),
+        builder: (context, _) => BottomNavigationBar(
+          currentIndex: currentIndex,
+          onTap: (i) => safeSetState(() {
+            _currentPage = null;
+            _currentPageName = tabs.keys.toList()[i];
+          }),
+          backgroundColor: AppTheme.of(context).primaryBackground,
+          selectedItemColor: AppTheme.of(context).primary,
+          unselectedItemColor: AppTheme.of(context).secondaryText,
+          showSelectedLabels: true,
+          showUnselectedLabels: true,
+          type: BottomNavigationBarType.fixed,
+          items: <BottomNavigationBarItem>[
+            const BottomNavigationBarItem(
+              icon: Icon(
+                Icons.home_outlined,
+                size: 24,
+              ),
+              label: 'Home',
+              tooltip: '',
             ),
-            label: 'Home',
-            tooltip: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.grid_view_outlined,
-              size: 24,
+            const BottomNavigationBarItem(
+              icon: Icon(
+                Icons.grid_view_outlined,
+                size: 24,
+              ),
+              label: 'Category',
+              tooltip: '',
             ),
-            label: 'Category',
-            tooltip: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.content_paste_rounded,
-              size: 24,
+            const BottomNavigationBarItem(
+              icon: Icon(
+                Icons.content_paste_rounded,
+                size: 24,
+              ),
+              label: 'Bookings',
+              tooltip: '',
             ),
-            label: 'Bookings',
-            tooltip: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.chat_outlined,
-              size: 24,
+            BottomNavigationBarItem(
+              icon: _buildMessagesIcon(context),
+              label: 'Messages',
+              tooltip: '',
             ),
-            label: 'Messages',
-            tooltip: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.person,
-              size: 24,
-            ),
-            label: 'Profile',
-            tooltip: '',
-          )
-        ],
+            const BottomNavigationBarItem(
+              icon: Icon(
+                Icons.person,
+                size: 24,
+              ),
+              label: 'Profile',
+              tooltip: '',
+            )
+          ],
+        ),
       ),
     );
   }

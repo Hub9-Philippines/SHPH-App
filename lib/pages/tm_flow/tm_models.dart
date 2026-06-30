@@ -32,6 +32,8 @@ class TMProviderProfile {
     required this.completedJobs,
     required this.etaMinutes,
     required this.vehicleLabel,
+    this.latitude,
+    this.longitude,
   });
 
   final String id;
@@ -41,6 +43,8 @@ class TMProviderProfile {
   final int completedJobs;
   final int etaMinutes;
   final String vehicleLabel;
+  final double? latitude;
+  final double? longitude;
 }
 
 @immutable
