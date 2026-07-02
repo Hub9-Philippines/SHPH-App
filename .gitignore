@@ -51,6 +51,7 @@ android/.kotlin/sessions/kotlin-compiler-*.salive
 
 # Android Gradle cache
 /android/.gradle/
+/android/build/reports/
 
 # Android test captures
 /android/app/build/
