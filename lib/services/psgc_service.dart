@@ -1,17 +1,50 @@
 import 'dart:convert';
-import 'package:flutter/widgets.dart';
+
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 String? _stringValue(dynamic value) => value is String ? value : null;
 
-class PSGCService {
+List<Region> _parseRegions(String body) {
+  final data = json.decode(body) as List<dynamic>;
+  return data
+      .cast<Map<String, dynamic>>()
+      .map(Region.fromJson)
+      .toList(growable: false);
+}
+
+List<Province> _parseProvinces(String body) {
+  final data = json.decode(body) as List<dynamic>;
+  return data
+      .cast<Map<String, dynamic>>()
+      .map(Province.fromJson)
+      .toList(growable: false);
+}
+
+List<CityMunicipality> _parseCitiesMunicipalities(String body) {
+  final data = json.decode(body) as List<dynamic>;
+  return data
+      .cast<Map<String, dynamic>>()
+      .map(CityMunicipality.fromJson)
+      .toList(growable: false);
+}
+
+List<Barangay> _parseBarangays(String body) {
+  final data = json.decode(body) as List<dynamic>;
+  return data
+      .cast<Map<String, dynamic>>()
+      .map(Barangay.fromJson)
+      .toList(growable: false);
+}
+
+// ignore: avoid_classes_with_only_static_members
+abstract final class PSGCService {
   static const String baseUrl = 'https://psgc.gitlab.io/api';
 
   static Future<List<Region>> getRegions() async {
     final response = await http.get(Uri.parse('$baseUrl/regions.json'));
     if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-      return data.map((json) => Region.fromJson(json)).toList();
+      return compute(_parseRegions, response.body);
     }
     return [];
   }
@@ -20,8 +53,7 @@ class PSGCService {
     final response = await http
         .get(Uri.parse('$baseUrl/regions/$regionCode/provinces.json'));
     if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-      return data.map((json) => Province.fromJson(json)).toList();
+      return compute(_parseProvinces, response.body);
     }
     return [];
   }
@@ -31,8 +63,7 @@ class PSGCService {
     final response = await http.get(
         Uri.parse('$baseUrl/regions/$regionCode/cities-municipalities.json'));
     if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-      return data.map((json) => CityMunicipality.fromJson(json)).toList();
+      return compute(_parseCitiesMunicipalities, response.body);
     }
     return [];
   }
@@ -42,8 +73,7 @@ class PSGCService {
     final response = await http.get(Uri.parse(
         '$baseUrl/provinces/$provinceCode/cities-municipalities.json'));
     if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-      return data.map((json) => CityMunicipality.fromJson(json)).toList();
+      return compute(_parseCitiesMunicipalities, response.body);
     }
     return [];
   }
@@ -53,8 +83,7 @@ class PSGCService {
     final response = await http.get(Uri.parse(
         '$baseUrl/cities-municipalities/$cityMunicipalityCode/barangays.json'));
     if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-      return data.map((json) => Barangay.fromJson(json)).toList();
+      return compute(_parseBarangays, response.body);
     }
     return [];
   }

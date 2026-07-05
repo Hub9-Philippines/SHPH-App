@@ -11,12 +11,12 @@ import '/backend/supabase/supabase.dart' hide LatLng;
 import '/flutter_flow/flutter_flow_util.dart' hide LatLng;
 import '/index.dart';
 import '/models/service_listing.dart';
-import '/services/logging_service.dart';
-import '/theme/app_theme.dart';
-import '/utils/geo_utils.dart';
 import '/pages/booking_funnel/booking_controller.dart';
 import '/pages/booking_funnel/booking_models.dart';
 import '/pages/booking_funnel/express_checkout_screen.dart';
+import '/services/logging_service.dart';
+import '/theme/app_theme.dart';
+import '/utils/geo_utils.dart';
 import '../../pages/booking_funnel/widgets/booking_flow_route.dart';
 import '../../pages/booking_funnel/widgets/service_selection_panel.dart';
 import 'home_model.dart';
@@ -1088,79 +1088,94 @@ class _HomeLocationOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final selectedBackgroundAlpha = isEnabled ? 0.08 : 0.04;
+    final selectedIconBackgroundAlpha = isEnabled ? 0.12 : 0.06;
+    final titleColor =
+        isEnabled ? const Color(0xFF16202A) : const Color(0x8016202A);
+    final subtitleColor =
+        isEnabled ? const Color(0xFF6F7B86) : const Color(0x806F7B86);
+    final iconColor = isSelected
+        ? theme.primary.withValues(alpha: isEnabled ? 1 : 0.5)
+        : isEnabled
+            ? const Color(0xFF53606D)
+            : const Color(0x8053606D);
+    final radioColor = isSelected
+        ? theme.primary.withValues(alpha: isEnabled ? 1 : 0.5)
+        : isEnabled
+            ? const Color(0xFF9AA6B2)
+            : const Color(0x809AA6B2);
 
-    return Opacity(
-      opacity: isEnabled ? 1 : 0.5,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: isEnabled ? onTap : null,
-          borderRadius: BorderRadius.circular(18),
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: isEnabled ? onTap : null,
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? theme.primary.withValues(alpha: selectedBackgroundAlpha)
+                : Colors.white,
+            border: Border.all(
               color: isSelected
-                  ? theme.primary.withValues(alpha: 0.08)
-                  : Colors.white,
-              border: Border.all(
-                color: isSelected ? theme.primary : const Color(0xFFE5E9EE),
-                width: isSelected ? 1.4 : 1,
+                  ? theme.primary.withValues(alpha: isEnabled ? 1 : 0.5)
+                  : const Color(0xFFE5E9EE),
+              width: isSelected ? 1.4 : 1,
+            ),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? theme.primary
+                          .withValues(alpha: selectedIconBackgroundAlpha)
+                      : const Color(0xFFF4F7FA),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  icon,
+                  color: iconColor,
+                  size: 22,
+                ),
               ),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? theme.primary.withValues(alpha: 0.12)
-                        : const Color(0xFFF4F7FA),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: isSelected ? theme.primary : const Color(0xFF53606D),
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: theme.bodyMedium.override(
-                          font:
-                              GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                          color: const Color(0xFF16202A),
-                        ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.bodyMedium.override(
+                        font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                        color: titleColor,
                       ),
-                      const SizedBox(height: 3),
-                      Text(
-                        subtitle,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.bodySmall.override(
-                          font: GoogleFonts.poppins(),
-                          color: const Color(0xFF6F7B86),
-                        ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.bodySmall.override(
+                        font: GoogleFonts.poppins(),
+                        color: subtitleColor,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Icon(
-                  isSelected
-                      ? Icons.radio_button_checked_rounded
-                      : Icons.radio_button_off_rounded,
-                  color: isSelected ? theme.primary : const Color(0xFF9AA6B2),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 12),
+              Icon(
+                isSelected
+                    ? Icons.radio_button_checked_rounded
+                    : Icons.radio_button_off_rounded,
+                color: radioColor,
+              ),
+            ],
           ),
         ),
       ),

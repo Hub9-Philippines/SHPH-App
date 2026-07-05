@@ -1,3 +1,4 @@
+import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -109,6 +110,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
   @override
   void dispose() {
+    EasyDebounce.cancel('services_screen_search');
     _model.dispose();
     super.dispose();
   }
@@ -244,10 +246,19 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 controller: _model.searchController,
                 focusNode: _model.searchFocusNode,
                 onChanged: (value) {
-                  setState(() {
-                    _model.searchQuery = value;
-                    _model.applyFilters();
-                  });
+                  EasyDebounce.debounce(
+                    'services_screen_search',
+                    const Duration(milliseconds: 250),
+                    () {
+                      if (!mounted) {
+                        return;
+                      }
+                      setState(() {
+                        _model.searchQuery = value;
+                        _model.applyFilters();
+                      });
+                    },
+                  );
                 },
                 decoration: InputDecoration(
                   hintText: 'Search services or categories...',
@@ -595,6 +606,16 @@ class _ServicesScreenState extends State<ServicesScreen> {
     final appState = FFAppState();
     final lat = appState.selectedLatitude ?? GeoUtils.fallbackLat;
     final lng = appState.selectedLongitude ?? GeoUtils.fallbackLng;
+    final listing = ServiceListing(
+      id: service['id'] as int,
+      title: service['title'] as String,
+      categoryName: service['category'] as String?,
+      description: service['description'] as String?,
+      basePrice: double.tryParse(
+          (service['price'] as String).replaceAll(RegExp('[^0-9.]'), '')),
+      thumbnail: service['imageUrl'] as String?,
+      isTimeMaterial: service['isTimeMaterial'] as bool? ?? false,
+    );
     final controller = BookingFlowController(
       initialDraft: BookingDraft(
         urgency: BookingUrgency.rightNow,
@@ -615,218 +636,233 @@ class _ServicesScreenState extends State<ServicesScreen> {
         latitude: lat,
         longitude: lng,
       ),
-    );
-    controller.setService(ServiceListing(
-      id: service['id'] as int,
-      title: service['title'] as String,
-      categoryName: service['category'] as String?,
-      description: service['description'] as String?,
-      basePrice: double.tryParse(
-          (service['price'] as String).replaceAll(RegExp(r'[^0-9.]'), '')),
-      thumbnail: service['imageUrl'] as String?,
-      isTimeMaterial: service['isTimeMaterial'] as bool? ?? false,
-    ));
+    )..setService(listing);
     Navigator.of(context).push(
       buildBookingFlowRoute(
         ChangeNotifierProvider.value(
           value: controller,
-          child: ExpressCheckoutScreen(
-            service: ServiceListing(
-              id: service['id'] as int,
-              title: service['title'] as String,
-              categoryName: service['category'] as String?,
-              description: service['description'] as String?,
-              basePrice: double.tryParse(
-                  (service['price'] as String).replaceAll(RegExp(r'[^0-9.]'), '')),
-              thumbnail: service['imageUrl'] as String?,
-              isTimeMaterial: service['isTimeMaterial'] as bool? ?? false,
-            ),
-          ),
+          child: ExpressCheckoutScreen(service: listing),
         ),
       ),
     );
   }
 
   Widget _buildServiceCard(
-          BuildContext context, Map<String, dynamic> service) =>
-      GestureDetector(
-        onTap: () => _openExpressCheckout(context, service),
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x10000000),
-                blurRadius: 18,
-                offset: Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
-                  child: Image.network(
-                    service['imageUrl'] as String,
-                    width: 92,
-                    height: 92,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      width: 92,
-                      height: 92,
-                      color: const Color(0xFFE8EDF2),
-                      child: Icon(
-                        Icons.image_not_supported_outlined,
-                        color: AppTheme.of(context).secondaryText,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        service['title'] as String,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTheme.of(context).titleMedium.override(
-                              font: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w700,
-                              ),
-                              color: const Color(0xFF16202A),
-                            ),
-                      ),
-                      const SizedBox(height: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.of(context)
-                              .primary
-                              .withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          service['category'] as String,
-                          style: AppTheme.of(context).labelSmall.override(
-                                font: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w700,
-                                ),
-                                color: AppTheme.of(context).primary,
-                              ),
-                        ),
-                      ),
-                      if (_model.selectedFilter == 'nearest' &&
-                          service['distanceText'] != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.location_on_rounded,
-                                size: 14,
-                                color: AppTheme.of(context).primary,
-                              ),
-                              const SizedBox(width: 3),
-                              Text(
-                                service['distanceText'] as String,
-                                style: AppTheme.of(context).labelSmall.override(
-                                      font: GoogleFonts.poppins(),
-                                      color: AppTheme.of(context).primary,
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.star_rounded,
-                            size: 18,
-                            color: Color(0xFFFFC44D),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            (service['rating'] as double).toStringAsFixed(1),
-                            style: AppTheme.of(context).bodySmall.override(
-                                  font: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  color: const Color(0xFF16202A),
-                                ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${service['reviewCount']} reviews',
-                            style: AppTheme.of(context).bodySmall.override(
-                                  font: GoogleFonts.poppins(),
-                                  color: const Color(0xFF6F7B86),
-                                ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              service['price'] as String,
-                              style: AppTheme.of(context).titleSmall.override(
-                                    font: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                    color: AppTheme.of(context).primary,
-                                  ),
-                            ),
-                          ),
-                          Material(
-                            color: const Color(0xFFF5F7FA),
-                            borderRadius: BorderRadius.circular(14),
-                            child: InkWell(
-                              onTap: () {
-                                final serviceId = service['id'] as int;
-                                if (_model.favorites.contains(serviceId)) {
-                                  _model.favorites.remove(serviceId);
-                                } else {
-                                  _model.favorites.add(serviceId);
-                                }
-                                setState(() {});
-                              },
-                              borderRadius: BorderRadius.circular(14),
-                              child: Padding(
-                                padding: const EdgeInsets.all(10),
-                                child: Icon(
-                                  _model.favorites
-                                          .contains(service['id'] as int)
-                                      ? Icons.favorite_rounded
-                                      : Icons.favorite_border_rounded,
-                                  color: _model.favorites
-                                          .contains(service['id'] as int)
-                                      ? const Color(0xFFE2557B)
-                                      : const Color(0xFF8A97A4),
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+    BuildContext context,
+    Map<String, dynamic> service,
+  ) =>
+      RepaintBoundary(
+        child: GestureDetector(
+          onTap: () => _openExpressCheckout(context, service),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x10000000),
+                  blurRadius: 18,
+                  offset: Offset(0, 8),
                 ),
               ],
             ),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: _ServiceCardImage(
+                      imageUrl: service['imageUrl'] as String?,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          service['title'] as String,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTheme.of(context).titleMedium.override(
+                                font: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                color: const Color(0xFF16202A),
+                              ),
+                        ),
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.of(context)
+                                .primary
+                                .withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            service['category'] as String,
+                            style: AppTheme.of(context).labelSmall.override(
+                                  font: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                  color: AppTheme.of(context).primary,
+                                ),
+                          ),
+                        ),
+                        if (_model.selectedFilter == 'nearest' &&
+                            service['distanceText'] != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.location_on_rounded,
+                                  size: 14,
+                                  color: AppTheme.of(context).primary,
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  service['distanceText'] as String,
+                                  style:
+                                      AppTheme.of(context).labelSmall.override(
+                                            font: GoogleFonts.poppins(),
+                                            color: AppTheme.of(context).primary,
+                                          ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.star_rounded,
+                              size: 18,
+                              color: Color(0xFFFFC44D),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              (service['rating'] as double).toStringAsFixed(1),
+                              style: AppTheme.of(context).bodySmall.override(
+                                    font: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    color: const Color(0xFF16202A),
+                                  ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '${service['reviewCount']} reviews',
+                              style: AppTheme.of(context).bodySmall.override(
+                                    font: GoogleFonts.poppins(),
+                                    color: const Color(0xFF6F7B86),
+                                  ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                service['price'] as String,
+                                style: AppTheme.of(context).titleSmall.override(
+                                      font: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                      color: AppTheme.of(context).primary,
+                                    ),
+                              ),
+                            ),
+                            Material(
+                              color: const Color(0xFFF5F7FA),
+                              borderRadius: BorderRadius.circular(14),
+                              child: InkWell(
+                                onTap: () {
+                                  final serviceId = service['id'] as int;
+                                  if (_model.favorites.contains(serviceId)) {
+                                    _model.favorites.remove(serviceId);
+                                  } else {
+                                    _model.favorites.add(serviceId);
+                                  }
+                                  setState(() {});
+                                },
+                                borderRadius: BorderRadius.circular(14),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(10),
+                                  child: Icon(
+                                    _model.favorites
+                                            .contains(service['id'] as int)
+                                        ? Icons.favorite_rounded
+                                        : Icons.favorite_border_rounded,
+                                    color: _model.favorites
+                                            .contains(service['id'] as int)
+                                        ? const Color(0xFFE2557B)
+                                        : const Color(0xFF8A97A4),
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
+        ),
+      );
+}
+
+class _ServiceCardImage extends StatelessWidget {
+  const _ServiceCardImage({required this.imageUrl});
+
+  static const double size = 92;
+
+  final String? imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final cacheSize = (size * MediaQuery.devicePixelRatioOf(context)).round();
+
+    if (imageUrl == null || imageUrl!.isEmpty) {
+      return const _ServiceCardImageFallback();
+    }
+
+    return Image.network(
+      imageUrl!,
+      width: size,
+      height: size,
+      fit: BoxFit.cover,
+      cacheWidth: cacheSize,
+      cacheHeight: cacheSize,
+      errorBuilder: (context, error, stackTrace) =>
+          const _ServiceCardImageFallback(),
+    );
+  }
+}
+
+class _ServiceCardImageFallback extends StatelessWidget {
+  const _ServiceCardImageFallback();
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: _ServiceCardImage.size,
+        height: _ServiceCardImage.size,
+        color: const Color(0xFFE8EDF2),
+        child: Icon(
+          Icons.image_not_supported_outlined,
+          color: AppTheme.of(context).secondaryText,
         ),
       );
 }

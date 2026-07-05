@@ -1,9 +1,9 @@
+import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '/app_state.dart';
 import '/backend/supabase/database/tables/bookings.dart';
 import '/backend/supabase/database/tables/service_listings.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
@@ -57,6 +57,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
   String? _selectedPriceSort;
   List<String> _recentSearches = [];
   List<BookingsRow> _recentBookings = [];
+  int _searchGeneration = 0;
 
   @override
   void initState() {
@@ -114,10 +115,12 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
   }
 
   Future<void> _performSearch(String query) async {
+    final searchGeneration = ++_searchGeneration;
     final normalizedQuery = query.trim();
     if (normalizedQuery.isEmpty) {
       safeSetState(() {
         _searchResults = [];
+        _isSearching = false;
       });
       return;
     }
@@ -129,9 +132,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
 
     try {
       final services = await ServiceListingsTable().queryRows(
-        queryFn: (q) => q
-            .eq('is_available', 'true')
-            .or(
+        queryFn: (q) => q.eq('is_available', 'true').or(
               'title.ilike.%$normalizedQuery%,category_name.ilike.%$normalizedQuery%,description.ilike.%$normalizedQuery%,provider_name.ilike.%$normalizedQuery%',
             ),
       );
@@ -176,6 +177,10 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
         });
       }
 
+      if (searchGeneration != _searchGeneration) {
+        return;
+      }
+
       safeSetState(() {
         _searchResults = results;
         _isSearching = false;
@@ -186,11 +191,23 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
         tag: 'SearchPage',
         error: e,
       );
+      if (searchGeneration != _searchGeneration) {
+        return;
+      }
+
       safeSetState(() {
         _searchResults = [];
         _isSearching = false;
       });
     }
+  }
+
+  void _scheduleSearch(String query) {
+    EasyDebounce.debounce(
+      'search_page_query',
+      const Duration(milliseconds: 300),
+      () => _performSearch(query),
+    );
   }
 
   bool _matchesCategory(String selected, String actual) {
@@ -233,6 +250,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
 
   @override
   void dispose() {
+    EasyDebounce.cancel('search_page_query');
     _model.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
@@ -409,7 +427,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
                 controller: _searchController,
                 focusNode: _searchFocusNode,
                 autofocus: true,
-                onChanged: _performSearch,
+                onChanged: _scheduleSearch,
                 decoration: InputDecoration(
                   hintText: 'Search for services...',
                   hintStyle: AppTheme.of(context).bodyMedium.override(
@@ -978,8 +996,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
         latitude: lat,
         longitude: lng,
       ),
-    );
-    controller.setService(listing);
+    )..setService(listing);
     Navigator.of(context).push(
       buildBookingFlowRoute(
         ChangeNotifierProvider.value(
@@ -990,8 +1007,28 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
     );
   }
 
-  Widget _buildServiceCard(ServiceListingsRow service) => GestureDetector(
+  Widget _buildServiceCard(ServiceListingsRow service) => _SearchServiceCard(
+        service: service,
         onTap: () => _openExpressCheckout(context, service),
+      );
+}
+
+class _SearchServiceCard extends StatelessWidget {
+  const _SearchServiceCard({
+    required this.service,
+    required this.onTap,
+  });
+
+  final ServiceListingsRow service;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+
+    return RepaintBoundary(
+      child: GestureDetector(
+        onTap: onTap,
         child: Container(
           margin: const EdgeInsets.only(bottom: 14),
           decoration: BoxDecoration(
@@ -1010,36 +1047,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
-                  child:
-                      service.thumbnail != null && service.thumbnail!.isNotEmpty
-                          ? Image.network(
-                              service.thumbnail!,
-                              width: 92,
-                              height: 92,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Container(
-                                width: 92,
-                                height: 92,
-                                color: const Color(0xFFE8EDF2),
-                                child: Icon(
-                                  Icons.image_not_supported_outlined,
-                                  color: AppTheme.of(context).secondaryText,
-                                ),
-                              ),
-                            )
-                          : Container(
-                              width: 92,
-                              height: 92,
-                              color: const Color(0xFFE8EDF2),
-                              child: Icon(
-                                Icons.image_not_supported_outlined,
-                                color: AppTheme.of(context).secondaryText,
-                              ),
-                            ),
-                ),
+                _SearchServiceThumbnail(imageUrl: service.thumbnail),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
@@ -1049,20 +1057,20 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
                         service.title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: AppTheme.of(context).titleMedium.override(
-                              font: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w700,
-                              ),
-                              color: const Color(0xFF16202A),
-                            ),
+                        style: theme.titleMedium.override(
+                          font: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w700,
+                          ),
+                          color: const Color(0xFF16202A),
+                        ),
                       ),
                       const SizedBox(height: 6),
                       Text(
                         service.categoryName ?? 'Service',
-                        style: AppTheme.of(context).bodySmall.override(
-                              font: GoogleFonts.poppins(),
-                              color: const Color(0xFF6F7B86),
-                            ),
+                        style: theme.bodySmall.override(
+                          font: GoogleFonts.poppins(),
+                          color: const Color(0xFF6F7B86),
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Row(
@@ -1076,19 +1084,19 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
                           Text(
                             (double.tryParse(service.rating ?? '0') ?? 0)
                                 .toStringAsFixed(1),
-                            style: AppTheme.of(context).bodySmall.override(
-                                  font: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                            style: theme.bodySmall.override(
+                              font: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                           const SizedBox(width: 8),
                           Text(
                             '${service.reviewCount ?? 0} reviews',
-                            style: AppTheme.of(context).bodySmall.override(
-                                  font: GoogleFonts.poppins(),
-                                  color: const Color(0xFF6F7B86),
-                                ),
+                            style: theme.bodySmall.override(
+                              font: GoogleFonts.poppins(),
+                              color: const Color(0xFF6F7B86),
+                            ),
                           ),
                         ],
                       ),
@@ -1097,12 +1105,12 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
                         service.basePrice != null
                             ? 'PHP ${service.basePrice}${service.priceUnit ?? ''}'
                             : 'PHP 0',
-                        style: AppTheme.of(context).titleSmall.override(
-                              font: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w700,
-                              ),
-                              color: AppTheme.of(context).primary,
-                            ),
+                        style: theme.titleSmall.override(
+                          font: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w700,
+                          ),
+                          color: theme.primary,
+                        ),
                       ),
                     ],
                   ),
@@ -1110,6 +1118,53 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SearchServiceThumbnail extends StatelessWidget {
+  const _SearchServiceThumbnail({required this.imageUrl});
+
+  static const double size = 92;
+
+  final String? imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
+    final cacheSize = (size * devicePixelRatio).round();
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: imageUrl != null && imageUrl!.isNotEmpty
+          ? Image.network(
+              imageUrl!,
+              width: size,
+              height: size,
+              fit: BoxFit.cover,
+              cacheWidth: cacheSize,
+              cacheHeight: cacheSize,
+              errorBuilder: (context, error, stackTrace) =>
+                  const _SearchServiceThumbnailFallback(),
+            )
+          : const _SearchServiceThumbnailFallback(),
+    );
+  }
+}
+
+class _SearchServiceThumbnailFallback extends StatelessWidget {
+  const _SearchServiceThumbnailFallback();
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: _SearchServiceThumbnail.size,
+        height: _SearchServiceThumbnail.size,
+        color: const Color(0xFFE8EDF2),
+        child: Icon(
+          Icons.image_not_supported_outlined,
+          color: AppTheme.of(context).secondaryText,
         ),
       );
 }

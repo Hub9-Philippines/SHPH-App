@@ -37,7 +37,7 @@ class _CategoriesgridWidgetState extends State<CategoriesgridWidget> {
   }
 
   @override
-  Widget build(BuildContext context) => GridView(
+  Widget build(BuildContext context) => GridView.builder(
         padding: EdgeInsets.zero,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
@@ -48,50 +48,52 @@ class _CategoriesgridWidgetState extends State<CategoriesgridWidget> {
         primary: false,
         shrinkWrap: true,
         scrollDirection: Axis.horizontal,
-        children: [
-          ...CategoriesgridModel.categories.map((category) => GestureDetector(
-                onTap: () => category.categoryParam == 'All'
-                    ? context.push('/services')
-                    : context.push('/services?category=${category.categoryParam}'),
-                child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: const Color(0xAAF0F0F0),
-                        borderRadius: BorderRadius.circular(category.borderRadius),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.asset(
-                          category.imageAsset,
-                          width: 200,
-                          height: 200,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
+        itemCount: CategoriesgridModel.categories.length,
+        itemBuilder: (context, index) {
+          final category = CategoriesgridModel.categories[index];
+          return GestureDetector(
+            onTap: () => category.categoryParam == 'All'
+                ? context.push('/services')
+                : context.push('/services?category=${category.categoryParam}'),
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: const Color(0xAAF0F0F0),
+                    borderRadius: BorderRadius.circular(category.borderRadius),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset(
+                      category.imageAsset,
+                      width: 200,
+                      height: 200,
+                      fit: BoxFit.contain,
+                      cacheWidth: 200,
+                      cacheHeight: 200,
                     ),
-                    Text(
-                      category.name,
-                      textAlign: TextAlign.center,
-                      style: AppTheme.of(context).bodySmall.override(
-                            font: GoogleFonts.poppins(
-                              fontWeight: FontWeight.normal,
-                              fontStyle:
-                                  AppTheme.of(context).bodySmall.fontStyle,
-                            ),
-                            letterSpacing: 0,
-                            fontWeight: FontWeight.normal,
-                            fontStyle:
-                                AppTheme.of(context).bodySmall.fontStyle,
-                          ),
-                    ),
-                  ].divide(const SizedBox(height: 8)),
+                  ),
                 ),
-              )),
-        ],
+                Text(
+                  category.name,
+                  textAlign: TextAlign.center,
+                  style: AppTheme.of(context).bodySmall.override(
+                        font: GoogleFonts.poppins(
+                          fontWeight: FontWeight.normal,
+                          fontStyle: AppTheme.of(context).bodySmall.fontStyle,
+                        ),
+                        letterSpacing: 0,
+                        fontWeight: FontWeight.normal,
+                        fontStyle: AppTheme.of(context).bodySmall.fontStyle,
+                      ),
+                ),
+              ].divide(const SizedBox(height: 8)),
+            ),
+          );
+        },
       );
 }

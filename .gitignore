@@ -34,6 +34,11 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Flutter generated plugin registrants
+**/flutter/generated_plugin_registrant.*
+**/flutter/generated_plugins.cmake
+**/Flutter/GeneratedPluginRegistrant.swift
+
 # Symbolication related
 app.*.symbols
 
@@ -74,6 +79,14 @@ android/.kotlin/sessions/kotlin-compiler-*.salive
 
 # logs
 *build*.txt
+analyze_output.txt
+analyze_results.txt
+
+# Local scratch files
+temp_*.py
+temp_*.txt
+.agents/
+.windsurf/
 
 # npm modules
 /backend/node_modules/

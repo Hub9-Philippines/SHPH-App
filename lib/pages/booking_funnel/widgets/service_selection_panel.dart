@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/models/service_listing.dart';
+import '/pages/search_page/search_page_widget.dart';
 import '/services/service_listing_service.dart';
 import '/theme/app_theme.dart';
 
@@ -81,12 +83,15 @@ class _ServiceSelectionPanelState extends State<ServiceSelectionPanel> {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return _gridPlaceholder();
                 }
-                if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+                if (snapshot.hasError ||
+                    !snapshot.hasData ||
+                    snapshot.data!.isEmpty) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     child: Text(
                       'Could not load services. Pull down to retry.',
-                      style: theme.bodySmall.override(color: theme.secondaryText),
+                      style:
+                          theme.bodySmall.override(color: theme.secondaryText),
                     ),
                   );
                 }
@@ -98,14 +103,9 @@ class _ServiceSelectionPanelState extends State<ServiceSelectionPanel> {
                     const SizedBox(height: 16),
                     TextButton.icon(
                       onPressed: () {
-                        final nav = Navigator.of(context);
-                        nav.pop();
-                        nav.push(
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                const _SearchPageRedirect(),
-                          ),
-                        );
+                        final router = GoRouter.of(context);
+                        Navigator.of(context).pop();
+                        router.pushNamed(SearchPageWidget.routeName);
                       },
                       icon: const Icon(Icons.search_rounded, size: 18),
                       label: const Text('Search all services →'),
@@ -125,108 +125,138 @@ class _ServiceSelectionPanelState extends State<ServiceSelectionPanel> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        GridView.count(
-          crossAxisCount: 3,
+        GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-          childAspectRatio: 0.92,
-          children: List.generate(9, (_) => Container(
+          itemCount: 9,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+            childAspectRatio: 0.92,
+          ),
+          itemBuilder: (context, index) => DecoratedBox(
             decoration: BoxDecoration(
               color: theme.alternate.withValues(alpha: 0.35),
               borderRadius: BorderRadius.circular(16),
             ),
-          )),
+          ),
         ),
         const SizedBox(height: 16),
       ],
     );
   }
 
-  Widget _buildGrid(BuildContext context, List<ServiceListing> services) {
-    final theme = AppTheme.of(context);
-    return GridView.count(
-      crossAxisCount: 3,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 10,
-      crossAxisSpacing: 10,
-      childAspectRatio: 0.92,
-      children: services.map((service) {
-        return InkWell(
-          onTap: () => Navigator.of(context).pop(service),
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: theme.secondaryBackground,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: theme.alternate),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: theme.primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    _categoryIcon(service.categoryName),
-                    color: theme.primary,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  service.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: theme.bodySmall.override(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  service.formattedPrice,
-                  style: theme.labelSmall.override(
-                    color: theme.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
+  Widget _buildGrid(BuildContext context, List<ServiceListing> services) =>
+      GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: services.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+          childAspectRatio: 0.92,
+        ),
+        itemBuilder: (context, index) {
+          final service = services[index];
+          return _ServicePickerTile(
+            service: service,
+            icon: _categoryIcon(service.categoryName),
+            onTap: () => Navigator.of(context).pop(service),
+          );
+        },
+      );
 
   IconData _categoryIcon(String? categoryName) {
     final category = (categoryName ?? '').toLowerCase();
-    if (category.contains('clean')) return Icons.cleaning_services_rounded;
-    if (category.contains('plumb')) return Icons.plumbing_rounded;
-    if (category.contains('electric')) return Icons.electrical_services_rounded;
-    if (category.contains('paint') || category.contains('decor')) return Icons.format_paint_rounded;
-    if (category.contains('carp')) return Icons.handyman_rounded;
-    if (category.contains('appliance')) return Icons.kitchen_rounded;
-    if (category.contains('laundry')) return Icons.local_laundry_service_rounded;
+    if (category.contains('clean')) {
+      return Icons.cleaning_services_rounded;
+    }
+    if (category.contains('plumb')) {
+      return Icons.plumbing_rounded;
+    }
+    if (category.contains('electric')) {
+      return Icons.electrical_services_rounded;
+    }
+    if (category.contains('paint') || category.contains('decor')) {
+      return Icons.format_paint_rounded;
+    }
+    if (category.contains('carp')) {
+      return Icons.handyman_rounded;
+    }
+    if (category.contains('appliance')) {
+      return Icons.kitchen_rounded;
+    }
+    if (category.contains('laundry')) {
+      return Icons.local_laundry_service_rounded;
+    }
     return Icons.home_repair_service_rounded;
   }
 }
 
-class _SearchPageRedirect extends StatelessWidget {
-  const _SearchPageRedirect();
+class _ServicePickerTile extends StatelessWidget {
+  const _ServicePickerTile({
+    required this.service,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final ServiceListing service;
+  final IconData icon;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Navigator.of(context).pushReplacementNamed('/searchPage');
-    });
-    return const SizedBox.shrink();
+    final theme = AppTheme.of(context);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: theme.secondaryBackground,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: theme.alternate),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: theme.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                icon,
+                color: theme.primary,
+                size: 22,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              service.title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: theme.bodySmall.override(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              service.formattedPrice,
+              style: theme.labelSmall.override(
+                color: theme.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
