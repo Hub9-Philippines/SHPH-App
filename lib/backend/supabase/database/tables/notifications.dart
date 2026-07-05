@@ -41,7 +41,7 @@ class NotificationsRow extends SupabaseDataRow {
   Map<String, dynamic>? get metadata => getField<Map<String, dynamic>>('metadata');
   set metadata(Map<String, dynamic>? value) => setField<Map<String, dynamic>>('metadata', value);
 
-  DateTime get createdAt => getField<DateTime>('created_at')!;
+  DateTime get createdAt => getField<DateTime>('created_at') ?? DateTime.now();
   set createdAt(DateTime value) => setField<DateTime>('created_at', value);
 
   DateTime? get readAt => getField<DateTime>('read_at');
