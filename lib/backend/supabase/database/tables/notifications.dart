@@ -29,7 +29,7 @@ class NotificationsRow extends SupabaseDataRow {
   String get type => getField<String>('type')!;
   set type(String value) => setField<String>('type', value);
 
-  bool get isRead => getField<bool>('is_read')!;
+  bool get isRead => getField<bool>('is_read') ?? false;
   set isRead(bool value) => setField<bool>('is_read', value);
 
   String? get imageUrl => getField<String>('image_url');
