@@ -14,6 +14,8 @@ import '/models/service_listing.dart';
 import '/pages/booking_funnel/booking_controller.dart';
 import '/pages/booking_funnel/booking_models.dart';
 import '/pages/booking_funnel/express_checkout_screen.dart';
+import '/pages/booking_funnel/live_matching/live_matching_screen.dart';
+import '/pages/booking_funnel/status_page.dart';
 import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
 import '/utils/geo_utils.dart';
@@ -42,11 +44,13 @@ class _HomeWidgetState extends State<HomeWidget> {
   LatLng _center = const LatLng(14.5995, 120.9842);
   bool _hasLocation = false;
   bool _isUsingDeviceLocation = false;
+  late final List<_ActiveBookingShortcutData> _activeBookingShortcuts;
 
   @override
   void initState() {
     super.initState();
     _model = createModel(context, HomeModel.new);
+    _activeBookingShortcuts = _buildActiveBookingShortcuts();
     _loadAddress();
     _loadDeviceLocation();
   }
@@ -69,6 +73,7 @@ class _HomeWidgetState extends State<HomeWidget> {
             right: 16,
             bottom: mediaQuery.padding.bottom + 248,
           );
+          final activeShortcut = _visibleActiveBookingShortcut();
           if (!snapshot.hasData) {
             return Scaffold(
               backgroundColor: AppTheme.of(context).primaryBackground,
@@ -161,6 +166,17 @@ class _HomeWidgetState extends State<HomeWidget> {
                       child: _buildTopOverlay(),
                     ),
                     Positioned(
+                      left: 20,
+                      right: 20,
+                      bottom: mediaQuery.padding.bottom + 218,
+                      child: _LiveProgressShortcut(
+                        booking: activeShortcut,
+                        onTap: activeShortcut == null
+                            ? null
+                            : () => _openActiveBooking(activeShortcut),
+                      ),
+                    ),
+                    Positioned(
                       left: 0,
                       right: 0,
                       bottom: 0,
@@ -231,6 +247,74 @@ class _HomeWidgetState extends State<HomeWidget> {
       return rows;
     });
   }
+
+  List<_ActiveBookingShortcutData> _buildActiveBookingShortcuts() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return [
+      _ActiveBookingShortcutData(
+        id: 'asap-live-001',
+        providerName: 'Ramon Dela Cruz',
+        serviceTitle: 'Home Cleaning',
+        status: 'confirmation pending',
+        urgency: 'ASAP',
+        bookingDate: today,
+        avatarUrl: '',
+      ),
+      _ActiveBookingShortcutData(
+        id: 'scheduled-live-001',
+        providerName: 'Assigned provider',
+        serviceTitle: 'Repair Service',
+        status: 'booking confirmed',
+        urgency: 'scheduled',
+        bookingDate: today,
+        avatarUrl: '',
+      ),
+    ];
+  }
+
+  _ActiveBookingShortcutData? _visibleActiveBookingShortcut() {
+    for (final booking in _activeBookingShortcuts) {
+      final status = booking.status.toLowerCase();
+      final isToday = _isSameCalendarDay(booking.bookingDate, DateTime.now());
+      final isAsap = booking.urgency.toLowerCase() == 'asap';
+      final isLiveStatus =
+          status == 'confirmation pending' || status == 'booking confirmed';
+      if ((isToday && isLiveStatus) || (isAsap && isLiveStatus)) {
+        return booking;
+      }
+    }
+    return null;
+  }
+
+  void _openActiveBooking(_ActiveBookingShortcutData booking) {
+    final status = booking.status.toLowerCase();
+    if (status == 'confirmation pending') {
+      Navigator.of(context).push(
+        buildBookingFlowRoute(
+          LiveMatchingScreen(
+            bookingDate: booking.bookingDate,
+            serviceTitle: booking.serviceTitle,
+          ),
+        ),
+      );
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => StatusPage(
+          bookingStatus: booking.status,
+          bookingDate: booking.bookingDate,
+          providerName: booking.providerName,
+          serviceTitle: booking.serviceTitle,
+        ),
+      ),
+    );
+  }
+
+  bool _isSameCalendarDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
 
   Future<void> _loadDeviceLocation({bool forceUseDevice = false}) async {
     try {
@@ -1065,6 +1149,152 @@ class _HomeLocationSheet extends StatelessWidget {
       return Icons.work_rounded;
     }
     return Icons.location_on_rounded;
+  }
+}
+
+class _ActiveBookingShortcutData {
+  const _ActiveBookingShortcutData({
+    required this.id,
+    required this.providerName,
+    required this.serviceTitle,
+    required this.status,
+    required this.urgency,
+    required this.bookingDate,
+    required this.avatarUrl,
+  });
+
+  final String id;
+  final String providerName;
+  final String serviceTitle;
+  final String status;
+  final String urgency;
+  final DateTime bookingDate;
+  final String avatarUrl;
+}
+
+class _LiveProgressShortcut extends StatelessWidget {
+  const _LiveProgressShortcut({
+    required this.booking,
+    required this.onTap,
+  });
+
+  final _ActiveBookingShortcutData? booking;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+    final visible = booking != null;
+
+    return IgnorePointer(
+      ignoring: !visible,
+      child: AnimatedOpacity(
+        opacity: visible ? 1 : 0,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        child: AnimatedSlide(
+          offset: visible ? Offset.zero : const Offset(0, 0.16),
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(22),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(22),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.92),
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.70),
+                    ),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x22000000),
+                        blurRadius: 22,
+                        offset: Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 20,
+                          backgroundColor:
+                              theme.primary.withValues(alpha: 0.12),
+                          backgroundImage:
+                              booking?.avatarUrl.trim().isNotEmpty == true
+                                  ? NetworkImage(booking!.avatarUrl)
+                                  : null,
+                          child: booking?.avatarUrl.trim().isNotEmpty == true
+                              ? null
+                              : Icon(
+                                  Icons.person_rounded,
+                                  color: theme.primary,
+                                ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                booking?.providerName ?? '',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.bodyMedium.override(
+                                  font: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                  color: const Color(0xFF14213D),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                _progressText(booking),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.bodySmall.override(
+                                  color: const Color(0xFF64748B),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: theme.primary,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _progressText(_ActiveBookingShortcutData? booking) {
+    if (booking == null) {
+      return '';
+    }
+    final status = booking.status.toLowerCase();
+    if (status == 'confirmation pending') {
+      return 'Waiting for provider confirmation';
+    }
+    if (status == 'booking confirmed') {
+      return 'Provider confirmed for today';
+    }
+    return booking.status;
   }
 }
 

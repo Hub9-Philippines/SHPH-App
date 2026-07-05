@@ -59,9 +59,9 @@ class CheckoutScreen extends StatelessWidget {
                               ChangeNotifierProvider.value(
                                 value: controller,
                                 child: LiveMatchingScreen(
+                                  bookingDate: _liveMatchingDate(draft),
                                   showMap: showLiveMap,
-                                  serviceTitle:
-                                      controller.selectedServiceLabel,
+                                  serviceTitle: controller.selectedServiceLabel,
                                 ),
                               ),
                             ),
@@ -162,6 +162,7 @@ class CheckoutScreen extends StatelessWidget {
           ChangeNotifierProvider.value(
             value: controller,
             child: LiveMatchingScreen(
+              bookingDate: _liveMatchingDate(controller.draft),
               showMap: showLiveMap,
               serviceTitle: controller.selectedServiceLabel,
             ),
@@ -227,6 +228,19 @@ class CheckoutScreen extends StatelessWidget {
       return 'Find Active Cleaner Now';
     }
     return 'Find Active Provider Now';
+  }
+
+  DateTime _liveMatchingDate(BookingDraft draft) {
+    if (draft.scheduledDate != null && draft.scheduledTime != null) {
+      return DateTime(
+        draft.scheduledDate!.year,
+        draft.scheduledDate!.month,
+        draft.scheduledDate!.day,
+        draft.scheduledTime!.hour,
+        draft.scheduledTime!.minute,
+      );
+    }
+    return draft.scheduledDate ?? DateTime.now();
   }
 
   String _asapLabel(BookingDraft draft) {
@@ -428,8 +442,8 @@ class _CheckoutSheet extends StatelessWidget {
                     _Pill(
                       label: 'COD',
                       selected: draft.paymentMethod == BookingPaymentMethod.cod,
-                      onTap: () => controller
-                          .setPaymentMethod(BookingPaymentMethod.cod),
+                      onTap: () =>
+                          controller.setPaymentMethod(BookingPaymentMethod.cod),
                     ),
                   ],
                 ),

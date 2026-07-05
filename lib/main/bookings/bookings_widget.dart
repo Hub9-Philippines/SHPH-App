@@ -6,6 +6,7 @@ import '/custom_code/widgets/index.dart' as custom_widgets;
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
+import '/pages/booking_funnel/status_page.dart';
 import '/theme/app_theme.dart';
 import 'bookings_model.dart';
 
@@ -215,6 +216,8 @@ class _BookingsWidgetState extends State<BookingsWidget> {
   Widget _buildBookingCard(BuildContext context, BookingItem booking) {
     final theme = AppTheme.of(context);
     final status = booking.status.toLowerCase();
+    final shouldShowStatusButton = _isToday(booking.scheduledExecutionDate) &&
+        !_isTerminalStatus(booking.status);
     final statusColor = switch (status) {
       'completed' => const Color(0xFF64748B),
       'cancelled' => const Color(0xFFEF4444),
@@ -350,10 +353,58 @@ class _BookingsWidgetState extends State<BookingsWidget> {
                 borderRadius: BorderRadius.circular(16),
               ),
             ),
+            if (shouldShowStatusButton) ...[
+              const SizedBox(height: 10),
+              FFButtonWidget(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => StatusPage(
+                        bookingStatus: booking.status,
+                        bookingDate:
+                            booking.scheduledExecutionDate ?? DateTime.now(),
+                        providerName: 'Assigned provider',
+                        serviceTitle: booking.title,
+                      ),
+                    ),
+                  );
+                },
+                text: 'View Status',
+                icon: const Icon(Icons.track_changes_rounded, size: 18),
+                options: FFButtonOptions(
+                  width: double.infinity,
+                  height: 52,
+                  color: theme.primary,
+                  textStyle: theme.titleSmall.override(
+                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    color: Colors.white,
+                  ),
+                  elevation: 0,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
+  }
+
+  bool _isToday(DateTime? date) {
+    if (date == null) {
+      return false;
+    }
+    final now = DateTime.now();
+    return date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
+  }
+
+  bool _isTerminalStatus(String status) {
+    final normalized = status.toLowerCase();
+    return normalized == 'cancelled' ||
+        normalized == 'completed' ||
+        normalized == 'booking cancelled';
   }
 
   Widget _bookingImageFallback(BuildContext context) => Container(
@@ -519,41 +570,4 @@ class _BookingMetaRow extends StatelessWidget {
       ],
     );
   }
-}
-
-class _HeaderMetric extends StatelessWidget {
-  const _HeaderMetric({
-    required this.label,
-    required this.value,
-  });
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: AppTheme.of(context).titleMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                    color: Colors.white,
-                  ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: AppTheme.of(context).bodySmall.override(
-                    color: Colors.white.withValues(alpha: 0.8),
-                  ),
-            ),
-          ],
-        ),
-      );
 }

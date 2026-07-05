@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '/auth/supabase_auth/auth_util.dart';
+import '/backend/supabase/database/tables/notifications.dart';
 import '/components/categoriesgrid/categoriesgrid_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
@@ -27,17 +29,16 @@ class HomeModel extends FlutterFlowModel<HomeWidget> {
     isLoadingNotifications = true;
 
     try {
-      // TODO: Replace with actual database query when notifications table is available
-      // For testing, return sample count
-      FFAppState().notificationCount = 2; // Sample: 2 unread notifications
-      
-      // Uncomment when notifications table is available:
-      // final notifications = await NotificationsTable().queryRows(
-      //   queryFn: (q) => q
-      //       .eq('user_id', currentUserUid)
-      //       .eq('is_read', false),
-      // );
-      // FFAppState().notificationCount = notifications.length;
+      if (currentUserUid.isEmpty) {
+        FFAppState().notificationCount = 0;
+        return;
+      }
+
+      final notifications = await NotificationsTable().queryRows(
+        queryFn: (q) => q.eq('user_id', currentUserUid),
+      );
+      FFAppState().notificationCount =
+          notifications.where((notification) => !notification.isRead).length;
     } catch (e) {
       // On error, default to 0
       FFAppState().notificationCount = 0;
