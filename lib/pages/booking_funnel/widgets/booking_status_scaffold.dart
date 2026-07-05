@@ -15,6 +15,7 @@ class BookingStatusScaffold extends StatelessWidget {
     this.center,
     this.showMap = true,
     this.markerHue = BitmapDescriptor.hueRed,
+    this.markers,
     this.isDraggable = false,
     this.mapVisibleFraction = _kDefaultMapVisibleFraction,
     this.sheetMaxFraction = _kDefaultSheetMaxFraction,
@@ -27,6 +28,7 @@ class BookingStatusScaffold extends StatelessWidget {
   final Widget? center;
   final bool showMap;
   final double markerHue;
+  final Set<Marker>? markers;
   final bool isDraggable;
   final double mapVisibleFraction;
   final double sheetMaxFraction;
@@ -79,16 +81,17 @@ class BookingStatusScaffold extends StatelessWidget {
                           tiltGesturesEnabled: false,
                           scrollGesturesEnabled: false,
                           zoomGesturesEnabled: false,
-                          markers: {
-                            Marker(
-                              markerId: const MarkerId('booking_location'),
-                              position: location,
-                              anchor: const Offset(0.5, 1),
-                              icon: BitmapDescriptor.defaultMarkerWithHue(
-                                markerHue,
+                          markers: markers ??
+                            {
+                              Marker(
+                                markerId: const MarkerId('booking_location'),
+                                position: location,
+                                anchor: const Offset(0.5, 1),
+                                icon: BitmapDescriptor.defaultMarkerWithHue(
+                                  markerHue,
+                                ),
                               ),
-                            ),
-                          },
+                            },
                         ),
                       )
                     : const SizedBox.shrink(),
