@@ -29,7 +29,7 @@ class NotificationsRow extends SupabaseDataRow {
   String get type => getField<String>('type')!;
   set type(String value) => setField<String>('type', value);
 
-  bool get isRead => getField<bool>('is_read')!;
+  bool get isRead => getField<bool>('is_read') ?? false;
   set isRead(bool value) => setField<bool>('is_read', value);
 
   String? get imageUrl => getField<String>('image_url');
@@ -41,7 +41,7 @@ class NotificationsRow extends SupabaseDataRow {
   Map<String, dynamic>? get metadata => getField<Map<String, dynamic>>('metadata');
   set metadata(Map<String, dynamic>? value) => setField<Map<String, dynamic>>('metadata', value);
 
-  DateTime get createdAt => getField<DateTime>('created_at')!;
+  DateTime get createdAt => getField<DateTime>('created_at') ?? DateTime.now();
   set createdAt(DateTime value) => setField<DateTime>('created_at', value);
 
   DateTime? get readAt => getField<DateTime>('read_at');

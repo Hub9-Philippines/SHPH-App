@@ -14,6 +14,7 @@ class BookingItem {
     required this.title,
     required this.serviceType,
     required this.date,
+    required this.scheduledExecutionDate,
     required this.price,
     required this.imageUrl,
   });
@@ -22,6 +23,7 @@ class BookingItem {
   final String title;
   final String serviceType;
   final String date;
+  final DateTime? scheduledExecutionDate;
   final double price;
   final String imageUrl;
 }
@@ -95,6 +97,7 @@ class BookingsModel extends FlutterFlowModel<BookingsWidget> {
           title: serviceListing?.title ?? 'Unknown Service',
           serviceType: serviceListing?.categoryName ?? 'Service',
           date: _formatDate(booking.bookingDate),
+          scheduledExecutionDate: booking.bookingDate,
           price: booking.totalPrice ?? 0.0,
           imageUrl: serviceListing?.thumbnail ?? '',
         );

@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +12,8 @@ import 'package:provider/provider.dart';
 import '/main.dart';
 import '/services/nearby_pro_mock_data.dart';
 import '/theme/app_theme.dart';
+import '../status_page.dart';
+import '../../../api/app_config.dart';
 import '../booking_controller.dart';
 import '../booking_models.dart';
 
@@ -19,6 +23,7 @@ import '../booking_models.dart';
 
 class LiveMatchingScreen extends StatefulWidget {
   const LiveMatchingScreen({
+    required this.bookingDate,
     super.key,
     this.showMap = true,
     this.serviceTitle,
@@ -26,6 +31,7 @@ class LiveMatchingScreen extends StatefulWidget {
 
   final bool showMap;
   final String? serviceTitle;
+  final DateTime bookingDate;
 
   @override
   State<LiveMatchingScreen> createState() => _LiveMatchingScreenState();
@@ -36,7 +42,6 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
   // ── Animation controllers ──────────────────────────────────────────
   late final AnimationController _radarController;
   late final AnimationController _gradientController;
-  late final AnimationController _matchRevealController;
 
   // ── Map ────────────────────────────────────────────────────────────
   GoogleMapController? _mapController;
@@ -44,6 +49,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
   // ── Timer / stage ──────────────────────────────────────────────────
   Timer? _timer;
   Timer? _matchTimer;
+  Timer? _mockStatusTimer;
   int _secondsRemaining = 30;
   bool _timedOut = false;
 
@@ -51,6 +57,9 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
   Map<String, dynamic>? _matchedPro;
   List<Map<String, dynamic>> _nearbyPros = [];
   LatLng? _providerLatLng;
+  String bookingStatus = 'confirmation pending';
+  late final List<_MockBooking> _mockBookings;
+  late _MockBooking _activeMockBooking;
 
   // ── Zoom targets per stage ─────────────────────────────────────────
   static const _zoomNearby = 16.0;
@@ -62,6 +71,9 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
   @override
   void initState() {
     super.initState();
+    _mockBookings = _buildMockBookings();
+    _activeMockBooking = _mockBookings.first;
+    bookingStatus = _activeMockBooking.initialStatus;
     _radarController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 4800),
@@ -72,11 +84,6 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
       duration: const Duration(milliseconds: 1100),
     );
 
-    _matchRevealController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-
     // Generate nearby pros immediately — context is valid in initState
     // because the widget is already in the tree when pushed via Navigator.
     _generateNearbyPros();
@@ -85,6 +92,47 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     _matchTimer = Timer(const Duration(seconds: 5), _onMatchFound);
 
     _timer = Timer.periodic(const Duration(seconds: 1), _onTick);
+    _startMockStatusSimulation();
+  }
+
+  List<_MockBooking> _buildMockBookings() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return [
+      _MockBooking(
+        id: 'mock-success-today',
+        providerName: 'Ramon Dela Cruz',
+        initialStatus: 'confirmation pending',
+        bookingDate: today,
+      ),
+      _MockBooking(
+        id: 'mock-cancelled-today',
+        providerName: 'Ramon Dela Cruz',
+        initialStatus: 'booking cancelled',
+        bookingDate: today,
+      ),
+      _MockBooking(
+        id: 'mock-cancelled-future',
+        providerName: 'Ramon Dela Cruz',
+        initialStatus: 'booking cancelled',
+        bookingDate: today.add(const Duration(days: 3)),
+      ),
+    ];
+  }
+
+  void _startMockStatusSimulation() {
+    _mockStatusTimer?.cancel();
+    if (_activeMockBooking.initialStatus != 'confirmation pending') {
+      return;
+    }
+    _mockStatusTimer = Timer(const Duration(seconds: 5), () {
+      if (!mounted || bookingStatus != 'confirmation pending') {
+        return;
+      }
+      setState(() {
+        bookingStatus = 'booking confirmed';
+      });
+    });
   }
 
   void _generateNearbyPros() {
@@ -98,8 +146,12 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
   }
 
   void _onMatchFound() {
-    if (!mounted || _timedOut || _matchedPro != null) return;
-    if (_nearbyPros.isEmpty) return;
+    if (!mounted || _timedOut || _matchedPro != null) {
+      return;
+    }
+    if (_nearbyPros.isEmpty) {
+      return;
+    }
 
     // Pick the closest pro.
     _nearbyPros.sort((a, b) =>
@@ -116,46 +168,44 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
       _matchTimer?.cancel();
       _radarController.stop();
       _gradientController.stop();
-      _matchRevealController.forward(from: 0.0);
     });
+  }
 
-    // Zoom to frame both the user pin and the provider dot.
-    final booking = context.read<BookingFlowController?>();
-    final draft = booking?.draft;
-    final userLatLng = LatLng(
-      draft?.latitude ?? 14.5995,
-      draft?.longitude ?? 120.9842,
-    );
-    _mapController?.animateCamera(
-      CameraUpdate.newLatLngBounds(
-        LatLngBounds(
-          southwest: LatLng(
-            math.min(userLatLng.latitude, _providerLatLng!.latitude),
-            math.min(userLatLng.longitude, _providerLatLng!.longitude),
-          ),
-          northeast: LatLng(
-            math.max(userLatLng.latitude, _providerLatLng!.latitude),
-            math.max(userLatLng.longitude, _providerLatLng!.longitude),
-          ),
-        ),
-        80,
-      ),
-    );
+  void _retryProviderSearch() {
+    _timer?.cancel();
+    _matchTimer?.cancel();
+    _mockStatusTimer?.cancel();
+    _generateNearbyPros();
+    setState(() {
+      _matchedPro = null;
+      _providerLatLng = null;
+      _timedOut = false;
+      _secondsRemaining = 30;
+      bookingStatus = 'confirmation pending';
+    });
+    _activeMockBooking = _mockBookings.first;
+    _radarController.repeat();
+    _gradientController.reset();
+    _matchTimer = Timer(const Duration(seconds: 5), _onMatchFound);
+    _timer = Timer.periodic(const Duration(seconds: 1), _onTick);
+    _startMockStatusSimulation();
   }
 
   @override
   void dispose() {
     _timer?.cancel();
     _matchTimer?.cancel();
+    _mockStatusTimer?.cancel();
     _radarController.dispose();
     _gradientController.dispose();
-    _matchRevealController.dispose();
     super.dispose();
   }
 
   // ── Tick ───────────────────────────────────────────────────────────
   void _onTick(Timer timer) {
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     if (_matchedPro != null) {
       _timer?.cancel();
       return;
@@ -181,18 +231,34 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
   }
 
   double _targetZoom() {
-    if (_matchedPro != null) return _zoomMatched;
-    if (_timedOut) return _zoomNearby;
-    if (_secondsRemaining > 20) return _zoomNearby;
-    if (_secondsRemaining > 10) return _zoomChecking;
+    if (_matchedPro != null) {
+      return _zoomMatched;
+    }
+    if (_timedOut) {
+      return _zoomNearby;
+    }
+    if (_secondsRemaining > 20) {
+      return _zoomNearby;
+    }
+    if (_secondsRemaining > 10) {
+      return _zoomChecking;
+    }
     return _zoomSweep;
   }
 
   int _currentStage() {
-    if (_matchedPro != null) return 4;
-    if (_timedOut || _secondsRemaining <= 0) return 3;
-    if (_secondsRemaining > 20) return 1;
-    if (_secondsRemaining > 10) return 2;
+    if (_matchedPro != null) {
+      return 4;
+    }
+    if (_timedOut || _secondsRemaining <= 0) {
+      return 3;
+    }
+    if (_secondsRemaining > 20) {
+      return 1;
+    }
+    if (_secondsRemaining > 10) {
+      return 2;
+    }
     return 3;
   }
 
@@ -284,7 +350,9 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     final booking = context.read<BookingFlowController?>();
     booking?.setMatchingActive(true);
     booking?.setLiveSearchTimedOut(true);
-    if (mounted) Navigator.of(context).pop();
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
   }
 
   // ── Build ──────────────────────────────────────────────────────────
@@ -300,12 +368,32 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
         widget.serviceTitle ?? draft?.serviceTitle ?? 'Service request';
     final stage = _matchingStage(_secondsRemaining);
 
-    final bool showActive = !_timedOut && _matchedPro == null;
+    final showActive = !_timedOut && _matchedPro == null;
+
+    if (_matchedPro != null && _providerLatLng != null) {
+      return _AssignedProviderRouteMap(
+        clientLocation: location,
+        providerLocation: _providerLatLng!,
+        pro: _matchedPro!,
+        serviceTitle: serviceTitle,
+        addressLabel: draft?.address.label ?? 'Pinned location',
+        addressLine:
+            '${draft?.address.line1 ?? 'Location loading'}${(draft?.address.city ?? '').isNotEmpty ? ', ${draft!.address.city}' : ''}',
+        referenceId: booking?.activeReferenceId,
+        locationLabel: _resolveLocationLabel(draft),
+        bookingStatus: bookingStatus,
+        bookingDate: widget.bookingDate,
+        onFindAnotherProvider: _retryProviderSearch,
+        onBackHome: _goHome,
+      );
+    }
 
     return PopScope(
       canPop: _matchedPro != null || _timedOut,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _onBackOrCancel();
+        if (!didPop) {
+          _onBackOrCancel();
+        }
       },
       child: Scaffold(
         body: Stack(
@@ -325,16 +413,6 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
                   ),
                 ),
               ),
-            if (_matchedPro != null)
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: _MatchReveal(
-                    controller: _matchRevealController,
-                    theme: AppTheme.of(context),
-                  ),
-                ),
-              ),
-
             // ── Layer 3: Top status badge ─────────────────────────
             if (!_timedOut)
               Positioned(
@@ -365,6 +443,40 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
         ),
       ),
     );
+  }
+
+  void _goHome() {
+    Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (_) => const NavBarPage(
+          initialPage: 'Home',
+          disableResizeToAvoidBottomInset: true,
+        ),
+      ),
+      (route) => false,
+    );
+  }
+
+  String _resolveLocationLabel(BookingDraft? draft) {
+    final label = draft?.address.label.trim() ?? '';
+    if (label.isNotEmpty) {
+      return label;
+    }
+
+    final addressParts = [
+      draft?.address.line1,
+      draft?.address.city,
+    ]
+        .whereType<String>()
+        .map((value) => value.trim())
+        .where((value) => value.isNotEmpty)
+        .toList();
+
+    if (addressParts.isNotEmpty) {
+      return addressParts.join(', ');
+    }
+
+    return 'Your Current Location';
   }
 
   // ── Map widget ──────────────────────────────────────────────────────
@@ -437,86 +549,84 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
       snap: true,
       snapSizes: const [0.12, 0.38, 0.72],
       snapAnimationDuration: const Duration(milliseconds: 320),
-      builder: (context, scrollController) {
-        return Container(
-          clipBehavior: Clip.hardEdge,
-          decoration: const BoxDecoration(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-          ),
-          child: BackdropFilter(
-            filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-            child: Container(
-              decoration: BoxDecoration(
-                color: theme.primaryBackground.withValues(alpha: 0.78),
-                border: Border(
-                  top: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.12),
-                    width: 0.5,
-                  ),
+      builder: (context, scrollController) => Container(
+        clipBehavior: Clip.hardEdge,
+        decoration: const BoxDecoration(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: BackdropFilter(
+          filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            decoration: BoxDecoration(
+              color: theme.primaryBackground.withValues(alpha: 0.78),
+              border: Border(
+                top: BorderSide(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  width: 0.5,
                 ),
               ),
-              child: ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(32)),
-                child: _timedOut
-                    ? _TimeoutSheet(
-                        scrollController: scrollController,
-                        theme: theme,
-                        onAdjustBooking: _popClean,
-                        onBackHome: () =>
-                            Navigator.of(context, rootNavigator: true)
-                                .pushAndRemoveUntil(
-                          MaterialPageRoute(
-                            builder: (_) => const NavBarPage(
-                              initialPage: 'Home',
-                              disableResizeToAvoidBottomInset: true,
-                            ),
+            ),
+            child: ClipRRect(
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(32)),
+              child: _timedOut
+                  ? _TimeoutSheet(
+                      scrollController: scrollController,
+                      theme: theme,
+                      onAdjustBooking: _popClean,
+                      onBackHome: () =>
+                          Navigator.of(context, rootNavigator: true)
+                              .pushAndRemoveUntil(
+                        MaterialPageRoute(
+                          builder: (_) => const NavBarPage(
+                            initialPage: 'Home',
+                            disableResizeToAvoidBottomInset: true,
                           ),
-                          (route) => false,
                         ),
-                      )
-                      : _matchedPro != null
-                          ? _MatchedSheet(
-                              scrollController: scrollController,
-                              theme: theme,
-                              pro: _matchedPro!,
-                              addressLabel:
-                                  draft?.address.label ?? 'Pinned location',
-                              addressLine:
-                                  '${draft?.address.line1 ?? 'Location loading'}${(draft?.address.city ?? '').isNotEmpty ? ', ${draft!.address.city}' : ''}',
-                              referenceId: booking?.activeReferenceId,
-                              onBackHome: () =>
-                                  Navigator.of(context, rootNavigator: true)
-                                      .pushAndRemoveUntil(
-                                MaterialPageRoute(
-                                  builder: (_) => const NavBarPage(
-                                    initialPage: 'Home',
-                                    disableResizeToAvoidBottomInset: true,
-                                  ),
-                                ),
-                                (route) => false,
+                        (route) => false,
+                      ),
+                    )
+                  : _matchedPro != null
+                      ? _MatchedSheet(
+                          scrollController: scrollController,
+                          theme: theme,
+                          pro: _matchedPro!,
+                          addressLabel:
+                              draft?.address.label ?? 'Pinned location',
+                          addressLine:
+                              '${draft?.address.line1 ?? 'Location loading'}${(draft?.address.city ?? '').isNotEmpty ? ', ${draft!.address.city}' : ''}',
+                          referenceId: booking?.activeReferenceId,
+                          onBackHome: () =>
+                              Navigator.of(context, rootNavigator: true)
+                                  .pushAndRemoveUntil(
+                            MaterialPageRoute(
+                              builder: (_) => const NavBarPage(
+                                initialPage: 'Home',
+                                disableResizeToAvoidBottomInset: true,
                               ),
-                            )
-                          : _SearchingSheet(
-                              scrollController: scrollController,
-                              theme: theme,
-                              stageLabel: stage.label,
-                              stageSubtitle: stage.subtitle,
-                              addressLabel:
-                                  draft?.address.label ?? 'Pinned location',
-                              addressLine:
-                                  '${draft?.address.line1 ?? 'Location loading'}${(draft?.address.city ?? '').isNotEmpty ? ', ${draft!.address.city}' : ''}',
-                              referenceId: booking?.activeReferenceId,
-                              secondsRemaining: _secondsRemaining,
-                              gradientValue: _gradientController,
-                              stageIndex: _currentStage(),
-                              onCancel: _showCancelDialog,
                             ),
-              ),
+                            (route) => false,
+                          ),
+                        )
+                      : _SearchingSheet(
+                          scrollController: scrollController,
+                          theme: theme,
+                          stageLabel: stage.label,
+                          stageSubtitle: stage.subtitle,
+                          addressLabel:
+                              draft?.address.label ?? 'Pinned location',
+                          addressLine:
+                              '${draft?.address.line1 ?? 'Location loading'}${(draft?.address.city ?? '').isNotEmpty ? ', ${draft!.address.city}' : ''}',
+                          referenceId: booking?.activeReferenceId,
+                          secondsRemaining: _secondsRemaining,
+                          gradientValue: _gradientController,
+                          stageIndex: _currentStage(),
+                          onCancel: _showCancelDialog,
+                        ),
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }
@@ -524,6 +634,965 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
 // ────────────────────────────────────────────────────────────────────────
 // Matching stage model
 // ────────────────────────────────────────────────────────────────────────
+
+class _MockBooking {
+  const _MockBooking({
+    required this.id,
+    required this.providerName,
+    required this.initialStatus,
+    required this.bookingDate,
+  });
+
+  final String id;
+  final String providerName;
+  final String initialStatus;
+  final DateTime bookingDate;
+}
+
+class _AssignedProviderRouteMap extends StatefulWidget {
+  const _AssignedProviderRouteMap({
+    required this.clientLocation,
+    required this.providerLocation,
+    required this.pro,
+    required this.serviceTitle,
+    required this.addressLabel,
+    required this.addressLine,
+    required this.locationLabel,
+    required this.onBackHome,
+    required this.onFindAnotherProvider,
+    required this.bookingStatus,
+    required this.bookingDate,
+    this.referenceId,
+  });
+
+  final LatLng clientLocation;
+  final LatLng providerLocation;
+  final Map<String, dynamic> pro;
+  final String serviceTitle;
+  final String addressLabel;
+  final String addressLine;
+  final String locationLabel;
+  final VoidCallback onBackHome;
+  final VoidCallback onFindAnotherProvider;
+  final String bookingStatus;
+  final DateTime bookingDate;
+  final String? referenceId;
+
+  @override
+  State<_AssignedProviderRouteMap> createState() =>
+      _AssignedProviderRouteMapState();
+}
+
+class _AssignedProviderRouteMapState extends State<_AssignedProviderRouteMap> {
+  static const double _collapsedSheetExtent = 0.25;
+  static const double _expandedSheetExtent = 0.50;
+
+  GoogleMapController? _mapController;
+  Timer? _boundsDebounce;
+  List<LatLng> _routePoints = const [];
+  String? _routeError;
+  String? _routeDistanceText;
+  int? _routeEtaMinutes;
+  double _bottomSheetExtent = _collapsedSheetExtent;
+  double? _sheetContentHeight;
+  bool _mapReady = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRoutePolyline();
+  }
+
+  @override
+  void didUpdateWidget(covariant _AssignedProviderRouteMap oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.clientLocation != widget.clientLocation ||
+        oldWidget.providerLocation != widget.providerLocation) {
+      _fetchRoutePolyline();
+      _scheduleBoundsUpdate();
+    }
+  }
+
+  @override
+  void dispose() {
+    _boundsDebounce?.cancel();
+    _mapController?.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchRoutePolyline() async {
+    final fallbackRoute = [
+      widget.clientLocation,
+      widget.providerLocation,
+    ];
+
+    try {
+      final polylinePoints = PolylinePoints(
+        apiKey: AppConfig.googleDirectionsKey,
+      );
+      final result = await polylinePoints.getRouteBetweenCoordinates(
+        // ignore: deprecated_member_use
+        request: PolylineRequest(
+          origin: PointLatLng(
+            widget.clientLocation.latitude,
+            widget.clientLocation.longitude,
+          ),
+          destination: PointLatLng(
+            widget.providerLocation.latitude,
+            widget.providerLocation.longitude,
+          ),
+          mode: TravelMode.driving,
+          timeoutDuration: const Duration(seconds: 12),
+        ),
+      );
+      final points = <LatLng>[];
+      for (final point in result.points) {
+        points.add(LatLng(point.latitude, point.longitude));
+      }
+      final routePoints = points.isEmpty ? fallbackRoute : points;
+      final distanceMeters =
+          result.totalDistanceValue ?? _routeDistanceMeters(routePoints);
+      final etaMinutes = _etaMinutesFromRoute(
+        durationSeconds: result.totalDurationValue,
+        distanceMeters: result.totalDistanceValue,
+        routePoints: routePoints,
+      );
+
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _routePoints = routePoints;
+        _routeDistanceText = _formatDistanceMeters(distanceMeters);
+        _routeEtaMinutes = etaMinutes;
+        _routeError = result.errorMessage?.isNotEmpty == true
+            ? result.errorMessage
+            : points.isEmpty
+                ? 'No route found. Showing direct path.'
+                : null;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _routePoints = fallbackRoute;
+        _routeDistanceText = _formatDistanceMeters(
+          _routeDistanceMeters(fallbackRoute),
+        );
+        _routeEtaMinutes = _etaMinutesFromRoute(routePoints: fallbackRoute);
+        _routeError = 'Route unavailable. Showing direct path.';
+      });
+    }
+
+    _scheduleBoundsUpdate();
+  }
+
+  void _scheduleBoundsUpdate() {
+    _boundsDebounce?.cancel();
+    _boundsDebounce = Timer(const Duration(milliseconds: 120), () {
+      if (!mounted || !_mapReady) {
+        return;
+      }
+      _updateMapBounds(widget.clientLocation, widget.providerLocation);
+    });
+  }
+
+  void _updateMapBounds(LatLng client, LatLng provider) {
+    final controller = _mapController;
+    if (controller == null) {
+      return;
+    }
+
+    final bounds = _boundsForPoints([
+      client,
+      provider,
+      ..._routePoints,
+    ]);
+    controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 80));
+  }
+
+  LatLngBounds _boundsForPoints(List<LatLng> points) {
+    var minLat = points.first.latitude;
+    var maxLat = points.first.latitude;
+    var minLng = points.first.longitude;
+    var maxLng = points.first.longitude;
+
+    for (final point in points.skip(1)) {
+      minLat = math.min(minLat, point.latitude);
+      maxLat = math.max(maxLat, point.latitude);
+      minLng = math.min(minLng, point.longitude);
+      maxLng = math.max(maxLng, point.longitude);
+    }
+
+    if (minLat == maxLat) {
+      minLat -= 0.001;
+      maxLat += 0.001;
+    }
+    if (minLng == maxLng) {
+      minLng -= 0.001;
+      maxLng += 0.001;
+    }
+
+    return LatLngBounds(
+      southwest: LatLng(minLat, minLng),
+      northeast: LatLng(maxLat, maxLng),
+    );
+  }
+
+  int _etaMinutesFromRoute({
+    int? durationSeconds,
+    int? distanceMeters,
+    List<LatLng> routePoints = const [],
+  }) {
+    if (durationSeconds != null && durationSeconds > 0) {
+      return math.max(1, (durationSeconds / 60).ceil());
+    }
+
+    final meters = distanceMeters ?? _routeDistanceMeters(routePoints);
+    if (meters <= 0) {
+      return widget.pro['etaMinutes'] as int? ?? 15;
+    }
+
+    const metersPerMinute = 500; // Approx. 30 km/h city driving fallback.
+    return math.max(1, (meters / metersPerMinute).ceil());
+  }
+
+  int _routeDistanceMeters(List<LatLng> points) {
+    if (points.length < 2) {
+      return 0;
+    }
+
+    var total = 0.0;
+    for (var i = 0; i < points.length - 1; i++) {
+      total += _distanceBetween(points[i], points[i + 1]);
+    }
+    return total.round();
+  }
+
+  double _distanceBetween(LatLng start, LatLng end) {
+    const earthRadiusMeters = 6371000.0;
+    final startLat = _degreesToRadians(start.latitude);
+    final endLat = _degreesToRadians(end.latitude);
+    final deltaLat = _degreesToRadians(end.latitude - start.latitude);
+    final deltaLng = _degreesToRadians(end.longitude - start.longitude);
+
+    final a = math.sin(deltaLat / 2) * math.sin(deltaLat / 2) +
+        math.cos(startLat) *
+            math.cos(endLat) *
+            math.sin(deltaLng / 2) *
+            math.sin(deltaLng / 2);
+    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    return earthRadiusMeters * c;
+  }
+
+  double _degreesToRadians(double degrees) => degrees * math.pi / 180;
+
+  String _formatDistanceMeters(int meters) {
+    if (meters <= 0) {
+      return widget.pro['distanceText'] as String? ?? 'nearby';
+    }
+    if (meters < 1000) {
+      return '$meters m';
+    }
+    return '${(meters / 1000).toStringAsFixed(1)} km';
+  }
+
+  double _dynamicMaxSheetExtent(double availableHeight) {
+    if (availableHeight <= 0 || _sheetContentHeight == null) {
+      return _expandedSheetExtent;
+    }
+
+    final measuredExtent = (_sheetContentHeight! / availableHeight)
+        .clamp(_collapsedSheetExtent, _expandedSheetExtent)
+        .toDouble();
+    return math.max(_collapsedSheetExtent, measuredExtent);
+  }
+
+  void _handleSheetContentHeightChanged(double height) {
+    if (((_sheetContentHeight ?? 0) - height).abs() < 1) {
+      return;
+    }
+    setState(() {
+      _sheetContentHeight = height;
+    });
+    _scheduleBoundsUpdate();
+  }
+
+  bool _isBookingToday() {
+    final now = DateTime.now();
+    final date = widget.bookingDate;
+    return date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
+  }
+
+  void _openStatusPage() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => StatusPage(
+          bookingStatus: widget.bookingStatus,
+          bookingDate: widget.bookingDate,
+          providerName: widget.pro['providerName'] as String? ?? 'Professional',
+          serviceTitle: widget.serviceTitle,
+        ),
+      ),
+    );
+  }
+
+  void _openBookingsPage() {
+    Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (_) => const NavBarPage(
+          initialPage: 'Bookings',
+          disableResizeToAvoidBottomInset: true,
+        ),
+      ),
+      (route) => false,
+    );
+  }
+
+  bool _handleSheetNotification(DraggableScrollableNotification notification) {
+    if ((notification.extent - _bottomSheetExtent).abs() < 0.002) {
+      return false;
+    }
+    setState(() {
+      _bottomSheetExtent = notification.extent;
+    });
+    _scheduleBoundsUpdate();
+    return false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
+    final name = widget.pro['providerName'] as String? ?? 'Professional';
+    final photo = widget.pro['providerPhoto'] as String?;
+    final rating = widget.pro['rating'] as double? ?? 0;
+    final distanceText = _routeDistanceText ??
+        (widget.pro['distanceText'] as String? ?? 'nearby');
+    final etaMinutes =
+        _routeEtaMinutes ?? (widget.pro['etaMinutes'] as int? ?? 15);
+    final completedJobs = widget.pro['completedJobs'] as int? ?? 0;
+
+    return Scaffold(
+      backgroundColor: theme.primaryBackground,
+      body: Column(
+        children: [
+          _AssignedRouteTopBar(
+            serviceTitle: widget.serviceTitle,
+            providerName: name,
+            locationLabel: widget.locationLabel,
+            bookingStatus: widget.bookingStatus,
+          ),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final maxSheetExtent =
+                    _dynamicMaxSheetExtent(constraints.maxHeight);
+                final currentSheetExtent = _bottomSheetExtent.clamp(
+                  _collapsedSheetExtent,
+                  maxSheetExtent,
+                );
+                final mapPadding = EdgeInsets.only(
+                  top: 16,
+                  bottom: constraints.maxHeight * currentSheetExtent +
+                      bottomPadding +
+                      24,
+                  left: 16,
+                  right: 16,
+                );
+
+                return NotificationListener<DraggableScrollableNotification>(
+                  onNotification: _handleSheetNotification,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: GoogleMap(
+                          initialCameraPosition: CameraPosition(
+                            target: widget.clientLocation,
+                            zoom: 14,
+                          ),
+                          padding: mapPadding,
+                          zoomControlsEnabled: false,
+                          myLocationButtonEnabled: false,
+                          mapToolbarEnabled: false,
+                          markers: {
+                            Marker(
+                              markerId: const MarkerId('client_location'),
+                              position: widget.clientLocation,
+                              anchor: const Offset(0.5, 1),
+                              icon: BitmapDescriptor.defaultMarkerWithHue(
+                                BitmapDescriptor.hueAzure,
+                              ),
+                            ),
+                            Marker(
+                              markerId: const MarkerId('provider_location'),
+                              position: widget.providerLocation,
+                              anchor: const Offset(0.5, 1),
+                              icon: BitmapDescriptor.defaultMarkerWithHue(
+                                BitmapDescriptor.hueRed,
+                              ),
+                            ),
+                          },
+                          polylines: {
+                            Polyline(
+                              polylineId: const PolylineId('provider_route'),
+                              points: _routePoints.isEmpty
+                                  ? [
+                                      widget.clientLocation,
+                                      widget.providerLocation,
+                                    ]
+                                  : _routePoints,
+                              color: const Color(0xFF1976D2),
+                              width: 5,
+                              jointType: JointType.round,
+                              startCap: Cap.roundCap,
+                              endCap: Cap.roundCap,
+                            ),
+                          },
+                          onMapCreated: (controller) {
+                            _mapController = controller;
+                            _mapReady = true;
+                            _scheduleBoundsUpdate();
+                          },
+                        ),
+                      ),
+                      Positioned.fill(
+                        child: MediaQuery.removePadding(
+                          context: context,
+                          removeBottom: true,
+                          child: DraggableScrollableSheet(
+                            initialChildSize: _collapsedSheetExtent,
+                            minChildSize: _collapsedSheetExtent,
+                            maxChildSize: maxSheetExtent,
+                            builder: (context, scrollController) =>
+                                _AssignedRouteBottomSheet(
+                              scrollController: scrollController,
+                              theme: theme,
+                              providerName: name,
+                              providerPhoto: photo,
+                              rating: rating,
+                              distanceText: distanceText,
+                              etaMinutes: etaMinutes,
+                              completedJobs: completedJobs,
+                              addressLabel: widget.addressLabel,
+                              addressLine: widget.addressLine,
+                              referenceId: widget.referenceId,
+                              routeError: _routeError,
+                              bottomInset: bottomPadding,
+                              onContentHeightChanged:
+                                  _handleSheetContentHeightChanged,
+                              bookingStatus: widget.bookingStatus,
+                              isBookingToday: _isBookingToday(),
+                              onFindAnotherProvider:
+                                  widget.onFindAnotherProvider,
+                              onViewStatus: _openStatusPage,
+                              onViewBookings: _openBookingsPage,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AssignedRouteTopBar extends StatelessWidget {
+  const _AssignedRouteTopBar({
+    required this.serviceTitle,
+    required this.providerName,
+    required this.locationLabel,
+    required this.bookingStatus,
+  });
+
+  final String serviceTitle;
+  final String providerName;
+  final String locationLabel;
+  final String bookingStatus;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+
+    return SafeArea(
+      bottom: false,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+        decoration: BoxDecoration(
+          color: theme.primaryBackground,
+          border: Border(bottom: BorderSide(color: theme.alternate)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: theme.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(Icons.route_rounded, color: theme.primary),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          providerName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.titleSmall.override(
+                            font: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      _BookingStatusChip(
+                        status: bookingStatus,
+                        theme: theme,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Heading to $locationLabel',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.bodySmall.override(
+                      color: theme.secondaryText,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AssignedRouteBottomSheet extends StatelessWidget {
+  const _AssignedRouteBottomSheet({
+    required this.scrollController,
+    required this.theme,
+    required this.providerName,
+    required this.rating,
+    required this.distanceText,
+    required this.etaMinutes,
+    required this.completedJobs,
+    required this.addressLabel,
+    required this.addressLine,
+    required this.bottomInset,
+    required this.onContentHeightChanged,
+    required this.bookingStatus,
+    required this.isBookingToday,
+    required this.onFindAnotherProvider,
+    required this.onViewStatus,
+    required this.onViewBookings,
+    this.providerPhoto,
+    this.referenceId,
+    this.routeError,
+  });
+
+  final ScrollController scrollController;
+  final AppThemeData theme;
+  final String providerName;
+  final String? providerPhoto;
+  final double rating;
+  final String distanceText;
+  final int etaMinutes;
+  final int completedJobs;
+  final String addressLabel;
+  final String addressLine;
+  final double bottomInset;
+  final ValueChanged<double> onContentHeightChanged;
+  final String bookingStatus;
+  final bool isBookingToday;
+  final VoidCallback onFindAnotherProvider;
+  final VoidCallback onViewStatus;
+  final VoidCallback onViewBookings;
+  final String? referenceId;
+  final String? routeError;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        clipBehavior: Clip.hardEdge,
+        decoration: BoxDecoration(
+          color: theme.primaryBackground.withValues(alpha: 0.98),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 24,
+              offset: const Offset(0, -8),
+            ),
+          ],
+        ),
+        child: ListView(
+          controller: scrollController,
+          padding: EdgeInsets.zero,
+          children: [
+            _MeasureSize(
+              onChange: (size) => onContentHeightChanged(size.height),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(20, 12, 20, 24 + bottomInset),
+                child: Column(
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 42,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: theme.alternate,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 28,
+                          backgroundColor:
+                              theme.primary.withValues(alpha: 0.10),
+                          backgroundImage:
+                              providerPhoto != null && providerPhoto!.isNotEmpty
+                                  ? NetworkImage(providerPhoto!)
+                                  : null,
+                          child: providerPhoto == null || providerPhoto!.isEmpty
+                              ? Icon(Icons.person_rounded, color: theme.primary)
+                              : null,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                providerName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.titleMedium.override(
+                                  font: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.w700),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.star_rounded,
+                                    size: 16,
+                                    color: theme.warning,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    rating.toStringAsFixed(1),
+                                    style: theme.bodySmall.override(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Icon(
+                                    Icons.work_outline_rounded,
+                                    size: 14,
+                                    color: theme.secondaryText,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '$completedJobs jobs',
+                                    style: theme.bodySmall.override(
+                                      color: theme.secondaryText,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _MatchedInfoTile(
+                            theme: theme,
+                            icon: Icons.access_time_rounded,
+                            label: 'ETA',
+                            value: '$etaMinutes min',
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _MatchedInfoTile(
+                            theme: theme,
+                            icon: Icons.near_me_rounded,
+                            label: 'Distance',
+                            value: distanceText,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if ((routeError ?? '').isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      _MetaRow(
+                        theme: theme,
+                        icon: Icons.info_outline_rounded,
+                        title: 'Route',
+                        subtitle: routeError!,
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    _MetaRow(
+                      theme: theme,
+                      icon: Icons.place_rounded,
+                      title: addressLabel,
+                      subtitle: addressLine,
+                    ),
+                    if ((referenceId ?? '').isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      _MetaRow(
+                        theme: theme,
+                        icon: Icons.tag_rounded,
+                        title: 'Reference',
+                        subtitle: referenceId!,
+                      ),
+                    ],
+                    const SizedBox(height: 20),
+                    _BookingActionButton(
+                      theme: theme,
+                      bookingStatus: bookingStatus,
+                      isBookingToday: isBookingToday,
+                      onFindAnotherProvider: onFindAnotherProvider,
+                      onViewStatus: onViewStatus,
+                      onViewBookings: onViewBookings,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+}
+
+class _BookingStatusChip extends StatelessWidget {
+  const _BookingStatusChip({
+    required this.status,
+    required this.theme,
+  });
+
+  final String status;
+  final AppThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    final normalized = status.toLowerCase();
+    final color = switch (normalized) {
+      'booking confirmed' => const Color(0xFF16A34A),
+      'booking cancelled' => const Color(0xFFDC2626),
+      _ => const Color(0xFFF59E0B),
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.28)),
+      ),
+      child: Text(
+        _titleCaseStatus(normalized),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: theme.bodySmall.override(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+class _BookingActionButton extends StatelessWidget {
+  const _BookingActionButton({
+    required this.theme,
+    required this.bookingStatus,
+    required this.isBookingToday,
+    required this.onFindAnotherProvider,
+    required this.onViewStatus,
+    required this.onViewBookings,
+  });
+
+  final AppThemeData theme;
+  final String bookingStatus;
+  final bool isBookingToday;
+  final VoidCallback onFindAnotherProvider;
+  final VoidCallback onViewStatus;
+  final VoidCallback onViewBookings;
+
+  @override
+  Widget build(BuildContext context) {
+    final normalized = bookingStatus.toLowerCase();
+
+    if (normalized == 'booking confirmed') {
+      return _SheetPrimaryButton(
+        theme: theme,
+        label: isBookingToday ? 'View Status' : 'View Bookings',
+        icon: isBookingToday
+            ? Icons.track_changes_rounded
+            : Icons.calendar_month_rounded,
+        backgroundColor: theme.primary,
+        onPressed: isBookingToday ? onViewStatus : onViewBookings,
+      );
+    }
+
+    return _SheetPrimaryButton(
+      theme: theme,
+      label: 'Find Another Provider',
+      icon: Icons.person_search_rounded,
+      backgroundColor: theme.secondary,
+      onPressed: normalized == 'confirmation pending'
+          ? () => _confirmFindAnotherProvider(context)
+          : onFindAnotherProvider,
+    );
+  }
+
+  Future<void> _confirmFindAnotherProvider(BuildContext context) async {
+    final shouldCancel = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Find another provider?'),
+        content: const Text(
+          'Are you sure you want to cancel this booking and search for another provider?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('No'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.error,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Yes, Cancel'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldCancel == true) {
+      onFindAnotherProvider();
+    }
+  }
+}
+
+class _SheetPrimaryButton extends StatelessWidget {
+  const _SheetPrimaryButton({
+    required this.theme,
+    required this.label,
+    required this.icon,
+    required this.backgroundColor,
+    required this.onPressed,
+  });
+
+  final AppThemeData theme;
+  final String label;
+  final IconData icon;
+  final Color backgroundColor;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+        width: double.infinity,
+        height: 56,
+        child: ElevatedButton.icon(
+          onPressed: onPressed,
+          icon: Icon(icon, size: 20),
+          label: Text(
+            label,
+            style: theme.titleMedium.override(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: backgroundColor,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+          ),
+        ),
+      );
+}
+
+String _titleCaseStatus(String status) => status
+    .split(' ')
+    .map((word) => word.isEmpty
+        ? word
+        : '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}')
+    .join(' ');
+
+class _MeasureSize extends SingleChildRenderObjectWidget {
+  const _MeasureSize({
+    required this.onChange,
+    required super.child,
+  });
+
+  final ValueChanged<Size> onChange;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _MeasureSizeRenderObject(onChange);
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    covariant _MeasureSizeRenderObject renderObject,
+  ) {
+    renderObject.onChange = onChange;
+  }
+}
+
+class _MeasureSizeRenderObject extends RenderProxyBox {
+  _MeasureSizeRenderObject(this.onChange);
+
+  ValueChanged<Size> onChange;
+  Size? _oldSize;
+
+  @override
+  void performLayout() {
+    super.performLayout();
+    final newSize = child?.size ?? Size.zero;
+    if (_oldSize == newSize) {
+      return;
+    }
+    _oldSize = newSize;
+    WidgetsBinding.instance.addPostFrameCallback((_) => onChange(newSize));
+  }
+}
 
 class _MatchingStage {
   const _MatchingStage({
@@ -548,20 +1617,18 @@ class _RadarPulse extends StatelessWidget {
   final AppThemeData theme;
 
   @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: controller,
-      builder: (context, _) {
-        final progress = controller.value * 3.0;
-        return CustomPaint(
-          painter: _RadarPainter(
-            progress: progress,
-            primaryColor: theme.primary,
-          ),
-        );
-      },
-    );
-  }
+  Widget build(BuildContext context) => AnimatedBuilder(
+        animation: controller,
+        builder: (context, _) {
+          final progress = controller.value * 3.0;
+          return CustomPaint(
+            painter: _RadarPainter(
+              progress: progress,
+              primaryColor: theme.primary,
+            ),
+          );
+        },
+      );
 }
 
 class _RadarPainter extends CustomPainter {
@@ -583,7 +1650,11 @@ class _RadarPainter extends CustomPainter {
       final curved = Curves.easeOutCubic.transform(phase);
       final radius = math.max(10.0, curved * maxRadius);
       final opacity = (1.0 - curved) *
-          (i == 0 ? 0.55 : i == 1 ? 0.38 : 0.22);
+          (i == 0
+              ? 0.55
+              : i == 1
+                  ? 0.38
+                  : 0.22);
 
       // Ring fill (glow)
       final fillPaint = Paint()
@@ -619,56 +1690,6 @@ class _RadarPainter extends CustomPainter {
 // ────────────────────────────────────────────────────────────────────────
 // Match reveal — success pulse overlay when a provider is found
 // ────────────────────────────────────────────────────────────────────────
-
-class _MatchReveal extends StatelessWidget {
-  const _MatchReveal({
-    required this.controller,
-    required this.theme,
-  });
-
-  final AnimationController controller;
-  final AppThemeData theme;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: controller,
-      builder: (context, _) {
-        final t = controller.value;
-        final scale = 1.0 + (1.0 - t) * 0.15;
-        final opacity = t;
-        return Opacity(
-          opacity: opacity,
-          child: Transform.scale(
-            scale: scale,
-            child: Center(
-              child: Container(
-                width: 116,
-                height: 116,
-                decoration: BoxDecoration(
-                  color: theme.primaryBackground.withValues(alpha: 0.94),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.success.withValues(alpha: 0.30),
-                      blurRadius: 28,
-                      spreadRadius: 6,
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  Icons.check_circle_rounded,
-                  size: 58,
-                  color: theme.success,
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
 
 // ────────────────────────────────────────────────────────────────────────
 // Top status badge — glassmorphic card with animated gradient bar
@@ -758,7 +1779,9 @@ class _StatusBadge extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                isMatched ? 'Provider assigned' : 'Finding the nearest provider',
+                isMatched
+                    ? 'Provider assigned'
+                    : 'Finding the nearest provider',
                 style: theme.titleMedium.override(
                   font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
                 ),
@@ -855,45 +1878,41 @@ class _GradientBar extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: gradientValue,
-      builder: (context, _) {
-        final t = gradientValue.isAnimating
-            ? gradientValue.value
-            : 1.0;
+  Widget build(BuildContext context) => AnimatedBuilder(
+        animation: gradientValue,
+        builder: (context, _) {
+          final t = gradientValue.isAnimating ? gradientValue.value : 1.0;
 
-        final prevIdx = (stageIndex - 2).clamp(0, _stages.length - 1);
-        final currIdx = (stageIndex - 1).clamp(0, _stages.length - 1);
+          final prevIdx = (stageIndex - 2).clamp(0, _stages.length - 1);
+          final currIdx = (stageIndex - 1).clamp(0, _stages.length - 1);
 
-        final prev = _stages[prevIdx];
-        final curr = _stages[currIdx];
+          final prev = _stages[prevIdx];
+          final curr = _stages[currIdx];
 
-        return Container(
-          height: 7,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
-            gradient: LinearGradient(
-              colors: [
-                Color.lerp(prev.color1, curr.color1, t)!,
-                Color.lerp(prev.color2, curr.color2, t)!,
-              ],
-            ),
-          ),
-          child: FractionallySizedBox(
-            alignment: Alignment.centerLeft,
-            widthFactor: progress.clamp(0.0, 1.0),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(999),
-                color: Colors.transparent,
+          return Container(
+            height: 7,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(999),
+              gradient: LinearGradient(
+                colors: [
+                  Color.lerp(prev.color1, curr.color1, t)!,
+                  Color.lerp(prev.color2, curr.color2, t)!,
+                ],
               ),
             ),
-          ),
-        );
-      },
-    );
-  }
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: progress.clamp(0.0, 1.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(999),
+                  color: Colors.transparent,
+                ),
+              ),
+            ),
+          );
+        },
+      );
 }
 
 class _GradientStage {
@@ -937,130 +1956,128 @@ class _SearchingSheet extends StatelessWidget {
   final int stageIndex;
 
   @override
-  Widget build(BuildContext context) {
-    return ListView(
-      controller: scrollController,
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
-      children: [
-        // Drag handle
-        Center(
-          child: Container(
-            width: 42,
-            height: 5,
+  Widget build(BuildContext context) => ListView(
+        controller: scrollController,
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+        children: [
+          // Drag handle
+          Center(
+            child: Container(
+              width: 42,
+              height: 5,
+              decoration: BoxDecoration(
+                color: theme.alternate,
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Stage card
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: theme.alternate,
-              borderRadius: BorderRadius.circular(999),
+              color: theme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: theme.primary.withValues(alpha: 0.18),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  stageLabel,
+                  style: theme.labelLarge.override(
+                    color: theme.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  stageSubtitle,
+                  style: theme.bodySmall.override(
+                    color: theme.secondaryText,
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-        const SizedBox(height: 16),
-        // Stage card
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: theme.primary.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: theme.primary.withValues(alpha: 0.18),
-            ),
+          const SizedBox(height: 14),
+          // Gradient progress bar
+          _GradientBar(
+            gradientValue: gradientValue,
+            stageIndex: stageIndex,
+            progress: secondsRemaining / 30,
+            theme: theme,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(height: 8),
+          // Countdown
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Text(
-                stageLabel,
+                'Searching ',
+                style: theme.bodySmall.override(color: theme.secondaryText),
+              ),
+              Text(
+                '$secondsRemaining s',
                 style: theme.labelLarge.override(
                   color: theme.primary,
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                stageSubtitle,
-                style: theme.bodySmall.override(
-                  color: theme.secondaryText,
-                ),
-              ),
             ],
           ),
-        ),
-        const SizedBox(height: 14),
-        // Gradient progress bar
-        _GradientBar(
-          gradientValue: gradientValue,
-          stageIndex: stageIndex,
-          progress: secondsRemaining / 30,
-          theme: theme,
-        ),
-        const SizedBox(height: 8),
-        // Countdown
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Text(
-              'Searching ',
-              style: theme.bodySmall.override(color: theme.secondaryText),
+          const SizedBox(height: 14),
+          // Header
+          Text(
+            'Searching nearby providers',
+            style: theme.titleMedium.override(
+              font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
             ),
-            Text(
-              '$secondsRemaining s',
-              style: theme.labelLarge.override(
-                color: theme.primary,
-                fontWeight: FontWeight.w700,
-              ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Stay on this screen while we look for the closest available professional.',
+            style: theme.bodyMedium.override(
+              color: theme.secondaryText,
             ),
-          ],
-        ),
-        const SizedBox(height: 14),
-        // Header
-        Text(
-          'Searching nearby providers',
-          style: theme.titleMedium.override(
-            font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
           ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'Stay on this screen while we look for the closest available professional.',
-          style: theme.bodyMedium.override(
-            color: theme.secondaryText,
-          ),
-        ),
-        const SizedBox(height: 16),
-        _MetaRow(
-          theme: theme,
-          icon: Icons.place_rounded,
-          title: addressLabel,
-          subtitle: addressLine,
-        ),
-        if ((referenceId ?? '').isNotEmpty) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           _MetaRow(
             theme: theme,
-            icon: Icons.tag_rounded,
-            title: 'Search reference',
-            subtitle: referenceId!,
+            icon: Icons.place_rounded,
+            title: addressLabel,
+            subtitle: addressLine,
+          ),
+          if ((referenceId ?? '').isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _MetaRow(
+              theme: theme,
+              icon: Icons.tag_rounded,
+              title: 'Search reference',
+              subtitle: referenceId!,
+            ),
+          ],
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: OutlinedButton(
+              onPressed: onCancel,
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: theme.alternate),
+                foregroundColor: theme.secondaryText,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: const Text('Cancel search'),
+            ),
           ),
         ],
-        const SizedBox(height: 20),
-        SizedBox(
-          width: double.infinity,
-          height: 54,
-          child: OutlinedButton(
-            onPressed: onCancel,
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: theme.alternate),
-              foregroundColor: theme.secondaryText,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-            child: const Text('Cancel search'),
-          ),
-        ),
-      ],
-    );
-  }
+      );
 }
 
 // ────────────────────────────────────────────────────────────────────────
@@ -1132,7 +2149,7 @@ class _MatchedSheet extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.check_circle_rounded,
+                  Icons.person_pin_circle_rounded,
                   color: theme.success,
                   size: 26,
                 ),
@@ -1180,8 +2197,7 @@ class _MatchedSheet extends StatelessWidget {
                 backgroundColor: theme.iconBackground,
                 backgroundImage: photo != null ? NetworkImage(photo) : null,
                 child: photo == null
-                    ? Icon(Icons.person_rounded,
-                        size: 30, color: theme.primary)
+                    ? Icon(Icons.person_rounded, size: 30, color: theme.primary)
                     : null,
               ),
               const SizedBox(width: 14),
@@ -1306,39 +2322,37 @@ class _MatchedInfoTile extends StatelessWidget {
   final String value;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: theme.secondaryBackground,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: theme.alternate),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: theme.primary),
-          const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: theme.bodySmall.override(
-                  color: theme.secondaryText,
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: theme.secondaryBackground,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: theme.alternate),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: theme.primary),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: theme.bodySmall.override(
+                    color: theme.secondaryText,
+                  ),
                 ),
-              ),
-              Text(
-                value,
-                style: theme.bodyMedium.override(
-                  fontWeight: FontWeight.w700,
+                Text(
+                  value,
+                  style: theme.bodyMedium.override(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+              ],
+            ),
+          ],
+        ),
+      );
 }
 
 // ────────────────────────────────────────────────────────────────────────
@@ -1359,75 +2373,72 @@ class _TimeoutSheet extends StatelessWidget {
   final VoidCallback onBackHome;
 
   @override
-  Widget build(BuildContext context) {
-    return ListView(
-      controller: scrollController,
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
-      children: [
-        Center(
-          child: Container(
-            width: 42,
-            height: 5,
-            decoration: BoxDecoration(
-              color: theme.alternate,
-              borderRadius: BorderRadius.circular(999),
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        Icon(Icons.timer_off_rounded,
-            size: 48, color: theme.secondaryText),
-        const SizedBox(height: 12),
-        Text(
-          'Providers are busy, try again',
-          textAlign: TextAlign.center,
-          style: theme.titleMedium.override(
-            font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'You can adjust the booking details and retry, or head back home for now.',
-          textAlign: TextAlign.center,
-          style: theme.bodyMedium.override(
-            color: theme.secondaryText,
-          ),
-        ),
-        const SizedBox(height: 24),
-        SizedBox(
-          width: double.infinity,
-          height: 54,
-          child: ElevatedButton(
-            onPressed: onAdjustBooking,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+  Widget build(BuildContext context) => ListView(
+        controller: scrollController,
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+        children: [
+          Center(
+            child: Container(
+              width: 42,
+              height: 5,
+              decoration: BoxDecoration(
+                color: theme.alternate,
+                borderRadius: BorderRadius.circular(999),
               ),
             ),
-            child: const Text('Adjust booking'),
           ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          height: 54,
-          child: OutlinedButton(
-            onPressed: onBackHome,
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: theme.alternate),
-              foregroundColor: theme.secondaryText,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
+          const SizedBox(height: 16),
+          Icon(Icons.timer_off_rounded, size: 48, color: theme.secondaryText),
+          const SizedBox(height: 12),
+          Text(
+            'Providers are busy, try again',
+            textAlign: TextAlign.center,
+            style: theme.titleMedium.override(
+              font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
             ),
-            child: const Text('Back home'),
           ),
-        ),
-      ],
-    );
-  }
+          const SizedBox(height: 8),
+          Text(
+            'You can adjust the booking details and retry, or head back home for now.',
+            textAlign: TextAlign.center,
+            style: theme.bodyMedium.override(
+              color: theme.secondaryText,
+            ),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: ElevatedButton(
+              onPressed: onAdjustBooking,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: const Text('Adjust booking'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: OutlinedButton(
+              onPressed: onBackHome,
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: theme.alternate),
+                foregroundColor: theme.secondaryText,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: const Text('Back home'),
+            ),
+          ),
+        ],
+      );
 }
 
 // ────────────────────────────────────────────────────────────────────────
@@ -1448,41 +2459,39 @@ class _MetaRow extends StatelessWidget {
   final String subtitle;
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: theme.secondaryBackground,
-            borderRadius: BorderRadius.circular(14),
+  Widget build(BuildContext context) => Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: theme.secondaryBackground,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(icon, color: theme.primary, size: 20),
           ),
-          child: Icon(icon, color: theme.primary, size: 20),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: theme.bodyMedium.override(
-                  fontWeight: FontWeight.w700,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.bodyMedium.override(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: theme.bodySmall.override(
-                  color: theme.secondaryText,
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: theme.bodySmall.override(
+                    color: theme.secondaryText,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ],
-    );
-  }
+        ],
+      );
 }

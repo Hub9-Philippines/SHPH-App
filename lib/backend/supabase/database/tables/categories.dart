@@ -32,7 +32,7 @@ class CategoriesRow extends SupabaseDataRow {
   int? get sortOrder => getField<int>('sort_order');
   set sortOrder(int? value) => setField<int>('sort_order', value);
 
-  bool get isActive => getField<bool>('is_active')!;
+  bool get isActive => getField<bool>('is_active') ?? false;
   set isActive(bool value) => setField<bool>('is_active', value);
 
   DateTime get createdAt => getField<DateTime>('created_at')!;

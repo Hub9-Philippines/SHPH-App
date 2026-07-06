@@ -154,6 +154,7 @@ class ExpressCheckoutScreen extends StatelessWidget {
           ChangeNotifierProvider.value(
             value: controller,
             child: LiveMatchingScreen(
+              bookingDate: _liveMatchingDate(controller.draft),
               serviceTitle: controller.selectedServiceLabel,
             ),
           ),
@@ -174,6 +175,9 @@ class ExpressCheckoutScreen extends StatelessWidget {
     }
     return null;
   }
+
+  DateTime _liveMatchingDate(BookingDraft draft) =>
+      _scheduledDateTime(draft) ?? draft.scheduledDate ?? DateTime.now();
 }
 
 class _ExpressSheet extends StatelessWidget {
@@ -287,21 +291,23 @@ class _ExpressSheet extends StatelessWidget {
                   children: [
                     _Pill(
                       label: 'GCash',
-                      selected: draft.paymentMethod == BookingPaymentMethod.gcash,
+                      selected:
+                          draft.paymentMethod == BookingPaymentMethod.gcash,
                       onTap: () => controller
                           .setPaymentMethod(BookingPaymentMethod.gcash),
                     ),
                     _Pill(
                       label: 'Card',
-                      selected: draft.paymentMethod == BookingPaymentMethod.card,
+                      selected:
+                          draft.paymentMethod == BookingPaymentMethod.card,
                       onTap: () => controller
                           .setPaymentMethod(BookingPaymentMethod.card),
                     ),
                     _Pill(
                       label: 'COD',
                       selected: draft.paymentMethod == BookingPaymentMethod.cod,
-                      onTap: () => controller
-                          .setPaymentMethod(BookingPaymentMethod.cod),
+                      onTap: () =>
+                          controller.setPaymentMethod(BookingPaymentMethod.cod),
                     ),
                   ],
                 ),
@@ -495,7 +501,8 @@ class _SectionRow extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: theme.bodyMedium.override(fontWeight: FontWeight.w700),
+                    style:
+                        theme.bodyMedium.override(fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -777,7 +784,8 @@ class _ScopeEditSheetState extends State<_ScopeEditSheet> {
   void initState() {
     super.initState();
     _rooms = widget.controller.draft.rooms;
-    _serviceTypeIndex = _serviceTypes.indexOf(widget.controller.draft.cleaningType);
+    _serviceTypeIndex =
+        _serviceTypes.indexOf(widget.controller.draft.cleaningType);
     if (_serviceTypeIndex < 0) _serviceTypeIndex = 0;
   }
 
@@ -787,7 +795,8 @@ class _ScopeEditSheetState extends State<_ScopeEditSheet> {
     final draft = widget.controller.draft;
     final category = (draft.serviceCategoryName ?? '').toLowerCase();
     final unitLabel = category.contains('clean') ? 'rooms' : 'units';
-    final levelLabel = category.contains('clean') ? 'Cleaning type' : 'Service level';
+    final levelLabel =
+        category.contains('clean') ? 'Cleaning type' : 'Service level';
 
     return Container(
       decoration: BoxDecoration(
@@ -826,9 +835,7 @@ class _ScopeEditSheetState extends State<_ScopeEditSheet> {
               ),
               const Spacer(),
               IconButton(
-                onPressed: _rooms > 1
-                    ? () => setState(() => _rooms--)
-                    : null,
+                onPressed: _rooms > 1 ? () => setState(() => _rooms--) : null,
                 icon: const Icon(Icons.remove_circle_outline),
               ),
               Padding(
@@ -841,9 +848,7 @@ class _ScopeEditSheetState extends State<_ScopeEditSheet> {
                 ),
               ),
               IconButton(
-                onPressed: _rooms < 8
-                    ? () => setState(() => _rooms++)
-                    : null,
+                onPressed: _rooms < 8 ? () => setState(() => _rooms++) : null,
                 icon: const Icon(Icons.add_circle_outline),
               ),
             ],
@@ -882,7 +887,8 @@ class _ScopeEditSheetState extends State<_ScopeEditSheet> {
             child: ElevatedButton(
               onPressed: () {
                 widget.controller.setRooms(_rooms);
-                widget.controller.setServiceType(_serviceTypes[_serviceTypeIndex]);
+                widget.controller
+                    .setServiceType(_serviceTypes[_serviceTypeIndex]);
                 Navigator.of(context).pop();
               },
               style: ElevatedButton.styleFrom(

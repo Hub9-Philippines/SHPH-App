@@ -138,8 +138,11 @@ void main() {
   testWidgets('Live matching screen times out after 30 seconds',
       (tester) async {
     await tester.pumpWidget(
-      const MaterialApp(
-        home: LiveMatchingScreen(showMap: false),
+      MaterialApp(
+        home: LiveMatchingScreen(
+          bookingDate: DateTime(2026, 7, 5),
+          showMap: false,
+        ),
       ),
     );
 

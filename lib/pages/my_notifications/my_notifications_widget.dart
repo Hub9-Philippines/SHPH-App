@@ -666,9 +666,10 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      notification.body?.trim().isNotEmpty == true
-                          ? notification.body!
-                          : 'Open this update to see more details.',
+                      (notification.body?.trim().isNotEmpty == true
+                              ? notification.body
+                              : null) ??
+                          'Open this update to see more details.',
                       style: AppTheme.of(context).bodyMedium.override(
                             font: GoogleFonts.poppins(),
                             color: const Color(0xFF64748B),
