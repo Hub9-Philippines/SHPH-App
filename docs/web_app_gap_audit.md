@@ -1,11 +1,13 @@
 # Web App Gap Audit — SHPH_web_version
 
-> **Audited:** 2026-07-06
-> **Repo (local):** `C:\Users\Pol\Desktop\DEV\StartUp\SHPH_web_version`
-> **Repo (GitLab):**
-> - Root (submodule parent): https://gitlab.com/shph1/shph.git
-> - Backend (`shph-api`): https://gitlab.com/shph1/shph-api.git
-> - Frontend (`shph-app`): https://gitlab.com/shph1/shph-app.git
+> **Audited:** 2026-07-06 (initial pass — see note below)
+> **Repo (local, machine this audit ran on):** `C:\Users\Pol\Desktop\DEV\StartUp\SHPH_web_version` — *this path is specific to the machine that ran the audit; other developers should use the GitLab links below, not this path*
+> **Repo (GitLab — canonical, same for everyone):**
+> - Root (submodule parent): https://gitlab.com/shph1/shph.git — commit `main` (up to date)
+> - Backend (`shph-api`): https://gitlab.com/shph1/shph-api.git — updated `4cc3d52` → `0bb8cfe` (+92 commits)
+> - Frontend (`shph-app`): https://gitlab.com/shph1/shph-app.git — updated `f02800f` → `ef2cdac` (+220 commits)
+>
+> ⚠️ **The findings below were verified against the OLD commits** (`4cc3d52`/`f02800f`), before the submodule update to latest. Submodules have since been fast-forwarded to `0bb8cfe`/`ef2cdac`. A fresh re-audit against the new commits is recommended before relying on this report — notably `shph-app` gained a full wallet UI (`feat(SHPH-150)`) among 220 other commits not yet reviewed here.
 
 This audit consolidates findings from the web app's own prior self-audits (`BIDDING_AUDIT_REPORT.md`, `orm-audit-findings.md`) plus a fresh scan, cross-checked against `CHANGELOG.md` to exclude already-resolved items. **Note:** these source audits are dated May 2026 — verify against `CHANGELOG.md` before implementing, in case items were already fixed since.
 

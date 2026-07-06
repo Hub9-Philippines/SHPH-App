@@ -88,6 +88,9 @@ temp_*.txt
 .agents/
 .windsurf/
 
+# Per-developer local paths (machine-specific, never commit)
+.devin/local/
+
 # npm modules
 /backend/node_modules/
 /backend/aws/cdk/node_modules/
