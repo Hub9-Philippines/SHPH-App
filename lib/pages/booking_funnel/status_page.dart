@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '/main.dart';
 import '/theme/app_theme.dart';
 import 'widgets/booking_status_scaffold.dart';
 
@@ -15,6 +16,7 @@ class StatusPage extends StatefulWidget {
     this.providerLocation,
     this.providerPhoto,
     this.bookingReference,
+    this.shouldPopToHome = false,
     super.key,
   });
 
@@ -26,6 +28,7 @@ class StatusPage extends StatefulWidget {
   final LatLng? providerLocation;
   final String? providerPhoto;
   final String? bookingReference;
+  final bool shouldPopToHome;
 
   @override
   State<StatusPage> createState() => _StatusPageState();
@@ -163,9 +166,9 @@ class _StatusPageState extends State<StatusPage>
         widget.providerLocation ??
         const LatLng(14.5995, 120.9842);
 
-    return BookingStatusScaffold(
+    final scaffold = BookingStatusScaffold(
       location: location,
-      showMap: widget.clientLocation != null || widget.providerLocation != null,
+      showMap: true,
       markerHue: BitmapDescriptor.hueAzure,
       markers: _buildMarkers(),
       isDraggable: true,
@@ -187,6 +190,26 @@ class _StatusPageState extends State<StatusPage>
         bookingReference: widget.bookingReference,
         theme: theme,
       ),
+    );
+
+    if (!widget.shouldPopToHome) return scaffold;
+
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (_) => const NavBarPage(
+                initialPage: 'Home',
+                disableResizeToAvoidBottomInset: true,
+              ),
+            ),
+            (route) => false,
+          );
+        }
+      },
+      child: scaffold,
     );
   }
 }

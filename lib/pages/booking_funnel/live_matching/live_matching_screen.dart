@@ -371,20 +371,26 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     final showActive = !_timedOut && _matchedPro == null;
 
     if (_matchedPro != null && _providerLatLng != null) {
-      return _AssignedProviderRouteMap(
-        clientLocation: location,
-        providerLocation: _providerLatLng!,
-        pro: _matchedPro!,
-        serviceTitle: serviceTitle,
-        addressLabel: draft?.address.label ?? 'Pinned location',
-        addressLine:
-            '${draft?.address.line1 ?? 'Location loading'}${(draft?.address.city ?? '').isNotEmpty ? ', ${draft!.address.city}' : ''}',
-        referenceId: booking?.activeReferenceId,
-        locationLabel: _resolveLocationLabel(draft),
-        bookingStatus: bookingStatus,
-        bookingDate: widget.bookingDate,
-        onFindAnotherProvider: _retryProviderSearch,
-        onBackHome: _goHome,
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) _goHome();
+        },
+        child: _AssignedProviderRouteMap(
+          clientLocation: location,
+          providerLocation: _providerLatLng!,
+          pro: _matchedPro!,
+          serviceTitle: serviceTitle,
+          addressLabel: draft?.address.label ?? 'Pinned location',
+          addressLine:
+              '${draft?.address.line1 ?? 'Location loading'}${(draft?.address.city ?? '').isNotEmpty ? ', ${draft!.address.city}' : ''}',
+          referenceId: booking?.activeReferenceId,
+          locationLabel: _resolveLocationLabel(draft),
+          bookingStatus: bookingStatus,
+          bookingDate: widget.bookingDate,
+          onFindAnotherProvider: _retryProviderSearch,
+          onBackHome: _goHome,
+        ),
       );
     }
 
@@ -928,15 +934,17 @@ class _AssignedProviderRouteMapState extends State<_AssignedProviderRouteMap> {
   }
 
   void _openStatusPage() {
-    Navigator.of(context).push(
+    Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
       MaterialPageRoute(
         builder: (_) => StatusPage(
           bookingStatus: widget.bookingStatus,
           bookingDate: widget.bookingDate,
           providerName: widget.pro['providerName'] as String? ?? 'Professional',
           serviceTitle: widget.serviceTitle,
+          shouldPopToHome: true,
         ),
       ),
+      (route) => route.isFirst,
     );
   }
 
