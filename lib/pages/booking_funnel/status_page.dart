@@ -1,10 +1,12 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '/main.dart';
 import '/theme/app_theme.dart';
-import 'widgets/booking_status_scaffold.dart';
 
 class StatusPage extends StatefulWidget {
   const StatusPage({
@@ -36,7 +38,29 @@ class StatusPage extends StatefulWidget {
 
 class _StatusPageState extends State<StatusPage>
     with TickerProviderStateMixin {
+  static const double _collapsedSheetExtent = 0.30;
+  static const double _expandedSheetExtent = 0.65;
+
   late final AnimationController _pulseController;
+
+  GoogleMapController? _mapController;
+  Timer? _movementTimer;
+  Timer? _statusTimer;
+  double _bottomSheetExtent = _collapsedSheetExtent;
+  bool _mapReady = false;
+
+  LatLng _currentProviderLocation = const LatLng(14.5995, 120.9842);
+  String _currentStatus = '';
+  int _etaSeconds = 0;
+
+  bool get _isTerminal {
+    final s = _currentStatus.toLowerCase();
+    return s == 'completed' ||
+        s == 'booking cancelled' ||
+        s == 'cancelled';
+  }
+
+  int get _activeStageIndex => _stageIndexForStatus(_currentStatus);
 
   static const _stages = <_BookingStage>[
     _BookingStage(
@@ -76,40 +100,140 @@ class _StatusPageState extends State<StatusPage>
     ),
   ];
 
-  int get _activeStageIndex {
-    final status = widget.bookingStatus.toLowerCase();
-    if (status == 'booking cancelled' || status == 'cancelled') {
-      return -1;
-    }
-    if (status == 'completed') {
-      return _stages.length - 1;
-    }
-    if (status == 'in progress' || status == 'in_progress') {
-      return 3;
-    }
-    if (status == 'on site' || status == 'arrived') {
-      return 2;
-    }
-    if (status == 'en route' || status == 'booking confirmed') {
-      return 1;
-    }
+  int _stageIndexForStatus(String s) {
+    final lower = s.toLowerCase();
+    if (lower == 'booking cancelled' || lower == 'cancelled') return -1;
+    if (lower == 'completed') return _stages.length - 1;
+    if (lower == 'in progress' || lower == 'in_progress') return 3;
+    if (lower == 'on site' || lower == 'arrived') return 2;
+    if (lower == 'en route' || lower == 'booking confirmed') return 1;
     return 0;
   }
 
-  bool get _isTerminal =>
-      widget.bookingStatus.toLowerCase() == 'completed' ||
-      widget.bookingStatus.toLowerCase() == 'booking cancelled' ||
-      widget.bookingStatus.toLowerCase() == 'cancelled';
+  LatLng get _clientLocation =>
+      widget.clientLocation ?? const LatLng(14.5995, 120.9842);
+
+  double _distanceToClient(LatLng from) {
+    const r = 6371.0;
+    final dLat = _toRadians(_clientLocation.latitude - from.latitude);
+    final dLon = _toRadians(_clientLocation.longitude - from.longitude);
+    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(_toRadians(from.latitude)) *
+            math.cos(_toRadians(_clientLocation.latitude)) *
+            math.sin(dLon / 2) *
+            math.sin(dLon / 2);
+    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    return r * c;
+  }
+
+  double _toRadians(double deg) => deg * math.pi / 180;
 
   @override
   void initState() {
     super.initState();
+    _currentProviderLocation =
+        widget.providerLocation ?? const LatLng(14.5995, 120.9842);
+    _currentStatus = widget.bookingStatus;
+    _etaSeconds = _etaForStatus(_currentStatus);
+
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
     if (!_isTerminal) {
       _pulseController.repeat(reverse: true);
+    }
+
+    _startRealtimeSimulation();
+  }
+
+  void _startRealtimeSimulation() {
+    final providerLatLng = widget.providerLocation;
+    if (providerLatLng == null || _isTerminal) return;
+
+    final totalSteps = 60;
+    var step = 0;
+
+    final latStep =
+        (_clientLocation.latitude - providerLatLng.latitude) / totalSteps;
+    final lngStep =
+        (_clientLocation.longitude - providerLatLng.longitude) / totalSteps;
+
+    _movementTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      step++;
+      final newLat = providerLatLng.latitude + latStep * step;
+      final newLng = providerLatLng.longitude + lngStep * step;
+      final newPos = LatLng(newLat, newLng);
+
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      setState(() {
+        if (step >= totalSteps) {
+          _currentProviderLocation = _clientLocation;
+          timer.cancel();
+        } else {
+          _currentProviderLocation = newPos;
+        }
+      });
+
+      _updateStatusBasedOnDistance();
+      _etaSeconds = math.max(0, _etaSeconds - 1);
+      _scheduleBoundsUpdate();
+    });
+  }
+
+  void _updateStatusBasedOnDistance() {
+    final distKm = _distanceToClient(_currentProviderLocation);
+    final current = _currentStatus.toLowerCase();
+
+    String newStatus;
+    if (distKm < 0.05) {
+      newStatus = current == 'in_progress' || current == 'completed'
+          ? current
+          : 'on_site';
+    } else if (distKm < 0.5) {
+      newStatus = 'on_site';
+    } else {
+      newStatus = 'en_route';
+    }
+
+    if (newStatus != _currentStatus) {
+      setState(() => _currentStatus = newStatus);
+      _etaSeconds = _etaForStatus(newStatus);
+    }
+  }
+
+  int _etaForStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'en_route':
+        return 900; // 15 min
+      case 'on_site':
+        return 300; // 5 min
+      case 'in_progress':
+        return 1800; // 30 min
+      default:
+        return 0;
+    }
+  }
+
+  void _scheduleBoundsUpdate() {
+    if (_mapReady && _mapController != null) {
+      final bounds = LatLngBounds(
+        southwest: LatLng(
+          math.min(_clientLocation.latitude, _currentProviderLocation.latitude),
+          math.min(_clientLocation.longitude, _currentProviderLocation.longitude),
+        ),
+        northeast: LatLng(
+          math.max(_clientLocation.latitude, _currentProviderLocation.latitude),
+          math.max(_clientLocation.longitude, _currentProviderLocation.longitude),
+        ),
+      );
+      _mapController!.animateCamera(
+        CameraUpdate.newLatLngBounds(bounds, 80),
+      );
     }
   }
 
@@ -127,68 +251,132 @@ class _StatusPageState extends State<StatusPage>
   @override
   void dispose() {
     _pulseController.dispose();
+    _movementTimer?.cancel();
+    _statusTimer?.cancel();
+    _mapController?.dispose();
     super.dispose();
   }
 
-  Set<Marker> _buildMarkers() {
-    final markers = <Marker>{};
-    if (widget.clientLocation != null) {
-      markers.add(
-        Marker(
-          markerId: const MarkerId('client_location'),
-          position: widget.clientLocation!,
-          anchor: const Offset(0.5, 1),
-          icon: BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueAzure,
-          ),
-        ),
-      );
-    }
-    if (widget.providerLocation != null) {
-      markers.add(
-        Marker(
-          markerId: const MarkerId('provider_location'),
-          position: widget.providerLocation!,
-          anchor: const Offset(0.5, 1),
-          icon: BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueGreen,
-          ),
-        ),
-      );
-    }
-    return markers;
+  double _dynamicMaxSheetExtent(double availableHeight) {
+    return _expandedSheetExtent;
+  }
+
+  bool _handleSheetNotification(DraggableScrollableNotification n) {
+    if ((n.extent - _bottomSheetExtent).abs() < 0.002) return false;
+    setState(() => _bottomSheetExtent = n.extent);
+    return false;
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
-    final location = widget.clientLocation ??
-        widget.providerLocation ??
-        const LatLng(14.5995, 120.9842);
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
 
-    final scaffold = BookingStatusScaffold(
-      location: location,
-      showMap: true,
-      markerHue: BitmapDescriptor.hueAzure,
-      markers: _buildMarkers(),
-      isDraggable: true,
-      topCard: _StatusTopBar(
-        status: widget.bookingStatus,
-        serviceTitle: widget.serviceTitle,
-        providerName: widget.providerName,
-        providerPhoto: widget.providerPhoto,
-        theme: theme,
-      ),
-      bottomSheet: _StatusSheetContent(
-        stages: _stages,
-        activeStageIndex: _activeStageIndex,
-        pulseValue: _pulseController,
-        isTerminal: _isTerminal,
-        providerName: widget.providerName,
-        status: widget.bookingStatus,
-        bookingDate: widget.bookingDate,
-        bookingReference: widget.bookingReference,
-        theme: theme,
+    final scaffold = Scaffold(
+      backgroundColor: theme.primaryBackground,
+      body: Column(
+        children: [
+          _StatusTopBar(
+            providerName: widget.providerName,
+            providerPhoto: widget.providerPhoto,
+            status: _currentStatus,
+            serviceTitle: widget.serviceTitle,
+            theme: theme,
+          ),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final maxSheetExtent =
+                    _dynamicMaxSheetExtent(constraints.maxHeight);
+                final currentSheetExtent = _bottomSheetExtent.clamp(
+                  _collapsedSheetExtent,
+                  maxSheetExtent,
+                );
+                final mapPadding = EdgeInsets.only(
+                  top: 16,
+                  bottom: constraints.maxHeight * currentSheetExtent +
+                      bottomPadding +
+                      24,
+                  left: 16,
+                  right: 16,
+                );
+
+                return NotificationListener<
+                    DraggableScrollableNotification>(
+                  onNotification: _handleSheetNotification,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: GoogleMap(
+                          initialCameraPosition: CameraPosition(
+                            target: _clientLocation,
+                            zoom: 14,
+                          ),
+                          padding: mapPadding,
+                          zoomControlsEnabled: false,
+                          myLocationButtonEnabled: false,
+                          mapToolbarEnabled: false,
+                          markers: {
+                            Marker(
+                              markerId: const MarkerId('client_location'),
+                              position: _clientLocation,
+                              anchor: const Offset(0.5, 1),
+                              icon: BitmapDescriptor.defaultMarkerWithHue(
+                                BitmapDescriptor.hueAzure,
+                              ),
+                            ),
+                            Marker(
+                              markerId: const MarkerId('provider_location'),
+                              position: _currentProviderLocation,
+                              anchor: const Offset(0.5, 1),
+                              icon: BitmapDescriptor.defaultMarkerWithHue(
+                                BitmapDescriptor.hueGreen,
+                              ),
+                            ),
+                          },
+                          polylines: const {},
+                          onMapCreated: (controller) {
+                            _mapController = controller;
+                            _mapReady = true;
+                            _scheduleBoundsUpdate();
+                          },
+                        ),
+                      ),
+                      Positioned.fill(
+                        child: MediaQuery.removePadding(
+                          context: context,
+                          removeBottom: true,
+                          child: DraggableScrollableSheet(
+                            initialChildSize: _collapsedSheetExtent,
+                            minChildSize: _collapsedSheetExtent,
+                            maxChildSize: maxSheetExtent,
+                            builder: (context, scrollController) =>
+                                _StatusSheetContainer(
+                              scrollController: scrollController,
+                              theme: theme,
+                              stages: _stages,
+                              activeStageIndex: _activeStageIndex,
+                              pulseValue: _pulseController,
+                              isTerminal: _isTerminal,
+                              providerName: widget.providerName,
+                              status: _currentStatus,
+                              bookingDate: widget.bookingDate,
+                              bookingReference: widget.bookingReference,
+                              etaSeconds: _etaSeconds,
+                              distanceKm: _distanceToClient(
+                                  _currentProviderLocation),
+                              bottomInset: bottomPadding,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
 
@@ -216,17 +404,17 @@ class _StatusPageState extends State<StatusPage>
 
 class _StatusTopBar extends StatelessWidget {
   const _StatusTopBar({
+    required this.providerName,
     required this.status,
     required this.serviceTitle,
-    required this.providerName,
     required this.theme,
     this.providerPhoto,
   });
 
-  final String status;
-  final String serviceTitle;
   final String providerName;
   final String? providerPhoto;
+  final String status;
+  final String serviceTitle;
   final AppThemeData theme;
 
   @override
@@ -237,75 +425,137 @@ class _StatusTopBar extends StatelessWidget {
 
     return SafeArea(
       bottom: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: theme.primaryBackground.withValues(alpha: 0.92),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.18),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+        decoration: BoxDecoration(
+          color: theme.primaryBackground,
+          border: Border(bottom: BorderSide(color: theme.alternate)),
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 20,
+              backgroundColor: theme.primary.withValues(alpha: 0.10),
+              backgroundImage:
+                  providerPhoto != null && providerPhoto!.trim().isNotEmpty
+                      ? NetworkImage(providerPhoto!)
+                      : null,
+              child: providerPhoto == null || providerPhoto!.trim().isEmpty
+                  ? Icon(Icons.person_rounded, color: theme.primary)
+                  : null,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 22,
-                backgroundColor: theme.primary.withValues(alpha: 0.12),
-                backgroundImage: providerPhoto != null &&
-                        providerPhoto!.trim().isNotEmpty
-                    ? NetworkImage(providerPhoto!)
-                    : null,
-                child: providerPhoto == null || providerPhoto!.trim().isEmpty
-                    ? Icon(Icons.person_rounded, color: theme.primary)
-                    : null,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      providerName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.titleSmall.override(
-                        font: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w700,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          providerName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.titleSmall.override(
+                            font: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      isTerminal ? 'Booking $status' : 'Booking in progress',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.bodySmall.override(
-                        color: theme.secondaryText,
+                      const SizedBox(width: 8),
+                      _BookingStatusChip(
+                        status: status,
+                        theme: theme,
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    isTerminal
+                        ? 'Booking $status'
+                        : 'Tracking progress of $providerName',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.bodySmall.override(
+                      color: theme.secondaryText,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _StatusSheetContent extends StatelessWidget {
-  const _StatusSheetContent({
+class _BookingStatusChip extends StatelessWidget {
+  const _BookingStatusChip({
+    required this.status,
+    required this.theme,
+  });
+
+  final String status;
+  final AppThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    final lower = status.toLowerCase();
+    final Color bg;
+    final Color fg;
+    final String label;
+
+    if (lower == 'completed') {
+      bg = const Color(0xFF16A34A).withValues(alpha: 0.12);
+      fg = const Color(0xFF16A34A);
+      label = 'Completed';
+    } else if (lower == 'en route' || lower == 'booking confirmed') {
+      bg = const Color(0xFF1976D2).withValues(alpha: 0.12);
+      fg = const Color(0xFF1976D2);
+      label = 'En Route';
+    } else if (lower == 'on site' || lower == 'arrived') {
+      bg = const Color(0xFFE65100).withValues(alpha: 0.12);
+      fg = const Color(0xFFE65100);
+      label = 'On Site';
+    } else if (lower == 'in progress' || lower == 'in_progress') {
+      bg = const Color(0xFF7B1FA2).withValues(alpha: 0.12);
+      fg = const Color(0xFF7B1FA2);
+      label = 'In Progress';
+    } else if (lower == 'cancelled' || lower == 'booking cancelled') {
+      bg = const Color(0xFFDC2626).withValues(alpha: 0.12);
+      fg = const Color(0xFFDC2626);
+      label = 'Cancelled';
+    } else {
+      bg = const Color(0xFF64748B).withValues(alpha: 0.12);
+      fg = const Color(0xFF64748B);
+      label = 'Confirmed';
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: theme.labelSmall.override(
+          color: fg,
+          fontWeight: FontWeight.w700,
+          fontSize: 10,
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusSheetContainer extends StatelessWidget {
+  const _StatusSheetContainer({
+    required this.scrollController,
+    required this.theme,
     required this.stages,
     required this.activeStageIndex,
     required this.pulseValue,
@@ -313,10 +563,14 @@ class _StatusSheetContent extends StatelessWidget {
     required this.providerName,
     required this.status,
     required this.bookingDate,
-    required this.theme,
+    required this.etaSeconds,
+    required this.distanceKm,
+    required this.bottomInset,
     this.bookingReference,
   });
 
+  final ScrollController scrollController;
+  final AppThemeData theme;
   final List<_BookingStage> stages;
   final int activeStageIndex;
   final Animation<double> pulseValue;
@@ -324,87 +578,142 @@ class _StatusSheetContent extends StatelessWidget {
   final String providerName;
   final String status;
   final DateTime bookingDate;
+  final int etaSeconds;
+  final double distanceKm;
+  final double bottomInset;
   final String? bookingReference;
-  final AppThemeData theme;
 
   @override
   Widget build(BuildContext context) {
-    final title = serviceTitleFromStatus(status);
+    final title = _serviceTitleFromStatus(status);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Center(
-          child: Container(
-            width: 42,
-            height: 5,
-            decoration: BoxDecoration(
-              color: theme.alternate,
-              borderRadius: BorderRadius.circular(999),
-            ),
+    return Container(
+      clipBehavior: Clip.hardEdge,
+      decoration: BoxDecoration(
+        color: theme.primaryBackground.withValues(alpha: 0.98),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 24,
+            offset: const Offset(0, -8),
           ),
-        ),
-        const SizedBox(height: 18),
-        Text(
-          title,
-          style: theme.titleMedium.override(
-            font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-          ),
-        ),
-        const SizedBox(height: 4),
-        if (isTerminal)
-          Text(
-            'This booking has been ${status.toLowerCase()}.',
-            style: theme.bodySmall.override(color: theme.secondaryText),
-          )
-        else
-          Text(
-            'Tracking $providerName\'s progress',
-            style: theme.bodySmall.override(color: theme.secondaryText),
-          ),
-        const SizedBox(height: 20),
-        ...List.generate(stages.length, (i) => _StageRow(
-          stage: stages[i],
-          stageCount: stages.length,
-          index: i,
-          activeIndex: activeStageIndex,
-          pulseValue: pulseValue,
-          isTerminal: isTerminal,
-          theme: theme,
-        )),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: theme.secondaryBackground,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            children: [
-              _DetailRow(
-                theme: theme,
-                icon: Icons.calendar_today_rounded,
-                label: 'Booking date',
-                value:
-                    '${bookingDate.month}/${bookingDate.day}/${bookingDate.year}',
-              ),
-              if ((bookingReference ?? '').isNotEmpty) ...[
-                const SizedBox(height: 8),
-                _DetailRow(
+        ],
+      ),
+      child: ListView(
+        controller: scrollController,
+        padding: EdgeInsets.zero,
+        children: [
+          Padding(
+            padding:
+                EdgeInsets.fromLTRB(20, 12, 20, 24 + bottomInset),
+            child: Column(
+              children: [
+                Center(
+                  child: Container(
+                    width: 42,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: theme.alternate,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Icon(Icons.track_changes_rounded,
+                        size: 20, color: theme.primary),
+                    const SizedBox(width: 10),
+                    Text(
+                      title,
+                      style: theme.titleMedium.override(
+                        font: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                if (!isTerminal) ...[
+                  Text(
+                    '${distanceKm.toStringAsFixed(1)} km away',
+                    style: theme.bodySmall.override(
+                      color: theme.secondaryText,
+                    ),
+                  ),
+                  if (etaSeconds > 0)
+                    Text(
+                      'Approximately ${_formatEta(etaSeconds)}',
+                      style: theme.bodySmall.override(
+                        color: theme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                ] else
+                  Text(
+                    'This booking has been ${status.toLowerCase()}.',
+                    style: theme.bodySmall.override(
+                      color: theme.secondaryText,
+                    ),
+                  ),
+                const SizedBox(height: 20),
+                ...List.generate(stages.length, (i) => _StageRow(
+                  stage: stages[i],
+                  stageCount: stages.length,
+                  index: i,
+                  activeIndex: activeStageIndex,
+                  pulseValue: pulseValue,
+                  isTerminal: isTerminal,
                   theme: theme,
-                  icon: Icons.tag_rounded,
-                  label: 'Reference',
-                  value: bookingReference!,
+                )),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: theme.secondaryBackground,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    children: [
+                      _DetailRow(
+                        theme: theme,
+                        icon: Icons.calendar_today_rounded,
+                        label: 'Booking date',
+                        value:
+                            '${bookingDate.month}/${bookingDate.day}/${bookingDate.year}',
+                      ),
+                      if ((bookingReference ?? '').isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        _DetailRow(
+                          theme: theme,
+                          icon: Icons.tag_rounded,
+                          label: 'Reference',
+                          value: bookingReference!,
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ],
-            ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  String serviceTitleFromStatus(String s) {
+  String _formatEta(int totalSeconds) {
+    final minutes = totalSeconds ~/ 60;
+    if (minutes >= 60) {
+      final h = minutes ~/ 60;
+      final m = minutes % 60;
+      return '${h}h ${m}min';
+    }
+    return '${minutes}min';
+  }
+
+  String _serviceTitleFromStatus(String s) {
     final lower = s.toLowerCase();
     if (lower == 'completed') return 'Service Completed';
     if (lower == 'booking cancelled' || lower == 'cancelled') {
@@ -530,7 +839,9 @@ class _StageRow extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      if (_isActive && !isTerminal && stage.estimatedMinutes != null)
+                      if (_isActive &&
+                          !isTerminal &&
+                          stage.estimatedMinutes != null)
                         _EtaChip(
                           minutes: stage.estimatedMinutes!,
                           theme: theme,
@@ -561,7 +872,6 @@ class _StageRow extends StatelessWidget {
       ),
     );
   }
-
 }
 
 class _EtaChip extends StatelessWidget {
