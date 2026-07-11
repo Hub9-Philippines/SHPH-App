@@ -248,6 +248,16 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                   onTap: () => context
                                       .pushNamed(SettingsWidget.routeName),
                                 ),
+                                const SizedBox(height: 14),
+                                _ProfileMenuTile(
+                                  icon: Icons.help_rounded,
+                                  iconTint: const Color(0xFF1976D2),
+                                  title: 'Help',
+                                  subtitle:
+                                      'FAQs and chat with our support team',
+                                  onTap: () => context
+                                      .pushNamed(HelpPage.routeName),
+                                ),
                               ],
                             ),
                             const SizedBox(height: 18),

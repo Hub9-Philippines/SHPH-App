@@ -333,11 +333,14 @@ class _BookingsWidgetState extends State<BookingsWidget> {
             ),
             const SizedBox(height: 14),
             FFButtonWidget(
-              onPressed: () {
-                context.pushNamed(
+              onPressed: () async {
+                final cancelled = await context.pushNamed<bool>(
                   BookingDetailsWidget.routeName,
                   extra: <String, dynamic>{'bookingId': booking.id},
                 );
+                if (cancelled == true) {
+                  _model.reloadBookings();
+                }
               },
               text: 'View Booking Details',
               icon: const Icon(Icons.arrow_forward_rounded, size: 18),
