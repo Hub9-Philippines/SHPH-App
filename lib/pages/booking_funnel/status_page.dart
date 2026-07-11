@@ -38,20 +38,22 @@ class StatusPage extends StatefulWidget {
 
 class _StatusPageState extends State<StatusPage>
     with TickerProviderStateMixin {
-  static const double _collapsedSheetExtent = 0.30;
-  static const double _expandedSheetExtent = 0.65;
+  static const double _sheetFraction = 0.42;
 
   late final AnimationController _pulseController;
 
   GoogleMapController? _mapController;
   Timer? _movementTimer;
   Timer? _statusTimer;
-  double _bottomSheetExtent = _collapsedSheetExtent;
   bool _mapReady = false;
 
   LatLng _currentProviderLocation = const LatLng(14.5995, 120.9842);
   String _currentStatus = '';
   int _etaSeconds = 0;
+
+  List<LatLng> _routeWaypoints = [];
+  int _currentWaypointIndex = 0;
+  final Set<Polyline> _polylines = {};
 
   bool get _isTerminal {
     final s = _currentStatus.toLowerCase();
@@ -136,6 +138,9 @@ class _StatusPageState extends State<StatusPage>
     _currentStatus = widget.bookingStatus;
     _etaSeconds = _etaForStatus(_currentStatus);
 
+    _generateRouteWaypoints();
+    _buildPolyline();
+
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
@@ -147,35 +152,80 @@ class _StatusPageState extends State<StatusPage>
     _startRealtimeSimulation();
   }
 
+  void _generateRouteWaypoints() {
+    final start = widget.providerLocation;
+    final end = _clientLocation;
+    if (start == null) {
+      _routeWaypoints = [end];
+      return;
+    }
+
+    const count = 30;
+    _routeWaypoints = [start];
+
+    final dx = end.longitude - start.longitude;
+    final dy = end.latitude - start.latitude;
+    final len = math.sqrt(dx * dx + dy * dy);
+    if (len < 1e-8) {
+      _routeWaypoints = [start, end];
+      return;
+    }
+
+    final perpX = -dy / len;
+    final perpY = dx / len;
+    final distKm = _distanceToClient(start);
+    final curveAmount = (distKm * 0.003).clamp(0.002, 0.02);
+
+    final ctrlLat =
+        (start.latitude + end.latitude) / 2 + perpY * curveAmount;
+    final ctrlLng =
+        (start.longitude + end.longitude) / 2 + perpX * curveAmount;
+
+    for (int i = 1; i <= count; i++) {
+      final t = i / count;
+      final inv = 1 - t;
+      final lat =
+          inv * inv * start.latitude + 2 * inv * t * ctrlLat + t * t * end.latitude;
+      final lng =
+          inv * inv * start.longitude + 2 * inv * t * ctrlLng + t * t * end.longitude;
+      _routeWaypoints.add(LatLng(lat, lng));
+    }
+  }
+
+  void _buildPolyline() {
+    if (_routeWaypoints.length < 2) return;
+    _polylines.clear();
+    _polylines.add(
+      Polyline(
+        polylineId: const PolylineId('route'),
+        points: _routeWaypoints,
+        color: const Color(0xFF1976D2),
+        width: 5,
+        jointType: JointType.round,
+      ),
+    );
+  }
+
   void _startRealtimeSimulation() {
-    final providerLatLng = widget.providerLocation;
-    if (providerLatLng == null || _isTerminal) return;
+    if (_routeWaypoints.length < 2 || _isTerminal) return;
 
-    final totalSteps = 60;
-    var step = 0;
-
-    final latStep =
-        (_clientLocation.latitude - providerLatLng.latitude) / totalSteps;
-    final lngStep =
-        (_clientLocation.longitude - providerLatLng.longitude) / totalSteps;
+    _currentWaypointIndex = 0;
+    _currentProviderLocation = _routeWaypoints[0];
 
     _movementTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      step++;
-      final newLat = providerLatLng.latitude + latStep * step;
-      final newLng = providerLatLng.longitude + lngStep * step;
-      final newPos = LatLng(newLat, newLng);
-
       if (!mounted) {
         timer.cancel();
         return;
       }
 
       setState(() {
-        if (step >= totalSteps) {
-          _currentProviderLocation = _clientLocation;
+        _currentWaypointIndex++;
+        if (_currentWaypointIndex >= _routeWaypoints.length - 1) {
+          _currentProviderLocation = _routeWaypoints.last;
           timer.cancel();
         } else {
-          _currentProviderLocation = newPos;
+          _currentProviderLocation =
+              _routeWaypoints[_currentWaypointIndex];
         }
       });
 
@@ -257,25 +307,66 @@ class _StatusPageState extends State<StatusPage>
     super.dispose();
   }
 
-  double _dynamicMaxSheetExtent(double availableHeight) {
-    return _expandedSheetExtent;
-  }
-
-  bool _handleSheetNotification(DraggableScrollableNotification n) {
-    if ((n.extent - _bottomSheetExtent).abs() < 0.002) return false;
-    setState(() => _bottomSheetExtent = n.extent);
-    return false;
+  void _goHome() {
+    Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (_) => const NavBarPage(
+          initialPage: 'Home',
+          disableResizeToAvoidBottomInset: true,
+        ),
+      ),
+      (route) => false,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final sheetHeight = screenHeight * _sheetFraction;
+    final mapPadding = EdgeInsets.only(bottom: sheetHeight + 24);
 
     final scaffold = Scaffold(
       backgroundColor: theme.primaryBackground,
-      body: Column(
+      body: Stack(
         children: [
+          Positioned.fill(
+            child: GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: _clientLocation,
+                zoom: 14,
+              ),
+              padding: mapPadding,
+              zoomControlsEnabled: false,
+              myLocationButtonEnabled: false,
+              mapToolbarEnabled: false,
+              markers: {
+                Marker(
+                  markerId: const MarkerId('client_location'),
+                  position: _clientLocation,
+                  anchor: const Offset(0.5, 1),
+                  icon: BitmapDescriptor.defaultMarkerWithHue(
+                    BitmapDescriptor.hueAzure,
+                  ),
+                ),
+                Marker(
+                  markerId: const MarkerId('provider_location'),
+                  position: _currentProviderLocation,
+                  anchor: const Offset(0.5, 1),
+                  icon: BitmapDescriptor.defaultMarkerWithHue(
+                    BitmapDescriptor.hueGreen,
+                  ),
+                ),
+              },
+              polylines: _polylines,
+              onMapCreated: (controller) {
+                _mapController = controller;
+                _mapReady = true;
+                _scheduleBoundsUpdate();
+              },
+            ),
+          ),
           _StatusTopBar(
             providerName: widget.providerName,
             providerPhoto: widget.providerPhoto,
@@ -283,97 +374,24 @@ class _StatusPageState extends State<StatusPage>
             serviceTitle: widget.serviceTitle,
             theme: theme,
           ),
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final maxSheetExtent =
-                    _dynamicMaxSheetExtent(constraints.maxHeight);
-                final currentSheetExtent = _bottomSheetExtent.clamp(
-                  _collapsedSheetExtent,
-                  maxSheetExtent,
-                );
-                final mapPadding = EdgeInsets.only(
-                  top: 16,
-                  bottom: constraints.maxHeight * currentSheetExtent +
-                      bottomPadding +
-                      24,
-                  left: 16,
-                  right: 16,
-                );
-
-                return NotificationListener<
-                    DraggableScrollableNotification>(
-                  onNotification: _handleSheetNotification,
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
-                        child: GoogleMap(
-                          initialCameraPosition: CameraPosition(
-                            target: _clientLocation,
-                            zoom: 14,
-                          ),
-                          padding: mapPadding,
-                          zoomControlsEnabled: false,
-                          myLocationButtonEnabled: false,
-                          mapToolbarEnabled: false,
-                          markers: {
-                            Marker(
-                              markerId: const MarkerId('client_location'),
-                              position: _clientLocation,
-                              anchor: const Offset(0.5, 1),
-                              icon: BitmapDescriptor.defaultMarkerWithHue(
-                                BitmapDescriptor.hueAzure,
-                              ),
-                            ),
-                            Marker(
-                              markerId: const MarkerId('provider_location'),
-                              position: _currentProviderLocation,
-                              anchor: const Offset(0.5, 1),
-                              icon: BitmapDescriptor.defaultMarkerWithHue(
-                                BitmapDescriptor.hueGreen,
-                              ),
-                            ),
-                          },
-                          polylines: const {},
-                          onMapCreated: (controller) {
-                            _mapController = controller;
-                            _mapReady = true;
-                            _scheduleBoundsUpdate();
-                          },
-                        ),
-                      ),
-                      Positioned.fill(
-                        child: MediaQuery.removePadding(
-                          context: context,
-                          removeBottom: true,
-                          child: DraggableScrollableSheet(
-                            initialChildSize: _collapsedSheetExtent,
-                            minChildSize: _collapsedSheetExtent,
-                            maxChildSize: maxSheetExtent,
-                            builder: (context, scrollController) =>
-                                _StatusSheetContainer(
-                              scrollController: scrollController,
-                              theme: theme,
-                              stages: _stages,
-                              activeStageIndex: _activeStageIndex,
-                              pulseValue: _pulseController,
-                              isTerminal: _isTerminal,
-                              providerName: widget.providerName,
-                              status: _currentStatus,
-                              bookingDate: widget.bookingDate,
-                              bookingReference: widget.bookingReference,
-                              etaSeconds: _etaSeconds,
-                              distanceKm: _distanceToClient(
-                                  _currentProviderLocation),
-                              bottomInset: bottomPadding,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: _StatusSheetContainer(
+              theme: theme,
+              stages: _stages,
+              activeStageIndex: _activeStageIndex,
+              pulseValue: _pulseController,
+              isTerminal: _isTerminal,
+              providerName: widget.providerName,
+              status: _currentStatus,
+              bookingDate: widget.bookingDate,
+              bookingReference: widget.bookingReference,
+              etaSeconds: _etaSeconds,
+              distanceKm: _distanceToClient(_currentProviderLocation),
+              bottomInset: bottomPadding,
+              onBackToHome: widget.shouldPopToHome ? _goHome : null,
             ),
           ),
         ],
@@ -385,17 +403,7 @@ class _StatusPageState extends State<StatusPage>
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) {
-          Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-            MaterialPageRoute(
-              builder: (_) => const NavBarPage(
-                initialPage: 'Home',
-                disableResizeToAvoidBottomInset: true,
-              ),
-            ),
-            (route) => false,
-          );
-        }
+        if (!didPop) _goHome();
       },
       child: scaffold,
     );
@@ -554,7 +562,6 @@ class _BookingStatusChip extends StatelessWidget {
 
 class _StatusSheetContainer extends StatelessWidget {
   const _StatusSheetContainer({
-    required this.scrollController,
     required this.theme,
     required this.stages,
     required this.activeStageIndex,
@@ -567,9 +574,9 @@ class _StatusSheetContainer extends StatelessWidget {
     required this.distanceKm,
     required this.bottomInset,
     this.bookingReference,
+    this.onBackToHome,
   });
 
-  final ScrollController scrollController;
   final AppThemeData theme;
   final List<_BookingStage> stages;
   final int activeStageIndex;
@@ -582,6 +589,7 @@ class _StatusSheetContainer extends StatelessWidget {
   final double distanceKm;
   final double bottomInset;
   final String? bookingReference;
+  final VoidCallback? onBackToHome;
 
   @override
   Widget build(BuildContext context) {
@@ -600,105 +608,105 @@ class _StatusSheetContainer extends StatelessWidget {
           ),
         ],
       ),
-      child: ListView(
-        controller: scrollController,
-        padding: EdgeInsets.zero,
-        children: [
-          Padding(
-            padding:
-                EdgeInsets.fromLTRB(20, 12, 20, 24 + bottomInset),
-            child: Column(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(20, 12, 20, 24 + bottomInset),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
               children: [
-                Center(
-                  child: Container(
-                    width: 42,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: theme.alternate,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Icon(Icons.track_changes_rounded,
-                        size: 20, color: theme.primary),
-                    const SizedBox(width: 10),
-                    Text(
-                      title,
-                      style: theme.titleMedium.override(
-                        font: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                if (!isTerminal) ...[
-                  Text(
-                    '${distanceKm.toStringAsFixed(1)} km away',
-                    style: theme.bodySmall.override(
-                      color: theme.secondaryText,
-                    ),
-                  ),
-                  if (etaSeconds > 0)
-                    Text(
-                      'Approximately ${_formatEta(etaSeconds)}',
-                      style: theme.bodySmall.override(
-                        color: theme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                ] else
-                  Text(
-                    'This booking has been ${status.toLowerCase()}.',
-                    style: theme.bodySmall.override(
-                      color: theme.secondaryText,
-                    ),
-                  ),
-                const SizedBox(height: 20),
-                ...List.generate(stages.length, (i) => _StageRow(
-                  stage: stages[i],
-                  stageCount: stages.length,
-                  index: i,
-                  activeIndex: activeStageIndex,
-                  pulseValue: pulseValue,
-                  isTerminal: isTerminal,
-                  theme: theme,
-                )),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: theme.secondaryBackground,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    children: [
-                      _DetailRow(
-                        theme: theme,
-                        icon: Icons.calendar_today_rounded,
-                        label: 'Booking date',
-                        value:
-                            '${bookingDate.month}/${bookingDate.day}/${bookingDate.year}',
-                      ),
-                      if ((bookingReference ?? '').isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        _DetailRow(
-                          theme: theme,
-                          icon: Icons.tag_rounded,
-                          label: 'Reference',
-                          value: bookingReference!,
-                        ),
-                      ],
-                    ],
+                Icon(Icons.track_changes_rounded,
+                    size: 20, color: theme.primary),
+                const SizedBox(width: 10),
+                Text(
+                  title,
+                  style: theme.titleMedium.override(
+                    font: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w700),
                   ),
                 ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            if (!isTerminal) ...[
+              Text(
+                '${distanceKm.toStringAsFixed(1)} km away',
+                style: theme.bodySmall.override(
+                  color: theme.secondaryText,
+                ),
+              ),
+              if (etaSeconds > 0)
+                Text(
+                  'Approximately ${_formatEta(etaSeconds)}',
+                  style: theme.bodySmall.override(
+                    color: theme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+            ] else
+              Text(
+                'This booking has been ${status.toLowerCase()}.',
+                style: theme.bodySmall.override(
+                  color: theme.secondaryText,
+                ),
+              ),
+            const SizedBox(height: 16),
+            ...List.generate(stages.length, (i) => _StageRow(
+              stage: stages[i],
+              stageCount: stages.length,
+              index: i,
+              activeIndex: activeStageIndex,
+              pulseValue: pulseValue,
+              isTerminal: isTerminal,
+              theme: theme,
+            )),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: theme.secondaryBackground,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                children: [
+                  _DetailRow(
+                    theme: theme,
+                    icon: Icons.calendar_today_rounded,
+                    label: 'Booking date',
+                    value:
+                        '${bookingDate.month}/${bookingDate.day}/${bookingDate.year}',
+                  ),
+                  if ((bookingReference ?? '').isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    _DetailRow(
+                      theme: theme,
+                      icon: Icons.tag_rounded,
+                      label: 'Reference',
+                      value: bookingReference!,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (onBackToHome != null) ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: onBackToHome,
+                  icon: const Icon(Icons.home_rounded, size: 18),
+                  label: const Text('Back to Home'),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
