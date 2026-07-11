@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     id("com.android.application")
@@ -6,24 +7,12 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-// ── Release signing ────────────────────────────────────────────
-// Create android/key.properties with your keystore info:
-//
-//   storePassword=<password>
-//   keyPassword=<password>
-//   keyAlias=upload
-//   storeFile=app/upload-keystore.jks
-//
-// Then generate a keystore:
-//   keytool -genkey -v -keystore upload-keystore.jks ^
-//       -keyalg RSA -keysize 2048 -validity 10000 -alias upload
-//
-// key.properties and *.jks are already gitignored.
-// ───────────────────────────────────────────────────────────────
-val keystoreProperties = java.util.Properties()
+val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
-    keystoreProperties.load(keystorePropertiesFile.inputStream())
+    keystorePropertiesFile.inputStream().use { stream ->
+        keystoreProperties.load(stream)
+    }
 }
 
 android {
@@ -37,10 +26,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.serbisyohubph"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -50,22 +36,21 @@ android {
     signingConfigs {
         create("release") {
             if (keystorePropertiesFile.exists()) {
-                keyAlias = keystoreProperties["keyAlias"] as String
-                keyPassword = keystoreProperties["keyPassword"] as String
-                storeFile = keystoreProperties["storeFile"]?.let {
-                    rootProject.file(it)
-                }
-                storePassword = keystoreProperties["storePassword"] as String
-            } else {
-                // Fall back to debug — user hasn't set up release signing yet.
-                signingConfig = signingConfigs.getByName("debug")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
             }
         }
     }
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = if (keystorePropertiesFile.exists()) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
