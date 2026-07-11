@@ -12,7 +12,7 @@ plugins {
 //   storePassword=<password>
 //   keyPassword=<password>
 //   keyAlias=upload
-//   storeFile=../upload-keystore.jks
+//   storeFile=app/upload-keystore.jks
 //
 // Then generate a keystore:
 //   keytool -genkey -v -keystore upload-keystore.jks ^
