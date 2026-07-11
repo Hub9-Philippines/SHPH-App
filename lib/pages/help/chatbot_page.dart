@@ -4,7 +4,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/auth/supabase_auth/auth_util.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/theme/app_theme.dart';
 
@@ -34,16 +36,53 @@ class _ChatbotPageState extends State<ChatbotPage> {
   final ScrollController _scrollController = ScrollController();
   final List<_ChatMessage> _messages = [];
   bool _isLoading = false;
+  String _systemPrompt = '';
+  bool _apiConfigured = false;
 
   @override
   void initState() {
     super.initState();
+    _apiConfigured = OpenRouterConfig.apiKey.isNotEmpty &&
+        OpenRouterConfig.apiKey != 'your-openrouter-api-key-here';
+    _buildSystemPrompt();
     _messages.add(
       _ChatMessage(
-        text: 'Hello! I\'m your virtual assistant. How can I help you today?',
+        text: _apiConfigured
+            ? 'Hello! I\'m your virtual assistant. How can I help you today?'
+            : 'Hello! I\'m your virtual assistant. '
+                'To enable AI responses, set the OPENROUTER_API_KEY '
+                'environment variable. For now, I\'ll let you know '
+                'when the AI is ready to assist.',
         isUser: false,
       ),
     );
+  }
+
+  void _buildSystemPrompt() {
+    final name = currentUserDisplayName;
+    final email = currentUserEmail;
+    final uid = currentUserUid;
+
+    _systemPrompt = '''
+You are a helpful customer support assistant for the SHPH (Serbisyo Hub PH) app, a home services booking platform in the Philippines. Answer questions clearly and concisely based on the information below.
+
+USER INFORMATION:
+- Name: ${name.isNotEmpty ? name : 'Not set'}
+- Email: ${email.isNotEmpty ? email : 'Not set'}
+- User ID: ${uid.isNotEmpty ? uid : 'Not available'}
+
+APP FEATURES:
+- Service booking: Users browse categories, select services, choose date/time, and book
+- Live matching: After booking, the app finds nearby providers in real-time
+- Booking statuses: confirmed, en_route, on_site, in_progress, completed, cancelled
+- Payment: credit/debit cards, GCash, Maya, e-wallets (managed in Profile > Payment Methods)
+- Provider tracking: Real-time map with provider location and ETA
+- Cancellation: Available from booking details page; policies may apply
+- User profile: Edit name, photo, contact info from Profile page
+- Notifications: Available in the notifications section
+
+Use the user's name when addressing them. If asked something you don't know, say so honestly. Never make up information. Keep responses friendly and helpful.
+''';
   }
 
   @override
@@ -89,7 +128,12 @@ class _ChatbotPageState extends State<ChatbotPage> {
       setState(() {
         _messages.add(
           _ChatMessage(
-            text: 'Sorry, I encountered an error. Please try again later.',
+            text: _apiConfigured
+                ? 'Sorry, I encountered an error connecting to the AI service. '
+                    'Please check your connection and try again.'
+                : 'AI chat requires an API key. '
+                    'Please set OPENROUTER_API_KEY when building the app:\n'
+                    '  flutter run --dart-define=OPENROUTER_API_KEY=sk-or-v1-...',
             isUser: false,
           ),
         );
@@ -102,48 +146,45 @@ class _ChatbotPageState extends State<ChatbotPage> {
   Future<String> _callOpenRouter(String message) async {
     final apiKey = OpenRouterConfig.apiKey;
     if (apiKey.isEmpty || apiKey == 'your-openrouter-api-key-here') {
-      return _buildLocalResponse(message);
+      throw Exception('API key not configured');
     }
 
-    final messages = _buildMessagePayload(message);
+    final body = _buildRequestBody(message);
 
-    try {
-      final httpResponse = await http
-          .post(
-            Uri.parse('https://openrouter.ai/api/v1/chat/completions'),
-            headers: {
-              'Authorization': 'Bearer $apiKey',
-              'Content-Type': 'application/json',
-              'HTTP-Referer': 'https://shph.app',
-              'X-Title': 'SHPH',
-            },
-            body: jsonEncode({
-              'model': 'deepseek/deepseek-v4-flash-free',
-              'messages': messages,
-              'temperature': 0.7,
-              'max_tokens': 1024,
-            }),
-          )
-          .timeout(const Duration(seconds: 30));
+    final httpResponse = await http
+        .post(
+          Uri.parse('https://openrouter.ai/api/v1/chat/completions'),
+          headers: {
+            'Authorization': 'Bearer $apiKey',
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://shph.app',
+            'X-Title': 'SHPH',
+          },
+          body: jsonEncode(body),
+        )
+        .timeout(const Duration(seconds: 30));
 
-      if (httpResponse.statusCode == 200) {
-        final data = jsonDecode(httpResponse.body) as Map<String, dynamic>;
-        final choices = data['choices'] as List;
-        if (choices.isNotEmpty) {
-          final content = choices[0]['message']['content'] as String?;
-          if (content != null && content.trim().isNotEmpty) {
-            return content.trim();
-          }
+    if (httpResponse.statusCode == 200) {
+      final data = jsonDecode(httpResponse.body) as Map<String, dynamic>;
+      final choices = data['choices'] as List;
+      if (choices.isNotEmpty) {
+        final content = choices[0]['message']['content'] as String?;
+        if (content != null && content.trim().isNotEmpty) {
+          return content.trim();
         }
       }
-      return _buildLocalResponse(message);
-    } catch (_) {
-      return _buildLocalResponse(message);
     }
+
+    final errorBody = httpResponse.statusCode != 200
+        ? 'API returned status ${httpResponse.statusCode}'
+        : 'Empty response from API';
+    throw Exception(errorBody);
   }
 
-  List<Map<String, String>> _buildMessagePayload(String newMessage) {
-    final msgs = <Map<String, String>>[];
+  Map<String, dynamic> _buildRequestBody(String newMessage) {
+    final msgs = <Map<String, dynamic>>[
+      {'role': 'system', 'content': _systemPrompt},
+    ];
     for (final msg in _messages) {
       msgs.add({
         'role': msg.isUser ? 'user' : 'assistant',
@@ -151,33 +192,13 @@ class _ChatbotPageState extends State<ChatbotPage> {
       });
     }
     msgs.add({'role': 'user', 'content': newMessage});
-    return msgs;
-  }
 
-  String _buildLocalResponse(String message) {
-    final lower = message.toLowerCase();
-    if (lower.contains('book') || lower.contains('service')) {
-      return 'To book a service, go to the Home page, select a category, choose your service, and follow the booking steps. You can track your booking status from the Bookings tab.';
-    }
-    if (lower.contains('cancel')) {
-      return 'You can cancel a booking from the booking details page. Open My Bookings, select the booking, and tap "Cancel Booking". Please note that cancellation policies may apply.';
-    }
-    if (lower.contains('payment') || lower.contains('pay')) {
-      return 'We accept credit/debit cards, GCash, Maya, and other e-wallets. You can manage your payment methods in Profile > Payment Methods.';
-    }
-    if (lower.contains('refund')) {
-      return 'Refunds are processed within 5-7 business days to your original payment method. For specific refund inquiries, please contact our support team.';
-    }
-    if (lower.contains('password') || lower.contains('login')) {
-      return 'You can reset your password by tapping "Forgot Password" on the login screen. For security changes, go to Profile > Security.';
-    }
-    if (lower.contains('profile') || lower.contains('edit')) {
-      return 'Go to your Profile page and tap "Edit Profile" to update your information. You can change your name, photo, and contact details there.';
-    }
-    if (lower.contains('help') || lower.contains('support')) {
-      return 'You\'re in the right place! Browse our FAQs on the Help page for common questions, or chat with me for more specific assistance.';
-    }
-    return 'I\'m here to help! You can ask me about booking services, cancellations, payments, account settings, or any other questions about the app. What would you like to know?';
+    return {
+      'model': 'deepseek/deepseek-v4-flash-free',
+      'messages': msgs,
+      'temperature': 0.7,
+      'max_tokens': 2048,
+    };
   }
 
   @override
@@ -197,7 +218,8 @@ class _ChatbotPageState extends State<ChatbotPage> {
                 color: theme.primary.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(Icons.smart_toy_rounded, color: theme.primary, size: 22),
+              child:
+                  Icon(Icons.smart_toy_rounded, color: theme.primary, size: 22),
             ),
             const SizedBox(width: 12),
             Column(
@@ -255,7 +277,8 @@ class _ChatbotPageState extends State<ChatbotPage> {
                   const SizedBox(width: 8),
                   Text(
                     'Getting answer...',
-                    style: theme.labelSmall.override(color: theme.secondaryText),
+                    style:
+                        theme.labelSmall.override(color: theme.secondaryText),
                   ),
                 ],
               ),
@@ -312,7 +335,8 @@ class _ChatbotPageState extends State<ChatbotPage> {
   }
 
   Widget _buildBubble(_ChatMessage msg, AppThemeData theme) {
-    final align = msg.isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start;
+    final align =
+        msg.isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start;
     final color = msg.isUser ? theme.primary : theme.secondaryBackground;
     final textColor = msg.isUser ? Colors.white : theme.primaryText;
     final borderRadius = msg.isUser
@@ -363,6 +387,6 @@ class OpenRouterConfig {
 
   static const String apiKey = String.fromEnvironment(
     'OPENROUTER_API_KEY',
-    defaultValue: 'your-openrouter-api-key-here',
+    defaultValue: '',
   );
 }

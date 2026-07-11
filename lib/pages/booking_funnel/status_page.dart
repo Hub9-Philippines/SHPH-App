@@ -38,13 +38,15 @@ class StatusPage extends StatefulWidget {
 
 class _StatusPageState extends State<StatusPage>
     with TickerProviderStateMixin {
-  static const double _sheetFraction = 0.42;
+  static const double _collapsedSheetExtent = 0.30;
+  static const double _expandedSheetExtent = 0.55;
 
   late final AnimationController _pulseController;
 
   GoogleMapController? _mapController;
   Timer? _movementTimer;
   Timer? _statusTimer;
+  double _bottomSheetExtent = _collapsedSheetExtent;
   bool _mapReady = false;
 
   LatLng _currentProviderLocation = const LatLng(14.5995, 120.9842);
@@ -319,54 +321,47 @@ class _StatusPageState extends State<StatusPage>
     );
   }
 
+  double _dynamicMaxSheetExtent(double availableHeight) {
+    return _expandedSheetExtent;
+  }
+
+  bool _handleSheetNotification(DraggableScrollableNotification n) {
+    if ((n.extent - _bottomSheetExtent).abs() < 0.002) return false;
+    setState(() => _bottomSheetExtent = n.extent);
+    _scheduleBoundsUpdate();
+    return false;
+  }
+
+  Widget _buildSheet(ScrollController scrollController) {
+    final theme = AppTheme.of(context);
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
+    return _StatusSheetContainer(
+      scrollController: scrollController,
+      theme: theme,
+      stages: _stages,
+      activeStageIndex: _activeStageIndex,
+      pulseValue: _pulseController,
+      isTerminal: _isTerminal,
+      providerName: widget.providerName,
+      status: _currentStatus,
+      bookingDate: widget.bookingDate,
+      bookingReference: widget.bookingReference,
+      etaSeconds: _etaSeconds,
+      distanceKm: _distanceToClient(_currentProviderLocation),
+      bottomInset: bottomPadding,
+      onBackToHome: widget.shouldPopToHome ? _goHome : null,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
-    final screenHeight = MediaQuery.sizeOf(context).height;
-    final sheetHeight = screenHeight * _sheetFraction;
-    final mapPadding = EdgeInsets.only(bottom: sheetHeight + 24);
 
     final scaffold = Scaffold(
       backgroundColor: theme.primaryBackground,
-      body: Stack(
+      body: Column(
         children: [
-          Positioned.fill(
-            child: GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: _clientLocation,
-                zoom: 14,
-              ),
-              padding: mapPadding,
-              zoomControlsEnabled: false,
-              myLocationButtonEnabled: false,
-              mapToolbarEnabled: false,
-              markers: {
-                Marker(
-                  markerId: const MarkerId('client_location'),
-                  position: _clientLocation,
-                  anchor: const Offset(0.5, 1),
-                  icon: BitmapDescriptor.defaultMarkerWithHue(
-                    BitmapDescriptor.hueAzure,
-                  ),
-                ),
-                Marker(
-                  markerId: const MarkerId('provider_location'),
-                  position: _currentProviderLocation,
-                  anchor: const Offset(0.5, 1),
-                  icon: BitmapDescriptor.defaultMarkerWithHue(
-                    BitmapDescriptor.hueGreen,
-                  ),
-                ),
-              },
-              polylines: _polylines,
-              onMapCreated: (controller) {
-                _mapController = controller;
-                _mapReady = true;
-                _scheduleBoundsUpdate();
-              },
-            ),
-          ),
           _StatusTopBar(
             providerName: widget.providerName,
             providerPhoto: widget.providerPhoto,
@@ -374,24 +369,83 @@ class _StatusPageState extends State<StatusPage>
             serviceTitle: widget.serviceTitle,
             theme: theme,
           ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: _StatusSheetContainer(
-              theme: theme,
-              stages: _stages,
-              activeStageIndex: _activeStageIndex,
-              pulseValue: _pulseController,
-              isTerminal: _isTerminal,
-              providerName: widget.providerName,
-              status: _currentStatus,
-              bookingDate: widget.bookingDate,
-              bookingReference: widget.bookingReference,
-              etaSeconds: _etaSeconds,
-              distanceKm: _distanceToClient(_currentProviderLocation),
-              bottomInset: bottomPadding,
-              onBackToHome: widget.shouldPopToHome ? _goHome : null,
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final maxSheetExtent =
+                    _dynamicMaxSheetExtent(constraints.maxHeight);
+                final currentSheetExtent = _bottomSheetExtent.clamp(
+                  _collapsedSheetExtent,
+                  maxSheetExtent,
+                );
+                final mapPadding = EdgeInsets.only(
+                  bottom: constraints.maxHeight * currentSheetExtent +
+                      bottomPadding +
+                      24,
+                );
+
+                return NotificationListener<
+                    DraggableScrollableNotification>(
+                  onNotification: _handleSheetNotification,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: GoogleMap(
+                          initialCameraPosition: CameraPosition(
+                            target: _clientLocation,
+                            zoom: 14,
+                          ),
+                          padding: mapPadding,
+                          zoomControlsEnabled: false,
+                          myLocationButtonEnabled: false,
+                          mapToolbarEnabled: false,
+                          markers: {
+                            Marker(
+                              markerId:
+                                  const MarkerId('client_location'),
+                              position: _clientLocation,
+                              anchor: const Offset(0.5, 1),
+                              icon: BitmapDescriptor
+                                  .defaultMarkerWithHue(
+                                BitmapDescriptor.hueAzure,
+                              ),
+                            ),
+                            Marker(
+                              markerId:
+                                  const MarkerId('provider_location'),
+                              position: _currentProviderLocation,
+                              anchor: const Offset(0.5, 1),
+                              icon: BitmapDescriptor
+                                  .defaultMarkerWithHue(
+                                BitmapDescriptor.hueGreen,
+                              ),
+                            ),
+                          },
+                          polylines: _polylines,
+                          onMapCreated: (controller) {
+                            _mapController = controller;
+                            _mapReady = true;
+                            _scheduleBoundsUpdate();
+                          },
+                        ),
+                      ),
+                      Positioned.fill(
+                        child: MediaQuery.removePadding(
+                          context: context,
+                          removeBottom: true,
+                          child: DraggableScrollableSheet(
+                            initialChildSize: _collapsedSheetExtent,
+                            minChildSize: _collapsedSheetExtent,
+                            maxChildSize: maxSheetExtent,
+                            builder: (context, scrollController) =>
+                                _buildSheet(scrollController),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -562,6 +616,7 @@ class _BookingStatusChip extends StatelessWidget {
 
 class _StatusSheetContainer extends StatelessWidget {
   const _StatusSheetContainer({
+    required this.scrollController,
     required this.theme,
     required this.stages,
     required this.activeStageIndex,
@@ -577,6 +632,7 @@ class _StatusSheetContainer extends StatelessWidget {
     this.onBackToHome,
   });
 
+  final ScrollController scrollController;
   final AppThemeData theme;
   final List<_BookingStage> stages;
   final int activeStageIndex;
@@ -608,105 +664,112 @@ class _StatusSheetContainer extends StatelessWidget {
           ),
         ],
       ),
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(20, 12, 20, 24 + bottomInset),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
+      child: ListView(
+        controller: scrollController,
+        padding: EdgeInsets.zero,
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(20, 12, 20, 24 + bottomInset),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.track_changes_rounded,
-                    size: 20, color: theme.primary),
-                const SizedBox(width: 10),
-                Text(
-                  title,
-                  style: theme.titleMedium.override(
-                    font: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            if (!isTerminal) ...[
-              Text(
-                '${distanceKm.toStringAsFixed(1)} km away',
-                style: theme.bodySmall.override(
-                  color: theme.secondaryText,
-                ),
-              ),
-              if (etaSeconds > 0)
-                Text(
-                  'Approximately ${_formatEta(etaSeconds)}',
-                  style: theme.bodySmall.override(
-                    color: theme.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-            ] else
-              Text(
-                'This booking has been ${status.toLowerCase()}.',
-                style: theme.bodySmall.override(
-                  color: theme.secondaryText,
-                ),
-              ),
-            const SizedBox(height: 16),
-            ...List.generate(stages.length, (i) => _StageRow(
-              stage: stages[i],
-              stageCount: stages.length,
-              index: i,
-              activeIndex: activeStageIndex,
-              pulseValue: pulseValue,
-              isTerminal: isTerminal,
-              theme: theme,
-            )),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: theme.secondaryBackground,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                children: [
-                  _DetailRow(
-                    theme: theme,
-                    icon: Icons.calendar_today_rounded,
-                    label: 'Booking date',
-                    value:
-                        '${bookingDate.month}/${bookingDate.day}/${bookingDate.year}',
-                  ),
-                  if ((bookingReference ?? '').isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    _DetailRow(
-                      theme: theme,
-                      icon: Icons.tag_rounded,
-                      label: 'Reference',
-                      value: bookingReference!,
+                Row(
+                  children: [
+                    Icon(Icons.track_changes_rounded,
+                        size: 20, color: theme.primary),
+                    const SizedBox(width: 10),
+                    Text(
+                      title,
+                      style: theme.titleMedium.override(
+                        font: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w700),
+                      ),
                     ),
                   ],
-                ],
-              ),
-            ),
-            if (onBackToHome != null) ...[
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: onBackToHome,
-                  icon: const Icon(Icons.home_rounded, size: 18),
-                  label: const Text('Back to Home'),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                ),
+                const SizedBox(height: 4),
+                if (!isTerminal) ...[
+                  Text(
+                    '${distanceKm.toStringAsFixed(1)} km away',
+                    style: theme.bodySmall.override(
+                      color: theme.secondaryText,
                     ),
                   ),
+                  if (etaSeconds > 0)
+                    Text(
+                      'Approximately ${_formatEta(etaSeconds)}',
+                      style: theme.bodySmall.override(
+                        color: theme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                ] else
+                  Text(
+                    'This booking has been ${status.toLowerCase()}.',
+                    style: theme.bodySmall.override(
+                      color: theme.secondaryText,
+                    ),
+                  ),
+                const SizedBox(height: 16),
+                ...List.generate(stages.length, (i) => _StageRow(
+                  stage: stages[i],
+                  stageCount: stages.length,
+                  index: i,
+                  activeIndex: activeStageIndex,
+                  pulseValue: pulseValue,
+                  isTerminal: isTerminal,
+                  theme: theme,
+                )),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: theme.secondaryBackground,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    children: [
+                      _DetailRow(
+                        theme: theme,
+                        icon: Icons.calendar_today_rounded,
+                        label: 'Booking date',
+                        value:
+                            '${bookingDate.month}/${bookingDate.day}/${bookingDate.year}',
+                      ),
+                      if ((bookingReference ?? '').isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        _DetailRow(
+                          theme: theme,
+                          icon: Icons.tag_rounded,
+                          label: 'Reference',
+                          value: bookingReference!,
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ],
-        ),
+                if (onBackToHome != null) ...[
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: onBackToHome,
+                      icon: const Icon(Icons.home_rounded, size: 18),
+                      label: const Text('Back to Home'),
+                      style: FilledButton.styleFrom(
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
