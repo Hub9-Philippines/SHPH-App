@@ -2,6 +2,15 @@
 
 A service provider marketplace mobile application built for Filipinos. Clients can find and book local service providers for home services, while professionals can list their services and manage their bookings.
 
+## Branches
+
+| Branch | Purpose |
+|--------|---------|
+| `main` | Stable, production-ready code. |
+| `develop` | Active development — integration branch for all features. |
+| `feature/booking-flow-system` | Booking flow feature work (status sheet, polyline, address). |
+| `feature/pol` | Experimental / personal feature branch. |
+
 ## Tech Stack
 
 ### Mobile App (Flutter)
