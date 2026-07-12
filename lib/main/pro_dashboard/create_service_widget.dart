@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/models/service_listing.dart';
+import '/services/service_listing_service.dart';
 import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
 
@@ -27,7 +29,10 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
 
   String? _selectedCategory;
   bool isLoading = false;
+  bool _isEditMode = false;
+  int? _editId;
   List<File> _selectedImages = [];
+  List<String> _existingImageUrls = [];
 
   final List<String> _categories = [
     'Cleaning',
@@ -42,6 +47,52 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
     'Pest Control',
     'Other',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final params = GoRouterState.of(context).uri.queryParameters;
+      final editId = params['edit'];
+      if (editId != null) {
+        _editId = int.tryParse(editId);
+        if (_editId != null) {
+          _loadListingForEdit(_editId!);
+        }
+      }
+    });
+  }
+
+  Future<void> _loadListingForEdit(int id) async {
+    setState(() => isLoading = true);
+    try {
+      final listing =
+          await ServiceListingService.instance.fetchServiceListingById(id);
+      if (listing != null && mounted) {
+        setState(() {
+          _isEditMode = true;
+          _nameController.text = listing.title;
+          _descriptionController.text = listing.description ?? '';
+          _priceController.text =
+              listing.basePrice?.toStringAsFixed(0) ?? '';
+          _selectedCategory = listing.categoryName;
+          _existingImageUrls = listing.allImages;
+          isLoading = false;
+        });
+      } else if (mounted) {
+        setState(() => isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to load service for editing')),
+        );
+      }
+    } catch (e) {
+      LoggingService.error('Error loading listing for edit: $e',
+          tag: 'CreateService');
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -114,7 +165,7 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
     return urls;
   }
 
-  Future<void> _createService() async {
+  Future<void> _submitService() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -130,48 +181,78 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
         throw Exception('User not authenticated');
       }
 
-      // Generate service ID
-      final serviceId = DateTime.now().millisecondsSinceEpoch.toString();
+      if (_isEditMode && _editId != null) {
+        // Upload any new images
+        List<String> newImageUrls = [];
+        if (_selectedImages.isNotEmpty) {
+          newImageUrls = await _uploadImages(_editId.toString());
+        }
 
-      // Upload images first
-      List<String> imageUrls = [];
-      if (_selectedImages.isNotEmpty) {
-        imageUrls = await _uploadImages(serviceId);
-      }
-
-      // Create service in database
-      final serviceData = {
-        'id': serviceId,
-        'provider_id': userId,
-        'name': _nameController.text.trim(),
-        'description': _descriptionController.text.trim(),
-        'category': _selectedCategory,
-        'base_price': double.tryParse(_priceController.text) ?? 0.0,
-        'duration_minutes': int.tryParse(_durationController.text) ?? 60,
-        'additional_info': _additionalInfoController.text.trim(),
-        'images': imageUrls,
-        'is_active': true,
-        'created_at': DateTime.now().toIso8601String(),
-        'updated_at': DateTime.now().toIso8601String(),
-      };
-
-      await Supabase.instance.client
-          .from('service_listings')
-          .insert(serviceData);
-
-      LoggingService.info('Service created: $serviceId', tag: 'CreateService');
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Service created successfully!')),
+        // Update via service
+        await ServiceListingService.instance.updateListing(
+          id: _editId!,
+          title: _nameController.text.trim(),
+          description: _descriptionController.text.trim(),
+          basePrice: double.tryParse(_priceController.text) ?? 0.0,
         );
-        context.pop();
+
+        // Upload new images to gallery
+        for (final file in _selectedImages) {
+          await ServiceListingService.instance.uploadListingImage(_editId!, file);
+        }
+
+        LoggingService.info('Service updated: $_editId', tag: 'CreateService');
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Service updated successfully!')),
+          );
+          context.pop();
+        }
+      } else {
+        // Create new service
+        final serviceId = DateTime.now().millisecondsSinceEpoch.toString();
+
+        // Upload images first
+        List<String> imageUrls = [];
+        if (_selectedImages.isNotEmpty) {
+          imageUrls = await _uploadImages(serviceId);
+        }
+
+        // Create service in database
+        final serviceData = {
+          'id': serviceId,
+          'provider_id': userId,
+          'name': _nameController.text.trim(),
+          'description': _descriptionController.text.trim(),
+          'category': _selectedCategory,
+          'base_price': double.tryParse(_priceController.text) ?? 0.0,
+          'duration_minutes': int.tryParse(_durationController.text) ?? 60,
+          'additional_info': _additionalInfoController.text.trim(),
+          'images': imageUrls,
+          'is_active': true,
+          'created_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        };
+
+        await Supabase.instance.client
+            .from('service_listings')
+            .insert(serviceData);
+
+        LoggingService.info('Service created: $serviceId', tag: 'CreateService');
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Service created successfully!')),
+          );
+          context.pop();
+        }
       }
     } catch (e) {
-      LoggingService.error('Error creating service: $e', tag: 'CreateService');
+      LoggingService.error('Error saving service: $e', tag: 'CreateService');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error creating service: $e')),
+          SnackBar(content: Text('Error saving service: $e')),
         );
       }
     } finally {
@@ -186,7 +267,7 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Create Service',
+          _isEditMode ? 'Edit Service' : 'Create Service',
           style: AppTheme.of(context).titleLarge.override(
                 font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
               ),
@@ -221,6 +302,21 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
               ),
               const SizedBox(height: 12),
 
+              // Existing images (edit mode)
+              if (_existingImageUrls.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: SizedBox(
+                    height: 100,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _existingImageUrls.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 12),
+                      itemBuilder: (context, index) =>
+                          _buildExistingImagePreview(index),
+                    ),
+                  ),
+                ),
               // Image Grid
               if (_selectedImages.isNotEmpty)
                 SizedBox(
@@ -228,7 +324,7 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: _selectedImages.length +
-                        (_selectedImages.length < 5 ? 1 : 0),
+                        (_selectedImages.length + _existingImageUrls.length < 5 ? 1 : 0),
                     separatorBuilder: (_, __) => const SizedBox(width: 12),
                     itemBuilder: (context, index) {
                       if (index == _selectedImages.length) {
@@ -239,7 +335,7 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
                     },
                   ),
                 )
-              else
+              else if (_existingImageUrls.length < 5)
                 _buildAddImageButton(isFullWidth: true),
 
               const SizedBox(height: 24),
@@ -376,12 +472,12 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
               ),
               const SizedBox(height: 32),
 
-              // Create Button
+              // Submit Button
               SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: isLoading ? null : _createService,
+                  onPressed: isLoading ? null : _submitService,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.of(context).primary,
                     foregroundColor: Colors.white,
@@ -400,7 +496,7 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
                           ),
                         )
                       : Text(
-                          'Create Service',
+                          _isEditMode ? 'Save Changes' : 'Create Service',
                           style: AppTheme.of(context).titleSmall.override(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
@@ -487,6 +583,20 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildExistingImagePreview(int index) {
+    return Container(
+      width: 100,
+      height: 100,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        image: DecorationImage(
+          fit: BoxFit.cover,
+          image: NetworkImage(_existingImageUrls[index]),
+        ),
+      ),
     );
   }
 

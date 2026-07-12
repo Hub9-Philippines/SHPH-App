@@ -112,6 +112,20 @@ class ReviewsService {
     }
   }
 
+  Future<bool> respondToReview(String reviewId, String reply) async {
+    try {
+      await _supabase.from('reviews').update({
+        'provider_reply': reply,
+        'provider_reply_at': DateTime.now().toIso8601String(),
+      }).eq('id', reviewId);
+      return true;
+    } catch (e) {
+      LoggingService.error('Error responding to review: $e',
+          tag: 'ReviewsService');
+      return false;
+    }
+  }
+
   Future<bool> hasUserReviewed(int serviceListingId) async {
     try {
       final userId = _currentUserId;

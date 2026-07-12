@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/logging_service.dart';
+import '/services/reviews_service.dart';
 import '/theme/app_theme.dart';
 
 class ReviewsRatingsWidget extends StatefulWidget {
@@ -651,9 +652,134 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
                   color: const Color(0xFF94A3B8),
                 ),
           ),
+          ..._buildProviderReplySection(context, review),
         ],
       ),
     );
+  }
+
+  List<Widget> _buildProviderReplySection(
+    BuildContext context,
+    Map<String, dynamic> review,
+  ) {
+    final reviewId = review['id']?.toString();
+    final existingReply = review['provider_reply'] as String?;
+
+    if (existingReply != null && existingReply.isNotEmpty) {
+      return [
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: const Color(0xFFEFF6FF),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: const Color(0xFFBFDBFE),
+              width: 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.reply_rounded, size: 16, color: const Color(0xFF2563EB)),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Your Response',
+                    style: AppTheme.of(context).labelMedium.override(
+                          font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                          color: const Color(0xFF2563EB),
+                        ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                existingReply,
+                style: AppTheme.of(context).bodyMedium.override(
+                      font: GoogleFonts.poppins(),
+                      color: const Color(0xFF1E40AF),
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ];
+    }
+
+    if (reviewId == null) return [];
+
+    return [
+      const SizedBox(height: 12),
+      Align(
+        alignment: Alignment.centerRight,
+        child: TextButton.icon(
+          onPressed: () => _showReplyDialog(context, reviewId),
+          icon: const Icon(Icons.reply_rounded, size: 18),
+          label: const Text('Respond'),
+          style: TextButton.styleFrom(
+            foregroundColor: const Color(0xFF2563EB),
+          ),
+        ),
+      ),
+    ];
+  }
+
+  Future<void> _showReplyDialog(BuildContext context, String reviewId) async {
+    final controller = TextEditingController();
+
+    final reply = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Respond to Review'),
+        content: TextField(
+          controller: controller,
+          maxLines: 4,
+          autofocus: true,
+          decoration: InputDecoration(
+            hintText: 'Write a professional response...',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final text = controller.text.trim();
+              if (text.isNotEmpty) {
+                Navigator.pop(ctx, text);
+              }
+            },
+            child: const Text('Post Reply'),
+          ),
+        ],
+      ),
+    );
+
+    if (reply == null || !mounted) return;
+
+    final success = await ReviewsService.instance.respondToReview(reviewId, reply);
+    if (!mounted) return;
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Reply posted successfully'),
+          backgroundColor: Color(0xFF059669),
+        ),
+      );
+      _loadReviews();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to post reply')),
+      );
+    }
   }
 
   Widget _buildMessageState(

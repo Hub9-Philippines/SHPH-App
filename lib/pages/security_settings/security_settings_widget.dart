@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '/backend/supabase/supabase.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/services/biometric_service.dart';
 import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
 import 'security_settings_model.dart';
@@ -35,6 +36,8 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
   bool _isProcessingMfa = false;
   String? _mfaQRCode;
   String? _mfaFactorId;
+  bool _biometricAvailable = false;
+  bool _biometricEnabled = false;
 
   @override
   void initState() {
@@ -42,6 +45,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
     _model = createModel(context, SecuritySettingsModel.new);
     _loadSessions();
     _checkMFAStatus();
+    _loadBiometricStatus();
   }
 
   @override
@@ -289,6 +293,45 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
       await _enrollMFA();
     } else {
       await _disableMFA();
+    }
+  }
+
+  Future<void> _loadBiometricStatus() async {
+    final available = await BiometricService.instance.isAvailable();
+    final enabled = await BiometricService.instance.isEnabled();
+    if (mounted) {
+      setState(() {
+        _biometricAvailable = available;
+        _biometricEnabled = enabled;
+      });
+    }
+  }
+
+  Future<void> _toggleBiometric(bool value) async {
+    if (value && !_biometricAvailable) return;
+    if (value) {
+      final authed = await BiometricService.instance.authenticate(
+        reason: 'Enable biometric login for your account',
+      );
+      if (!authed) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Authentication failed')),
+          );
+        }
+        return;
+      }
+    }
+    await BiometricService.instance.setEnabled(value);
+    if (mounted) {
+      setState(() => _biometricEnabled = value);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(value
+              ? 'Biometric login enabled'
+              : 'Biometric login disabled'),
+        ),
+      );
     }
   }
 
@@ -587,6 +630,73 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                         const LinearProgressIndicator(minHeight: 3),
                       ],
                     ],
+                  ),
+                ),
+                const SizedBox(height: 18),
+                _buildSection(
+                  title: 'Biometric Login',
+                  child: _buildInfoRow(
+                    icon: Icons.fingerprint_rounded,
+                    title: 'Fingerprint / Face ID',
+                    subtitle: _biometricAvailable
+                        ? 'Use biometric authentication to sign in quickly.'
+                        : 'Biometric authentication is not available on this device.',
+                    trailing: Switch.adaptive(
+                      value: _biometricEnabled,
+                      onChanged: _biometricAvailable ? _toggleBiometric : null,
+                      activeThumbColor: AppTheme.of(context).primary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                _buildSection(
+                  title: 'Video Calls',
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF7ED),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFFFED7AA)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFED7AA).withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Icon(Icons.videocam_off_outlined,
+                              color: Color(0xFFC2410C), size: 22),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Coming Soon',
+                                style: AppTheme.of(context).titleSmall.override(
+                                      font: GoogleFonts.poppins(
+                                          fontWeight: FontWeight.w700),
+                                      color: const Color(0xFFC2410C),
+                                    ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'WebRTC video calls are in development and will be available in a future update.',
+                                style: AppTheme.of(context).bodySmall.override(
+                                      font: GoogleFonts.poppins(),
+                                      color: const Color(0xFF9A3412),
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 18),

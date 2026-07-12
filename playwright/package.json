@@ -1,0 +1,16 @@
+{
+  "name": "shph-playwright-tests",
+  "version": "1.0.0",
+  "description": "Playwright UI tests for SerbisyoHub PH Flutter web app",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:headed": "npx playwright test --headed",
+    "test:ui": "npx playwright test --ui",
+    "test:debug": "npx playwright test --debug",
+    "report": "npx playwright show-report",
+    "codegen": "npx playwright codegen http://localhost:8080"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  }
+}

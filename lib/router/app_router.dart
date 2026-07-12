@@ -454,6 +454,32 @@ class AppRouter {
             builder: (context, state) => const ProDashboardWidget(),
           ),
           GoRoute(
+            path: ProviderBidsWidget.routePath,
+            name: ProviderBidsWidget.routeName,
+            builder: (context, state) => const ProviderBidsWidget(),
+          ),
+          GoRoute(
+            path: ProAnalyticsWidget.routePath,
+            name: ProAnalyticsWidget.routeName,
+            builder: (context, state) => const ProAnalyticsWidget(),
+          ),
+          GoRoute(
+            path: WalletWidget.routePath,
+            name: WalletWidget.routeName,
+            builder: (context, state) => const WalletWidget(),
+          ),
+          GoRoute(
+            path: DisputesWidget.routePath,
+            name: DisputesWidget.routeName,
+            builder: (context, state) => const DisputesWidget(),
+          ),
+          GoRoute(
+            path: NotificationPreferencesWidget.routePath,
+            name: NotificationPreferencesWidget.routeName,
+            builder: (context, state) =>
+                const NotificationPreferencesWidget(),
+          ),
+          GoRoute(
             path: ProEditProfileWidget.routePath,
             name: ProEditProfileWidget.routeName,
             builder: (context, state) => const ProEditProfileWidget(),
@@ -487,6 +513,16 @@ class AppRouter {
             path: CreateServiceWidget.routePath,
             name: CreateServiceWidget.routeName,
             builder: (context, state) => const CreateServiceWidget(),
+          ),
+          GoRoute(
+            path: MyServicesWidget.routePath,
+            name: MyServicesWidget.routeName,
+            builder: (context, state) => const MyServicesWidget(),
+          ),
+          GoRoute(
+            path: AdminDashboardWidget.routePath,
+            name: AdminDashboardWidget.routeName,
+            builder: (context, state) => const AdminDashboardWidget(),
           ),
           GoRoute(
             path: FavoritesWidget.routePath,

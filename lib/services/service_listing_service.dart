@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '/api/bridges/api_row_mapper.dart';
 import '/api/models/service_listing.dart';
 import '/api/resources/favorites_api.dart';
@@ -165,5 +167,162 @@ class ServiceListingService {
     }
 
     return [];
+  }
+
+  Future<List<ServiceListing>> fetchMyListings() async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return [];
+
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final page = await _servicesApi.listMyListings();
+        return page.results.map(_apiToServiceListing).toList();
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API fetchMyListings failed, falling back to Supabase: $e',
+          tag: 'ServiceListingService',
+        );
+      }
+    }
+
+    try {
+      final services = await ServiceListingsTable().queryRows(
+        queryFn: (q) => q
+            .eq('provider', userId)
+            .order('created_at', ascending: false),
+      );
+      return services.map(_rowToServiceListing).toList();
+    } catch (e) {
+      LoggingService.error('Error fetching my listings: $e',
+          tag: 'ServiceListingService');
+      return [];
+    }
+  }
+
+  Future<ServiceListing?> updateListing({
+    required int id,
+    String? title,
+    int? category,
+    String? description,
+    double? basePrice,
+    bool? isAvailable,
+  }) async {
+    final updates = <String, dynamic>{};
+    if (title != null) updates['title'] = title;
+    if (category != null) updates['category'] = category;
+    if (description != null) updates['description'] = description;
+    if (basePrice != null) updates['base_price'] = basePrice;
+    if (isAvailable != null) {
+      updates['status'] = isAvailable ? 'active' : 'draft';
+    }
+    updates['updated_at'] = DateTime.now().toIso8601String();
+
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final updated = await _servicesApi.updateListing(id, updates);
+        return _apiToServiceListing(updated);
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API updateListing failed, falling back to Supabase: $e',
+          tag: 'ServiceListingService',
+        );
+      }
+    }
+
+    try {
+      await Supabase.instance.client
+          .from('service_listings')
+          .update(updates)
+          .eq('id', id);
+      return await fetchServiceListingById(id);
+    } catch (e) {
+      LoggingService.error('Error updating listing: $e',
+          tag: 'ServiceListingService');
+      return null;
+    }
+  }
+
+  Future<bool> deleteListing(int id) async {
+    try {
+      await Supabase.instance.client
+          .from('service_listings')
+          .delete()
+          .eq('id', id);
+      LoggingService.info('Listing deleted: $id',
+          tag: 'ServiceListingService');
+      return true;
+    } catch (e) {
+      LoggingService.error('Error deleting listing: $e',
+          tag: 'ServiceListingService');
+      return false;
+    }
+  }
+
+  Future<ServiceListing?> archiveListing(int id) async {
+    return await updateListing(id: id, isAvailable: false);
+  }
+
+  Future<ServiceListing?> unarchiveListing(int id) async {
+    return await updateListing(id: id, isAvailable: true);
+  }
+
+  Future<String?> uploadListingImage(int listingId, File imageFile) async {
+    try {
+      final fileName =
+          '$listingId-${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final filePath = 'service-images/$fileName';
+
+      await Supabase.instance.client.storage
+          .from('services')
+          .upload(filePath, imageFile);
+
+      final url = Supabase.instance.client.storage
+          .from('services')
+          .getPublicUrl(filePath);
+
+      await Supabase.instance.client
+          .from('service_listing_images')
+          .insert({
+            'listing_id': listingId,
+            'image_url': url,
+            'created_at': DateTime.now().toIso8601String(),
+          });
+
+      return url;
+    } catch (e) {
+      LoggingService.error('Error uploading listing image: $e',
+          tag: 'ServiceListingService');
+      return null;
+    }
+  }
+
+  Future<List<String>> fetchListingImages(int listingId) async {
+    try {
+      final response = await Supabase.instance.client
+          .from('service_listing_images')
+          .select('image_url')
+          .eq('listing_id', listingId)
+          .order('sort_order', ascending: true);
+
+      return (response as List).map((e) => e['image_url'] as String).toList();
+    } catch (e) {
+      LoggingService.error('Error fetching listing images: $e',
+          tag: 'ServiceListingService');
+      return [];
+    }
+  }
+
+  Future<bool> deleteListingImage(int imageId) async {
+    try {
+      await Supabase.instance.client
+          .from('service_listing_images')
+          .delete()
+          .eq('id', imageId);
+      return true;
+    } catch (e) {
+      LoggingService.error('Error deleting listing image: $e',
+          tag: 'ServiceListingService');
+      return false;
+    }
   }
 }

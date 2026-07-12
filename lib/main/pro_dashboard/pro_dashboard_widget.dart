@@ -11,6 +11,7 @@ import '/services/chat_service.dart';
 import '/services/dispatch/dispatch_models.dart';
 import '/services/dispatch/dispatch_service.dart';
 import '/services/logging_service.dart';
+import '/services/payouts_service.dart';
 import '/services/pro_bookings_service.dart';
 import '/theme/app_theme.dart';
 
@@ -53,6 +54,7 @@ class _ProDashboardWidgetState extends State<ProDashboardWidget> {
     final tabs = {
       'ProJobs': const ProJobsWidget(),
       'ProSchedule': const ProScheduleWidget(),
+      'ProAnalytics': const ProAnalyticsWidget(),
       'ProEarnings': const ProEarningsWidget(),
       'ProMessages': const ProMessagesWidget(),
       'ProProfile': const ProProfileWidget(),
@@ -113,6 +115,14 @@ class _ProDashboardWidgetState extends State<ProDashboardWidget> {
                   size: 24,
                 ),
                 label: 'Schedule',
+                tooltip: '',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(
+                  Icons.insights_rounded,
+                  size: 24,
+                ),
+                label: 'Analytics',
                 tooltip: '',
               ),
               BottomNavigationBarItem(
@@ -1386,11 +1396,17 @@ class _ProEarningsWidgetState extends State<ProEarningsWidget> {
   Future<void> _handleCashOut() async {
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('User not authenticated')),
+      );
+      return;
+    }
+
+    if (totalEarnings <= 0) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No earnings available to cash out')),
       );
       return;
     }
@@ -1399,16 +1415,88 @@ class _ProEarningsWidgetState extends State<ProEarningsWidget> {
       final methods = await PaymentMethodsTable().queryRows(
         queryFn: (q) => q.eq('user_id', userId),
       );
-      if (!mounted) {
+      if (!mounted) return;
+
+      final ewallets = methods.where((m) => m.type == 'ewallet').toList();
+      if (ewallets.isEmpty) {
+        final addNow = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('No Payout Wallet'),
+            content: const Text(
+                'You need to link an e-wallet first to receive payouts.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Later'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Add E-Wallet'),
+              ),
+            ],
+          ),
+        );
+        if (addNow == true && mounted) {
+          await context.pushNamed(AddEwalletPaymentWidget.routeName);
+        }
         return;
       }
 
-      final hasEwallet = methods.any((method) => method.type == 'ewallet');
-      final action = await showModalBottomSheet<String>(
-        context: context,
-        backgroundColor: Colors.transparent,
-        builder: (context) => Container(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      final result = await _showPayoutRequestSheet(ewallets);
+      if (result == null || !mounted) return;
+
+      final success = await PayoutsService.instance.requestPayout(
+        amount: result['amount'] as double,
+        paymentMethodId: result['paymentMethodId'] as String?,
+        note: result['note'] as String?,
+      );
+
+      if (!mounted) return;
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Payout request submitted! Admin will review it shortly.'),
+            backgroundColor: Color(0xFF059669),
+          ),
+        );
+        _loadEarnings();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to submit payout request')),
+        );
+      }
+    } catch (e, stackTrace) {
+      LoggingService.error(
+        'Failed to process cash-out',
+        tag: 'ProEarnings',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not process cash-out')),
+      );
+    }
+  }
+
+  Future<Map<String, dynamic>?> _showPayoutRequestSheet(
+    List<dynamic> ewallets,
+  ) async {
+    final amountController = TextEditingController();
+    final noteController = TextEditingController();
+    String? selectedMethodId;
+
+    return showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) => Container(
+          padding: EdgeInsets.fromLTRB(
+            20, 12, 20,
+            24 + MediaQuery.of(context).viewInsets.bottom,
+          ),
           decoration: const BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
@@ -1431,71 +1519,124 @@ class _ProEarningsWidgetState extends State<ProEarningsWidget> {
                 ),
                 const SizedBox(height: 18),
                 Text(
-                  'Cash Out Setup',
+                  'Request Payout',
                   style: AppTheme.of(context).titleMedium.override(
                         fontWeight: FontWeight.w700,
                       ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 Text(
-                  hasEwallet
-                      ? 'Your payout wallet is ready to review. Automated provider cash-out is not enabled yet, but you can manage the wallet that will be used for payouts.'
-                      : 'Link an e-wallet first so your provider payout destination is ready when cash-out processing is enabled.',
+                  'Available: PHP ${totalEarnings.toStringAsFixed(2)}',
                   style: AppTheme.of(context).bodyMedium.override(
                         color: AppTheme.of(context).secondaryText,
                       ),
                 ),
                 const SizedBox(height: 18),
+                Text(
+                  'Amount (PHP)',
+                  style: AppTheme.of(context).bodySmall.override(
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: amountController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    hintText: '0.00',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    prefixText: 'PHP ',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Payout Wallet',
+                  style: AppTheme.of(context).bodySmall.override(
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                const SizedBox(height: 6),
+                DropdownButtonFormField<String>(
+                  value: selectedMethodId,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  hint: const Text('Select e-wallet'),
+                  items: ewallets.map<DropdownMenuItem<String>>((m) {
+                    final method = m;
+                    final label = method.label ??
+                        (method.details?['number'] as String?) ??
+                        'E-Wallet';
+                    return DropdownMenuItem<String>(
+                      value: method.id as String,
+                      child: Text(label),
+                    );
+                  }).toList(),
+                  onChanged: (v) =>
+                      setSheetState(() => selectedMethodId = v),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Note (optional)',
+                  style: AppTheme.of(context).bodySmall.override(
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: noteController,
+                  maxLines: 2,
+                  decoration: InputDecoration(
+                    hintText: 'Add a note for admin...',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton(
-                    onPressed: () =>
-                        Navigator.of(context).pop(hasEwallet ? 'manage' : 'add'),
-                    child: Text(
-                      hasEwallet ? 'Manage Payout Wallet' : 'Add Payout Wallet',
-                    ),
+                    onPressed: () {
+                      final amount =
+                          double.tryParse(amountController.text) ?? 0;
+                      if (amount <= 0 || amount > totalEarnings) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text(
+                                  'Enter a valid amount up to your available earnings')),
+                        );
+                        return;
+                      }
+                      Navigator.of(context).pop({
+                        'amount': amount,
+                        'paymentMethodId': selectedMethodId,
+                        'note': noteController.text.trim().isEmpty
+                            ? null
+                            : noteController.text.trim(),
+                      });
+                    },
+                    child: const Text('Submit Request'),
                   ),
                 ),
                 const SizedBox(height: 10),
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop('later'),
-                    child: const Text('Maybe Later'),
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Cancel'),
                   ),
                 ),
               ],
             ),
           ),
         ),
-      );
-
-      if (!mounted) {
-        return;
-      }
-
-      if (action == 'add') {
-        await context.pushNamed(AddEwalletPaymentWidget.routeName);
-        return;
-      }
-
-      if (action == 'manage') {
-        await context.pushNamed(PaymentMethodsWidget.routeName);
-      }
-    } catch (e, stackTrace) {
-      LoggingService.error(
-        'Failed to open cash-out setup',
-        tag: 'ProEarnings',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      if (!mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open cash-out setup')),
-      );
-    }
+      ),
+    );
   }
 
   double get _weeklyDelta => thisWeek - lastWeek;
@@ -3293,7 +3434,26 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                         ),
                       ),
                     ),
-                    // Create Service Button
+                    // My Services + Create Service Buttons
+                    Padding(
+                      padding:
+                          const EdgeInsetsDirectional.fromSTEB(24, 0, 24, 8),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () =>
+                              context.pushNamed('MyServices'),
+                          icon: const Icon(Icons.manage_search_rounded),
+                          label: const Text('My Services'),
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(56),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                     Padding(
                       padding:
                           const EdgeInsetsDirectional.fromSTEB(24, 0, 24, 16),

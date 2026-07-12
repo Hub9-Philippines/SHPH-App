@@ -62,7 +62,15 @@ export 'main/payment_methods/add_ewallet_payment_widget.dart'
 export 'main/payment_methods/payment_methods_widget.dart'
     show PaymentMethodsWidget;
 export 'main/pro_dashboard/about_widget.dart' show AboutWidget;
+export 'main/pro_dashboard/pro_analytics_widget.dart' show ProAnalyticsWidget;
+export 'main/pro_dashboard/provider_bids_widget.dart' show ProviderBidsWidget;
+export 'pages/wallet/wallet_widget.dart' show WalletWidget;
+export 'pages/disputes/disputes_widget.dart' show DisputesWidget;
+export 'pages/notification_preferences/notification_preferences_widget.dart'
+    show NotificationPreferencesWidget;
 export 'main/pro_dashboard/create_service_widget.dart' show CreateServiceWidget;
+export 'main/pro_dashboard/my_services_widget.dart' show MyServicesWidget;
+export 'main/admin/admin_dashboard_widget.dart' show AdminDashboardWidget;
 export 'main/pro_dashboard/edit_profile_widget.dart' show ProEditProfileWidget;
 export 'main/pro_dashboard/help_support_widget.dart' show HelpSupportWidget;
 export 'main/pro_dashboard/pro_dashboard_widget.dart' show ProDashboardWidget;

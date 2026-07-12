@@ -10,7 +10,7 @@
 #include <file_selector_windows/file_selector_windows.h>
 #include <flutter_tts/flutter_tts_plugin.h>
 #include <geolocator_windows/geolocator_windows.h>
-#include <passkeys_windows/passkeys_windows_plugin.h>
+#include <local_auth_windows/local_auth_plugin.h>
 #include <permission_handler_windows/permission_handler_windows_plugin.h>
 #include <url_launcher_windows/url_launcher_windows.h>
 
@@ -23,8 +23,8 @@ void RegisterPlugins(flutter::PluginRegistry* registry) {
       registry->GetRegistrarForPlugin("FlutterTtsPlugin"));
   GeolocatorWindowsRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("GeolocatorWindows"));
-  PasskeysWindowsPluginRegisterWithRegistrar(
-      registry->GetRegistrarForPlugin("PasskeysWindowsPlugin"));
+  LocalAuthPluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("LocalAuthPlugin"));
   PermissionHandlerWindowsPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("PermissionHandlerWindowsPlugin"));
   UrlLauncherWindowsRegisterWithRegistrar(
