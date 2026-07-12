@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '/backend/supabase/database/tables/addresses.dart';
 import '/backend/supabase/database/tables/service_listings.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/bookings_service.dart';
@@ -17,6 +18,9 @@ class BookingItem {
     required this.scheduledExecutionDate,
     required this.price,
     required this.imageUrl,
+    this.addressLabel,
+    this.clientLatitude,
+    this.clientLongitude,
   });
   final String id;
   final String status;
@@ -26,6 +30,9 @@ class BookingItem {
   final DateTime? scheduledExecutionDate;
   final double price;
   final String imageUrl;
+  final String? addressLabel;
+  final double? clientLatitude;
+  final double? clientLongitude;
 }
 
 class BookingsModel extends FlutterFlowModel<BookingsWidget> {
@@ -86,11 +93,31 @@ class BookingsModel extends FlutterFlowModel<BookingsWidget> {
         }
       }
 
+      final addressIds =
+          bookings.map((b) => b.addressId).where((id) => id != null).map((id) => id!).toSet();
+      final Map<int, AddressesRow> addressCache = {};
+      if (addressIds.isNotEmpty) {
+        try {
+          final addresses = await AddressesTable().queryRows(
+            queryFn: (q) => q.inFilter('id', addressIds.toList()),
+          );
+          for (final addr in addresses) {
+            addressCache[addr.id] = addr;
+          }
+        } catch (_) {}
+      }
+
       final inProgress = <BookingItem>[];
       final completed = <BookingItem>[];
 
       for (final booking in bookings) {
         final serviceListing = _serviceListingsCache[booking.serviceListingId];
+        final addr = booking.addressId != null
+            ? addressCache[booking.addressId]
+            : null;
+        final addressLabel = addr != null
+            ? '${addr.addressLine1 ?? ''}${addr.city != null && addr.city!.isNotEmpty ? ', ${addr.city}' : ''}'
+            : null;
         final bookingItem = BookingItem(
           id: booking.id,
           status: _formatStatus(booking.status),
@@ -100,6 +127,7 @@ class BookingsModel extends FlutterFlowModel<BookingsWidget> {
           scheduledExecutionDate: booking.bookingDate,
           price: booking.totalPrice ?? 0.0,
           imageUrl: serviceListing?.thumbnail ?? '',
+          addressLabel: addressLabel,
         );
 
         if (booking.status.toLowerCase() == 'completed' ||
