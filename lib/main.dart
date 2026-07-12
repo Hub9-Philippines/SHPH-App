@@ -16,6 +16,7 @@ import 'flutter_flow/flutter_flow_util.dart';
 import 'index.dart';
 import 'l10n/app_localizations.dart';
 import 'services/error_handler.dart';
+import 'services/logging_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,7 +27,12 @@ void main() async {
   await SupaFlow.initialize();
 
   // Initialize SHPH REST API client (OpenAPI-backed Dio layer)
-  await initializeShphApi();
+  try {
+    await initializeShphApi();
+  } catch (e) {
+    // API unreachable — all callers fall back to Supabase gracefully.
+    LoggingService.debug('SHPH API init skipped: $e', tag: 'main');
+  }
 
   // Restore current auth session from local storage
   final supabaseUser = Supabase.instance.client.auth.currentUser;
