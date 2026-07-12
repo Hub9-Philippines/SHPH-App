@@ -596,6 +596,16 @@ class AppRouter {
             },
           ),
           GoRoute(
+            path: HelpPage.routePath,
+            name: HelpPage.routeName,
+            builder: (context, state) => const HelpPage(),
+          ),
+          GoRoute(
+            path: ChatbotPage.routePath,
+            name: ChatbotPage.routeName,
+            builder: (context, state) => const ChatbotPage(),
+          ),
+          GoRoute(
             path: TMActiveJobScreen.routePath,
             name: TMActiveJobScreen.routeName,
             builder: (context, state) => const TMActiveJobScreen(),

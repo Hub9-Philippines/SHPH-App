@@ -213,7 +213,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
               backgroundColor: Colors.white,
               foregroundColor: AppTheme.of(context).primary,
             ),
-            icon: const Icon(Icons.tune_rounded),
+            icon: const Icon(Icons.notifications_rounded),
           ),
           const SizedBox(width: 8),
           IconButton.filledTonal(

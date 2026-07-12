@@ -80,3 +80,5 @@ export 'pages/tm_flow/tm_invoice_screen.dart' show TMInvoiceScreen;
 export 'pages/tm_flow/tm_payment_screen.dart' show TMPaymentScreen;
 export 'pages/tm_flow/tm_rating_screen.dart' show TMRatingScreen;
 export 'pages/tm_flow/tm_sub_category_screen.dart' show TMSubCategoryScreen;
+export 'pages/help/help_page.dart' show HelpPage;
+export 'pages/help/chatbot_page.dart' show ChatbotPage;

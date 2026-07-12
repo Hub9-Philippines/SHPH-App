@@ -123,7 +123,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pop(context);
+        Navigator.pop(context, true);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
