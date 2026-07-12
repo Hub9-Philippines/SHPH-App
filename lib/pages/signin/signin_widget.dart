@@ -12,7 +12,6 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
 import '/theme/app_theme.dart';
-import '../../auth/supabase_auth/supabase_auth_manager.dart';
 import 'signin_model.dart';
 
 export 'signin_model.dart';
@@ -397,8 +396,7 @@ class _SigninWidgetState extends State<SigninWidget>
           icon: Icons.g_mobiledata_rounded,
           label: 'Continue with Google',
           onTap: () async {
-            final user = await (authManager as SupabaseAuthManager)
-                .signInWithGoogle(context);
+            final user = await authManager.signInWithGoogle(context);
             if (user != null && context.mounted) {
               await PostAuthNavigationFlow().handlePostAuthNavigation(
                 context: context,
@@ -412,62 +410,61 @@ class _SigninWidgetState extends State<SigninWidget>
           icon: Icons.apple_rounded,
           label: 'Continue with Apple',
           onTap: () async {
-            final user = await (authManager as SupabaseAuthManager)
-                .signInWithApple(context);
-            if (user != null && context.mounted) {
-              await PostAuthNavigationFlow().handlePostAuthNavigation(
-                context: context,
-                userId: user.uid!,
-              );
-            }
-          },
-        ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            GestureDetector(
-              onTap: () => context.goNamed(ForgotPasswordWidget.routeName),
-              child: Text(
-                'Forgot password',
-                style: theme.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: theme.primary,
+              final user = await authManager.signInWithApple(context);
+              if (user != null && context.mounted) {
+                await PostAuthNavigationFlow().handlePostAuthNavigation(
+                  context: context,
+                  userId: user.uid!,
+                );
+              }
+            },
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              GestureDetector(
+                onTap: () => context.goNamed(ForgotPasswordWidget.routeName),
+                child: Text(
+                  'Forgot password',
+                  style: theme.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.primary,
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-        const Spacer(),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              "Don't have an account yet? ",
-              style: theme.bodyMedium.copyWith(color: theme.secondaryText),
-            ),
-            GestureDetector(
-              onTap: () => context.goNamed(SignupWidget.routeName),
-              child: Text(
-                'Sign Up',
-                style: theme.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: theme.primary,
+            ],
+          ),
+          const Spacer(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                "Don't have an account yet? ",
+                style: theme.bodyMedium.copyWith(color: theme.secondaryText),
+              ),
+              GestureDetector(
+                onTap: () => context.goNamed(SignupWidget.routeName),
+                child: Text(
+                  'Sign Up',
+                  style: theme.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.primary,
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEmailTab(AppThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Email',
+            ],
+          ),
+        ],
+      );
+    }
+ 
+    Widget _buildEmailTab(AppThemeData theme) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Email',
           style: theme.bodyMedium.copyWith(
             fontWeight: FontWeight.w500,
             color: theme.primaryText,
@@ -623,9 +620,7 @@ class _SigninWidgetState extends State<SigninWidget>
                       safeSetState(() {});
                       try {
                         GoRouter.of(context).prepareAuthEvent();
-                        final user = await (authManager
-                                as SupabaseAuthManager)
-                            .signInWithEmail(
+                        final user = await authManager.signInWithEmail(
                           context,
                           _model.emailTextFieldTextController.text,
                           _model.passwordTextFieldTextController.text,
@@ -675,8 +670,7 @@ class _SigninWidgetState extends State<SigninWidget>
           icon: Icons.g_mobiledata_rounded,
           label: 'Continue with Google',
           onTap: () async {
-            final user = await (authManager as SupabaseAuthManager)
-                .signInWithGoogle(context);
+            final user = await authManager.signInWithGoogle(context);
             if (user != null && context.mounted) {
               await PostAuthNavigationFlow().handlePostAuthNavigation(
                 context: context,
@@ -690,8 +684,7 @@ class _SigninWidgetState extends State<SigninWidget>
           icon: Icons.apple_rounded,
           label: 'Continue with Apple',
           onTap: () async {
-            final user = await (authManager as SupabaseAuthManager)
-                .signInWithApple(context);
+            final user = await authManager.signInWithApple(context);
             if (user != null && context.mounted) {
               await PostAuthNavigationFlow().handlePostAuthNavigation(
                 context: context,

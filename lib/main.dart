@@ -8,10 +8,11 @@ import '/backend/supabase/supabase.dart';
 import '/flutter_flow/token_refresh_manager.dart';
 import '/router/app_router.dart';
 import '/theme/app_theme.dart';
-// Authentication imports - Using Supabase for auth
+// Authentication imports - Using SHPH API for auth
 import 'auth/auth_manager_factory.dart';
 import 'auth/supabase_auth/auth_util.dart';
 import 'auth/supabase_auth/supabase_user_provider.dart';
+import 'auth/shph_auth/shph_user_provider.dart';
 import 'flutter_flow/flutter_flow_util.dart';
 import 'index.dart';
 import 'l10n/app_localizations.dart';
@@ -23,26 +24,30 @@ void main() async {
   GoRouter.optionURLReflectsImperativeAPIs = true;
   usePathUrlStrategy();
 
-  // Initialize Supabase
+  // Keep Supabase initialized for services that still fall back to it.
   await SupaFlow.initialize();
 
   // Initialize SHPH REST API client (OpenAPI-backed Dio layer)
   try {
     await initializeShphApi();
   } catch (e) {
-    // API unreachable — all callers fall back to Supabase gracefully.
     LoggingService.debug('SHPH API init skipped: $e', tag: 'main');
   }
 
-  // Restore current auth session from local storage
-  final supabaseUser = Supabase.instance.client.auth.currentUser;
-  if (supabaseUser != null) {
-    // Set the global current user immediately so auth state is correct on app start
-    currentUser = SerbisyoHubPHSupabaseUser(supabaseUser);
+  // Restore current auth session from SHPH API tokens
+  final hasShphToken = await ShphTokenStorage.hasAccessToken();
+  if (hasShphToken) {
+    try {
+      final data = await ShphUsersApi.instance.getMe();
+      currentUser = SerbisyoHubPHShphUser.fromData(data);
+    } catch (_) {
+      // Token invalid or expired; clear and proceed unauthenticated.
+      await ShphTokenStorage.clear();
+    }
   }
 
-  // Initialize Auth Manager - Using Supabase for authentication
-  AuthManagerFactory.initialize(AuthProvider.supabase);
+  // Initialize Auth Manager - Using SHPH API for authentication
+  AuthManagerFactory.initialize(AuthProvider.shph);
 
   await AppTheme.initialize();
 
@@ -96,13 +101,13 @@ class _MyAppState extends State<MyApp> {
     _router =
         AppRouter.createRouter(_appStateNotifier, appState: widget.appState);
 
-    // Use Supabase user stream for auth state management
-    userStream = serbisyoHubPHSupabaseUserStream()
+    // Use SHPH user stream for auth state management
+    userStream = serbisyoHubPHShphUserStream()
       ..listen((user) {
         _appStateNotifier.update(user);
       });
 
-    // Start automatic token refresh monitoring (Fix #5: Token Refresh Interceptor)
+    // Start automatic token refresh monitoring
     TokenRefreshManager().startTokenRefreshMonitoring();
 
     Future.delayed(

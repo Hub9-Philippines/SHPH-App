@@ -5,7 +5,6 @@ import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
 
 import '/auth/supabase_auth/auth_util.dart';
-import '/backend/supabase/supabase.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -223,68 +222,37 @@ class _SignupWidgetState extends State<SignupWidget> {
                   safeSetState(() {});
 
                   if (_model.phoneFieldTextController.text != '') {
-                    try {
-                      _model.isPhoneExists =
-                          await ProfilesTable().queryRows(
-                        queryFn: (q) => q.eqOrNull(
-                          'phone_number',
-                          FFAppState().phone,
+                    final phoneNumberVal =
+                        _model.phoneFieldTextController.text;
+                    if (phoneNumberVal.isEmpty ||
+                        !phoneNumberVal.startsWith('+')) {
+                      _model.isLoading = false;
+                      _model.errorMessage =
+                          'Phone Number is required and has to start with +.';
+                      safeSetState(() {});
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                              'Phone Number is required and has to start with +.'),
                         ),
                       );
-                      if (_model.isPhoneExists?.firstOrNull?.phoneNumber ==
-                          FFAppState().phone) {
-                        _model.isLoading = false;
-                        _model.errorMessage =
-                            'This phone number is already associated with an account. Please login instead.';
-                        safeSetState(() {});
-                        if (!context.mounted) return;
-                        await showDialog(
-                          context: context,
-                          builder: (alertDialogContext) => AlertDialog(
-                            title: const Text('Account Already Exists'),
-                            content: const Text(
-                                'This phone number is already associated with an account. Please login instead.'),
-                            actions: [
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.pop(alertDialogContext),
-                                child: const Text('Ok'),
-                              ),
-                            ],
-                          ),
-                        );
-                      } else {
-                        final phoneNumberVal =
-                            _model.phoneFieldTextController.text;
-                        if (phoneNumberVal.isEmpty ||
-                            !phoneNumberVal.startsWith('+')) {
-                          _model.isLoading = false;
-                          _model.errorMessage =
-                              'Phone Number is required and has to start with +.';
-                          safeSetState(() {});
+                      return;
+                    }
+                    try {
+                      if (!context.mounted) return;
+                      await beginPhoneAuth(
+                        context: context,
+                        phoneNumber: phoneNumberVal,
+                        onCodeSent: (context) async {
                           if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                  'Phone Number is required and has to start with +.'),
-                            ),
+                          await context.pushNamed(
+                            PhoneVerifyUserWidget.routeName,
                           );
-                          return;
-                        }
-                        if (!context.mounted) return;
-                        await beginPhoneAuth(
-                          context: context,
-                          phoneNumber: phoneNumberVal,
-                          onCodeSent: (context) async {
-                            if (!context.mounted) return;
-                            await context.pushNamed(
-                              PhoneVerifyUserWidget.routeName,
-                            );
-                          },
-                        );
-                        _model.isLoading = false;
-                        safeSetState(() {});
-                      }
+                        },
+                      );
+                      _model.isLoading = false;
+                      safeSetState(() {});
                     } catch (e) {
                       _model.isLoading = false;
                       _model.errorMessage =

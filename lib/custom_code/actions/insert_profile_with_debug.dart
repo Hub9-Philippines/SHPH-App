@@ -5,6 +5,7 @@ import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom actions
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:flutter/material.dart';
+import '/api/resources/users_api.dart';
 // Begin custom action code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
@@ -17,8 +18,6 @@ Future<String> insertProfileWithDebug(
   String role,
 ) async {
   try {
-    final supabase = Supabase.instance.client;
-
     debugPrint('=== insertProfileWithDebug Called ===');
     debugPrint('ID: $id');
     debugPrint('First Name: $firstname');
@@ -27,12 +26,33 @@ Future<String> insertProfileWithDebug(
     debugPrint('Phone: $phone');
     debugPrint('Role: $role');
 
-    // Default empty role to 'client'
     final roleToUse = role.isEmpty ? 'client' : role;
     debugPrint('Role to use: $roleToUse');
 
-    // Check if profile already exists (from auto-create trigger)
-    debugPrint('--- Checking if profile already exists ---');
+    // Use SHPH API to update/create user profile
+    final data = <String, dynamic>{
+      'first_name': firstname,
+      'last_name': lastname,
+      'display_name': '$firstname $lastname'.trim(),
+      'phone_number': phone,
+      'role': roleToUse,
+    };
+
+    if (email != null && email.isNotEmpty) {
+      data['email'] = email;
+    }
+
+    try {
+      await ShphUsersApi.instance.updateMe(data);
+      debugPrint('Profile updated via SHPH API successfully');
+      return "success";
+    } catch (apiError) {
+      debugPrint('SHPH API update failed, falling back to Supabase: $apiError');
+    }
+
+    // Fallback: use Supabase directly
+    final supabase = Supabase.instance.client;
+
     final existingProfile = await supabase
         .from('profiles')
         .select('id, phone_number, email')
@@ -40,31 +60,14 @@ Future<String> insertProfileWithDebug(
         .maybeSingle();
 
     if (existingProfile != null) {
-      debugPrint('Profile exists from auto-create trigger, performing UPDATE');
-
-      // Profile exists, update it with complete data
-      final Map<String, dynamic> updateData = {
-        'first_name': firstname,
-        'last_name': lastname,
-        'display_name': '$firstname $lastname'.trim(),
-        'phone_number': phone,
-        'role': roleToUse,
-      };
-
-      if (email != null && email.isNotEmpty) {
-        updateData['email'] = email;
-      }
-
-      await supabase.from('profiles').update(updateData).eq('id', id);
-      debugPrint('Profile updated successfully');
+      debugPrint('Profile exists, performing UPDATE via Supabase');
+      await supabase.from('profiles').update(data).eq('id', id);
+      debugPrint('Profile updated successfully via Supabase');
       return "success";
     }
 
-    debugPrint('Profile does not exist, performing INSERT');
+    debugPrint('Profile does not exist, performing INSERT via Supabase');
 
-    // Profile doesn't exist, proceed with validations and insert
-
-    // Validation: Check if Phone already exists
     final phoneCheck = await supabase
         .from('profiles')
         .select('id')
@@ -76,7 +79,6 @@ Future<String> insertProfileWithDebug(
       return "Error: This phone number is already registered.";
     }
 
-    // Validation: Check if Email already exists (only if email is provided)
     if (email != null && email.isNotEmpty) {
       final emailCheck = await supabase
           .from('profiles')
@@ -90,8 +92,7 @@ Future<String> insertProfileWithDebug(
       }
     }
 
-    // Prepare data for insert
-    final Map<String, dynamic> data = {
+    final Map<String, dynamic> insertData = {
       'id': id,
       'first_name': firstname,
       'last_name': lastname,
@@ -101,13 +102,11 @@ Future<String> insertProfileWithDebug(
     };
 
     if (email != null && email.isNotEmpty) {
-      data['email'] = email;
+      insertData['email'] = email;
     }
 
-    // Perform Insert
-    debugPrint('Inserting new profile');
-    await supabase.from('profiles').insert(data);
-    debugPrint('Profile inserted successfully');
+    await supabase.from('profiles').insert(insertData);
+    debugPrint('Profile inserted successfully via Supabase');
 
     return "success";
   } catch (e) {

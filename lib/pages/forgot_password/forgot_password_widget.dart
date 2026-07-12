@@ -10,7 +10,6 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
 import '/theme/app_theme.dart';
-import '../../auth/supabase_auth/supabase_auth_manager.dart';
 import 'forgot_password_model.dart';
 
 export 'forgot_password_model.dart';
@@ -370,8 +369,7 @@ class _ForgotPasswordWidgetState extends State<ForgotPasswordWidget> {
                                     !_model.isEmailvalid)
                                 ? null
                                 : () async {
-                                    await (authManager as SupabaseAuthManager)
-                                        .resetPassword(
+                                    await authManager.resetPassword(
                                       email: _model
                                           .emailTextFieldTextController.text,
                                       context: context,

@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/auth/base_auth_user_provider.dart';
 import '/backend/supabase/database/tables/payment_methods.dart';
 import '/flutter_flow/lat_lng.dart';
 import '/index.dart';
@@ -11,17 +11,24 @@ import '/main.dart';
 import '/models/service_listing.dart';
 import '/pages/booking_funnel/booking_models.dart';
 import '/pages/geographic_selection/geographic_selection_widget.dart';
+import '/services/profiles_service.dart';
 
 // Helper function to fetch user profile for role-based routing
 Future<Map<String, dynamic>?> _fetchUserProfile(String userId) async {
   try {
-    final response = await Supabase.instance.client
-        .from('profiles')
-        .select(
-            'role, verification_status, email, display_name, is_profile_complete, first_name, last_name')
-        .eq('id', userId)
-        .single();
-    return response;
+    final profile = await ProfilesService.instance.getProfile();
+    if (profile == null) return null;
+    return {
+      'role': profile.role,
+      'verification_status': profile.verificationStatus,
+      'email': profile.email,
+      'display_name': profile.displayName,
+      'is_profile_complete': profile.isProfileComplete,
+      'first_name': profile.firstName,
+      'last_name': profile.lastName,
+      'is_verified': profile.isVerified,
+      'is_face_verified': profile.isFaceVerified,
+    };
   } catch (e) {
     return null;
   }
@@ -720,7 +727,7 @@ class RoleBasedRedirectGuard {
 
     // Role-based routing logic with 4-state pro account lifecycle
     if (appStateNotifier.loggedIn) {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
+      final userId = currentUser?.uid;
       if (userId != null) {
         final userProfile = await _fetchUserProfile(userId);
         if (userProfile != null) {

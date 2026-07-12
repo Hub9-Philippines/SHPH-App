@@ -1,16 +1,18 @@
-// Supabase Authentication Utilities
-// This file provides auth helper functions and getters for the app
+// Authentication Utilities
+// Provides auth helper functions and getters for the app
 
 import 'package:flutter/material.dart';
 import '../auth_manager.dart';
 import '../auth_manager_factory.dart';
 import '../base_auth_user_provider.dart';
+import '../shph_auth/shph_user_provider.dart';
 import 'supabase_auth_manager.dart';
 
 export '../base_auth_user_provider.dart';
 export 'supabase_user_provider.dart';
+export '../shph_auth/shph_user_provider.dart';
 
-/// Get the current auth manager instance (Supabase-based)
+/// Get the current auth manager instance
 AuthManager get authManager => AuthManagerFactory.instance;
 
 /// Get the current logged-in user's UID
@@ -65,7 +67,7 @@ Future<void> verifyCurrentUserEmail(BuildContext context) async {
   }
 }
 
-/// Handle phone auth state changes (Supabase specific)
+/// Handle phone auth state changes (Supabase-specific listener; no-op for SHPH)
 void handlePhoneAuthStateChanges(BuildContext context) {
   if (authManager is SupabaseAuthManager) {
     (authManager as SupabaseAuthManager).handlePhoneAuthStateChanges(context);
@@ -78,8 +80,8 @@ Future<void> beginPhoneAuth({
   required String phoneNumber,
   required void Function(BuildContext) onCodeSent,
 }) async {
-  if (authManager is SupabaseAuthManager) {
-    await (authManager as SupabaseAuthManager).beginPhoneAuth(
+  if (authManager is PhoneSignInManager) {
+    await (authManager as PhoneSignInManager).beginPhoneAuth(
       context: context,
       phoneNumber: phoneNumber,
       onCodeSent: onCodeSent,
@@ -93,8 +95,8 @@ Future<dynamic> verifySmsCode({
   required String smsCode,
   String? phoneNumber,
 }) async {
-  if (authManager is SupabaseAuthManager) {
-    return (authManager as SupabaseAuthManager).verifySmsCode(
+  if (authManager is PhoneSignInManager) {
+    return (authManager as PhoneSignInManager).verifySmsCode(
       context: context,
       smsCode: smsCode,
       phoneNumber: phoneNumber,
