@@ -1,10 +1,16 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '/api/shph_api.dart';
 
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import '/index.dart';
+import '/pages/booking_funnel/booking_models.dart';
 import '/services/bookings_service.dart';
 import '/theme/app_theme.dart';
 import 'booking_details_model.dart';
@@ -29,6 +35,8 @@ class BookingDetailsWidget extends StatefulWidget {
 class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
   late BookingDetailsModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  int? _sharedEtaMinutes;
+  Timer? _etaTimer;
 
   @override
   void initState() {
@@ -39,6 +47,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
 
   @override
   void dispose() {
+    _etaTimer?.cancel();
     _model.dispose();
     super.dispose();
   }
@@ -59,11 +68,9 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
           await BookingsService.instance.getBookingById(widget.bookingId!);
 
       if (booking != null) {
-        final service = await Supabase.instance.client
-            .from('service_listings')
-            .select()
-            .eq('id', booking.serviceListingId)
-            .maybeSingle();
+        final serviceResult =
+            await ShphServicesApi.instance.getListing(booking.serviceListingId);
+        final service = serviceResult.toJson();
 
         if (!mounted) {
           return;
@@ -130,6 +137,390 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
             content: Text('Failed to cancel booking'),
             backgroundColor: Colors.red,
           ),
+        );
+      }
+    }
+  }
+
+  Future<void> _rescheduleBooking() async {
+    final currentDate = _model.booking!.bookingDate;
+    final currentTime = _model.booking!.bookingTime;
+
+    final date = await showDatePicker(
+      context: context,
+      initialDate: currentDate.isAfter(DateTime.now()) ? currentDate : DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 180)),
+    );
+    if (date == null || !mounted) return;
+
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(
+        hour: int.tryParse(currentTime.split(':').first) ?? 9,
+        minute: int.tryParse(currentTime.split(':').last) ?? 0,
+      ),
+    );
+    if (time == null || !mounted) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reschedule Booking'),
+        content: Text(
+          'Change booking to ${date.month}/${date.day} at ${formatTimeOfDay(time)}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('No'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Yes'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    final success = await BookingsService.instance.rescheduleBooking(
+      _model.booking!.id,
+      newDate: '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
+      newTime: '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
+    );
+
+    if (!mounted) return;
+
+    if (success.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Booking rescheduled successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      _loadBookingDetails();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to reschedule booking'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _addTip() async {
+    final controller = TextEditingController();
+    final amount = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Add a Tip'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            hintText: 'Enter tip amount',
+            prefixText: 'PHP ',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, controller.text),
+            child: const Text('Send Tip'),
+          ),
+        ],
+      ),
+    );
+    if (amount == null || !mounted) return;
+    final parsed = double.tryParse(amount);
+    if (parsed == null || parsed <= 0) return;
+    try {
+      await ShphPaymentsApi.instance.tipBookingProvider(
+        _model.booking!.id,
+        amount: parsed,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tip sent!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to send tip: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _uploadCompletionPhoto() async {
+    final controller = TextEditingController();
+    final url = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Completion Photo'),
+        content: TextField(
+          controller: controller,
+          decoration: InputDecoration(
+            hintText: 'Paste photo URL or leave blank to skip',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+            child: const Text('Submit'),
+          ),
+        ],
+      ),
+    );
+    if (url == null || !mounted) return;
+    try {
+      if (url.isNotEmpty) {
+        final httpClient = HttpClient();
+        final request = await httpClient.getUrl(Uri.parse(url));
+        final response = await request.close();
+        final bytes = <int>[];
+        await for (final chunk in response) {
+          bytes.addAll(chunk);
+        }
+        await ShphBookingsApi.instance.completePhoto(
+          _model.booking!.id,
+          fileBytes: bytes,
+          fileName:
+              'completion_${DateTime.now().millisecondsSinceEpoch}.jpg',
+        );
+      }
+      await BookingsService.instance.updateBookingStatus(
+        _model.booking!.id,
+        'completed',
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Booking completed!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        _loadBookingDetails();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _approvePartsCost() async {
+    try {
+      await ShphBookingsApi.instance.approvePartsCost(_model.booking!.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Parts cost approved'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        _loadBookingDetails();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _rejectPartsCost() async {
+    final controller = TextEditingController();
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Reject Parts Cost'),
+        content: TextField(
+          controller: controller,
+          maxLines: 3,
+          decoration: InputDecoration(
+            hintText: 'Reason for rejection...',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+            child: const Text('Reject'),
+          ),
+        ],
+      ),
+    );
+    if (reason == null || !mounted) return;
+    try {
+      await ShphBookingsApi.instance.rejectPartsCost(
+        _model.booking!.id,
+        reason: reason.isNotEmpty ? reason : null,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Parts cost rejected'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        _loadBookingDetails();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _shareEta() async {
+    final controller = TextEditingController();
+    final minutes = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Share ETA'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            hintText: 'Estimated minutes until arrival',
+            suffixText: 'min',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, controller.text.trim()), child: const Text('Share')),
+        ],
+      ),
+    );
+    if (minutes == null || minutes.isEmpty || !mounted) return;
+    final parsed = int.tryParse(minutes);
+    if (parsed == null || parsed < 0) return;
+    try {
+      await ShphBookingsApi.instance.shareEta(_model.booking!.id, minutes: parsed);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('ETA shared with client'), backgroundColor: Colors.green),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to share ETA: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _viewInvoice() async {
+    if (_model.booking == null) return;
+    try {
+      final invoice = await ShphBookingsApi.instance.getInvoice(_model.booking!.id);
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Invoice'),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildInfoRow(ctx, 'Booking', _model.booking!.id.substring(0, 8)),
+                _buildInfoRow(ctx, 'Amount', 'PHP ${(_model.booking!.totalPrice ?? 0).toStringAsFixed(2)}'),
+                _buildInfoRow(ctx, 'Status', invoice['status']?.toString() ?? _model.booking!.paymentStatus ?? 'N/A'),
+                if (invoice['invoice_number'] != null)
+                  _buildInfoRow(ctx, 'Invoice #', invoice['invoice_number'].toString()),
+                if (invoice['issued_at'] != null)
+                  _buildInfoRow(ctx, 'Issued', invoice['issued_at'].toString()),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load invoice: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _getPaymentStatus() async {
+    if (_model.booking == null) return;
+    try {
+      final payment = await ShphPaymentsApi.instance.getBookingPayment(_model.booking!.id);
+      if (!mounted || payment.isEmpty) return;
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Payment Details'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildInfoRow(ctx, 'Status', payment['status']?.toString() ?? 'N/A'),
+              if (payment['amount'] != null)
+                _buildInfoRow(ctx, 'Amount', 'PHP ${(payment['amount'] as num).toStringAsFixed(2)}'),
+              if (payment['method'] != null)
+                _buildInfoRow(ctx, 'Method', payment['method'].toString()),
+              if (payment['paid_at'] != null)
+                _buildInfoRow(ctx, 'Paid At', payment['paid_at'].toString()),
+              if (payment['transaction_id'] != null)
+                _buildInfoRow(ctx, 'Transaction ID', payment['transaction_id'].toString()),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load payment details: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -250,13 +641,59 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                                       'Status',
                                       _formatStatus(_model.booking!.status),
                                     ),
-                                    _buildInfoRow(
-                                      context,
-                                      'Payment status',
-                                      _model.booking!.paymentStatus ?? 'Pending',
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 8),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              'Payment status',
+                                              style: AppTheme.of(context).bodyMedium.override(
+                                                    font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                                                    color: const Color(0xFF64748B),
+                                                  ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: GestureDetector(
+                                              onTap: _getPaymentStatus,
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                mainAxisAlignment: MainAxisAlignment.end,
+                                                children: [
+                                                  Text(
+                                                    _model.booking!.paymentStatus ?? 'Pending',
+                                                    style: AppTheme.of(context).bodyMedium.override(
+                                                          font: GoogleFonts.poppins(),
+                                                          color: _model.booking!.paymentStatus == 'paid' ? Colors.green : Colors.orange,
+                                                        ),
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Icon(Icons.info_outline, size: 14, color: Colors.grey.shade500),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ],
                                 ),
+                                if (_model.booking!.status != 'pending') ...[
+                                  const SizedBox(height: 12),
+                                  OutlinedButton.icon(
+                                    onPressed: _viewInvoice,
+                                    icon: const Icon(Icons.receipt_long_rounded, size: 18),
+                                    label: const Text('View Invoice'),
+                                    style: OutlinedButton.styleFrom(
+                                      minimumSize: const Size(double.infinity, 48),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                                    ),
+                                  ),
+                                ],
                                 if (_model.booking!.notes != null &&
                                     _model.booking!.notes!.isNotEmpty) ...[
                                   const SizedBox(height: 18),
@@ -280,7 +717,26 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                                 ],
                                 const SizedBox(height: 24),
                                 if (_model.booking!.status == 'pending' ||
-                                    _model.booking!.status == 'confirmed')
+                                    _model.booking!.status == 'confirmed') ...[
+                                  FFButtonWidget(
+                                    onPressed: _rescheduleBooking,
+                                    text: 'Reschedule',
+                                    options: FFButtonOptions(
+                                      width: double.infinity,
+                                      height: 54,
+                                      color: AppTheme.of(context).primary,
+                                      textStyle: AppTheme.of(context)
+                                          .titleSmall
+                                          .override(
+                                            color: Colors.white,
+                                            font: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                      borderRadius: BorderRadius.circular(18),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
                                   FFButtonWidget(
                                     onPressed: _cancelBooking,
                                     text: 'Cancel Booking',
@@ -299,9 +755,20 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                                       borderRadius: BorderRadius.circular(18),
                                     ),
                                   ),
+                                ],
                                 if (_model.booking!.status == 'completed')
                                   FFButtonWidget(
-                                    onPressed: () {},
+                                    onPressed: () async {
+                                      final providerId = _model.serviceListing?['provider_id'] as int?;
+                                      await context.pushNamed(
+                                        LeaveReviewWidget.routeName,
+                                        extra: {
+                                          'bookingId': _model.booking!.id,
+                                          'providerId': providerId ?? 0,
+                                        },
+                                      );
+                                      _loadBookingDetails();
+                                    },
                                     text: 'Leave a Review',
                                     options: FFButtonOptions(
                                       width: double.infinity,
@@ -318,6 +785,67 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                                       borderRadius: BorderRadius.circular(18),
                                     ),
                                   ),
+                                if (_model.booking!.status == 'completed') ...[
+                                  const SizedBox(height: 12),
+                                  FFButtonWidget(
+                                    onPressed: _addTip,
+                                    text: 'Add a Tip',
+                                    options: FFButtonOptions(
+                                      width: double.infinity,
+                                      height: 54,
+                                      color: const Color(0xFFF59E0B),
+                                      textStyle: AppTheme.of(context)
+                                          .titleSmall
+                                          .override(
+                                            color: Colors.white,
+                                            font: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                      borderRadius: BorderRadius.circular(18),
+                                    ),
+                                  ),
+                                ],
+                                if (_model.booking!.status == 'in_progress') ...[
+                                  const SizedBox(height: 12),
+                                  FFButtonWidget(
+                                    onPressed: _uploadCompletionPhoto,
+                                    text: 'Mark Complete with Photo',
+                                    options: FFButtonOptions(
+                                      width: double.infinity,
+                                      height: 54,
+                                      color: const Color(0xFF16A34A),
+                                      textStyle: AppTheme.of(context)
+                                          .titleSmall
+                                          .override(
+                                            color: Colors.white,
+                                            font: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                      borderRadius: BorderRadius.circular(18),
+                                    ),
+                                  ),
+                                ],
+                                if (_model.booking!.status == 'confirmed' ||
+                                    _model.booking!.status == 'in_progress') ...[
+                                  _buildPartsCostSection(context),
+                                  const SizedBox(height: 12),
+                                  FFButtonWidget(
+                                    onPressed: _shareEta,
+                                    text: 'Share ETA',
+                                    options: FFButtonOptions(
+                                      width: double.infinity,
+                                      height: 54,
+                                      color: const Color(0xFF3B82F6),
+                                      textStyle: AppTheme.of(context).titleSmall.override(
+                                        color: Colors.white,
+                                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                                      ),
+                                      borderRadius: BorderRadius.circular(18),
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
                           ),
@@ -617,6 +1145,66 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
           ],
         ),
       );
+
+  Widget _buildPartsCostSection(BuildContext context) {
+    final partsCost = _model.serviceListing?['parts_cost'];
+    final partsStatus = _model.serviceListing?['parts_status'];
+    if (partsCost == null || partsStatus != 'pending') {
+      return const SizedBox.shrink();
+    }
+    final amount = (partsCost as num).toDouble();
+    return Padding(
+      padding: const EdgeInsets.only(top: 18),
+      child: _buildSectionCard(
+        context,
+        title: 'Parts Cost Approval',
+        subtitle: 'The provider has submitted a parts cost for this job.',
+        children: [
+          _buildInfoRow(
+            context,
+            'Parts Cost',
+            'PHP ${amount.toStringAsFixed(2)}',
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: FFButtonWidget(
+                  onPressed: _approvePartsCost,
+                  text: 'Approve',
+                  options: FFButtonOptions(
+                    height: 48,
+                    color: const Color(0xFF16A34A),
+                    textStyle: AppTheme.of(context).bodySmall.override(
+                      color: Colors.white,
+                      font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FFButtonWidget(
+                  onPressed: _rejectPartsCost,
+                  text: 'Reject',
+                  options: FFButtonOptions(
+                    height: 48,
+                    color: AppTheme.of(context).error,
+                    textStyle: AppTheme.of(context).bodySmall.override(
+                      color: Colors.white,
+                      font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _imageFallback(BuildContext context) => Container(
         width: 92,

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/api/shph_api.dart';
 import '/components/back_button/back_button_model.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/chat_service.dart';
@@ -19,8 +20,11 @@ class ChatPageModel extends FlutterFlowModel<ChatPageWidget> {
   List<Map<String, dynamic>> messages = [];
   RealtimeChannel? _messagesChannel;
   bool isLoading = true;
+  bool peerIsTyping = false;
 
   bool _isClient = true;
+
+  Timer? _typingTimer;
 
   // Callback for widget rebuild
   VoidCallback? onStateChanged;
@@ -154,6 +158,15 @@ class ChatPageModel extends FlutterFlowModel<ChatPageWidget> {
     }
   }
 
+  void sendTypingIndicator(String roomId) {
+    _typingTimer?.cancel();
+    _typingTimer = Timer(const Duration(seconds: 2), () async {
+      try {
+        await ShphChatApi.instance.sendTypingIndicator(roomId);
+      } catch (_) {}
+    });
+  }
+
   // Send message to Supabase with optimistic UI
   Future<void> sendMessage(String content, String roomId) async {
     // Optimistic UI: Add message immediately to local list
@@ -180,6 +193,7 @@ class ChatPageModel extends FlutterFlowModel<ChatPageWidget> {
 
   @override
   void dispose() {
+    _typingTimer?.cancel();
     backButtonModel.dispose();
     // Cancel real-time subscription
     if (_messagesChannel != null) {

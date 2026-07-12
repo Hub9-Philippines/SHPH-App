@@ -12,8 +12,15 @@ class SignupModel extends FlutterFlowModel<SignupWidget> {
 
   bool isPhoneValid = false;
   bool isLoading = false;
+  bool isEmailValid = true;
+  String? errorMessage;
 
   ///  State fields for stateful widgets in this page.
+
+  // State field(s) for TabBar widget.
+  TabController? tabBarController;
+  int get tabBarCurrentIndex =>
+      tabBarController != null ? tabBarController!.index : 0;
 
   // State field(s) for PhoneField widget.
   FocusNode? phoneFieldFocusNode;
@@ -22,19 +29,38 @@ class SignupModel extends FlutterFlowModel<SignupWidget> {
   String? Function(BuildContext, String?)? phoneFieldTextControllerValidator;
   // Stores action output result for [Backend Call - Query Rows] action in Button widget.
   List<ProfilesRow>? isPhoneExists;
-  String? errorMessage;
+
+  // State field(s) for EmailTextField widget.
+  FocusNode? emailTextFieldFocusNode;
+  TextEditingController? emailTextFieldTextController;
+  String? Function(BuildContext, String?)?
+      emailTextFieldTextControllerValidator;
+  // State field(s) for PasswordTextField widget.
+  FocusNode? passwordTextFieldFocusNode;
+  TextEditingController? passwordTextFieldTextController;
+  late bool passwordTextFieldVisibility;
+  String? Function(BuildContext, String?)?
+      passwordTextFieldTextControllerValidator;
   // Model for backButton component.
   late BackButtonModel backButtonModel;
 
   @override
   void initState(BuildContext context) {
+    passwordTextFieldVisibility = false;
     backButtonModel = createModel(context, BackButtonModel.new);
   }
 
   @override
   void dispose() {
+    tabBarController?.dispose();
     phoneFieldFocusNode?.dispose();
     phoneFieldTextController?.dispose();
+
+    emailTextFieldFocusNode?.dispose();
+    emailTextFieldTextController?.dispose();
+
+    passwordTextFieldFocusNode?.dispose();
+    passwordTextFieldTextController?.dispose();
 
     backButtonModel.dispose();
   }

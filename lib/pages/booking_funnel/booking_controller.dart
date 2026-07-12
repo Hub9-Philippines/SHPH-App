@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '/app_state.dart';
 import '/models/service_listing.dart';
+import '/services/bookings_service.dart';
 import '/services/logging_service.dart';
 import '/services/nearby_pro_mock_data.dart';
 import '/utils/geo_utils.dart';
@@ -42,6 +43,8 @@ class BookingFlowController extends ChangeNotifier {
   bool _isLoadingData;
   bool get isLoadingData => _isLoadingData;
 
+  Map<String, dynamic>? _estimate;
+
   bool isSubmitting = false;
   bool liveSearchTimedOut = false;
   bool isMatchingActive = false;
@@ -49,6 +52,28 @@ class BookingFlowController extends ChangeNotifier {
   String? lastError;
 
   BookingDraft get draft => _draft;
+
+  Future<void> loadEstimate() async {
+    final listingId = _draft.serviceListingId;
+    if (listingId == null) return;
+
+    try {
+      final result = await BookingsService.instance.estimateBooking(
+        listingId: listingId,
+        scheduledDate: _draft.scheduledDate
+            ?.toIso8601String()
+            .split('T')
+            .first,
+        scheduledTime: _draft.scheduledTime != null
+            ? '${_draft.scheduledTime!.hour.toString().padLeft(2, '0')}:${_draft.scheduledTime!.minute.toString().padLeft(2, '0')}'
+            : null,
+      );
+      _estimate = result;
+      notifyListeners();
+    } catch (_) {
+      // Silently fall back to local estimate
+    }
+  }
 
   void setService(ServiceListing service) {
     _draft = _draft.copyWith(
@@ -64,6 +89,22 @@ class BookingFlowController extends ChangeNotifier {
   }
 
   BookingQuote get quote {
+    if (_estimate != null) {
+      final apiTotal = (_estimate!['total_price'] as num?)?.toDouble();
+      final apiBase = (_estimate!['base_price'] as num?)?.toDouble();
+      final apiAdjustments =
+          (_estimate!['adjustments'] as num?)?.toDouble();
+      if (apiTotal != null) {
+        return BookingQuote(
+          basePrice: apiBase ?? _draft.serviceBasePrice ?? 599.0,
+          roomSubtotal: 0,
+          cleaningTypeAdjustment: apiAdjustments ?? 0,
+          urgencyAdjustment: 0,
+          total: apiTotal,
+        );
+      }
+    }
+
     final base = _draft.serviceBasePrice ?? 599.0;
     final roomIncrement = (base * 0.18).clamp(90.0, 320.0);
     final roomSubtotal = (_draft.rooms - 1) * roomIncrement;

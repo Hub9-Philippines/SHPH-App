@@ -3,12 +3,14 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import '/api/shph_api.dart';
 import '/auth/supabase_auth/auth_util.dart';
 import '/backend/supabase/supabase.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/upload_data.dart';
 import '/index.dart';
+import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
 import 'profile_model.dart';
 
@@ -60,17 +62,24 @@ class _ProfileWidgetState extends State<ProfileWidget> {
         if (!snapshot.hasData) {
           return Scaffold(
             backgroundColor: const Color(0xFFF5F7FA),
-            appBar: AppBar(
-              backgroundColor: const Color(0xFFF5F7FA),
-              automaticallyImplyLeading: false,
-              title: Text(
-                'Profile',
-                style: AppTheme.of(context).titleLarge,
+              appBar: AppBar(
+                backgroundColor: const Color(0xFFF5F7FA),
+                automaticallyImplyLeading: false,
+                title: Text(
+                  'Profile',
+                  style: AppTheme.of(context).titleLarge,
+                ),
+                centerTitle: true,
+                elevation: 0,
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.refresh),
+                    tooltip: 'Refresh Profile',
+                    onPressed: _refreshProfile,
+                  ),
+                ],
               ),
-              centerTitle: true,
-              elevation: 0,
-            ),
-            body: const SingleChildScrollView(
+              body: const SingleChildScrollView(
               child: Column(
                 children: [
                   ProfileHeaderSkeleton(),
@@ -99,6 +108,13 @@ class _ProfileWidgetState extends State<ProfileWidget> {
               ),
               centerTitle: true,
               elevation: 0,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  tooltip: 'Refresh Profile',
+                  onPressed: _refreshProfile,
+                ),
+              ],
             ),
             body: Center(
               child: Text(
@@ -158,6 +174,31 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                       'Add cards and manage checkout options',
                                   onTap: () => context.pushNamed(
                                       PaymentMethodsWidget.routeName),
+                                ),
+                                _ProfileMenuTile(
+                                  icon: Icons.swap_horiz_rounded,
+                                  iconTint: const Color(0xFF0F8A6C),
+                                  title: 'Become a Provider',
+                                  subtitle:
+                                      'Switch to pro account and offer services',
+                                  onTap: () async {
+                                    try {
+                                      await ShphUsersApi.instance.applyProvider({'role': 'pro'});
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('Provider application submitted!')),
+                                        );
+                                        context.pushReplacementNamed(EKYCBeginWidget.routeName);
+                                      }
+                                    } catch (e) {
+                                      LoggingService.error('Apply provider failed: $e', tag: 'Profile');
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Error: ${e.toString()}')),
+                                        );
+                                      }
+                                    }
+                                  },
                                 ),
                               ],
                             ),
@@ -701,6 +742,27 @@ class _ProfileWidgetState extends State<ProfileWidget> {
     GoRouter.of(context).clearRedirectLocation();
 
     context.goNamedAuth(SplashWidget.routeName, context.mounted);
+  }
+
+  Future<void> _refreshProfile() async {
+    try {
+      final userData = await ShphAuthApi.instance.getCurrentUser();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Profile refreshed: ${userData['email'] ?? userData['username'] ?? 'OK'}'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        setState(() {});
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Refresh failed: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 }
 

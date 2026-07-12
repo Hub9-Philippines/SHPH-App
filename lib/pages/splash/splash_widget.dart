@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:lottie/lottie.dart';
 
+import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
+
+import '/api/shph_api.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import '/theme/app_theme.dart';
@@ -36,6 +39,21 @@ class _SplashWidgetState extends State<SplashWidget> {
           milliseconds: 3000,
         ),
       );
+
+      // Migrate existing Supabase session to SHPH API
+      try {
+        final session = supabase.Supabase.instance.client.auth.currentSession;
+        if (session != null) {
+          final token = session.accessToken;
+          if (token.isNotEmpty) {
+            await ShphAuthApi.instance.supabaseExchange(
+              accessToken: token,
+            );
+          }
+        }
+      } catch (_) {
+        // Silently continue if exchange fails — user can log in fresh
+      }
 
       // Check if onboarding has been completed
       final hasCompletedOnboarding = FFAppState().hasCompletedOnboarding;

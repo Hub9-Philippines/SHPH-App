@@ -18,11 +18,14 @@ export '/pages/create_profile/create_profile_widget.dart'
     show CreateProfileWidget;
 export '/pages/e_k_y_c_begin/e_k_y_c_begin_widget.dart' show EKYCBeginWidget;
 export '/pages/edit_profile/edit_profile_widget.dart' show EditProfileWidget;
+export '/pages/email_verify_register/email_verify_register_widget.dart'
+    show EmailVerifyRegisterWidget;
 export '/pages/favorites/favorites_widget.dart' show FavoritesWidget;
 export '/pages/forgot_password/forgot_password_widget.dart'
     show ForgotPasswordWidget;
 export '/pages/language_settings/language_settings_widget.dart'
     show LanguageSettingsWidget;
+export '/pages/leave_review/leave_review_widget.dart' show LeaveReviewWidget;
 export '/pages/my_notifications/my_notifications_widget.dart'
     show MyNotificationsWidget;
 export '/pages/my_reviews/my_reviews_widget.dart' show MyReviewsWidget;
@@ -90,3 +93,5 @@ export 'pages/tm_flow/tm_rating_screen.dart' show TMRatingScreen;
 export 'pages/tm_flow/tm_sub_category_screen.dart' show TMSubCategoryScreen;
 export 'pages/help/help_page.dart' show HelpPage;
 export 'pages/help/chatbot_page.dart' show ChatbotPage;
+export 'pages/availability_calendar/availability_calendar_widget.dart'
+    show AvailabilityCalendarWidget;

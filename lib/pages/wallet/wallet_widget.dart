@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/api/shph_api.dart';
 import '/services/logging_service.dart';
-import '/services/wallet_service.dart';
 import '/theme/app_theme.dart';
 
 class WalletWidget extends StatefulWidget {
@@ -19,7 +20,6 @@ class _WalletWidgetState extends State<WalletWidget> {
   double _balance = 0.0;
   List<Map<String, dynamic>> _transactions = [];
   bool _isLoading = true;
-  final _service = WalletService.instance;
 
   @override
   void initState() {
@@ -30,14 +30,33 @@ class _WalletWidgetState extends State<WalletWidget> {
   Future<void> _load() async {
     setState(() => _isLoading = true);
     try {
-      final data = await _service.getWallet();
-      _balance = (data['balance'] as num).toDouble();
-      _transactions =
-          (data['transactions'] as List).cast<Map<String, dynamic>>();
+      final data = await ShphWalletApi.instance.getWallet();
+      if (!mounted) return;
+
+      List<Map<String, dynamic>> transactions = [];
+      try {
+        final txData = await ShphWalletApi.instance.listTransactions();
+        if (txData['results'] is List) {
+          transactions = (txData['results'] as List).cast<Map<String, dynamic>>();
+        } else if (txData['transactions'] is List) {
+          transactions = (txData['transactions'] as List).cast<Map<String, dynamic>>();
+        }
+      } catch (_) {
+        if (data['recent_transactions'] is List) {
+          transactions = (data['recent_transactions'] as List).cast<Map<String, dynamic>>();
+        }
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _balance = (data['balance'] as num?)?.toDouble() ?? 0.0;
+        _transactions = transactions;
+        _isLoading = false;
+      });
     } catch (e) {
       LoggingService.error('Wallet load error: $e', tag: 'Wallet');
+      if (mounted) setState(() => _isLoading = false);
     }
-    if (mounted) setState(() => _isLoading = false);
   }
 
   String _currency(double v) => 'PHP ${v.toStringAsFixed(2)}';
@@ -98,13 +117,37 @@ class _WalletWidgetState extends State<WalletWidget> {
 
     if (amount == null || !mounted) return;
 
-    final success = await _service.topUp(
-      amount: amount,
-      description: 'Wallet top-up via PayMongo',
-    );
+    try {
+      final intent = await ShphWalletApi.instance.createTopUpIntent(
+        amount: (amount * 100).round(),
+        currency: 'PHP',
+      );
 
-    if (!mounted) return;
-    if (success) {
+      final clientSecret = intent['client_secret'] as String?;
+      if (clientSecret == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to initialize top-up.')),
+          );
+        }
+        return;
+      }
+
+      await Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: SetupPaymentSheetParameters(
+          paymentIntentClientSecret: clientSecret,
+          merchantDisplayName: 'SerbisyoHub',
+        ),
+      );
+
+      await Stripe.instance.presentPaymentSheet();
+
+      final paymentIntentId = clientSecret.split('_secret_').first;
+      await ShphWalletApi.instance.confirmTopUp(
+        paymentIntentId: paymentIntentId,
+      );
+
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Wallet topped up successfully!'),
@@ -112,10 +155,12 @@ class _WalletWidgetState extends State<WalletWidget> {
         ),
       );
       _load();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Top-up failed. Please try again.')),
-      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Top-up failed: $e')),
+        );
+      }
     }
   }
 
@@ -278,9 +323,84 @@ class _WalletWidgetState extends State<WalletWidget> {
             icon: Icons.history_rounded,
             label: 'History',
             color: const Color(0xFF2563EB),
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Scroll down to view history')),
+            onTap: () async {
+              try {
+                final txData = await ShphWalletApi.instance.listTransactions();
+                if (!mounted) return;
+                List<Map<String, dynamic>> txs = [];
+                if (txData['results'] is List) {
+                  txs = (txData['results'] as List).cast<Map<String, dynamic>>();
+                } else if (txData['transactions'] is List) {
+                  txs = (txData['transactions'] as List).cast<Map<String, dynamic>>();
+                }
+                setState(() => _transactions = txs);
+              } catch (_) {}
+              if (!mounted) return;
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                builder: (ctx) => DraggableScrollableSheet(
+                  initialChildSize: 0.8,
+                  builder: (_, scrollController) => Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.history, size: 24),
+                            const SizedBox(width: 8),
+                            const Text('Transaction History', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                            const Spacer(),
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () => Navigator.pop(ctx),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Divider(),
+                      Expanded(
+                        child: _transactions.isEmpty
+                            ? const Center(child: Text('No transactions yet'))
+                            : ListView.separated(
+                                controller: scrollController,
+                                padding: const EdgeInsets.all(16),
+                                itemCount: _transactions.length,
+                                separatorBuilder: (_, __) => const Divider(height: 1),
+                                itemBuilder: (context, index) {
+                                  final tx = _transactions[index];
+                                  final type = tx['type']?.toString() ?? 'Unknown';
+                                  final amount = (tx['amount'] as num?)?.toDouble() ?? 0.0;
+                                  final desc = tx['description']?.toString() ?? tx['notes']?.toString() ?? '';
+                                  final date = tx['created_at']?.toString() ?? tx['date']?.toString() ?? '';
+                                  final isCredit = amount > 0;
+                                  return ListTile(
+                                    leading: CircleAvatar(
+                                      backgroundColor: isCredit ? Colors.green.shade100 : Colors.red.shade100,
+                                      child: Icon(
+                                        isCredit ? Icons.arrow_downward : Icons.arrow_upward,
+                                        color: isCredit ? Colors.green : Colors.red,
+                                      ),
+                                    ),
+                                    title: Text(type, style: const TextStyle(fontWeight: FontWeight.w600)),
+                                    subtitle: Text('$desc\n$date', maxLines: 2),
+                                    trailing: Text(
+                                      '${isCredit ? '+' : ''}PHP ${amount.toStringAsFixed(2)}',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: isCredit ? Colors.green : Colors.red,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
               );
             },
           ),

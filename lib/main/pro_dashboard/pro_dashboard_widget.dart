@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/api/shph_api.dart';
+import '/auth/auth_manager_factory.dart';
 import '/backend/supabase/database/tables/payment_methods.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
@@ -3052,28 +3054,10 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
   }
 
   Future<void> _loadProfile() async {
-    if (mounted) {
-      setState(() => isLoading = true);
-    }
+    if (mounted) setState(() => isLoading = true);
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) {
-        if (mounted) {
-          setState(() => isLoading = false);
-        }
-        return;
-      }
-
-      final response = await Supabase.instance.client
-          .from('profiles')
-          .select()
-          .eq('id', userId)
-          .single();
-
-      if (!mounted) {
-        return;
-      }
-
+      final response = await ShphUsersApi.instance.getMe();
+      if (!mounted) return;
       setState(() {
         profileData = response;
         isAvailable = response['is_available'] as bool? ?? true;
@@ -3082,46 +3066,23 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
         isLoading = false;
       });
     } catch (e) {
-      LoggingService.error('Error loading provider profile: $e',
-          tag: 'ProProfile');
-      if (!mounted) {
-        return;
-      }
+      LoggingService.error('Error loading provider profile: $e', tag: 'ProProfile');
+      if (!mounted) return;
       setState(() => isLoading = false);
     }
   }
 
   Future<void> _updateAvailability(bool value) async {
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) {
-        return;
-      }
-
-      await Supabase.instance.client
-          .from('profiles')
-          .update({'is_available': value}).eq('id', userId);
-
-      if (!mounted) {
-        return;
-      }
-
+      await ShphUsersApi.instance.updateMe({'is_available': value});
+      if (!mounted) return;
       setState(() => isAvailable = value);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            value
-                ? 'You are live and visible to customers.'
-                : 'You are paused for new requests.',
-          ),
-        ),
+        SnackBar(content: Text(value ? 'You are live and visible to customers.' : 'You are paused for new requests.')),
       );
     } catch (e) {
-      LoggingService.error('Error updating provider availability: $e',
-          tag: 'ProProfile');
-      if (!mounted) {
-        return;
-      }
+      LoggingService.error('Error updating provider availability: $e', tag: 'ProProfile');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Unable to update availability right now')),
       );
@@ -3131,43 +3092,23 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
   Future<void> _saveHourlyRate() async {
     final parsedRate = double.tryParse(_rateController.text.trim());
     if (parsedRate == null || parsedRate <= 0) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Enter a valid hourly rate')),
       );
       return;
     }
-
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) {
-        return;
-      }
-
       setState(() => _isSavingRate = true);
-      await Supabase.instance.client
-          .from('profiles')
-          .update({'hourly_rate': parsedRate}).eq('id', userId);
-
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        hourlyRate = parsedRate;
-        _isSavingRate = false;
-      });
+      await ShphUsersApi.instance.updateMe({'hourly_rate': parsedRate});
+      if (!mounted) return;
+      setState(() { hourlyRate = parsedRate; _isSavingRate = false; });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Hourly rate updated')),
       );
     } catch (e) {
-      LoggingService.error('Error updating provider hourly rate: $e',
-          tag: 'ProProfile');
-      if (!mounted) {
-        return;
-      }
+      LoggingService.error('Error updating provider hourly rate: $e', tag: 'ProProfile');
+      if (!mounted) return;
       setState(() => _isSavingRate = false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Unable to update hourly rate right now')),
@@ -3180,48 +3121,44 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Row(
-          children: [
-            Icon(Icons.logout, color: Colors.red),
-            SizedBox(width: 8),
-            Text('Log Out'),
-          ],
+          children: [Icon(Icons.logout, color: Colors.red), SizedBox(width: 8), Text('Log Out')],
         ),
-        content: const Text(
-          'Are you sure you want to log out? You will need to sign in again to access your account.',
-        ),
+        content: const Text('Are you sure you want to log out? You will need to sign in again to access your account.'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
-            ),
-            child: const Text('Log Out'),
-          ),
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(true), style: TextButton.styleFrom(foregroundColor: Colors.red), child: const Text('Log Out')),
         ],
       ),
     );
-
-    if (shouldLogout != true) {
-      return;
-    }
-
+    if (shouldLogout != true) return;
     try {
-      await Supabase.instance.client.auth.signOut();
-      if (mounted) {
-        context.go('/');
-      }
+      final authManager = AuthManagerFactory.instance;
+      await authManager.signOut();
+      if (mounted) context.go('/');
     } catch (e) {
       LoggingService.error('Error logging out provider: $e', tag: 'ProProfile');
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Unable to log out right now')),
       );
+    }
+  }
+
+  Future<void> _enableClientMode() async {
+    try {
+      await ShphUsersApi.instance.enableClient();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Switched to client mode')),
+        );
+        context.go('/');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to switch: $e')),
+        );
+      }
     }
   }
 
@@ -3833,6 +3770,22 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                             Icons.info_outline,
                             'About',
                             () => context.pushNamed(AboutWidget.routeName),
+                          ),
+                          const SizedBox(height: 16),
+                          // Switch to Client Button
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: _enableClientMode,
+                              icon: const Icon(Icons.switch_account_rounded),
+                              label: const Text('Switch to Client'),
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: const Size.fromHeight(56),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                              ),
+                            ),
                           ),
                           const SizedBox(height: 16),
                           // Logout Button

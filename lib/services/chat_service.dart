@@ -213,6 +213,22 @@ class ChatService {
     String? providerName,
     String? providerPhoto,
   }) async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final thread = await _chatApi.createDirectThread(
+          participantId: providerId,
+        );
+        if (thread != null && thread.isNotEmpty) {
+          return thread;
+        }
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API createDirectThread failed, falling back: $e',
+          tag: 'ChatService',
+        );
+      }
+    }
+
     final currentUserId = _supabase.auth.currentUser?.id;
     if (currentUserId == null || providerId.isEmpty) {
       return null;

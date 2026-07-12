@@ -266,7 +266,7 @@ class ServiceListingService {
     return await updateListing(id: id, isAvailable: true);
   }
 
-  Future<String?> uploadListingImage(int listingId, File imageFile) async {
+  Future<String?> uploadListingImageFile(int listingId, File imageFile) async {
     try {
       final fileName =
           '$listingId-${DateTime.now().millisecondsSinceEpoch}.jpg';
@@ -324,5 +324,33 @@ class ServiceListingService {
           tag: 'ServiceListingService');
       return false;
     }
+  }
+
+  // ── API-based methods ─────────────────────────────────────────
+
+  Future<Map<String, dynamic>> createServiceListing(
+      Map<String, dynamic> payload) async {
+    final listing = await ShphServicesApi.instance.createListing(payload);
+    return listing.toJson();
+  }
+
+  Future<Map<String, dynamic>> uploadListingImage(
+    int listingId, {
+    required List<int> fileBytes,
+    required String fileName,
+  }) async {
+    return ShphServicesApi.instance.uploadListingImage(
+      listingId,
+      fileBytes: fileBytes,
+      fileName: fileName,
+    );
+  }
+
+  Future<void> deleteListingImageById(int listingId, int imageId) async {
+    await ShphServicesApi.instance.deleteListingImage(listingId, imageId);
+  }
+
+  Future<List<Map<String, dynamic>>> listSubcategories(int categoryId) async {
+    return ShphServicesApi.instance.listSubcategories(categoryId);
   }
 }

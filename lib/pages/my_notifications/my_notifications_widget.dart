@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/api/bridges/api_row_mapper.dart';
+import '/api/shph_api.dart';
 import '/auth/supabase_auth/auth_util.dart';
 import '/backend/supabase/supabase.dart';
 import '/components/back_button/back_button_widget.dart';
@@ -109,6 +111,23 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
       return [];
     }
 
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final resp = await ShphNotificationsApi.instance.listNotifications();
+        final items = resp['results'];
+        final list = items is List ? items : (resp is List ? resp : <dynamic>[]);
+        return (list as List<dynamic>)
+            .cast<Map<String, dynamic>>()
+            .map((e) => NotificationsRow(_normalizeNotificationData(e)))
+            .toList();
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API listNotifications failed, falling back: $e',
+          tag: 'Notifications',
+        );
+      }
+    }
+
     try {
       return await NotificationsTable().queryRows(
         queryFn: (q) => q
@@ -124,6 +143,22 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
       );
       rethrow;
     }
+  }
+
+  Map<String, dynamic> _normalizeNotificationData(Map<String, dynamic> data) {
+    return {
+      'id': data['id']?.toString() ?? '',
+      'user_id': data['user_id']?.toString() ?? currentUserUid,
+      'title': data['title'] ?? '',
+      'body': data['body'] ?? data['message'],
+      'type': data['type'] ?? 'system',
+      'is_read': data['is_read'] ?? data['isRead'] ?? false,
+      'image_url': data['image_url'] ?? data['image'],
+      'action_url': data['action_url'] ?? data['actionUrl'],
+      'metadata': data['metadata'] ?? data['meta'] ?? {},
+      'created_at': data['created_at'] ?? data['createdAt'] ?? DateTime.now().toIso8601String(),
+      'read_at': data['read_at'] ?? data['readAt'],
+    };
   }
 
   Future<void> _markAsRead(
@@ -158,6 +193,19 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
 
     safeSetState(() => _isMarkingAllRead = true);
     try {
+      if (await ApiRowMapper.canUseApi()) {
+        try {
+          await ShphNotificationsApi.instance.markAllRead();
+          await _refreshNotifications();
+          return;
+        } catch (e) {
+          LoggingService.error(
+            'SHPH API markAllRead failed, falling back: $e',
+            tag: 'Notifications',
+          );
+        }
+      }
+
       await NotificationsTable().update(
         data: {
           'is_read': true,

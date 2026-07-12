@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/services/disputes_service.dart';
+import '/api/shph_api.dart';
 import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
 
@@ -20,7 +20,6 @@ class _NotificationPreferencesWidgetState
     extends State<NotificationPreferencesWidget> {
   Map<String, dynamic> _prefs = {};
   bool _isLoading = true;
-  final _service = NotificationPreferencesService.instance;
 
   @override
   void initState() {
@@ -31,24 +30,36 @@ class _NotificationPreferencesWidgetState
   Future<void> _load() async {
     setState(() => _isLoading = true);
     try {
-      _prefs = await _service.getPreferences();
+      _prefs = await ShphUsersApi.instance.getNotificationPreferences();
     } catch (e) {
       LoggingService.error('Notif prefs load error: $e', tag: 'NotifPrefs');
+      _prefs = _defaults();
     }
     if (mounted) setState(() => _isLoading = false);
   }
 
   Future<void> _toggle(String key, bool value) async {
     setState(() => _prefs[key] = value);
-    final success = await _service.updatePreferences({key: value});
-    if (!mounted) return;
-    if (!success) {
+    try {
+      await ShphUsersApi.instance.updateNotificationPreferences({key: value});
+    } catch (e) {
+      if (!mounted) return;
       setState(() => _prefs[key] = !value);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Failed to update preference')),
       );
     }
   }
+
+  Map<String, dynamic> _defaults() => {
+    'push_enabled': true,
+    'email_enabled': true,
+    'sms_enabled': false,
+    'booking_updates': true,
+    'payment_updates': true,
+    'promo_offers': false,
+    'provider_alerts': true,
+  };
 
   @override
   Widget build(BuildContext context) {

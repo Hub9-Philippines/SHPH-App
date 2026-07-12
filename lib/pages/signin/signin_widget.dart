@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
 
+import '/api/shph_api.dart';
 import '/auth/post_auth_navigation_flow.dart';
 import '/auth/supabase_auth/auth_util.dart';
 import '/components/back_button/back_button_widget.dart';
@@ -330,47 +331,68 @@ class _SigninWidgetState extends State<SigninWidget>
                       !_model.isPhoneValid)
                   ? null
                   : () async {
-                      _model.errorMessage = null;
-                      _model.isPhoneLoginLoading = true;
-                      safeSetState(() {});
-                      final phoneNumberVal =
-                          _model.phoneFieldTextController.text;
-                      if (phoneNumberVal.isEmpty ||
-                          !phoneNumberVal.startsWith('+')) {
-                        _model.isPhoneLoginLoading = false;
-                        _model.errorMessage =
-                            'Phone Number is required and has to start with +.';
-                        safeSetState(() {});
-                        if (!context.mounted) return;
+                      final phone = _model.phoneFieldTextController.text.trim();
+                      if (phone.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text(
-                                'Phone Number is required and has to start with +.'),
-                          ),
+                              content:
+                                  Text('Please enter your phone number')),
                         );
                         return;
                       }
                       try {
-                        await beginPhoneAuth(
+                        await ShphAuthApi.instance
+                            .sendPhoneLoginOtp(phoneNumber: phone);
+                        if (!mounted) return;
+
+                        final codeController = TextEditingController();
+                        final code = await showDialog<String>(
                           context: context,
-                          phoneNumber: phoneNumberVal,
-                          onCodeSent: (context) async {
-                            if (!context.mounted) return;
-                            context.goNamedAuth(
-                              PhoneVerifyUserWidget.routeName,
-                              context.mounted,
-                              ignoreRedirect: true,
-                            );
-                          },
+                          builder: (ctx) => AlertDialog(
+                            title: const Text('Enter OTP'),
+                            content: TextField(
+                              controller: codeController,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                hintText:
+                                    'Enter the OTP sent to your phone',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx),
+                                child: const Text('Cancel'),
+                              ),
+                              FilledButton(
+                                onPressed: () => Navigator.pop(
+                                    ctx, codeController.text.trim()),
+                                child: const Text('Verify'),
+                              ),
+                            ],
+                          ),
                         );
+                        if (code == null || code.isEmpty || !mounted) return;
+
+                        setState(
+                            () => _model.isPhoneLoginLoading = true);
+                        await ShphAuthApi.instance.verifyPhoneLoginOtp(
+                          phoneNumber: phone,
+                          code: code,
+                        );
+                        if (!mounted) return;
+                        setState(
+                            () => _model.isPhoneLoginLoading = false);
+
+                        context.goNamed('Home');
                       } catch (e) {
-                        _model.isPhoneLoginLoading = false;
-                        _model.errorMessage =
-                            'An error occurred. Please try again.';
-                        safeSetState(() {});
-                        if (!context.mounted) return;
+                        if (!mounted) return;
+                        setState(
+                            () => _model.isPhoneLoginLoading = false);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error: ${e.toString()}')),
+                          SnackBar(
+                              content: Text(
+                                  'Phone login failed: $e')),
                         );
                       }
                     },

@@ -240,6 +240,18 @@ class AppRouter {
             builder: (context, state) => const PhoneVerifyUserWidget(),
           ),
           GoRoute(
+            path: EmailVerifyRegisterWidget.routePath,
+            name: EmailVerifyRegisterWidget.routeName,
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return EmailVerifyRegisterWidget(
+                email: extra?['email'] as String? ?? '',
+                password: extra?['password'] as String? ?? '',
+                role: extra?['role'] as String?,
+              );
+            },
+          ),
+          GoRoute(
             path: ProfileWidget.routePath,
             name: ProfileWidget.routeName,
             builder: (context, state) {
@@ -527,6 +539,11 @@ class AppRouter {
             builder: (context, state) => const MyServicesWidget(),
           ),
           GoRoute(
+            path: AvailabilityCalendarWidget.routePath,
+            name: AvailabilityCalendarWidget.routeName,
+            builder: (context, state) => const AvailabilityCalendarWidget(),
+          ),
+          GoRoute(
             path: AdminDashboardWidget.routePath,
             name: AdminDashboardWidget.routeName,
             builder: (context, state) => const AdminDashboardWidget(),
@@ -692,6 +709,17 @@ class AppRouter {
             path: TermsOfServiceWidget.routePath,
             name: TermsOfServiceWidget.routeName,
             builder: (context, state) => const TermsOfServiceWidget(),
+          ),
+          GoRoute(
+            path: LeaveReviewWidget.routePath,
+            name: LeaveReviewWidget.routeName,
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return LeaveReviewWidget(
+                bookingId: extra?['bookingId'] as String? ?? '',
+                providerId: extra?['providerId'] as int? ?? 0,
+              );
+            },
           ),
           GoRoute(
             path: GeographicSelectionWidget.routePath,

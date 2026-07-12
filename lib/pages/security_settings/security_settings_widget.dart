@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/api/shph_api.dart';
 import '/backend/supabase/supabase.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -30,7 +31,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
   final _mfaCodeController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  List<UserIdentity> _sessions = [];
+  List<Map<String, dynamic>> _sessions = [];
   bool _isLoadingSessions = true;
   bool _isChangingPassword = false;
   bool _isProcessingMfa = false;
@@ -59,17 +60,16 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
   }
 
   Future<void> _changePassword() async {
-    if (!_formKey.currentState!.validate() || _isChangingPassword) {
-      return;
-    }
-
+    if (!_formKey.currentState!.validate() || _isChangingPassword) return;
     setState(() => _isChangingPassword = true);
     try {
-      final response = await SupaFlow.client.auth.updateUser(
-        UserAttributes(password: _newPasswordController.text.trim()),
+      await ShphAuthApi.instance.confirmPasswordReset(
+        payload: {
+          'password': _newPasswordController.text.trim(),
+          'confirm_password': _newPasswordController.text.trim(),
+        },
       );
-
-      if (response.user != null && mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Password changed successfully')),
         );
@@ -78,44 +78,75 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
         _confirmPasswordController.clear();
       }
     } catch (e, stackTrace) {
-      LoggingService.error(
-        'Error changing password',
-        tag: 'SecuritySettings',
-        error: e,
-        stackTrace: stackTrace,
-      );
+      LoggingService.error('Error changing password', tag: 'SecuritySettings', error: e, stackTrace: stackTrace);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error changing password: $e')),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isChangingPassword = false);
-      }
+      if (mounted) setState(() => _isChangingPassword = false);
     }
   }
 
   Future<void> _loadSessions() async {
     try {
-      final response = await SupaFlow.client.auth.getUser();
-      if (!mounted) {
-        return;
-      }
-
+      final sessions = await ShphAuthApi.instance.listSessions();
+      if (!mounted) return;
       setState(() {
-        _sessions = response.user?.identities ?? [];
+        _sessions = sessions;
         _isLoadingSessions = false;
       });
     } catch (e, stackTrace) {
-      LoggingService.error(
-        'Error loading sessions',
-        tag: 'SecuritySettings',
-        error: e,
-        stackTrace: stackTrace,
-      );
+      LoggingService.error('Error loading sessions', tag: 'SecuritySettings', error: e, stackTrace: stackTrace);
+      if (mounted) setState(() => _isLoadingSessions = false);
+    }
+  }
+
+  Future<void> _revokeSession(String sessionId) async {
+    try {
+      await ShphAuthApi.instance.revokeSession(sessionId);
       if (mounted) {
-        setState(() => _isLoadingSessions = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Session revoked')),
+        );
+        _loadSessions();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to revoke session: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _revokeAllSessions() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Revoke All Sessions'),
+        content: const Text('This will sign you out of all other devices. Continue?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Revoke All')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await ShphAuthApi.instance.revokeAllSessions();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('All other sessions revoked')),
+        );
+        _loadSessions();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to revoke sessions: $e')),
+        );
       }
     }
   }
@@ -710,18 +741,34 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                       : _sessions.isEmpty
                           ? _buildEmptySessions()
                           : Column(
-                              children: _sessions.asMap().entries.map((entry) {
-                                return Padding(
-                                  padding: EdgeInsets.only(
-                                    bottom:
-                                        entry.key == _sessions.length - 1 ? 0 : 12,
+                              children: [
+                                ..._sessions.asMap().entries.map((entry) {
+                                  return Padding(
+                                    padding: EdgeInsets.only(
+                                      bottom: entry.key == _sessions.length - 1 ? 0 : 12,
+                                    ),
+                                    child: _buildSessionCard(
+                                      session: entry.value,
+                                      isCurrent: entry.key == 0,
+                                    ),
+                                  );
+                                }).toList(),
+                                const SizedBox(height: 12),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: OutlinedButton.icon(
+                                    onPressed: _revokeAllSessions,
+                                    icon: const Icon(Icons.logout_rounded, size: 18),
+                                    label: const Text('Revoke All Other Sessions'),
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: Colors.red,
+                                      side: const BorderSide(color: Colors.red),
+                                      padding: const EdgeInsets.symmetric(vertical: 14),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    ),
                                   ),
-                                  child: _buildSessionCard(
-                                    session: entry.value,
-                                    isCurrent: entry.key == 0,
-                                  ),
-                                );
-                              }).toList(),
+                                ),
+                              ],
                             ),
                 ),
               ],
@@ -936,7 +983,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
       );
 
   Widget _buildSessionCard({
-    required UserIdentity session,
+    required Map<String, dynamic> session,
     required bool isCurrent,
   }) =>
       Container(
@@ -1005,20 +1052,26 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                                 ),
                           ),
                         ),
+                      if (!isCurrent)
+                        IconButton(
+                          icon: const Icon(Icons.logout_rounded, size: 20, color: Colors.red),
+                          onPressed: () => _revokeSession(session['id']?.toString() ?? ''),
+                          tooltip: 'Revoke session',
+                        ),
                     ],
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    session.provider,
+                    session['provider'] ?? '',
                     style: AppTheme.of(context).bodyMedium.override(
                           font: GoogleFonts.poppins(),
                           color: const Color(0xFF334155),
                         ),
                   ),
-                  if ((session.createdAt ?? '').isNotEmpty) ...[
+                  if ((session['created_at']?.toString() ?? session['last_active']?.toString() ?? '').isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(
-                      'Last active ${_formatDate(session.createdAt!)}',
+                      'Last active ${_formatDate(session['created_at']?.toString() ?? session['last_active']?.toString() ?? '')}',
                       style: AppTheme.of(context).bodySmall.override(
                             font: GoogleFonts.poppins(),
                             color: const Color(0xFF64748B),

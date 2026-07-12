@@ -1,12 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '/flutter_flow/flutter_flow_util.dart';
 import '/models/service_listing.dart';
-import '/services/service_listing_service.dart';
+import '/pages/availability_calendar/availability_calendar_widget.dart';
 import '/services/logging_service.dart';
+import '/services/service_listing_service.dart';
 import '/theme/app_theme.dart';
 import 'create_service_widget.dart';
 
@@ -186,10 +188,12 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
       );
       if (picked == null) return;
 
-      final url = await ServiceListingService.instance
-          .uploadListingImage(listing.id, File(picked.path));
+      final fileBytes = await File(picked.path).readAsBytes();
+      final fileName = picked.name;
+      await ServiceListingService.instance
+          .uploadListingImage(listing.id, fileBytes: fileBytes, fileName: fileName);
 
-      if (url != null && mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Image added to gallery')),
         );
@@ -232,6 +236,11 @@ class _MyServicesWidgetState extends State<MyServicesWidget> {
           onPressed: () => context.pop(),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.calendar_month),
+            tooltip: 'Manage Availability',
+            onPressed: () => context.goNamed(AvailabilityCalendarWidget.routeName),
+          ),
           IconButton(
             icon: const Icon(Icons.add_circle_outline_rounded),
             onPressed: () =>
