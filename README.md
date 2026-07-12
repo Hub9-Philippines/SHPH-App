@@ -9,7 +9,7 @@ A service provider marketplace mobile application built for Filipinos. Clients c
 | `main` | Stable, production-ready code. |
 | `develop` | Active development — integration branch for all features. |
 | `feature/booking-flow-system` | Booking flow feature work (status sheet, polyline, address). |
-| `feature/pol` | Experimental / personal feature branch. |
+| `feature/pol` | Paul's working branch for the Mobile Port plan (see `docs/mobile_port_plan_2026-07.md`). |
 
 ## Tech Stack
 
