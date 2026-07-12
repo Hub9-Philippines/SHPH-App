@@ -669,10 +669,29 @@ class _StatusSheetContainer extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: [
           Padding(
-            padding: EdgeInsets.fromLTRB(20, 12, 20, 24 + bottomInset),
+            padding: EdgeInsets.fromLTRB(20, 8, 20, 28 + bottomInset),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                Center(
+                  child: Container(
+                    width: 42,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: theme.alternate,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Center(
+                  child: Icon(
+                    Icons.drag_handle_rounded,
+                    size: 16,
+                    color: theme.alternate,
+                  ),
+                ),
+                const SizedBox(height: 14),
                 Row(
                   children: [
                     Icon(Icons.track_changes_rounded,
@@ -710,7 +729,7 @@ class _StatusSheetContainer extends StatelessWidget {
                       color: theme.secondaryText,
                     ),
                   ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 ...List.generate(stages.length, (i) => _StageRow(
                   stage: stages[i],
                   stageCount: stages.length,
@@ -720,9 +739,9 @@ class _StatusSheetContainer extends StatelessWidget {
                   isTerminal: isTerminal,
                   theme: theme,
                 )),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 Container(
-                  padding: const EdgeInsets.all(14),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: theme.secondaryBackground,
                     borderRadius: BorderRadius.circular(16),
@@ -749,7 +768,7 @@ class _StatusSheetContainer extends StatelessWidget {
                   ),
                 ),
                 if (onBackToHome != null) ...[
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 18),
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
