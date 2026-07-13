@@ -33,4 +33,12 @@ class PaymentMethodsModel extends FlutterFlowModel {
       // ignore
     }
   }
+
+  Future<Map<String, dynamic>?> addPaymentMethod(Map<String, dynamic> payload) async {
+    try {
+      return await ShphUsersApi.instance.addPaymentMethod(payload);
+    } catch (e) {
+      return null;
+    }
+  }
 }

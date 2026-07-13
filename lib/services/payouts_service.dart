@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/api/bridges/api_row_mapper.dart';
+import '/api/resources/payouts_api.dart';
 import '/services/logging_service.dart';
 
 class PayoutsService {
@@ -7,10 +9,22 @@ class PayoutsService {
   static final PayoutsService instance = PayoutsService._();
 
   final _supabase = Supabase.instance.client;
+  final _api = ShphPayoutsApi.instance;
 
   String? get _currentUserId => _supabase.auth.currentUser?.id;
 
   Future<List<Map<String, dynamic>>> getPayoutRequests() async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        return await _api.listMyPayouts();
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API getPayoutRequests failed, falling back: $e',
+          tag: 'PayoutsService',
+        );
+      }
+    }
+
     final userId = _currentUserId;
     if (userId == null) return [];
 
@@ -44,6 +58,22 @@ class PayoutsService {
     String? paymentMethodId,
     String? note,
   }) async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        await _api.requestPayout({
+          'amount': amount,
+          if (paymentMethodId != null) 'payment_method_id': paymentMethodId,
+          if (note != null) 'note': note,
+        });
+        return true;
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API requestPayout failed, falling back: $e',
+          tag: 'PayoutsService',
+        );
+      }
+    }
+
     final userId = _currentUserId;
     if (userId == null) return false;
 
@@ -64,6 +94,18 @@ class PayoutsService {
   }
 
   Future<bool> cancelPayoutRequest(String payoutId) async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        await _api.cancelPayout(payoutId);
+        return true;
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API cancelPayoutRequest failed, falling back: $e',
+          tag: 'PayoutsService',
+        );
+      }
+    }
+
     try {
       await _supabase
           .from('payouts')

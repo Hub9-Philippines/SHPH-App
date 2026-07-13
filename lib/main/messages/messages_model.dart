@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '/api/shph_api.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/chat_service.dart';
 import 'messages_widget.dart' show MessagesWidget;
@@ -113,6 +114,7 @@ class MessagesModel extends FlutterFlowModel<MessagesWidget> {
       }).toList();
 
       _syncUnreadCount();
+      _loadCallHistory();
     } catch (e) {
       chatRooms = const [];
       _syncUnreadCount();
@@ -122,8 +124,43 @@ class MessagesModel extends FlutterFlowModel<MessagesWidget> {
     }
   }
 
+  Future<void> _loadCallHistory() async {
+    try {
+      final results = await ShphChatApi.instance.listCalls();
+      callHistory = results.map((call) {
+        final id = call['id']?.toString() ?? '';
+        final providerName = call['provider_name']?.toString() ??
+            call['participant_name']?.toString() ??
+            'Unknown';
+        final providerPhoto = call['provider_photo']?.toString() ??
+            call['participant_photo']?.toString() ??
+            '';
+        final callType = call['call_type']?.toString() ?? 'audio';
+        final callStatus = call['status']?.toString() ?? 'completed';
+        final durationSeconds = (call['duration'] as num?)?.toInt() ?? 0;
+        DateTime? createdAt;
+        if (call['created_at'] != null) {
+          createdAt = DateTime.tryParse(call['created_at'].toString());
+        }
+        return CallHistory(
+          id: id,
+          providerName: providerName,
+          providerPhoto: providerPhoto,
+          callType: callType,
+          callStatus: callStatus,
+          durationSeconds: durationSeconds,
+          createdAt: createdAt,
+        );
+      }).toList();
+    } catch (_) {
+      callHistory = const [];
+    }
+    onStateChanged?.call();
+  }
+
   Future<void> reload() {
     _syncUnreadCount();
+    _loadCallHistory();
     return _loadChatRooms();
   }
 

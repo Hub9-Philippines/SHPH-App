@@ -629,8 +629,7 @@ class _SignupWidgetState extends State<SignupWidget>
                           context.goNamed(HomeWidget.routeName);
                         } else {
                           GoRouter.of(context).prepareAuthEvent();
-                          final user =
-                              await authManager.createAccountWithEmail(
+                          await authManager.createAccountWithEmail(
                             context,
                             _model.emailTextFieldTextController.text,
                             _model.passwordTextFieldTextController.text,

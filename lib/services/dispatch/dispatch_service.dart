@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import '/api/bridges/api_row_mapper.dart';
+import '/api/resources/dispatch_api.dart';
 import '/backend/supabase/supabase.dart';
 import '/services/logging_service.dart';
 
@@ -10,6 +12,7 @@ class DispatchService {
   static final DispatchService instance = DispatchService._();
 
   final _supabase = Supabase.instance.client;
+  final _api = ShphDispatchApi.instance;
 
   String? get _currentUserId => _supabase.auth.currentUser?.id;
 
@@ -25,49 +28,63 @@ class DispatchService {
       throw StateError('User must be logged in to create a job request.');
     }
 
-    final payload = {
-      'client_id': userId,
-      'service_type': serviceType,
-      'location_lat': latitude,
-      'location_lng': longitude,
-      'requested_time': (requestedTime ?? DateTime.now()).toIso8601String(),
-      'status': 'searching',
-      if (bookingId != null) 'booking_id': bookingId,
-    };
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final payload = {
+          'client_id': userId,
+          'service_type': serviceType,
+          'location_lat': latitude,
+          'location_lng': longitude,
+          'requested_time': (requestedTime ?? DateTime.now()).toIso8601String(),
+          if (bookingId != null) 'booking_id': bookingId,
+        };
+        final result = await _api.createJob(payload);
+        return result['id'] as String;
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API createJob failed, falling back: $e',
+          tag: 'DispatchService',
+        );
+      }
+    }
 
     try {
       final response = await _supabase
           .from('job_requests')
-          .insert(payload)
+          .insert({
+            'client_id': userId,
+            'service_type': serviceType,
+            'location_lat': latitude,
+            'location_lng': longitude,
+            'requested_time': (requestedTime ?? DateTime.now()).toIso8601String(),
+            'status': 'searching',
+            if (bookingId != null) 'booking_id': bookingId,
+          })
           .select()
           .single();
 
       return response['id'] as String;
     } catch (e) {
-      LoggingService.error(
-        'Failed to create job request: $e',
-        tag: 'DispatchService',
-      );
+      LoggingService.error('Failed to create job request: $e', tag: 'DispatchService');
       rethrow;
     }
   }
 
   Future<bool> cancelJob(String jobId) async {
-    final userId = _currentUserId;
-    if (userId == null) {
-      return false;
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        await _api.cancelJob(jobId);
+        return true;
+      } catch (e) {
+        LoggingService.error('SHPH API cancelJob failed, falling back: $e', tag: 'DispatchService');
+      }
     }
 
     try {
-      final result = await _supabase.rpc('cancel_job', params: {
-        'p_job_id': jobId,
-      });
+      final result = await _supabase.rpc('cancel_job', params: {'p_job_id': jobId});
       return result == true;
     } catch (e) {
-      LoggingService.error(
-        'Failed to cancel job: $e',
-        tag: 'DispatchService',
-      );
+      LoggingService.error('Failed to cancel job: $e', tag: 'DispatchService');
       return false;
     }
   }
@@ -77,45 +94,25 @@ class DispatchService {
       .stream(primaryKey: ['id'])
       .eq('id', jobId)
       .asyncMap((rows) async {
-        if (rows.isEmpty) {
-          return null;
-        }
+        if (rows.isEmpty) return null;
         final job = DispatchJobRequest.fromJson(rows.first);
-
         DispatchOffer? offer;
         Map<String, dynamic>? profile;
-
         final providerId = job.assignedProviderId;
         if (providerId != null) {
           final offerResp = await _supabase
-              .from('dispatch_offers')
-              .select()
-              .eq('job_id', jobId)
-              .eq('provider_id', providerId)
-              .maybeSingle();
-          if (offerResp != null) {
-            offer = DispatchOffer.fromJson(offerResp);
-          }
-
+              .from('dispatch_offers').select().eq('job_id', jobId).eq('provider_id', providerId).maybeSingle();
+          if (offerResp != null) offer = DispatchOffer.fromJson(offerResp);
           final profileResp = await _supabase
-              .from('profiles')
-              .select('id, display_name, photo_url, skill_profession')
-              .eq('id', providerId)
-              .maybeSingle();
-          if (profileResp != null) {
-            profile = profileResp;
-          }
+              .from('profiles').select('id, display_name, photo_url, skill_profession').eq('id', providerId).maybeSingle();
+          if (profileResp != null) profile = profileResp;
         }
-
         return ClientJobView(job: job, offer: offer, providerProfile: profile);
       });
 
   Stream<List<ProviderOfferView>> watchProviderOffers() {
     final userId = _currentUserId;
-    if (userId == null) {
-      return const Stream.empty();
-    }
-
+    if (userId == null) return const Stream.empty();
     return _supabase
         .from('dispatch_offers')
         .stream(primaryKey: ['id'])
@@ -124,10 +121,7 @@ class DispatchService {
           final views = <ProviderOfferView>[];
           for (final row in rows) {
             final status = row['status'] as String?;
-            if (status != 'pending' && status != 'accepted') {
-              continue;
-            }
-
+            if (status != 'pending' && status != 'accepted') continue;
             final offer = DispatchOffer.fromJson(row);
             final jobResp = await _supabase
                 .from('job_requests')
@@ -135,114 +129,109 @@ class DispatchService {
                 .eq('id', offer.jobId)
                 .single();
             final job = DispatchJobRequest.fromJson(jobResp);
-            final clientName = (jobResp['profiles']
-                as Map<String, dynamic>?)?['display_name'] as String?;
-
-            views.add(ProviderOfferView(
-              offer: offer,
-              job: job,
-              clientDisplayName: clientName,
-            ));
+            final clientName = (jobResp['profiles'] as Map<String, dynamic>?)?['display_name'] as String?;
+            views.add(ProviderOfferView(offer: offer, job: job, clientDisplayName: clientName));
           }
           return views;
         });
   }
 
   Future<bool> acceptOffer(String jobId) async {
-    final providerId = _currentUserId;
-    if (providerId == null) {
-      return false;
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        await _api.acceptOffer(jobId);
+        return true;
+      } catch (e) {
+        LoggingService.error('SHPH API acceptOffer failed, falling back: $e', tag: 'DispatchService');
+      }
     }
 
+    final providerId = _currentUserId;
+    if (providerId == null) return false;
     try {
-      final result = await _supabase.rpc('accept_offer', params: {
-        'p_job_id': jobId,
-        'p_provider_id': providerId,
-      });
+      final result = await _supabase.rpc('accept_offer', params: {'p_job_id': jobId, 'p_provider_id': providerId});
       return result == true;
     } catch (e) {
-      LoggingService.error(
-        'Failed to accept offer: $e',
-        tag: 'DispatchService',
-      );
+      LoggingService.error('Failed to accept offer: $e', tag: 'DispatchService');
       return false;
     }
   }
 
   Future<bool> rejectOffer(String jobId) async {
-    final providerId = _currentUserId;
-    if (providerId == null) {
-      return false;
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        await _api.rejectOffer(jobId);
+        return true;
+      } catch (e) {
+        LoggingService.error('SHPH API rejectOffer failed, falling back: $e', tag: 'DispatchService');
+      }
     }
 
+    final providerId = _currentUserId;
+    if (providerId == null) return false;
     try {
-      final result = await _supabase.rpc('reject_offer_and_rematch', params: {
-        'p_job_id': jobId,
-        'p_provider_id': providerId,
-      });
+      final result = await _supabase.rpc('reject_offer_and_rematch', params: {'p_job_id': jobId, 'p_provider_id': providerId});
       return result != null;
     } catch (e) {
-      LoggingService.error(
-        'Failed to reject offer: $e',
-        tag: 'DispatchService',
-      );
+      LoggingService.error('Failed to reject offer: $e', tag: 'DispatchService');
       return false;
     }
   }
 
   Future<bool> completeJob(String jobId) async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        await _api.completeJob(jobId);
+        return true;
+      } catch (e) {
+        LoggingService.error('SHPH API completeJob failed, falling back: $e', tag: 'DispatchService');
+      }
+    }
+
     try {
-      await _supabase
-          .from('job_requests')
-          .update({'status': 'completed'})
-          .eq('id', jobId);
+      await _supabase.from('job_requests').update({'status': 'completed'}).eq('id', jobId);
       return true;
     } catch (e) {
-      LoggingService.error(
-        'Failed to complete job: $e',
-        tag: 'DispatchService',
-      );
+      LoggingService.error('Failed to complete job: $e', tag: 'DispatchService');
       return false;
     }
   }
 
   Future<DispatchJobRequest?> getJobById(String jobId) async {
-    try {
-      final response = await _supabase
-          .from('job_requests')
-          .select()
-          .eq('id', jobId)
-          .maybeSingle();
-      if (response == null) {
-        return null;
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final data = await _api.getJob(jobId);
+        return data.isNotEmpty ? DispatchJobRequest.fromJson(data) : null;
+      } catch (e) {
+        LoggingService.error('SHPH API getJobById failed, falling back: $e', tag: 'DispatchService');
       }
-      return DispatchJobRequest.fromJson(response);
+    }
+
+    try {
+      final response = await _supabase.from('job_requests').select().eq('id', jobId).maybeSingle();
+      return response != null ? DispatchJobRequest.fromJson(response) : null;
     } catch (e) {
-      LoggingService.error(
-        'Failed to fetch job: $e',
-        tag: 'DispatchService',
-      );
+      LoggingService.error('Failed to fetch job: $e', tag: 'DispatchService');
       return null;
     }
   }
 
   Future<DispatchOffer?> getOffer(String jobId, String providerId) async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final offers = await _api.listOffers(jobId: jobId, providerId: providerId);
+        if (offers.isNotEmpty) return DispatchOffer.fromJson(offers.first);
+      } catch (e) {
+        LoggingService.error('SHPH API getOffer failed, falling back: $e', tag: 'DispatchService');
+      }
+    }
+
     try {
       final response = await _supabase
-          .from('dispatch_offers')
-          .select()
-          .eq('job_id', jobId)
-          .eq('provider_id', providerId)
-          .maybeSingle();
-      if (response == null) {
-        return null;
-      }
-      return DispatchOffer.fromJson(response);
+          .from('dispatch_offers').select().eq('job_id', jobId).eq('provider_id', providerId).maybeSingle();
+      return response != null ? DispatchOffer.fromJson(response) : null;
     } catch (e) {
-      LoggingService.error(
-        'Failed to fetch offer: $e',
-        tag: 'DispatchService',
-      );
+      LoggingService.error('Failed to fetch offer: $e', tag: 'DispatchService');
       return null;
     }
   }

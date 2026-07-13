@@ -243,26 +243,50 @@ class ServiceListingService {
   }
 
   Future<bool> deleteListing(int id) async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        await _servicesApi.updateListing(id, {'status': 'deleted'});
+        LoggingService.info('Listing deleted via API: $id', tag: 'ServiceListingService');
+        return true;
+      } catch (e) {
+        LoggingService.error('SHPH API deleteListing failed, falling back: $e', tag: 'ServiceListingService');
+      }
+    }
+
     try {
       await Supabase.instance.client
           .from('service_listings')
           .delete()
           .eq('id', id);
-      LoggingService.info('Listing deleted: $id',
-          tag: 'ServiceListingService');
+      LoggingService.info('Listing deleted: $id', tag: 'ServiceListingService');
       return true;
     } catch (e) {
-      LoggingService.error('Error deleting listing: $e',
-          tag: 'ServiceListingService');
+      LoggingService.error('Error deleting listing: $e', tag: 'ServiceListingService');
       return false;
     }
   }
 
   Future<ServiceListing?> archiveListing(int id) async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        await _servicesApi.archiveListing(id);
+        return await fetchServiceListingById(id);
+      } catch (e) {
+        LoggingService.error('SHPH API archiveListing failed, falling back: $e', tag: 'ServiceListingService');
+      }
+    }
     return await updateListing(id: id, isAvailable: false);
   }
 
   Future<ServiceListing?> unarchiveListing(int id) async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        await _servicesApi.unarchiveListing(id);
+        return await fetchServiceListingById(id);
+      } catch (e) {
+        LoggingService.error('SHPH API unarchiveListing failed, falling back: $e', tag: 'ServiceListingService');
+      }
+    }
     return await updateListing(id: id, isAvailable: true);
   }
 

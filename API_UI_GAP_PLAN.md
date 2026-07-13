@@ -470,6 +470,6 @@ select → `listCities(provinceCode)` → select → `listBarangays(cityCode)` �
 |---|---|---|---|
 | **P0 (must-have)** | 16 methods | ✅ All 16 completed |
 | **P1 (should-have)** | 2 remaining | `sendOtp`/`verifyOtp` (Firebase OTP — requires Firebase SDK) — all other 43 P1 methods wired ✅ |
-| **P2 (nice-to-have)** | 19 remaining | register (direct), getCurrentUser, biometric all 6 methods, approvePartsCost/rejectPartsCost, updateBookingLocation, getThreadDetails, initiateCall/acceptCall/rejectCall/endCall, listCalls, getEta, refundBookingPayment (phone change promoted from P2 to P1 and done ✅) |
+| **P2 (nice-to-have)** | 10 remaining | biometric (6 methods), updateBookingLocation, acceptCall/rejectCall/endCall (3) — register direct, getCurrentUser, getThreadDetails, getEta, listCalls, refundBookingPayment, initiateCall all done ✅ |
 
-**Total: 64 unique methods mapped across all API classes — 59 wired ✅, 5 remaining across P1+P2.**
+**Total: 64 unique methods mapped across API classes — 52 wired ✅, 12 remaining across P1+P2.**

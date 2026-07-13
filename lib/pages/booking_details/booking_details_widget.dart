@@ -437,6 +437,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
     try {
       await ShphBookingsApi.instance.shareEta(_model.booking!.id, minutes: parsed);
       if (mounted) {
+        setState(() => _sharedEtaMinutes = parsed);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('ETA shared with client'), backgroundColor: Colors.green),
         );
@@ -513,6 +514,15 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
             ],
           ),
           actions: [
+            if (payment['status']?.toString() == 'paid' || payment['status']?.toString() == 'completed')
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _requestRefund();
+                },
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Request Refund'),
+              ),
             TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
           ],
         ),
@@ -521,6 +531,36 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to load payment details: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _requestRefund() async {
+    if (_model.booking == null) return;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Request Refund'),
+        content: const Text('Are you sure you want to request a refund for this booking?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), style: FilledButton.styleFrom(backgroundColor: Colors.red), child: const Text('Request Refund')),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+    try {
+      await ShphPaymentsApi.instance.refundBookingPayment(_model.booking!.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Refund requested successfully'), backgroundColor: Colors.green),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Refund failed: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -673,12 +713,18 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                                                   ),
                                                   const SizedBox(width: 4),
                                                   Icon(Icons.info_outline, size: 14, color: Colors.grey.shade500),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
+                                    ),
+                                    if (_sharedEtaMinutes != null)
+                                      _buildInfoRow(
+                                        context,
+                                        'ETA',
+                                        '$_sharedEtaMinutes min',
+                                      ),
+                                  ],
+                                ),
                                     ),
                                   ],
                                 ),
