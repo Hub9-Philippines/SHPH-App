@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '/api/bridges/api_row_mapper.dart';
 import '/api/resources/bookings_api.dart';
+import '/api/resources/payouts_api.dart';
 import '/backend/supabase/supabase.dart';
 import '/services/logging_service.dart';
 
@@ -193,6 +194,29 @@ class ProBookingsService {
 
   /// Get earnings summary for the provider
   Future<Map<String, dynamic>> getEarningsSummary() async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final data = await ShphPayoutsApi.instance.getEarningsSummary();
+        if (data.isNotEmpty) {
+          return {
+            'totalEarnings': (data['total_earnings'] ?? data['totalEarnings'] ?? 0).toDouble(),
+            'thisMonth': (data['this_month'] ?? data['thisMonth'] ?? 0).toDouble(),
+            'lastMonth': (data['last_month'] ?? data['lastMonth'] ?? 0).toDouble(),
+            'thisWeek': (data['this_week'] ?? data['thisWeek'] ?? 0).toDouble(),
+            'lastWeek': (data['last_week'] ?? data['lastWeek'] ?? 0).toDouble(),
+            'totalJobs': data['total_jobs'] ?? data['totalJobs'] ?? 0,
+            'weeklyData': (data['weekly_data'] ?? data['weeklyData'] ?? <Map<String, dynamic>>[]).cast<Map<String, dynamic>>(),
+            'recentTransactions': (data['recent_transactions'] ?? data['recentTransactions'] ?? <Map<String, dynamic>>[]).cast<Map<String, dynamic>>(),
+          };
+        }
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API getEarningsSummary failed, falling back: $e',
+          tag: 'ProBookingsService',
+        );
+      }
+    }
+
     try {
       final userId = _currentUserId;
       if (userId == null) {

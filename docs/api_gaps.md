@@ -30,9 +30,10 @@
 - **Call signaling**: `acceptCall`/`rejectCall`/`endCall` — WebRTC service is a stub
 - **`updateBookingLocation`**: needs `geolocator` package + periodic GPS tracking
 - **`updateWallet`**, **`reorderListingImages`**, **`updateAvailability`**, **`getEta`** — API exists but no UI wire
-- **`notifications_api.dart`**: `registerDevice`/`unregisterDevice` unwired (push token registration)
-- **`addresses_api.dart`**: 5 methods unwired (no service file exists)
-- **`recommendations_api.dart`**: 3 methods unwired (no service file or UI usage)
+- **`notifications_api.dart`**: `registerDevice`/`unregisterDevice` unwired (no FCM push SDK configured)
+- **`addresses_widget.dart`**/**`address_form_widget.dart`**: still use Supabase `AddressesTable()` directly (service file created but widget migration pending due to `AddressesRow` type dependency)
+- **`recommendations_api.dart`**: 3 methods unwired (no existing UI surface)
+- **`socialGoogle`**: needs Google Sign-In SDK idToken integration into `ShphAuthManager`
 - **`ProDashboardWidget` chat rooms**: Still shows local chat rooms from Supabase
 
 ---
@@ -446,8 +447,8 @@ The backend (`backend/`) uses Supabase-generated entities. These need alignment 
 | **Dart API methods implemented** | 165 |
 | **API methods wired to UI (P0)** | 48 — ✅ All 16 P0 completed |
 | **API methods wired to UI (P1)** | 43 of 45 completed |
-| **API methods wired to UI (total)** | 129 (78%) — 36 unwired |
-| **API methods still unwired** | 36 (22%) — most require UI integration, not API creation |
+| **API methods wired to UI (total)** | 133 (81%) — 32 unwired |
+| **API methods still unwired** | 32 (19%) — most require new UI surfaces or SDK integration |
 
 ### Key wins in this batch (2026-07-13)
 - **Zero compilation errors** after full `dart analyze` pass
@@ -506,6 +507,10 @@ The backend (`backend/`) uses Supabase-generated entities. These need alignment 
 - **`payment_methods_model.dart`** updated: added `addPaymentMethod` via `ShphUsersApi`
 - **`providers_service.dart`** created (new): wraps `ShphProvidersApi` with fallback pattern
 - **`NotificationPreferencesService`** (in disputes_service.dart) updated: getPreferences, updatePreferences now use `ShphUsersApi`
-- **API methods wired to UI**: 90 → **129** (39 new connections established)
-- **API methods still unwired**: 75 → **36**
-- **Zero compilation errors** on `dart analyze lib/`
+- **`addresses_service.dart`** created (new): wraps `ShphAddressesApi` with fallback pattern
+- **`home_widget.dart`** wired to load addresses via `AddressesService` API-first
+- **`pro_dashboard_widget.dart`** (ProProfileWidget) wired to `ProvidersService` for profile load/update
+- **`pro_bookings_service.dart`** `getEarningsSummary()` wired to `ShphPayoutsApi.getEarningsSummary()` API-first
+- **API methods wired to UI**: 90 → **133** (43 new connections established)
+- **API methods still unwired**: 75 → **32**
+- **Zero compilation errors** on changed files

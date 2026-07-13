@@ -15,6 +15,7 @@ import '/services/dispatch/dispatch_service.dart';
 import '/services/logging_service.dart';
 import '/services/payouts_service.dart';
 import '/services/pro_bookings_service.dart';
+import '/services/providers_service.dart';
 import '/theme/app_theme.dart';
 
 // Profile pages
@@ -3056,7 +3057,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
   Future<void> _loadProfile() async {
     if (mounted) setState(() => isLoading = true);
     try {
-      final response = await ShphUsersApi.instance.getMe();
+      final response = await ProvidersService.instance.getMyProviderProfile();
       if (!mounted) return;
       setState(() {
         profileData = response;
@@ -3074,7 +3075,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
 
   Future<void> _updateAvailability(bool value) async {
     try {
-      await ShphUsersApi.instance.updateMe({'is_available': value});
+      await ProvidersService.instance.updateMyProviderProfile({'is_available': value});
       if (!mounted) return;
       setState(() => isAvailable = value);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -3100,7 +3101,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
     }
     try {
       setState(() => _isSavingRate = true);
-      await ShphUsersApi.instance.updateMe({'hourly_rate': parsedRate});
+      await ProvidersService.instance.updateMyProviderProfile({'hourly_rate': parsedRate});
       if (!mounted) return;
       setState(() { hourlyRate = parsedRate; _isSavingRate = false; });
       ScaffoldMessenger.of(context).showSnackBar(
