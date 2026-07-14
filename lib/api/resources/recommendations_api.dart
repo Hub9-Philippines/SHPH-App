@@ -7,28 +7,29 @@ class ShphRecommendationsApi {
   static final ShphRecommendationsApi instance = ShphRecommendationsApi._();
   final _client = ShphApiClient.instance;
 
-  /// GET /api/recommendations/services/ - get recommended services
+  /// POST /api/recommendations/get-personalized/ - recommended services.
   Future<Map<String, dynamic>> listRecommendedServices({int? page}) async {
-    final response = await _client.get<Map<String, dynamic>>(
-      '/api/recommendations/services/',
-      queryParameters: {if (page != null) 'page': page},
+    final response = await _client.post<Map<String, dynamic>>(
+      '/api/recommendations/get-personalized/',
+      data: {if (page != null) 'page': page},
     );
     return response.data ?? {};
   }
 
-  /// GET /api/recommendations/providers/ - get recommended providers
+  /// POST /api/recommendations/nearby/ - nearby/provider recommendations.
   Future<Map<String, dynamic>> listRecommendedProviders({int? page}) async {
-    final response = await _client.get<Map<String, dynamic>>(
-      '/api/recommendations/providers/',
-      queryParameters: {if (page != null) 'page': page},
+    final response = await _client.post<Map<String, dynamic>>(
+      '/api/recommendations/nearby/',
+      data: {if (page != null) 'page': page},
     );
     return response.data ?? {};
   }
 
-  /// GET /api/recommendations/categories/ - get recommended categories
+  /// POST /api/recommendations/content-based/ - category/content recommendations.
   Future<Map<String, dynamic>> listRecommendedCategories() async {
-    final response = await _client.get<Map<String, dynamic>>(
-      '/api/recommendations/categories/',
+    final response = await _client.post<Map<String, dynamic>>(
+      '/api/recommendations/content-based/',
+      data: const {},
     );
     return response.data ?? {};
   }

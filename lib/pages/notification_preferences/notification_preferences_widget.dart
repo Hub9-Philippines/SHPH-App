@@ -30,7 +30,7 @@ class _NotificationPreferencesWidgetState
   Future<void> _load() async {
     setState(() => _isLoading = true);
     try {
-      _prefs = await ShphUsersApi.instance.getNotificationPreferences();
+      _prefs = await ShphNotificationsApi.instance.getPreferences();
     } catch (e) {
       LoggingService.error('Notif prefs load error: $e', tag: 'NotifPrefs');
       _prefs = _defaults();
@@ -41,7 +41,7 @@ class _NotificationPreferencesWidgetState
   Future<void> _toggle(String key, bool value) async {
     setState(() => _prefs[key] = value);
     try {
-      await ShphUsersApi.instance.updateNotificationPreferences({key: value});
+      await ShphNotificationsApi.instance.updatePreferences({key: value});
     } catch (e) {
       if (!mounted) return;
       setState(() => _prefs[key] = !value);
@@ -52,14 +52,14 @@ class _NotificationPreferencesWidgetState
   }
 
   Map<String, dynamic> _defaults() => {
-    'push_enabled': true,
-    'email_enabled': true,
-    'sms_enabled': false,
-    'booking_updates': true,
-    'payment_updates': true,
-    'promo_offers': false,
-    'provider_alerts': true,
-  };
+        'push_enabled': true,
+        'email_enabled': true,
+        'sms_enabled': false,
+        'booking_updates': true,
+        'payment_updates': true,
+        'promo_offers': false,
+        'provider_alerts': true,
+      };
 
   @override
   Widget build(BuildContext context) {

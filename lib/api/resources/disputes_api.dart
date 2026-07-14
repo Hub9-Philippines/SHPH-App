@@ -9,13 +9,17 @@ class ShphDisputesApi {
 
   /// GET /api/disputes/ - list my disputes
   Future<List<Map<String, dynamic>>> listDisputes() async {
-    final response = await _client.get<List<dynamic>>('/api/disputes/');
-    final data = response.data ?? [];
-    return data.whereType<Map<String, dynamic>>().toList();
+    final response = await _client.get<dynamic>('/api/disputes/');
+    final data = response.data;
+    final rows = data is List ? data : (data is Map ? data['results'] : null);
+    return (rows as List? ?? const [])
+        .whereType<Map<String, dynamic>>()
+        .toList();
   }
 
   /// POST /api/disputes/ - create a dispute
-  Future<Map<String, dynamic>> createDispute(Map<String, dynamic> payload) async {
+  Future<Map<String, dynamic>> createDispute(
+      Map<String, dynamic> payload) async {
     final response = await _client.post<Map<String, dynamic>>(
       '/api/disputes/',
       data: payload,

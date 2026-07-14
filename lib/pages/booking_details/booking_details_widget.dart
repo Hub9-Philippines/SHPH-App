@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:geolocator/geolocator.dart';
 
 import '/api/shph_api.dart';
 
@@ -37,6 +38,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   int? _sharedEtaMinutes;
   Timer? _etaTimer;
+  Timer? _locationTimer;
 
   @override
   void initState() {
@@ -48,6 +50,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
   @override
   void dispose() {
     _etaTimer?.cancel();
+    _locationTimer?.cancel();
     _model.dispose();
     super.dispose();
   }
@@ -81,6 +84,8 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
           _model.serviceListing = service;
           _model.isLoading = false;
         });
+        await _startProviderLocationUpdates(booking.status);
+        _startEtaUpdates();
       } else {
         setState(() {
           _model.isLoading = false;
@@ -95,6 +100,48 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
         });
       }
     }
+  }
+
+  void _startEtaUpdates() {
+    _etaTimer?.cancel();
+    Future<void> refresh() async {
+      try {
+        final eta = await ShphServicesApi.instance.getEta(widget.bookingId!);
+        final minutes = (eta['minutes'] ?? eta['eta_minutes']) as num?;
+        if (mounted && minutes != null) {
+          setState(() => _sharedEtaMinutes = minutes.toInt());
+        }
+      } catch (_) {}
+    }
+
+    refresh();
+    _etaTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => refresh(),
+    );
+  }
+
+  Future<void> _startProviderLocationUpdates(String status) async {
+    if (status != 'confirmed' && status != 'in_progress') return;
+    final me = await ShphUsersApi.instance.getMe();
+    if (me['role']?.toString() != 'provider') return;
+    _locationTimer?.cancel();
+    Future<void> sendLocation() async {
+      try {
+        final position = await Geolocator.getCurrentPosition();
+        await ShphBookingsApi.instance.updateBookingLocation(
+          widget.bookingId!,
+          latitude: position.latitude,
+          longitude: position.longitude,
+        );
+      } catch (_) {}
+    }
+
+    await sendLocation();
+    _locationTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => sendLocation(),
+    );
   }
 
   Future<void> _cancelBooking() async {
@@ -148,7 +195,8 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
 
     final date = await showDatePicker(
       context: context,
-      initialDate: currentDate.isAfter(DateTime.now()) ? currentDate : DateTime.now(),
+      initialDate:
+          currentDate.isAfter(DateTime.now()) ? currentDate : DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 180)),
     );
@@ -187,8 +235,10 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
 
     final success = await BookingsService.instance.rescheduleBooking(
       _model.booking!.id,
-      newDate: '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
-      newTime: '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
+      newDate:
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
+      newTime:
+          '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
     );
 
     if (!mounted) return;
@@ -304,8 +354,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
         await ShphBookingsApi.instance.completePhoto(
           _model.booking!.id,
           fileBytes: bytes,
-          fileName:
-              'completion_${DateTime.now().millisecondsSinceEpoch}.jpg',
+          fileName: 'completion_${DateTime.now().millisecondsSinceEpoch}.jpg',
         );
       }
       await BookingsService.instance.updateBookingStatus(
@@ -426,8 +475,11 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, controller.text.trim()), child: const Text('Share')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+              child: const Text('Share')),
         ],
       ),
     );
@@ -435,17 +487,22 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
     final parsed = int.tryParse(minutes);
     if (parsed == null || parsed < 0) return;
     try {
-      await ShphBookingsApi.instance.shareEta(_model.booking!.id, minutes: parsed);
+      await ShphBookingsApi.instance
+          .shareEta(_model.booking!.id, minutes: parsed);
       if (mounted) {
         setState(() => _sharedEtaMinutes = parsed);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('ETA shared with client'), backgroundColor: Colors.green),
+          const SnackBar(
+              content: Text('ETA shared with client'),
+              backgroundColor: Colors.green),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to share ETA: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('Failed to share ETA: $e'),
+              backgroundColor: Colors.red),
         );
       }
     }
@@ -454,7 +511,8 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
   Future<void> _viewInvoice() async {
     if (_model.booking == null) return;
     try {
-      final invoice = await ShphBookingsApi.instance.getInvoice(_model.booking!.id);
+      final invoice =
+          await ShphBookingsApi.instance.getInvoice(_model.booking!.id);
       if (!mounted) return;
       showDialog(
         context: context,
@@ -465,25 +523,37 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildInfoRow(ctx, 'Booking', _model.booking!.id.substring(0, 8)),
-                _buildInfoRow(ctx, 'Amount', 'PHP ${(_model.booking!.totalPrice ?? 0).toStringAsFixed(2)}'),
-                _buildInfoRow(ctx, 'Status', invoice['status']?.toString() ?? _model.booking!.paymentStatus ?? 'N/A'),
+                _buildInfoRow(
+                    ctx, 'Booking', _model.booking!.id.substring(0, 8)),
+                _buildInfoRow(ctx, 'Amount',
+                    'PHP ${(_model.booking!.totalPrice ?? 0).toStringAsFixed(2)}'),
+                _buildInfoRow(
+                    ctx,
+                    'Status',
+                    invoice['status']?.toString() ??
+                        _model.booking!.paymentStatus ??
+                        'N/A'),
                 if (invoice['invoice_number'] != null)
-                  _buildInfoRow(ctx, 'Invoice #', invoice['invoice_number'].toString()),
+                  _buildInfoRow(
+                      ctx, 'Invoice #', invoice['invoice_number'].toString()),
                 if (invoice['issued_at'] != null)
                   _buildInfoRow(ctx, 'Issued', invoice['issued_at'].toString()),
               ],
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+            TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Close')),
           ],
         ),
       );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load invoice: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('Failed to load invoice: $e'),
+              backgroundColor: Colors.red),
         );
       }
     }
@@ -492,7 +562,8 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
   Future<void> _getPaymentStatus() async {
     if (_model.booking == null) return;
     try {
-      final payment = await ShphPaymentsApi.instance.getBookingPayment(_model.booking!.id);
+      final payment =
+          await ShphPaymentsApi.instance.getBookingPayment(_model.booking!.id);
       if (!mounted || payment.isEmpty) return;
       showDialog(
         context: context,
@@ -502,19 +573,23 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildInfoRow(ctx, 'Status', payment['status']?.toString() ?? 'N/A'),
+              _buildInfoRow(
+                  ctx, 'Status', payment['status']?.toString() ?? 'N/A'),
               if (payment['amount'] != null)
-                _buildInfoRow(ctx, 'Amount', 'PHP ${(payment['amount'] as num).toStringAsFixed(2)}'),
+                _buildInfoRow(ctx, 'Amount',
+                    'PHP ${(payment['amount'] as num).toStringAsFixed(2)}'),
               if (payment['method'] != null)
                 _buildInfoRow(ctx, 'Method', payment['method'].toString()),
               if (payment['paid_at'] != null)
                 _buildInfoRow(ctx, 'Paid At', payment['paid_at'].toString()),
               if (payment['transaction_id'] != null)
-                _buildInfoRow(ctx, 'Transaction ID', payment['transaction_id'].toString()),
+                _buildInfoRow(ctx, 'Transaction ID',
+                    payment['transaction_id'].toString()),
             ],
           ),
           actions: [
-            if (payment['status']?.toString() == 'paid' || payment['status']?.toString() == 'completed')
+            if (payment['status']?.toString() == 'paid' ||
+                payment['status']?.toString() == 'completed')
               TextButton(
                 onPressed: () {
                   Navigator.pop(ctx);
@@ -523,14 +598,18 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                 style: TextButton.styleFrom(foregroundColor: Colors.red),
                 child: const Text('Request Refund'),
               ),
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+            TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Close')),
           ],
         ),
       );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load payment details: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('Failed to load payment details: $e'),
+              backgroundColor: Colors.red),
         );
       }
     }
@@ -542,10 +621,16 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Request Refund'),
-        content: const Text('Are you sure you want to request a refund for this booking?'),
+        content: const Text(
+            'Are you sure you want to request a refund for this booking?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), style: FilledButton.styleFrom(backgroundColor: Colors.red), child: const Text('Request Refund')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('Request Refund')),
         ],
       ),
     );
@@ -554,13 +639,16 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
       await ShphPaymentsApi.instance.refundBookingPayment(_model.booking!.id);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Refund requested successfully'), backgroundColor: Colors.green),
+          const SnackBar(
+              content: Text('Refund requested successfully'),
+              backgroundColor: Colors.green),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Refund failed: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('Refund failed: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -647,7 +735,8 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                             color: AppTheme.of(context).primary,
                             onRefresh: _loadBookingDetails,
                             child: ListView(
-                              padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+                              padding:
+                                  const EdgeInsets.fromLTRB(20, 12, 20, 28),
                               children: [
                                 _buildTopBar(context),
                                 const SizedBox(height: 18),
@@ -682,17 +771,25 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                                       _formatStatus(_model.booking!.status),
                                     ),
                                     Padding(
-                                      padding: const EdgeInsets.symmetric(vertical: 8),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 8),
                                       child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Expanded(
                                             child: Text(
                                               'Payment status',
-                                              style: AppTheme.of(context).bodyMedium.override(
-                                                    font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                                                    color: const Color(0xFF64748B),
+                                              style: AppTheme.of(context)
+                                                  .bodyMedium
+                                                  .override(
+                                                    font: GoogleFonts.poppins(
+                                                        fontWeight:
+                                                            FontWeight.w600),
+                                                    color:
+                                                        const Color(0xFF64748B),
                                                   ),
                                             ),
                                           ),
@@ -702,29 +799,42 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                                               onTap: _getPaymentStatus,
                                               child: Row(
                                                 mainAxisSize: MainAxisSize.min,
-                                                mainAxisAlignment: MainAxisAlignment.end,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.end,
                                                 children: [
                                                   Text(
-                                                    _model.booking!.paymentStatus ?? 'Pending',
-                                                    style: AppTheme.of(context).bodyMedium.override(
-                                                          font: GoogleFonts.poppins(),
-                                                          color: _model.booking!.paymentStatus == 'paid' ? Colors.green : Colors.orange,
+                                                    _model.booking!
+                                                            .paymentStatus ??
+                                                        'Pending',
+                                                    style: AppTheme.of(context)
+                                                        .bodyMedium
+                                                        .override(
+                                                          font: GoogleFonts
+                                                              .poppins(),
+                                                          color: _model.booking!
+                                                                      .paymentStatus ==
+                                                                  'paid'
+                                                              ? Colors.green
+                                                              : Colors.orange,
                                                         ),
                                                   ),
                                                   const SizedBox(width: 4),
-                                                  Icon(Icons.info_outline, size: 14, color: Colors.grey.shade500),
-                                          ],
-                                        ),
+                                                  Icon(Icons.info_outline,
+                                                      size: 14,
+                                                      color:
+                                                          Colors.grey.shade500),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                          if (_sharedEtaMinutes != null)
+                                            _buildInfoRow(
+                                              context,
+                                              'ETA',
+                                              '$_sharedEtaMinutes min',
+                                            ),
+                                        ],
                                       ),
-                                    ),
-                                    if (_sharedEtaMinutes != null)
-                                      _buildInfoRow(
-                                        context,
-                                        'ETA',
-                                        '$_sharedEtaMinutes min',
-                                      ),
-                                  ],
-                                ),
                                     ),
                                   ],
                                 ),
@@ -732,11 +842,15 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                                   const SizedBox(height: 12),
                                   OutlinedButton.icon(
                                     onPressed: _viewInvoice,
-                                    icon: const Icon(Icons.receipt_long_rounded, size: 18),
+                                    icon: const Icon(Icons.receipt_long_rounded,
+                                        size: 18),
                                     label: const Text('View Invoice'),
                                     style: OutlinedButton.styleFrom(
-                                      minimumSize: const Size(double.infinity, 48),
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                                      minimumSize:
+                                          const Size(double.infinity, 48),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(18)),
                                     ),
                                   ),
                                 ],
@@ -805,7 +919,9 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                                 if (_model.booking!.status == 'completed')
                                   FFButtonWidget(
                                     onPressed: () async {
-                                      final providerId = _model.serviceListing?['provider_id'] as int?;
+                                      final providerId =
+                                          _model.serviceListing?['provider_id']
+                                              as int?;
                                       await context.pushNamed(
                                         LeaveReviewWidget.routeName,
                                         extra: {
@@ -852,7 +968,8 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                                     ),
                                   ),
                                 ],
-                                if (_model.booking!.status == 'in_progress') ...[
+                                if (_model.booking!.status ==
+                                    'in_progress') ...[
                                   const SizedBox(height: 12),
                                   FFButtonWidget(
                                     onPressed: _uploadCompletionPhoto,
@@ -874,7 +991,8 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                                   ),
                                 ],
                                 if (_model.booking!.status == 'confirmed' ||
-                                    _model.booking!.status == 'in_progress') ...[
+                                    _model.booking!.status ==
+                                        'in_progress') ...[
                                   _buildPartsCostSection(context),
                                   const SizedBox(height: 12),
                                   FFButtonWidget(
@@ -884,10 +1002,13 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                                       width: double.infinity,
                                       height: 54,
                                       color: const Color(0xFF3B82F6),
-                                      textStyle: AppTheme.of(context).titleSmall.override(
-                                        color: Colors.white,
-                                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                                      ),
+                                      textStyle: AppTheme.of(context)
+                                          .titleSmall
+                                          .override(
+                                            color: Colors.white,
+                                            font: GoogleFonts.poppins(
+                                                fontWeight: FontWeight.w700),
+                                          ),
                                       borderRadius: BorderRadius.circular(18),
                                     ),
                                   ),
@@ -992,7 +1113,8 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                     color: AppTheme.of(context).primary,
                     textStyle: AppTheme.of(context).bodySmall.override(
                           color: Colors.white,
-                          font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                          font:
+                              GoogleFonts.poppins(fontWeight: FontWeight.w600),
                         ),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -1108,7 +1230,8 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                     'PHP ${(_model.booking!.totalPrice ?? 0).toStringAsFixed(2)}',
                     style: AppTheme.of(context).titleMedium.override(
                           color: AppTheme.of(context).primary,
-                          font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                          font:
+                              GoogleFonts.poppins(fontWeight: FontWeight.w700),
                         ),
                   ),
                 ],
@@ -1222,9 +1345,10 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                     height: 48,
                     color: const Color(0xFF16A34A),
                     textStyle: AppTheme.of(context).bodySmall.override(
-                      color: Colors.white,
-                      font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                    ),
+                          color: Colors.white,
+                          font:
+                              GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        ),
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
@@ -1238,9 +1362,10 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                     height: 48,
                     color: AppTheme.of(context).error,
                     textStyle: AppTheme.of(context).bodySmall.override(
-                      color: Colors.white,
-                      font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                    ),
+                          color: Colors.white,
+                          font:
+                              GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        ),
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),

@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '/backend/supabase/database/tables/bookings.dart';
 import '/backend/supabase/database/tables/service_listings.dart';
+import '/api/bridges/api_row_mapper.dart';
+import '/api/resources/services_api.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
@@ -131,11 +133,11 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
     });
 
     try {
-      final services = await ServiceListingsTable().queryRows(
-        queryFn: (q) => q.eq('is_available', 'true').or(
-              'title.ilike.%$normalizedQuery%,category_name.ilike.%$normalizedQuery%,description.ilike.%$normalizedQuery%,provider_name.ilike.%$normalizedQuery%',
-            ),
+      final page = await ShphServicesApi.instance.listListings(
+        search: normalizedQuery,
       );
+      final services =
+          page.results.map(ApiRowMapper.serviceListingToRow).toList();
 
       final results = services.where((service) {
         final category = service.categoryName ?? '';

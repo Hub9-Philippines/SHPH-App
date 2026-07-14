@@ -1,5 +1,4 @@
 // Automatic FlutterFlow imports
-import '/backend/supabase/supabase.dart';
 import '/theme/app_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom actions
@@ -42,72 +41,8 @@ Future<String> insertProfileWithDebug(
       data['email'] = email;
     }
 
-    try {
-      await ShphUsersApi.instance.updateMe(data);
-      debugPrint('Profile updated via SHPH API successfully');
-      return "success";
-    } catch (apiError) {
-      debugPrint('SHPH API update failed, falling back to Supabase: $apiError');
-    }
-
-    // Fallback: use Supabase directly
-    final supabase = Supabase.instance.client;
-
-    final existingProfile = await supabase
-        .from('profiles')
-        .select('id, phone_number, email')
-        .eq('id', id)
-        .maybeSingle();
-
-    if (existingProfile != null) {
-      debugPrint('Profile exists, performing UPDATE via Supabase');
-      await supabase.from('profiles').update(data).eq('id', id);
-      debugPrint('Profile updated successfully via Supabase');
-      return "success";
-    }
-
-    debugPrint('Profile does not exist, performing INSERT via Supabase');
-
-    final phoneCheck = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('phone_number', phone)
-        .maybeSingle();
-
-    if (phoneCheck != null) {
-      debugPrint('Error: Phone number already registered');
-      return "Error: This phone number is already registered.";
-    }
-
-    if (email != null && email.isNotEmpty) {
-      final emailCheck = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('email', email)
-          .maybeSingle();
-
-      if (emailCheck != null) {
-        debugPrint('Error: Email already in use');
-        return "Error: This email address is already in use.";
-      }
-    }
-
-    final Map<String, dynamic> insertData = {
-      'id': id,
-      'first_name': firstname,
-      'last_name': lastname,
-      'display_name': '$firstname $lastname'.trim(),
-      'phone_number': phone,
-      'role': roleToUse,
-    };
-
-    if (email != null && email.isNotEmpty) {
-      insertData['email'] = email;
-    }
-
-    await supabase.from('profiles').insert(insertData);
-    debugPrint('Profile inserted successfully via Supabase');
-
+    await ShphUsersApi.instance.updateMe(data);
+    debugPrint('Profile updated via SHPH API successfully');
     return "success";
   } catch (e) {
     debugPrint('Database Error: $e');

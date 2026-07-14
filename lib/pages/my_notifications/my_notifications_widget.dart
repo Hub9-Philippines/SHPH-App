@@ -1,10 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/api/bridges/api_row_mapper.dart';
 import '/api/shph_api.dart';
 import '/auth/supabase_auth/auth_util.dart';
-import '/backend/supabase/supabase.dart';
+import '/backend/supabase/database/tables/notifications.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
@@ -27,7 +28,7 @@ class MyNotificationsWidget extends StatefulWidget {
 class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
   late MyNotificationsModel _model;
   late Future<List<NotificationsRow>> _notificationsFuture;
-  RealtimeChannel? _realtimeChannel;
+  Timer? _refreshTimer;
   bool _isMarkingAllRead = false;
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -36,60 +37,14 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
     super.initState();
     _model = createModel(context, MyNotificationsModel.new);
     _loadNotifications();
-    _subscribeRealtime();
+    _refreshTimer = Timer.periodic(
+      const Duration(seconds: 15),
+      (_) => _reloadFromApi(),
+    );
   }
 
-  void _subscribeRealtime() {
-    final userId = currentUserUid;
-    if (userId.isEmpty) {
-      return;
-    }
-
-    _realtimeChannel = SupaFlow.client
-        .channel('notifications:$userId')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.insert,
-          schema: 'public',
-          table: 'notifications',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'user_id',
-            value: userId,
-          ),
-          callback: (_) {
-            _reloadFromRealtime();
-          },
-        )
-        .onPostgresChanges(
-          event: PostgresChangeEvent.update,
-          schema: 'public',
-          table: 'notifications',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'user_id',
-            value: userId,
-          ),
-          callback: (_) {
-            _reloadFromRealtime();
-          },
-        )
-        .onPostgresChanges(
-          event: PostgresChangeEvent.delete,
-          schema: 'public',
-          table: 'notifications',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'user_id',
-            value: userId,
-          ),
-          callback: (_) {
-            _reloadFromRealtime();
-          },
-        )
-        .subscribe();
-  }
-
-  void _reloadFromRealtime() {
+  void _reloadFromApi() {
+    if (!mounted) return;
     _loadNotifications();
     safeSetState(() {});
   }
@@ -111,29 +66,14 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
       return [];
     }
 
-    if (await ApiRowMapper.canUseApi()) {
-      try {
-        final resp = await ShphNotificationsApi.instance.listNotifications();
-        final items = resp['results'];
-        final list = items is List ? items : (resp is List ? resp : <dynamic>[]);
-        return (list as List<dynamic>)
-            .cast<Map<String, dynamic>>()
-            .map((e) => NotificationsRow(_normalizeNotificationData(e)))
-            .toList();
-      } catch (e) {
-        LoggingService.error(
-          'SHPH API listNotifications failed, falling back: $e',
-          tag: 'Notifications',
-        );
-      }
-    }
-
     try {
-      return await NotificationsTable().queryRows(
-        queryFn: (q) => q
-            .eq('user_id', currentUserUid)
-            .order('created_at', ascending: false),
-      );
+      final resp = await ShphNotificationsApi.instance.listNotifications();
+      final items = resp['results'];
+      final list = items is List ? items : <dynamic>[];
+      return list
+          .cast<Map<String, dynamic>>()
+          .map((e) => NotificationsRow(_normalizeNotificationData(e)))
+          .toList();
     } catch (e, stackTrace) {
       LoggingService.error(
         'Failed to load notifications',
@@ -156,7 +96,9 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
       'image_url': data['image_url'] ?? data['image'],
       'action_url': data['action_url'] ?? data['actionUrl'],
       'metadata': data['metadata'] ?? data['meta'] ?? {},
-      'created_at': data['created_at'] ?? data['createdAt'] ?? DateTime.now().toIso8601String(),
+      'created_at': data['created_at'] ??
+          data['createdAt'] ??
+          DateTime.now().toIso8601String(),
       'read_at': data['read_at'] ?? data['readAt'],
     };
   }
@@ -166,13 +108,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
     bool refresh = true,
   }) async {
     try {
-      await NotificationsTable().update(
-        data: {
-          'is_read': true,
-          'read_at': DateTime.now().toIso8601String(),
-        },
-        matchingRows: (rows) => rows.eq('id', notificationId),
-      );
+      await ShphNotificationsApi.instance.markRead(notificationId);
       if (refresh) {
         _loadNotifications();
         safeSetState(() {});
@@ -193,28 +129,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
 
     safeSetState(() => _isMarkingAllRead = true);
     try {
-      if (await ApiRowMapper.canUseApi()) {
-        try {
-          await ShphNotificationsApi.instance.markAllRead();
-          await _refreshNotifications();
-          return;
-        } catch (e) {
-          LoggingService.error(
-            'SHPH API markAllRead failed, falling back: $e',
-            tag: 'Notifications',
-          );
-        }
-      }
-
-      await NotificationsTable().update(
-        data: {
-          'is_read': true,
-          'read_at': DateTime.now().toIso8601String(),
-        },
-        matchingRows: (rows) => rows
-            .eq('user_id', currentUserUid)
-            .eq('is_read', false),
-      );
+      await ShphNotificationsApi.instance.markAllRead();
       await _refreshNotifications();
     } catch (e, stackTrace) {
       LoggingService.error(
@@ -372,9 +287,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
 
   @override
   void dispose() {
-    if (_realtimeChannel != null) {
-      SupaFlow.client.removeChannel(_realtimeChannel!);
-    }
+    _refreshTimer?.cancel();
     _model.dispose();
     super.dispose();
   }
@@ -561,8 +474,9 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton(
-                onPressed:
-                    unreadCount == 0 || _isMarkingAllRead ? null : _markAllAsRead,
+                onPressed: unreadCount == 0 || _isMarkingAllRead
+                    ? null
+                    : _markAllAsRead,
                 style: OutlinedButton.styleFrom(
                   side: BorderSide(
                     color: Colors.white.withValues(alpha: 0.34),
@@ -620,7 +534,8 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                     color: AppTheme.of(context).primary.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Icon(icon, size: 30, color: AppTheme.of(context).primary),
+                  child:
+                      Icon(icon, size: 30, color: AppTheme.of(context).primary),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -646,7 +561,8 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
         ),
       );
 
-  Widget _buildNotificationCard(NotificationsRow notification) => GestureDetector(
+  Widget _buildNotificationCard(NotificationsRow notification) =>
+      GestureDetector(
         onTap: () => _handleNotificationTap(notification),
         child: Container(
           padding: const EdgeInsets.all(16),

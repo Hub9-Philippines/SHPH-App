@@ -86,7 +86,8 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                 )
               : null,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           isDense: true,
         ),
         onSubmitted: (value) {
@@ -219,8 +220,13 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: () => _showRoleDialog(user['id'].toString(), role),
-                  child: const Text('Change Role'),
+                  onPressed: () => _toggleUser(
+                    user['id'].toString(),
+                    user['is_active'] != false,
+                  ),
+                  child: Text(user['is_active'] == false
+                      ? 'Activate User'
+                      : 'Deactivate User'),
                 ),
               ),
             ],
@@ -254,49 +260,35 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
     );
   }
 
-  Future<void> _showRoleDialog(String userId, String currentRole) async {
-    final roles = ['client', 'provider', 'admin'];
-    String? selected = currentRole;
-
-    final result = await showDialog<String>(
+  Future<void> _toggleUser(String userId, bool isActive) async {
+    final result = await showDialog<bool>(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setState) => AlertDialog(
-          title: const Text('Change Role'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: roles
-                .map((role) => RadioListTile<String>(
-                      value: role,
-                      groupValue: selected,
-                      title: Text(role[0].toUpperCase() + role.substring(1)),
-                      onChanged: (value) => setState(() => selected = value),
-                    ))
-                .toList(),
+      builder: (ctx) => AlertDialog(
+        title: Text(isActive ? 'Deactivate user?' : 'Activate user?'),
+        content: Text(isActive
+            ? 'This user will no longer be able to sign in.'
+            : 'This user will regain access to the app.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx, selected),
-              child: const Text('Save'),
-            ),
-          ],
-        ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Confirm'),
+          ),
+        ],
       ),
     );
-
-    if (result == null || result == currentRole) return;
-
-    final success =
-        await AdminService.instance.updateUserRole(userId, result);
+    if (result != true) return;
+    final success = await AdminService.instance.toggleUserActive(userId);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(success ? 'Role updated to $result' : 'Failed to update role'),
-          backgroundColor: success ? const Color(0xFF059669) : const Color(0xFFDC2626),
+          content:
+              Text(success ? 'User status updated' : 'Failed to update user'),
+          backgroundColor:
+              success ? const Color(0xFF059669) : const Color(0xFFDC2626),
         ),
       );
       if (success) _load();

@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '/app_state.dart';
 import '/backend/supabase/database/tables/addresses.dart';
@@ -13,6 +12,7 @@ import '/flutter_flow/lat_lng.dart' as ff_latlng;
 import '/models/service_listing.dart';
 import '/pages/pin_location/pin_location_widget.dart';
 import '/services/bookings_service.dart';
+import '/services/addresses_service.dart';
 import '/theme/app_theme.dart';
 import 'booking_controller.dart';
 import 'booking_models.dart';
@@ -323,7 +323,8 @@ class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
       return;
     }
 
-    final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    final dateStr =
+        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
     if (listingId == null) {
       final time = await showTimePicker(
@@ -491,11 +492,12 @@ class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
         : controller.draft.address.city;
 
     if (appState.selectedAddressId != null) {
-      await Supabase.instance.client.from('addresses').update({
+      await AddressesService.instance
+          .updateAddress(appState.selectedAddressId!, {
         'latitude': latitude,
         'longitude': longitude,
         'address_line1': updatedLine1,
-      }).eq('id', appState.selectedAddressId!);
+      });
     }
 
     appState.setSelectedAddress(
@@ -827,8 +829,10 @@ class _TimeSlotPicker extends StatelessWidget {
                 final timeStr = slot['time'] as String? ?? '';
                 final displayTime = slot['display'] as String? ?? timeStr;
                 final parts = timeStr.split(':');
-                final hour = int.tryParse(parts.isNotEmpty ? parts[0] : '9') ?? 9;
-                final minute = int.tryParse(parts.length > 1 ? parts[1] : '0') ?? 0;
+                final hour =
+                    int.tryParse(parts.isNotEmpty ? parts[0] : '9') ?? 9;
+                final minute =
+                    int.tryParse(parts.length > 1 ? parts[1] : '0') ?? 0;
                 return _TimeSlotChip(
                   label: displayTime,
                   onTap: () => Navigator.pop(

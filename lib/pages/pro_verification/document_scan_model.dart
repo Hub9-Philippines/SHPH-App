@@ -21,7 +21,7 @@ class DocumentScanModel extends FlutterFlowModel<DocumentScanWidget> {
     backButtonModel = createModel(context, BackButtonModel.new);
   }
 
-  // Upload document to Supabase storage
+  // Document selected for upload to the SHPH KYC API.
   Future<void> uploadDocument(XFile image,
       {required Function() onUploadStart,
       required Function() onUploadComplete,

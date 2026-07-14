@@ -4,8 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '/api/shph_api.dart';
+import '/api/bridges/api_row_mapper.dart';
 import '/auth/supabase_auth/auth_util.dart';
-import '/backend/supabase/supabase.dart';
+import '/backend/supabase/database/tables/profiles.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/upload_data.dart';
@@ -52,34 +53,34 @@ class _ProfileWidgetState extends State<ProfileWidget> {
       future: FFAppState().checkIfAccountExists(
         uniqueQueryKey:
             '$currentUserUid${dateTimeFormat("M/d h:mm a", getCurrentTimestamp)}',
-        requestFn: () => ProfilesTable().querySingleRow(
-          queryFn: (q) => q.or(
-            'phone_number.eq.${FFAppState().phone}, email.eq.${FFAppState().email}, id.eq.$currentUserUid',
-          ),
-        ),
+        requestFn: () async => [
+          ApiRowMapper.profileToRow(
+            await ShphUsersApi.instance.getMe(),
+          )
+        ],
       ),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return Scaffold(
             backgroundColor: const Color(0xFFF5F7FA),
-              appBar: AppBar(
-                backgroundColor: const Color(0xFFF5F7FA),
-                automaticallyImplyLeading: false,
-                title: Text(
-                  'Profile',
-                  style: AppTheme.of(context).titleLarge,
-                ),
-                centerTitle: true,
-                elevation: 0,
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.refresh),
-                    tooltip: 'Refresh Profile',
-                    onPressed: _refreshProfile,
-                  ),
-                ],
+            appBar: AppBar(
+              backgroundColor: const Color(0xFFF5F7FA),
+              automaticallyImplyLeading: false,
+              title: Text(
+                'Profile',
+                style: AppTheme.of(context).titleLarge,
               ),
-              body: const SingleChildScrollView(
+              centerTitle: true,
+              elevation: 0,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  tooltip: 'Refresh Profile',
+                  onPressed: _refreshProfile,
+                ),
+              ],
+            ),
+            body: const SingleChildScrollView(
               child: Column(
                 children: [
                   ProfileHeaderSkeleton(),
@@ -183,18 +184,28 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                       'Switch to pro account and offer services',
                                   onTap: () async {
                                     try {
-                                      await ShphUsersApi.instance.applyProvider({'role': 'pro'});
+                                      await ShphUsersApi.instance
+                                          .applyProvider({'role': 'pro'});
                                       if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('Provider application submitted!')),
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: Text(
+                                                  'Provider application submitted!')),
                                         );
-                                        context.pushReplacementNamed(EKYCBeginWidget.routeName);
+                                        context.pushReplacementNamed(
+                                            EKYCBeginWidget.routeName);
                                       }
                                     } catch (e) {
-                                      LoggingService.error('Apply provider failed: $e', tag: 'Profile');
+                                      LoggingService.error(
+                                          'Apply provider failed: $e',
+                                          tag: 'Profile');
                                       if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('Error: ${e.toString()}')),
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                              content: Text(
+                                                  'Error: ${e.toString()}')),
                                         );
                                       }
                                     }
@@ -296,8 +307,8 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                   title: 'Help',
                                   subtitle:
                                       'FAQs and chat with our support team',
-                                  onTap: () => context
-                                      .pushNamed(HelpPage.routeName),
+                                  onTap: () =>
+                                      context.pushNamed(HelpPage.routeName),
                                 ),
                               ],
                             ),
@@ -666,10 +677,13 @@ class _ProfileWidgetState extends State<ProfileWidget> {
           )
           .toList();
 
-      downloadUrls = await uploadSupabaseStorageFiles(
-        bucketName: 'SHPH',
-        selectedFiles: selectedMedia,
+      final upload = selectedUploadedFiles.first;
+      final response = await ShphUsersApi.instance.uploadPhoto(
+        upload.bytes ?? const [],
+        upload.name ?? 'profile.jpg',
       );
+      final url = (response['photo_url'] ?? response['url'])?.toString();
+      downloadUrls = url == null ? [] : [url];
     } finally {
       if (mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -694,10 +708,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
       _model.uploadedFileUrl_uploadData2mv = downloadUrls.first;
     });
 
-    await ProfilesTable().update(
-      data: {'face_scan_url': downloadUrls.first},
-      matchingRows: (rows) => rows.eq('id', currentUserUid),
-    );
+    await ShphUsersApi.instance.updateMe({'face_scan_url': downloadUrls.first});
 
     if (mounted) {
       showUploadMessage(context, 'Success!');
@@ -750,7 +761,8 @@ class _ProfileWidgetState extends State<ProfileWidget> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Profile refreshed: ${userData['email'] ?? userData['username'] ?? 'OK'}'),
+            content: Text(
+                'Profile refreshed: ${userData['email'] ?? userData['username'] ?? 'OK'}'),
             backgroundColor: Colors.green,
           ),
         );
@@ -759,7 +771,8 @@ class _ProfileWidgetState extends State<ProfileWidget> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Refresh failed: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('Refresh failed: $e'), backgroundColor: Colors.red),
         );
       }
     }

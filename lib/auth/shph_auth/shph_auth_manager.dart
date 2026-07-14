@@ -1,6 +1,5 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '/api/shph_api.dart';
 import '../../app_state.dart';
 import '../../flutter_flow/auth_logger.dart';
@@ -17,6 +16,7 @@ class ShphAuthManager extends AuthManager
         AnonymousSignInManager,
         GithubSignInManager,
         PhoneSignInManager {
+  static Future<void>? _googleInitialization;
 
   @override
   Future signOut() async {
@@ -55,7 +55,8 @@ class ShphAuthManager extends AuthManager
       AuthLogger.error('Email update failed', tag: 'UpdateEmail', error: e);
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to update email. Please try again.')),
+        const SnackBar(
+            content: Text('Unable to update email. Please try again.')),
       );
     }
   }
@@ -74,10 +75,12 @@ class ShphAuthManager extends AuthManager
         const SnackBar(content: Text('Password updated successfully')),
       );
     } catch (e) {
-      AuthLogger.error('Password update failed', tag: 'UpdatePassword', error: e);
+      AuthLogger.error('Password update failed',
+          tag: 'UpdatePassword', error: e);
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to update password. Please try again.')),
+        const SnackBar(
+            content: Text('Unable to update password. Please try again.')),
       );
     }
   }
@@ -97,7 +100,8 @@ class ShphAuthManager extends AuthManager
       AuthLogger.error('Password reset failed', tag: 'ResetPassword', error: e);
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(
+        const SnackBar(
+            content: Text(
           'If an account exists with that email, you will receive password reset instructions.',
         )),
       );
@@ -132,7 +136,8 @@ class ShphAuthManager extends AuthManager
       AuthLogger.error('Email sign-in failed', tag: 'EmailSignIn', error: e);
       if (!context.mounted) return null;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(
+        const SnackBar(
+            content: Text(
           'Authentication failed. Please check your credentials and try again.',
         )),
       );
@@ -176,76 +181,37 @@ class ShphAuthManager extends AuthManager
   @override
   Future<BaseAuthUser?> signInWithGoogle(BuildContext context) async {
     try {
-      if (kIsWeb) {
-        final response = await SupabaseAuthProxy.signInWithGoogle();
-        if (response) {
-          final data = await ShphUsersApi.instance.getMe();
-          final user = SerbisyoHubPHShphUser.fromData(data);
-          currentUser = user;
-          return user;
-        }
-        return null;
-      } else {
-        await SupabaseAuthProxy.signInWithGoogle();
-        final data = await ShphUsersApi.instance.getMe();
-        final user = SerbisyoHubPHShphUser.fromData(data);
-        currentUser = user;
-        return user;
+      _googleInitialization ??= GoogleSignIn.instance.initialize();
+      await _googleInitialization;
+      final account = await GoogleSignIn.instance.authenticate();
+      final idToken = account.authentication.idToken;
+      if (idToken == null || idToken.isEmpty) {
+        throw StateError('Google did not return an ID token.');
       }
+      await ShphAuthApi.instance.socialGoogle(idToken: idToken);
+      final data = await ShphUsersApi.instance.getMe();
+      final user = SerbisyoHubPHShphUser.fromData(data);
+      currentUser = user;
+      return user;
     } catch (e) {
       AuthLogger.error('Google sign-in failed', tag: 'GoogleSignIn', error: e);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Google sign-in was not completed.')),
+        );
+      }
       return null;
     }
   }
 
   @override
   Future<BaseAuthUser?> signInWithApple(BuildContext context) async {
-    try {
-      if (kIsWeb) {
-        final response = await SupabaseAuthProxy.signInWithApple();
-        if (response) {
-          final data = await ShphUsersApi.instance.getMe();
-          final user = SerbisyoHubPHShphUser.fromData(data);
-          currentUser = user;
-          return user;
-        }
-        return null;
-      } else {
-        await SupabaseAuthProxy.signInWithApple();
-        final data = await ShphUsersApi.instance.getMe();
-        final user = SerbisyoHubPHShphUser.fromData(data);
-        currentUser = user;
-        return user;
-      }
-    } catch (e) {
-      AuthLogger.error('Apple sign-in failed', tag: 'AppleSignIn', error: e);
-      return null;
-    }
+    return null;
   }
 
   @override
   Future<BaseAuthUser?> signInWithGithub(BuildContext context) async {
-    try {
-      if (kIsWeb) {
-        final response = await SupabaseAuthProxy.signInWithGithub();
-        if (response) {
-          final data = await ShphUsersApi.instance.getMe();
-          final user = SerbisyoHubPHShphUser.fromData(data);
-          currentUser = user;
-          return user;
-        }
-        return null;
-      } else {
-        await SupabaseAuthProxy.signInWithGithub();
-        final data = await ShphUsersApi.instance.getMe();
-        final user = SerbisyoHubPHShphUser.fromData(data);
-        currentUser = user;
-        return user;
-      }
-    } catch (e) {
-      AuthLogger.error('GitHub sign-in failed', tag: 'GithubSignIn', error: e);
-      return null;
-    }
+    return null;
   }
 
   @override
@@ -262,7 +228,8 @@ class ShphAuthManager extends AuthManager
       );
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(
+        const SnackBar(
+            content: Text(
           'Invalid phone number format. Please include country code (e.g., +639123456789 for Philippines)',
         )),
       );
@@ -304,7 +271,8 @@ class ShphAuthManager extends AuthManager
     String? phoneNumber,
   }) async {
     try {
-      final phone = phoneNumber ?? currentUser?.phoneNumber ?? FFAppState().phone;
+      final phone =
+          phoneNumber ?? currentUser?.phoneNumber ?? FFAppState().phone;
       if (phone.isEmpty) {
         throw Exception('Phone number is required');
       }
@@ -338,7 +306,8 @@ class ShphAuthManager extends AuthManager
       if (!context.mounted) return null;
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(
+        const SnackBar(
+            content: Text(
           'Verification failed. Please check the code and try again.',
         )),
       );
@@ -358,63 +327,5 @@ class ShphAuthManager extends AuthManager
     if (!phoneNumber.startsWith('+')) return false;
     final digitsOnly = phoneNumber.substring(1);
     return RegExp(r'^\d{7,15}$').hasMatch(digitsOnly);
-  }
-}
-
-/// Proxy calls to Supabase for social auth (Google, Apple, GitHub).
-/// Supabase is still used for OAuth flows until SHPH API adds social endpoints.
-class SupabaseAuthProxy {
-  static Future<bool> signInWithGoogle() async {
-    try {
-      if (kIsWeb) {
-        return await Supabase.instance.client.auth.signInWithOAuth(
-          OAuthProvider.google,
-          redirectTo: '${Uri.base.origin}/auth/callback',
-        );
-      } else {
-        await Supabase.instance.client.auth
-            .signInWithOAuth(OAuthProvider.google);
-        return true;
-      }
-    } catch (e) {
-      AuthLogger.error('Google Sign-In via Supabase failed', tag: 'SupabaseAuthProxy', error: e);
-      return false;
-    }
-  }
-
-  static Future<bool> signInWithApple() async {
-    try {
-      if (kIsWeb) {
-        return await Supabase.instance.client.auth.signInWithOAuth(
-          OAuthProvider.apple,
-          redirectTo: '${Uri.base.origin}/auth/callback',
-        );
-      } else {
-        await Supabase.instance.client.auth
-            .signInWithOAuth(OAuthProvider.apple);
-        return true;
-      }
-    } catch (e) {
-      AuthLogger.error('Apple Sign-In via Supabase failed', tag: 'SupabaseAuthProxy', error: e);
-      return false;
-    }
-  }
-
-  static Future<bool> signInWithGithub() async {
-    try {
-      if (kIsWeb) {
-        return await Supabase.instance.client.auth.signInWithOAuth(
-          OAuthProvider.github,
-          redirectTo: '${Uri.base.origin}/auth/callback',
-        );
-      } else {
-        await Supabase.instance.client.auth
-            .signInWithOAuth(OAuthProvider.github);
-        return true;
-      }
-    } catch (e) {
-      AuthLogger.error('GitHub Sign-In via Supabase failed', tag: 'SupabaseAuthProxy', error: e);
-      return false;
-    }
   }
 }

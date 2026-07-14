@@ -36,6 +36,12 @@ class ShphNotificationsApi {
     await _client.post('/api/notifications/mark-all-read/');
   }
 
+  Future<void> markRead(String id) async {
+    await _client.patch('/api/notifications/$id/', data: const {
+      'is_read': true,
+    });
+  }
+
   Future<Map<String, dynamic>> getPreferences() async {
     final response = await _client.get<Map<String, dynamic>>(
       '/api/notifications/preferences/',

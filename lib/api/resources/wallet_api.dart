@@ -13,12 +13,10 @@ class ShphWalletApi {
     return response.data ?? {};
   }
 
-  Future<Map<String, dynamic>> updateWallet(
-    Map<String, dynamic> payload,
-  ) async {
+  /// POST alternative documented for retrieving the current wallet.
+  Future<Map<String, dynamic>> getWalletViaPost() async {
     final response = await _client.post<Map<String, dynamic>>(
       '/api/wallet/',
-      data: payload,
     );
     return response.data ?? {};
   }

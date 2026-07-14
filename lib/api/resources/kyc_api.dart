@@ -9,7 +9,8 @@ class ShphKycApi {
   final _client = ShphApiClient.instance;
 
   Future<Map<String, dynamic>> getStatus() async {
-    final response = await _client.get<Map<String, dynamic>>('/api/kyc/status/');
+    final response =
+        await _client.get<Map<String, dynamic>>('/api/kyc/status/');
     return response.data ?? {};
   }
 
@@ -23,6 +24,32 @@ class ShphKycApi {
     final response = await _client.post<Map<String, dynamic>>(
       '/api/kyc/submit/',
       data: formData,
+    );
+    return response.data ?? {};
+  }
+
+  Future<Map<String, dynamic>> listAdminSubmissions({int? page}) async {
+    final response = await _client.get<Map<String, dynamic>>(
+      '/api/kyc/admin/',
+      queryParameters: {if (page != null) 'page': page},
+    );
+    return response.data ?? {};
+  }
+
+  Future<void> reviewSubmission(
+    String id,
+    String action, {
+    String? reason,
+  }) async {
+    await _client.post(
+      '/api/kyc/admin/$id/$action/',
+      data: {if (reason != null) 'reason': reason},
+    );
+  }
+
+  Future<Map<String, dynamic>> createLivenessChallenge() async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/api/kyc/liveness/challenge/',
     );
     return response.data ?? {};
   }

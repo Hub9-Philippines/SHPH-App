@@ -6,8 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/api/resources/kyc_api.dart';
+import '/api/resources/users_api.dart';
 import '/services/profiles_service.dart';
 import '../../services/face_verification/face_verification_service.dart';
 
@@ -90,6 +91,7 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
 
   /// Whether a face is currently detected
   bool _faceDetected = false;
+  Map<String, dynamic>? _livenessChallenge;
 
   /// Whether capture is in progress (prevents double-tap)
   bool _isCapturing = false;
@@ -113,6 +115,8 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
     });
 
     try {
+      _livenessChallenge = await ShphKycApi.instance.createLivenessChallenge();
+
       // Clean up any existing camera controller first
       if (_cameraController != null) {
         await _cameraController!.dispose();
@@ -301,13 +305,11 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
     setState(() => _state = VerificationState.uploading);
 
     try {
-      final userId =
-          widget.userId ?? Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) {
-        throw Exception('User not authenticated');
-      }
+      final me = await ShphUsersApi.instance.getMe();
+      final userId = widget.userId ?? me['id']?.toString();
+      if (userId == null) throw Exception('User not authenticated');
 
-      // Upload via ProfilesService (REST-first, else Supabase)
+      // Upload through the authenticated profile API.
       final file = File(_capturedImagePath!);
       final fileBytes = await file.readAsBytes();
       final fileName =
@@ -541,6 +543,17 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
                       color: _faceDetected ? Colors.green : Colors.black87,
                     ),
                   ),
+                  if (_livenessChallenge != null) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      (_livenessChallenge!['instruction'] ??
+                              _livenessChallenge!['action'] ??
+                              'Follow the requested movement before capture')
+                          .toString(),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ],
                   const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,

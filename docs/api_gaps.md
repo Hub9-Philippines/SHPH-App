@@ -4,6 +4,13 @@
 > **Scope:** `SHPH API.yaml` (OpenAPI spec) vs Flutter app (`lib/`)  
 > **Context:** The app is migrating from direct Supabase calls to the SHPH Django REST API. `ApiConfig.preferShphApi` defaults to `true`. All services now use API-only (no Supabase fallbacks).
 
+### Verified migration correction (2026-07-14)
+
+- Removed executable Supabase fallbacks from profiles, search, reviews, sessions, service listings, pro bookings, provider analytics, payouts, verification, disputes, chat, categories, admin, and both custom actions.
+- Removed Supabase initialization from startup and Supabase social-login proxying. Email/phone login and session restoration use JWT tokens through `ShphAuthManager`.
+- Review edit/delete and the legacy image-delete signature remain unsupported because the OpenAPI spec has no matching endpoint; they now fail safely instead of querying Supabase.
+- Generated Supabase row models and the inactive legacy auth implementation remain for compatibility. Runtime service and UI data access no longer executes Supabase queries.
+
 ### ✅ Completed in 2026-07-13 batch
 - **bookings_service.dart** + **wallet_service.dart**: Removed all Supabase fallback code; now API-only
 - **SecuritySettingsWidget**: Session management via `ShphAuthApi.listSessions()` / `revokeSession()` / `revokeAllSessions()`; password change via `ShphAuthApi.confirmPasswordReset()`
@@ -24,6 +31,11 @@
 - **Build verified**: `dart analyze` on all modified files shows 0 errors
 
 ### 🔧 Still Pending
+- **SDK-bound only:** Firebase OTP (`sendOtp`/`verifyOtp`), push device registration (FCM token), and WebAuthn passkey registration/authentication require their platform SDK/configuration.
+- **Intentionally retired:** `supabaseExchange` is not wired because runtime Supabase authentication has been removed.
+- **Duplicate transport variants:** KYC admin methods and wallet POST retrieval map to workflows already exposed through the admin dashboard and wallet screen; they do not need duplicate screens.
+- **New UI completed (2026-07-14):** API FAQ/support-ticket list/create/detail, server biometric credential management, detailed booking/revenue analytics, liveness challenge instructions, notification API preferences, and native Google-to-JWT login.
+- **Endpoint corrections (2026-07-14):** admin, KYC, dispute, payout, audit, provider-self, provider discovery, and wallet POST paths now match `SHPH API.yaml`.
 - **Realtime subscriptions**: 7 stream/subscription call sites cannot migrate to REST until WebSocket/SSE layer is provided
 - **Firebase OTP**: `sendOtp`/`verifyOtp` blocked until `firebase_auth` SDK is added
 - **Biometric auth**: 6 WebAuthn methods — needs credential manager / passkey plugin

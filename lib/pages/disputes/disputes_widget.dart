@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/api/resources/disputes_api.dart';
 import '/services/disputes_service.dart';
 import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
@@ -112,7 +113,8 @@ class _DisputesWidgetState extends State<DisputesWidget> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.gavel_outlined, size: 64, color: Color(0xFFCBD5E1)),
+            const Icon(Icons.gavel_outlined,
+                size: 64, color: Color(0xFFCBD5E1)),
             const SizedBox(height: 16),
             Text(
               'No Disputes',
@@ -143,9 +145,9 @@ class _DisputesWidgetState extends State<DisputesWidget> {
     final description = dispute['description'] as String?;
     final createdRaw = dispute['created_at'] as String?;
     final created = createdRaw != null ? DateTime.tryParse(createdRaw) : null;
-    final evidence = (dispute['dispute_evidence'] as List?)
-            ?.cast<Map<String, dynamic>>() ??
-        [];
+    final evidence =
+        (dispute['dispute_evidence'] as List?)?.cast<Map<String, dynamic>>() ??
+            [];
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -175,6 +177,11 @@ class _DisputesWidgetState extends State<DisputesWidget> {
                     color: const Color(0xFF1E293B),
                   ),
                 ),
+              ),
+              IconButton(
+                tooltip: 'View details',
+                onPressed: () => _showDisputeDetails(dispute['id'].toString()),
+                icon: const Icon(Icons.open_in_new_rounded),
               ),
               Container(
                 padding:
@@ -231,6 +238,26 @@ class _DisputesWidgetState extends State<DisputesWidget> {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showDisputeDetails(String id) async {
+    final detail = await ShphDisputesApi.instance.getDispute(id);
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(detail['reason']?.toString() ?? 'Dispute details'),
+        content: SingleChildScrollView(
+          child: Text(detail['description']?.toString() ?? 'No description'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
         ],
       ),
     );

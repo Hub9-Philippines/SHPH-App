@@ -100,8 +100,7 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
           _isEditMode = true;
           _nameController.text = listing.title;
           _descriptionController.text = listing.description ?? '';
-          _priceController.text =
-              listing.basePrice?.toStringAsFixed(0) ?? '';
+          _priceController.text = listing.basePrice?.toStringAsFixed(0) ?? '';
           _selectedCategory = listing.categoryName;
           _selectedCategoryId = listing.category;
           _existingImageUrls = listing.allImages;
@@ -170,9 +169,8 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
 
   Future<void> _deleteExistingImage(int index) async {
     final url = _existingImageUrls[index];
-    final id = _imageUploadData
-        .where((d) => d['url'] == url)
-        .firstOrNull?['id'] as int?;
+    final id = _imageUploadData.where((d) => d['url'] == url).firstOrNull?['id']
+        as int?;
     if (id == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Cannot delete this image at this time')),
@@ -185,8 +183,12 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
         title: const Text('Remove Image'),
         content: const Text('Remove this image from your service?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), style: FilledButton.styleFrom(backgroundColor: Colors.red), child: const Text('Remove')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('Remove')),
         ],
       ),
     );
@@ -204,9 +206,8 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
 
   Future<void> _setAsThumbnail(int index) async {
     final url = _existingImageUrls[index];
-    final id = _imageUploadData
-        .where((d) => d['url'] == url)
-        .firstOrNull?['id'] as int?;
+    final id = _imageUploadData.where((d) => d['url'] == url).firstOrNull?['id']
+        as int?;
     if (id == null || _editId == null) return;
     try {
       await ShphServicesApi.instance.setListingThumbnail(_editId!, id);
@@ -251,6 +252,15 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
               'url': uploadData['image_url'] as String?,
             });
           }
+        }
+
+        final orderedImageIds = _imageUploadData
+            .map((image) => image['id'])
+            .whereType<int>()
+            .toList();
+        if (orderedImageIds.isNotEmpty) {
+          await ShphServicesApi.instance
+              .reorderListingImages(_editId!, orderedImageIds);
         }
 
         // Update listing fields
@@ -396,7 +406,9 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: _selectedImages.length +
-                        (_selectedImages.length + _existingImageUrls.length < 5 ? 1 : 0),
+                        (_selectedImages.length + _existingImageUrls.length < 5
+                            ? 1
+                            : 0),
                     separatorBuilder: (_, __) => const SizedBox(width: 12),
                     itemBuilder: (context, index) {
                       if (index == _selectedImages.length) {
@@ -461,8 +473,7 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
                               .where((c) => c.id == _selectedCategoryId)
                               .firstOrNull,
                           hint: Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 16),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Text(
                               'Select a category',
                               style: AppTheme.of(context).bodyMedium.override(
@@ -471,8 +482,7 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
                             ),
                           ),
                           isExpanded: true,
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 16),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           borderRadius: BorderRadius.circular(12),
                           items: _categories.map((category) {
                             return DropdownMenuItem(
@@ -518,8 +528,7 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
                     child: DropdownButton<int>(
                       value: _selectedSubcategoryId,
                       hint: Padding(
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
                           'Select subcategory (optional)',
                           style: AppTheme.of(context).bodyMedium.override(
@@ -734,9 +743,7 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
     final url = _existingImageUrls[index];
     final hasId = _imageUploadData.any((d) => d['url'] == url);
     return GestureDetector(
-      onLongPress: hasId
-          ? () => _showImageMenu(index)
-          : null,
+      onLongPress: hasId ? () => _showImageMenu(index) : null,
       child: Stack(
         children: [
           Container(
@@ -777,7 +784,8 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
                   color: Colors.black54,
                   borderRadius: BorderRadius.circular(4),
                 ),
-                child: const Text('NEW', style: TextStyle(color: Colors.white, fontSize: 10)),
+                child: const Text('NEW',
+                    style: TextStyle(color: Colors.white, fontSize: 10)),
               ),
             ),
         ],
@@ -802,7 +810,8 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
             ),
             ListTile(
               leading: const Icon(Icons.delete_outline, color: Colors.red),
-              title: const Text('Remove Image', style: TextStyle(color: Colors.red)),
+              title: const Text('Remove Image',
+                  style: TextStyle(color: Colors.red)),
               onTap: () {
                 Navigator.pop(ctx);
                 _deleteExistingImage(index);

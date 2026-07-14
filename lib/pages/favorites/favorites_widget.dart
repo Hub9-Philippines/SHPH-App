@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/backend/supabase/supabase.dart';
+import '/backend/supabase/database/tables/service_listings.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
@@ -183,7 +183,8 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
                     color: AppTheme.of(context).primary.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Icon(icon, size: 30, color: AppTheme.of(context).primary),
+                  child:
+                      Icon(icon, size: 30, color: AppTheme.of(context).primary),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -279,7 +280,9 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: AppTheme.of(context).primary.withValues(alpha: 0.10),
+                          color: AppTheme.of(context)
+                              .primary
+                              .withValues(alpha: 0.10),
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(

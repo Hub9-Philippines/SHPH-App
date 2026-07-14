@@ -4,7 +4,6 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:provider/provider.dart';
 
 import '/api/shph_api.dart';
-import '/backend/supabase/supabase.dart';
 import '/flutter_flow/token_refresh_manager.dart';
 import '/router/app_router.dart';
 import '/theme/app_theme.dart';
@@ -23,9 +22,6 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   GoRouter.optionURLReflectsImperativeAPIs = true;
   usePathUrlStrategy();
-
-  // Keep Supabase initialized for services that still fall back to it.
-  await SupaFlow.initialize();
 
   // Initialize SHPH REST API client (OpenAPI-backed Dio layer)
   try {

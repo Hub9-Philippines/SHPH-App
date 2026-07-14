@@ -4,7 +4,7 @@ import '/api/resources/users_api.dart';
 import '/services/logging_service.dart';
 
 /// Service for provider-specific profile operations.
-/// Wraps [ShphProvidersApi] with the API-first + Supabase fallback pattern.
+/// Uses the provider API, with the users API as a compatible REST fallback.
 class ProvidersService {
   ProvidersService._();
   static final ProvidersService instance = ProvidersService._();
@@ -14,17 +14,14 @@ class ProvidersService {
 
   /// GET /api/providers/me/ — own provider details
   Future<Map<String, dynamic>> getMyProviderProfile() async {
-    if (await ApiRowMapper.canUseApi()) {
-      try {
-        return await _api.getMyProviderProfile();
-      } catch (e) {
-        LoggingService.error(
-          'SHPH API getMyProviderProfile failed, falling back: $e',
-          tag: 'ProvidersService',
-        );
-      }
+    try {
+      return await _api.getMyProviderProfile();
+    } catch (e) {
+      LoggingService.error(
+        'Provider profile endpoint failed; trying users API: $e',
+        tag: 'ProvidersService',
+      );
     }
-    // Fallback: use users_api to get profile with role=provider
     try {
       return await _usersApi.getMe();
     } catch (e) {
@@ -91,7 +88,8 @@ class ProvidersService {
           page: page,
         );
         return (data['results'] as List?)?.cast<Map<String, dynamic>>() ??
-               (data['data'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+            (data['data'] as List?)?.cast<Map<String, dynamic>>() ??
+            [];
       } catch (e) {
         LoggingService.error(
           'SHPH API listProviders failed, falling back: $e',
