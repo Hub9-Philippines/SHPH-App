@@ -138,6 +138,52 @@ Remaining gates before live calls can be enabled:
   confirmed.
 - Port the controller, concrete peer adapter, call UI, and chat integration.
 
+#### Contract audit against `shph-web`
+
+Audited repository: `C:\Users\Administrator\dev\shph-web` (`main`)
+
+Confirmed by the web client implementation:
+
+- `VITE_WS_URL` is the explicit WebSocket base URL.
+- When it is absent, the client derives `ws(s)://<API host>/ws` from
+  `VITE_API_URL`.
+- The chat singleton appends `/chat/`, producing a route shaped like
+  `wss://<host>/ws/chat/`.
+- JWT authentication uses WebSocket subprotocols `['shph-auth', token]`; the
+  token is not placed in the URL.
+- Call messages use `{'type': 'call_signal', 'data': <signal>}`.
+- Supported signal types match the mobile foundation: `call_initiate`,
+  `call_accept`, `call_reject`, `call_end`, `webrtc_offer`, `webrtc_answer`,
+  and `ice_candidate`.
+- The heartbeat sends `{'type': 'ping'}` every 30 seconds and treats inbound
+  traffic as proof of life; 45 seconds of silence triggers reconnection.
+- Reconnection uses exponential backoff, a five-attempt budget, and does not
+  retry an authentication/server rejection that closes before opening.
+- REST call lifecycle endpoints are:
+  - `POST /api/chat/calls/`
+  - `POST /api/chat/calls/initiate/`
+  - `POST /api/chat/calls/<callId>/accept/`
+  - `POST /api/chat/calls/<callId>/reject/`
+  - `POST /api/chat/calls/<callId>/end/`
+
+Not verified by the web repository:
+
+- Django Channels route registration and production deployment of
+  `/ws/chat/`.
+- Server validation that the authenticated user belongs to the target thread.
+- Server injection/validation of `callerUserId` rather than trusting clients.
+- Production environment values for `VITE_WS_URL`.
+- A working TURN deployment. The web client currently hardcodes
+  `web.prepcirca.com`/`dev.prepcirca.com` and exposes only username/credential
+  environment variables; it does not prove reachability or credential
+  validity.
+- Temporary TURN credential issuance. Static build credentials remain a
+  production security and abuse risk.
+
+Result: the mobile signaling model and REST paths are client-contract verified,
+but live transport remains gated until the Django backend/deployment and TURN
+service are inspected or tested directly.
+
 ### Known baseline issue
 
 Full-project `flutter analyze` is currently blocked by pre-existing errors in `integration_test/feature_smoke_test.dart`, including a stale `package:serbisyo_ph/main.dart` import and incomplete syntax. New batches must continue to pass scoped analysis and must not add errors to the baseline.
