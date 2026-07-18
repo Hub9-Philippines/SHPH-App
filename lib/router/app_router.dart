@@ -113,11 +113,7 @@ class AppRouter {
         refreshListenable: appStateNotifier,
         redirect: (context, state) =>
             RoleBasedRedirectGuard.checkRedirect(appStateNotifier, state),
-        errorBuilder: (context, state) {
-          final isLoggedIn = appStateNotifier?.loggedIn ?? false;
-          final page = isLoggedIn ? const NavBarPage() : const SplashWidget();
-          return page;
-        },
+        errorBuilder: (context, state) => const NotFoundPage(),
         routes: [
           GoRoute(
             path: '/',

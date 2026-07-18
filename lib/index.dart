@@ -30,6 +30,7 @@ export '/pages/my_notifications/my_notifications_widget.dart'
     show MyNotificationsWidget;
 export '/pages/my_reviews/my_reviews_widget.dart' show MyReviewsWidget;
 export '/pages/onboarding/onboarding_widget.dart' show OnboardingWidget;
+export '/pages/not_found/not_found_page.dart' show NotFoundPage;
 export '/pages/phone_verify_user/phone_verify_user_widget.dart'
     show PhoneVerifyUserWidget;
 export '/pages/pin_location/pin_location_widget.dart' show PinLocationWidget;
