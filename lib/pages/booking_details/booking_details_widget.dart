@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -317,46 +317,18 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
   }
 
   Future<void> _uploadCompletionPhoto() async {
-    final controller = TextEditingController();
-    final url = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Completion Photo'),
-        content: TextField(
-          controller: controller,
-          decoration: InputDecoration(
-            hintText: 'Paste photo URL or leave blank to skip',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: const Text('Submit'),
-          ),
-        ],
-      ),
+    final selection = await FilePicker.pickFiles(
+      type: FileType.image,
+      withData: true,
     );
-    if (url == null || !mounted) return;
+    final file = selection == null ? null : selection.files.single;
+    if (file?.bytes == null || !mounted) return;
     try {
-      if (url.isNotEmpty) {
-        final httpClient = HttpClient();
-        final request = await httpClient.getUrl(Uri.parse(url));
-        final response = await request.close();
-        final bytes = <int>[];
-        await for (final chunk in response) {
-          bytes.addAll(chunk);
-        }
-        await ShphBookingsApi.instance.completePhoto(
-          _model.booking!.id,
-          fileBytes: bytes,
-          fileName: 'completion_${DateTime.now().millisecondsSinceEpoch}.jpg',
-        );
-      }
+      await ShphBookingsApi.instance.completePhoto(
+        _model.booking!.id,
+        fileBytes: file!.bytes!,
+        fileName: file.name,
+      );
       await BookingsService.instance.updateBookingStatus(
         _model.booking!.id,
         'completed',

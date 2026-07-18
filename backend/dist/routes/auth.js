@@ -24,13 +24,19 @@ authRouter.post('/register/verify/', async (req, res) => {
     res.json(tokens);
 });
 authRouter.post('/otp/send-pin/', async (req, res) => {
-    const body = req.body;
-    await AuthService.verifyOtpPin(body);
+    await AuthService.sendPhoneOtp(req.body, 'register');
     res.status(204).send();
 });
 authRouter.post('/otp/verify-pin/', async (req, res) => {
-    const body = req.body;
-    const tokens = await AuthService.verifyOtpPin(body);
+    const tokens = await AuthService.verifyPhoneOtp(req.body, 'register');
+    res.json(tokens);
+});
+authRouter.post('/phone-login/send/', async (req, res) => {
+    await AuthService.sendPhoneOtp(req.body, 'login');
+    res.status(204).send();
+});
+authRouter.post('/phone-login/verify/', async (req, res) => {
+    const tokens = await AuthService.verifyPhoneOtp(req.body, 'login');
     res.json(tokens);
 });
 authRouter.post('/logout/', async (req, res) => {

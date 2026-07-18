@@ -247,9 +247,19 @@ class ShphAuthManager extends AuthManager
     }
 
     try {
-      await ShphAuthApi.instance.sendOtpPin(
-        payload: {'phone_number': formattedPhone},
-      );
+      if (FFAppState().phoneLoginMode) {
+        await ShphAuthApi.instance
+            .sendPhoneLoginOtp(phoneNumber: formattedPhone);
+      } else {
+        await ShphAuthApi.instance.sendOtpPin(
+          payload: {
+            'phone_number': formattedPhone,
+            'role': FFAppState().tempsignuprole.isEmpty
+                ? 'client'
+                : FFAppState().tempsignuprole,
+          },
+        );
+      }
       rateLimiter.recordOtpRequest(formattedPhone);
       AuthLogger.debug('Phone OTP sent to $formattedPhone', tag: 'PhoneAuth');
       if (context.mounted) {
@@ -278,9 +288,20 @@ class ShphAuthManager extends AuthManager
       }
 
       final formattedPhone = _formatToE164(phone);
-      final data = await ShphAuthApi.instance.verifyOtpPin(
-        payload: {'phone_number': formattedPhone, 'pin': smsCode},
-      );
+      final data = FFAppState().phoneLoginMode
+          ? await ShphAuthApi.instance.verifyPhoneLoginOtp(
+              phoneNumber: formattedPhone,
+              code: smsCode,
+            )
+          : await ShphAuthApi.instance.verifyOtpPin(
+              payload: {
+                'phone_number': formattedPhone,
+                'pin': smsCode,
+                'role': FFAppState().tempsignuprole.isEmpty
+                    ? 'client'
+                    : FFAppState().tempsignuprole,
+              },
+            );
 
       // On success, tokens are auto-persisted by verifyOtpPin.
       // Fetch user data to set currentUser.

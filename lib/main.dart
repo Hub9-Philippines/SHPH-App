@@ -10,7 +10,6 @@ import '/theme/app_theme.dart';
 // Authentication imports - Using SHPH API for auth
 import 'auth/auth_manager_factory.dart';
 import 'auth/supabase_auth/auth_util.dart';
-import 'auth/supabase_auth/supabase_user_provider.dart';
 import 'auth/shph_auth/shph_user_provider.dart';
 import 'flutter_flow/flutter_flow_util.dart';
 import 'index.dart';

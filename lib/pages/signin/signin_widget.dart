@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
 
-import '/api/shph_api.dart';
 import '/auth/post_auth_navigation_flow.dart';
 import '/auth/supabase_auth/auth_util.dart';
 import '/components/back_button/back_button_widget.dart';
@@ -341,50 +340,22 @@ class _SigninWidgetState extends State<SigninWidget>
                         return;
                       }
                       try {
-                        await ShphAuthApi.instance
-                            .sendPhoneLoginOtp(phoneNumber: phone);
-                        if (!mounted) return;
-
-                        final codeController = TextEditingController();
-                        final code = await showDialog<String>(
+                        FFAppState().phone = phone;
+                        FFAppState().phoneLoginMode = true;
+                        setState(() => _model.isPhoneLoginLoading = true);
+                        await beginPhoneAuth(
                           context: context,
-                          builder: (ctx) => AlertDialog(
-                            title: const Text('Enter OTP'),
-                            content: TextField(
-                              controller: codeController,
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                hintText:
-                                    'Enter the OTP sent to your phone',
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(ctx),
-                                child: const Text('Cancel'),
-                              ),
-                              FilledButton(
-                                onPressed: () => Navigator.pop(
-                                    ctx, codeController.text.trim()),
-                                child: const Text('Verify'),
-                              ),
-                            ],
-                          ),
-                        );
-                        if (code == null || code.isEmpty || !mounted) return;
-
-                        setState(
-                            () => _model.isPhoneLoginLoading = true);
-                        await ShphAuthApi.instance.verifyPhoneLoginOtp(
                           phoneNumber: phone,
-                          code: code,
+                          onCodeSent: (context) {
+                            if (!context.mounted) return;
+                            context.replaceNamed(
+                              PhoneVerifyUserWidget.routeName,
+                            );
+                          },
                         );
-                        if (!mounted) return;
-                        setState(
-                            () => _model.isPhoneLoginLoading = false);
-
-                        context.goNamed('Home');
+                        if (mounted) {
+                          setState(() => _model.isPhoneLoginLoading = false);
+                        }
                       } catch (e) {
                         if (!mounted) return;
                         setState(

@@ -1,91 +1,42 @@
-import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
+
+import '/api/resources/locations_api.dart';
 
 String? _stringValue(dynamic value) => value is String ? value : null;
 
-List<Region> _parseRegions(String body) {
-  final data = json.decode(body) as List<dynamic>;
-  return data
-      .cast<Map<String, dynamic>>()
-      .map(Region.fromJson)
-      .toList(growable: false);
-}
-
-List<Province> _parseProvinces(String body) {
-  final data = json.decode(body) as List<dynamic>;
-  return data
-      .cast<Map<String, dynamic>>()
-      .map(Province.fromJson)
-      .toList(growable: false);
-}
-
-List<CityMunicipality> _parseCitiesMunicipalities(String body) {
-  final data = json.decode(body) as List<dynamic>;
-  return data
-      .cast<Map<String, dynamic>>()
-      .map(CityMunicipality.fromJson)
-      .toList(growable: false);
-}
-
-List<Barangay> _parseBarangays(String body) {
-  final data = json.decode(body) as List<dynamic>;
-  return data
-      .cast<Map<String, dynamic>>()
-      .map(Barangay.fromJson)
-      .toList(growable: false);
-}
-
 // ignore: avoid_classes_with_only_static_members
 abstract final class PSGCService {
-  static const String baseUrl = 'https://psgc.gitlab.io/api';
+  static final _api = ShphLocationsApi.instance;
 
   static Future<List<Region>> getRegions() async {
-    final response = await http.get(Uri.parse('$baseUrl/regions.json'));
-    if (response.statusCode == 200) {
-      return compute(_parseRegions, response.body);
-    }
-    return [];
+    return (await _api.listRegions()).map(Region.fromJson).toList();
   }
 
   static Future<List<Province>> getProvincesByRegion(String regionCode) async {
-    final response = await http
-        .get(Uri.parse('$baseUrl/regions/$regionCode/provinces.json'));
-    if (response.statusCode == 200) {
-      return compute(_parseProvinces, response.body);
-    }
-    return [];
+    return (await _api.listProvinces(regionCode: regionCode))
+        .map(Province.fromJson)
+        .toList();
   }
 
   static Future<List<CityMunicipality>> getCitiesMunicipalitiesByRegion(
       String regionCode) async {
-    final response = await http.get(
-        Uri.parse('$baseUrl/regions/$regionCode/cities-municipalities.json'));
-    if (response.statusCode == 200) {
-      return compute(_parseCitiesMunicipalities, response.body);
-    }
-    return [];
+    return (await _api.listCities(null, regionCode: regionCode))
+        .map(CityMunicipality.fromJson)
+        .toList();
   }
 
   static Future<List<CityMunicipality>> getCitiesMunicipalitiesByProvince(
       String provinceCode) async {
-    final response = await http.get(Uri.parse(
-        '$baseUrl/provinces/$provinceCode/cities-municipalities.json'));
-    if (response.statusCode == 200) {
-      return compute(_parseCitiesMunicipalities, response.body);
-    }
-    return [];
+    return (await _api.listCities(provinceCode))
+        .map(CityMunicipality.fromJson)
+        .toList();
   }
 
   static Future<List<Barangay>> getBarangaysByCityMunicipality(
       String cityMunicipalityCode) async {
-    final response = await http.get(Uri.parse(
-        '$baseUrl/cities-municipalities/$cityMunicipalityCode/barangays.json'));
-    if (response.statusCode == 200) {
-      return compute(_parseBarangays, response.body);
-    }
-    return [];
+    return (await _api.listBarangays(cityMunicipalityCode))
+        .map(Barangay.fromJson)
+        .toList();
   }
 }
 

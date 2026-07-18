@@ -9,6 +9,8 @@ import { authRouter } from './routes/auth.js';
 import { usersRouter } from './routes/users.js';
 import { chatRouter } from './routes/chat.js';
 import { servicesRouter } from './routes/services.js';
+import { supportRouter } from './routes/support.js';
+import { locationsRouter } from './routes/locations.js';
 import { authenticateJwt } from './middleware/auth.js';
 import { json } from 'express';
 import { connectToDatabase } from './db/data-source.js';
@@ -28,9 +30,11 @@ app.get('/health', (_req, res) => {
 });
 
 app.use('/api/auth', authRouter);
+app.use('/api/locations', locationsRouter);
 app.use('/api/users', authenticateJwt, usersRouter);
 app.use('/api/chat', authenticateJwt, chatRouter);
 app.use('/api/services', authenticateJwt, servicesRouter);
+app.use('/api/support', authenticateJwt, supportRouter);
 
 app.use(errorHandler);
 

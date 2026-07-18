@@ -38,4 +38,19 @@ class ShphSupportApi {
     );
     return response.data ?? {};
   }
+
+  Future<String> chat({
+    required String message,
+    required List<Map<String, String>> history,
+  }) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/api/support/chatbot/',
+      data: {'message': message, 'history': history},
+    );
+    final reply = response.data?['reply']?.toString().trim();
+    if (reply == null || reply.isEmpty) {
+      throw StateError('The chat API returned an empty response');
+    }
+    return reply;
+  }
 }

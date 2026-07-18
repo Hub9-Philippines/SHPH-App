@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:http/http.dart' as http;
 
 import '/api/shph_api.dart';
 import '/components/back_button/back_button_widget.dart';
@@ -75,7 +75,8 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
   Future<void> _initiateCall(String callType) async {
     if (widget.roomId == null) return;
     try {
-      await ShphChatApi.instance.initiateCall(threadId: widget.roomId!, callType: callType);
+      await ShphChatApi.instance
+          .initiateCall(threadId: widget.roomId!, callType: callType);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('$callType call initiated...')),
@@ -91,42 +92,31 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
   }
 
   Future<void> _pickAndUploadFile() async {
-    final controller = TextEditingController();
-    final url = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Upload File'),
-        content: TextField(
-          controller: controller,
-          decoration: InputDecoration(
-            hintText: 'Paste file URL or image URL',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, controller.text.trim()), child: const Text('Upload')),
-        ],
-      ),
+    final selection = await FilePicker.pickFiles(
+      withData: true,
+      allowMultiple: false,
     );
-    if (url == null || url.isEmpty || widget.roomId == null || !mounted) return;
+    final file = selection == null ? null : selection.files.single;
+    if (file?.bytes == null || widget.roomId == null || !mounted) return;
     try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode != 200) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to download file'), backgroundColor: Colors.red));
-        return;
-      }
-      final bytes = response.bodyBytes;
-      final fileName = url.split('/').last.split('?').first;
-      final result = await ShphChatApi.instance.uploadFile(widget.roomId!, fileBytes: bytes, fileName: fileName);
+      final result = await ShphChatApi.instance.uploadFile(
+        widget.roomId!,
+        fileBytes: file!.bytes!,
+        fileName: file.name,
+      );
       if (mounted) {
-        final messageUrl = result['url']?.toString() ?? url;
+        final messageUrl = result['url']?.toString();
+        if (messageUrl == null || messageUrl.isEmpty) {
+          throw StateError('The API did not return an attachment URL');
+        }
         _messageController.text = messageUrl;
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('File attached'), backgroundColor: Colors.green));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('File attached'), backgroundColor: Colors.green));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e'), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Upload failed: $e'), backgroundColor: Colors.red));
       }
     }
   }
@@ -147,8 +137,10 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.delete_outline_rounded, color: Colors.red),
-              title: const Text('Delete Message', style: TextStyle(color: Colors.red)),
+              leading:
+                  const Icon(Icons.delete_outline_rounded, color: Colors.red),
+              title: const Text('Delete Message',
+                  style: TextStyle(color: Colors.red)),
               onTap: () {
                 Navigator.pop(ctx);
                 _deleteMessage(message);
@@ -161,7 +153,8 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
   }
 
   Future<void> _editMessage(Map<String, dynamic> message) async {
-    final controller = TextEditingController(text: message['text'] as String? ?? '');
+    final controller =
+        TextEditingController(text: message['text'] as String? ?? '');
     final newText = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -174,24 +167,31 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, controller.text.trim()), child: const Text('Save')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+              child: const Text('Save')),
         ],
       ),
     );
-    if (newText == null || newText.isEmpty || widget.roomId == null || !mounted) return;
+    if (newText == null || newText.isEmpty || widget.roomId == null || !mounted)
+      return;
     try {
-      await ShphChatApi.instance.editMessage(widget.roomId!, '', content: newText);
+      await ShphChatApi.instance
+          .editMessage(widget.roomId!, '', content: newText);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Message edited'), backgroundColor: Colors.green),
+          const SnackBar(
+              content: Text('Message edited'), backgroundColor: Colors.green),
         );
         _model.initializeChatSubscription(widget.roomId!);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to edit: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('Failed to edit: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -205,8 +205,12 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
         title: const Text('Delete Message'),
         content: const Text('Are you sure?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Delete')),
         ],
       ),
     );
@@ -215,14 +219,17 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
       await ShphChatApi.instance.deleteMessage(widget.roomId!, '');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Message deleted'), backgroundColor: Colors.green),
+          const SnackBar(
+              content: Text('Message deleted'), backgroundColor: Colors.green),
         );
         _model.initializeChatSubscription(widget.roomId!);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('Failed to delete: $e'),
+              backgroundColor: Colors.red),
         );
       }
     }
@@ -250,7 +257,8 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
   Future<void> _showThreadInfo() async {
     if (widget.roomId == null) return;
     try {
-      final details = await ShphChatApi.instance.getThreadDetails(widget.roomId!);
+      final details =
+          await ShphChatApi.instance.getThreadDetails(widget.roomId!);
       if (!mounted) return;
       final participants = details['participants'] as List? ?? [];
       final createdAt = details['created_at']?.toString() ?? '';
@@ -270,9 +278,13 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                 children: [
                   const Icon(Icons.info_outline, size: 20),
                   const SizedBox(width: 8),
-                  const Text('Thread Info', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('Thread Info',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const Spacer(),
-                  IconButton(onPressed: () => Navigator.pop(ctx), icon: const Icon(Icons.close)),
+                  IconButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      icon: const Icon(Icons.close)),
                 ],
               ),
               const Divider(),
@@ -303,15 +315,15 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
   }
 
   Widget _infoRow(String label, String value) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: const TextStyle(color: Colors.grey)),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
-      ],
-    ),
-  );
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: const TextStyle(color: Colors.grey)),
+            Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
+          ],
+        ),
+      );
 
   @override
   Widget build(BuildContext context) => GestureDetector(
@@ -436,7 +448,8 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                     color: const Color(0xFFEAF6F2),
                     borderRadius: BorderRadius.circular(999),
                   ),
-                  child: Icon(Icons.phone_rounded, size: 18, color: AppTheme.of(context).primary),
+                  child: Icon(Icons.phone_rounded,
+                      size: 18, color: AppTheme.of(context).primary),
                 ),
               ),
               const SizedBox(width: 8),
@@ -449,7 +462,8 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                     color: const Color(0xFFEAF6F2),
                     borderRadius: BorderRadius.circular(999),
                   ),
-                  child: Icon(Icons.videocam_rounded, size: 18, color: AppTheme.of(context).primary),
+                  child: Icon(Icons.videocam_rounded,
+                      size: 18, color: AppTheme.of(context).primary),
                 ),
               ),
               const SizedBox(width: 8),
@@ -462,7 +476,8 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                     color: const Color(0xFFEAF6F2),
                     borderRadius: BorderRadius.circular(999),
                   ),
-                  child: const Icon(Icons.info_outline, size: 18, color: Color(0xFF64748B)),
+                  child: const Icon(Icons.info_outline,
+                      size: 18, color: Color(0xFF64748B)),
                 ),
               ),
             ],
@@ -552,16 +567,17 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                 maxWidth: MediaQuery.sizeOf(context).width * 0.68,
               ),
               child: Column(
-                crossAxisAlignment: isMe
-                    ? CrossAxisAlignment.end
-                    : CrossAxisAlignment.start,
+                crossAxisAlignment:
+                    isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                 children: [
                   GestureDetector(
-                    onLongPress: isMe ? () => _showMessageActions(message) : null,
+                    onLongPress:
+                        isMe ? () => _showMessageActions(message) : null,
                     child: Container(
                       padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
                       decoration: BoxDecoration(
-                        color: isMe ? AppTheme.of(context).primary : Colors.white,
+                        color:
+                            isMe ? AppTheme.of(context).primary : Colors.white,
                         borderRadius: BorderRadius.only(
                           topLeft: const Radius.circular(22),
                           topRight: const Radius.circular(22),
@@ -580,52 +596,53 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                          message['text'] as String? ?? '',
-                          style: AppTheme.of(context)
-                              .bodyMedium
-                              .override(
-                                font: GoogleFonts.poppins(),
-                                color: isMe
-                                    ? Colors.white
-                                    : const Color(0xFF14213D),
-                              )
-                              .copyWith(height: 1.4),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              message['time'] as String? ?? '',
-                              style: AppTheme.of(context).labelSmall.override(
-                                    font: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    color: isMe
-                                        ? Colors.white.withValues(alpha: 0.78)
-                                        : const Color(0xFF94A3B8),
-                                  ),
-                            ),
-                            if (showStatus) ...[
-                              const SizedBox(width: 8),
+                            message['text'] as String? ?? '',
+                            style: AppTheme.of(context)
+                                .bodyMedium
+                                .override(
+                                  font: GoogleFonts.poppins(),
+                                  color: isMe
+                                      ? Colors.white
+                                      : const Color(0xFF14213D),
+                                )
+                                .copyWith(height: 1.4),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
                               Text(
-                                _statusLabel(message['status'] as String?),
+                                message['time'] as String? ?? '',
                                 style: AppTheme.of(context).labelSmall.override(
                                       font: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.w700,
+                                        fontWeight: FontWeight.w500,
                                       ),
                                       color: isMe
-                                          ? Colors.white
-                                              .withValues(alpha: 0.86)
-                                          : const Color(0xFF64748B),
+                                          ? Colors.white.withValues(alpha: 0.78)
+                                          : const Color(0xFF94A3B8),
                                     ),
                               ),
+                              if (showStatus) ...[
+                                const SizedBox(width: 8),
+                                Text(
+                                  _statusLabel(message['status'] as String?),
+                                  style:
+                                      AppTheme.of(context).labelSmall.override(
+                                            font: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                            color: isMe
+                                                ? Colors.white
+                                                    .withValues(alpha: 0.86)
+                                                : const Color(0xFF64748B),
+                                          ),
+                                ),
+                              ],
                             ],
-                          ],
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
                   ),
                   if (!isMe) ...[
                     const SizedBox(height: 6),
@@ -664,7 +681,8 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                     color: const Color(0xFFF1F5F9),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(Icons.attach_file_rounded, size: 22, color: Color(0xFF64748B)),
+                  child: const Icon(Icons.attach_file_rounded,
+                      size: 22, color: Color(0xFF64748B)),
                 ),
               ),
               Expanded(

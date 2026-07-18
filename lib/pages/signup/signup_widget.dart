@@ -352,6 +352,7 @@ class _SignupWidgetState extends State<SignupWidget>
                     }
                     try {
                       if (!context.mounted) return;
+                      FFAppState().phoneLoginMode = false;
                       await beginPhoneAuth(
                         context: context,
                         phoneNumber: phoneNumberVal,

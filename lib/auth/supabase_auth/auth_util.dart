@@ -5,11 +5,8 @@ import 'package:flutter/material.dart';
 import '../auth_manager.dart';
 import '../auth_manager_factory.dart';
 import '../base_auth_user_provider.dart';
-import '../shph_auth/shph_user_provider.dart';
-import 'supabase_auth_manager.dart';
 
 export '../base_auth_user_provider.dart';
-export 'supabase_user_provider.dart';
 export '../shph_auth/shph_user_provider.dart';
 
 /// Get the current auth manager instance
@@ -67,12 +64,8 @@ Future<void> verifyCurrentUserEmail(BuildContext context) async {
   }
 }
 
-/// Handle phone auth state changes (Supabase-specific listener; no-op for SHPH)
-void handlePhoneAuthStateChanges(BuildContext context) {
-  if (authManager is SupabaseAuthManager) {
-    (authManager as SupabaseAuthManager).handlePhoneAuthStateChanges(context);
-  }
-}
+/// Kept for generated screen compatibility. API phone auth has no listener.
+void handlePhoneAuthStateChanges(BuildContext context) {}
 
 /// Begin phone authentication
 Future<void> beginPhoneAuth({
