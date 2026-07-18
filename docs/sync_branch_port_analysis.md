@@ -20,6 +20,7 @@ Working branch: `feature/safe-sync-port`
 | Safe standalone utilities | Complete | `57bb0d2` | 10 focused tests passed; scoped analysis has no errors or warnings |
 | Runtime safety guardrails | Complete | `a7db350` | 8 focused tests passed; scoped analysis reports no issues |
 | App-level guardrail integration | Complete | `d559ca4` | 11 guardrail tests passed; scoped analysis has no errors or warnings |
+| Sensitive-action step-up | Complete | `6b63260` | Guardrail tests pass; payout and session operations fail closed |
 | Realtime communication | Pending | - | Requires deployed WebSocket and ICE/TURN verification |
 | Projects | Pending | - | Requires deployed API contract verification |
 | Rooms | Pending | - | Requires deployed API contract verification |
@@ -53,6 +54,32 @@ Working branch: `feature/safe-sync-port`
 - Updated the auth notifier and routed expired sessions to sign-in options.
 - Initialized the global scaffold messenger key so guardrail notices are visible.
 - Stopped network and inactivity timers when the app wrapper is disposed.
+
+### Source reference map
+
+All runtime guardrail work is derived from definitions on
+`feature/sync-from-shph-main`:
+
+| Source branch reference | Safe-port implementation | Adaptation |
+| --- | --- | --- |
+| `lib/services/network_status_service.dart` | `lib/services/network_status_service.dart` | Replaced the `google.com` DNS probe with the configured SHPH API host; added idempotent lifecycle and injectable probes. |
+| `lib/services/session_timeout_service.dart` | `lib/services/session_timeout_service.dart` | Preserved the 30-minute timeout and two-minute warning; replaced loose callbacks with typed events and explicit activity/lifecycle integration. |
+| `lib/services/step_up_auth_service.dart` | `lib/services/step_up_auth_service.dart` | Preserved device-auth-first verification; removed the source password modal because it returned an unverified password without calling an API. |
+| `lib/widgets/auth_prompt_modal.dart` | Step-up failure messaging at protected actions | Used as the authentication-prompt UX reference; did not reuse its login/register actions for an already authenticated user. |
+| No source app-root wiring | `lib/widgets/app_guardrail_scope.dart` and `lib/main.dart` | Completes the network/session integration that the source branch defined but left unused. |
+
+The source branch contains no call sites for `StepUpAuthService`. The safe port
+adds the missing enforcement to current implementations of source-migrated
+financial and session features: provider payout requests, individual/all-session
+revocation, and admin payout status changes.
+
+### Completed: sensitive-action step-up
+
+- Requires verified device authentication before provider payout submission.
+- Requires verified device authentication before revoking one or all sessions.
+- Requires verified device authentication before admin payout status changes.
+- Fails closed and does not call the API when verification is unavailable,
+  cancelled, or unsuccessful.
 
 ### Known baseline issue
 
@@ -167,7 +194,7 @@ The local Node backend and deployment assets should only be removed after confir
 - [x] Integrate network state with user-facing offline messaging.
 - [x] Integrate inactivity tracking with authenticated app lifecycle.
 - [x] Define and implement timeout warning and logout navigation UX.
-- [ ] Apply step-up verification to selected sensitive actions.
+- [x] Apply step-up verification to selected sensitive actions.
 
 ### Batch B: Realtime communication
 
