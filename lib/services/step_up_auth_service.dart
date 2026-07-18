@@ -8,6 +8,10 @@ typedef StepUpVerifier = Future<bool> Function(String reason);
 /// Password fallback is intentionally excluded until the API exposes a
 /// dedicated re-authentication endpoint. Collecting a password without
 /// server-side verification is not a security boundary.
+///
+/// Adapted from `feature/sync-from-shph-main`'s
+/// `lib/services/step_up_auth_service.dart` and its authentication-prompt
+/// guardrail. This version returns only a verified boolean.
 class StepUpAuthService {
   StepUpAuthService({StepUpVerifier? verifier})
       : _verifier = verifier ?? _verifyWithDeviceAuth;

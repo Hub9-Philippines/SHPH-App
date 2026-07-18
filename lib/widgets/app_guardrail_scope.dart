@@ -5,7 +5,11 @@ import 'package:flutter/material.dart';
 import '/services/network_status_service.dart';
 import '/services/session_timeout_service.dart';
 
-/// Applies runtime safety guardrails around the routed application content.
+/// Applies the network and session guardrails from
+/// `feature/sync-from-shph-main` around the routed application content.
+///
+/// The source branch supplied the services but did not integrate them at the
+/// app root; this wrapper completes that integration for the current router.
 class AppGuardrailScope extends StatefulWidget {
   const AppGuardrailScope({
     required this.authenticated,

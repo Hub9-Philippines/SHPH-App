@@ -7,6 +7,10 @@ import '/services/logging_service.dart';
 typedef NetworkProbe = Future<bool> Function();
 
 /// Monitors whether the configured SHPH API host is reachable.
+///
+/// Adapted from `feature/sync-from-shph-main`'s
+/// `lib/services/network_status_service.dart`; probes the configured SHPH host
+/// instead of a third-party domain and supports deterministic injection.
 class NetworkStatusService {
   NetworkStatusService({
     NetworkProbe? probe,

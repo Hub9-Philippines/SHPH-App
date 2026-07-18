@@ -7,6 +7,9 @@ enum SessionTimeoutEvent { warning, timedOut }
 /// The application decides how to warn or sign out the current user when an
 /// event occurs. This keeps timers testable and prevents navigation from a
 /// service that has no valid widget context.
+///
+/// Adapted from `feature/sync-from-shph-main`'s
+/// `lib/services/session_timeout_service.dart`.
 class SessionTimeoutService {
   SessionTimeoutService({
     this.inactiveTimeout = const Duration(minutes: 30),
