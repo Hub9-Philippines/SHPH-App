@@ -23,7 +23,7 @@ Working branch: `feature/safe-sync-port`
 | Sensitive-action step-up | Complete | `6b63260` | Guardrail tests pass; payout and session operations fail closed |
 | Privacy-safe crash boundary | Complete | `e019296` | 15 guardrail tests passed; focused crash analysis reports no issues |
 | Token and OTP protection | Complete | `8a952dc` | 22 combined guardrail tests passed; scoped analysis reports no issues |
-| Realtime communication | Pending | - | Requires deployed WebSocket and ICE/TURN verification |
+| Realtime communication | In progress | `efe612b` | Protocol foundation: 9 tests passed; transport remains gated |
 | Projects | Pending | - | Requires deployed API contract verification |
 | Rooms | Pending | - | Requires deployed API contract verification |
 | Supabase and Node cleanup | Pending | - | Requires runtime/deployment usage audit |
@@ -108,6 +108,35 @@ revocation, and admin payout status changes.
 - Retains the source OTP limits of one request per 60 seconds and five requests
   per phone number over 24 hours.
 - Removes normalized phone numbers from OTP limiter logs.
+
+### In progress: realtime communication
+
+The Batch B protocol foundation is adapted from these source-branch files:
+
+- `lib/services/call/signaling_message.dart`
+- `lib/services/call/call_signaling.dart`
+- `lib/services/call/call_peer.dart`
+- `lib/services/call/ice_config.dart`
+
+Completed foundation work:
+
+- Added typed call signaling messages using the source wire protocol.
+- Rejects unknown, incomplete, or malformed inbound signaling payloads.
+- Added an injected signaling transport so tests and controllers do not depend
+  directly on an unverified WebSocket endpoint.
+- Added a testable peer interface for the future `flutter_webrtc` adapter.
+- Made STUN and TURN URLs configurable with build-time values.
+- Requires both a TURN username and credential before TURN is enabled.
+- Removed the source branch's hardcoded TURN host assumption.
+
+Remaining gates before live calls can be enabled:
+
+- Verify the deployed SHPH WebSocket URL and `/chat/` route.
+- Verify the `shph-auth` WebSocket subprotocol with the deployed backend.
+- Provision and test approved TURN servers and credentials.
+- Add `web_socket_channel` and `flutter_webrtc` only after those contracts are
+  confirmed.
+- Port the controller, concrete peer adapter, call UI, and chat integration.
 
 ### Known baseline issue
 
@@ -226,11 +255,15 @@ The local Node backend and deployment assets should only be removed after confir
 
 ### Batch B: Realtime communication
 
-- Add WebSocket transport and lifecycle handling.
-- Add WebRTC signaling and call controller.
-- Integrate incoming/outgoing calls with chat.
-- Add unit and widget tests.
-- Validate with two authenticated devices against the deployed API.
+- [x] Add validated signaling message models and envelope adapter.
+- [x] Add configurable ICE/STUN/TURN foundation.
+- [x] Add a transport-independent peer abstraction.
+- [ ] Verify WebSocket and TURN deployment contracts.
+- [ ] Add WebSocket transport and lifecycle handling.
+- [ ] Add the WebRTC controller and concrete peer adapter.
+- [ ] Integrate incoming/outgoing calls with chat.
+- [ ] Add controller and call widget tests.
+- [ ] Validate with two authenticated devices against the deployed API.
 
 ### Batch C: Projects
 
