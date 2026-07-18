@@ -25,8 +25,7 @@ enum OfferStatus {
 
   String get dbValue => name;
 
-  static OfferStatus fromDb(String value) =>
-      OfferStatus.values.firstWhere(
+  static OfferStatus fromDb(String value) => OfferStatus.values.firstWhere(
         (s) => s.name == value,
         orElse: () => OfferStatus.pending,
       );

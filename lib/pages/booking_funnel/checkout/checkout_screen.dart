@@ -6,7 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart' as gmaps;
 import 'package:provider/provider.dart';
 
 import '/app_state.dart';
-import '/backend/supabase/supabase.dart';
+import '/backend/shph_db/database/tables/addresses.dart';
 import '/components/edit_address/edit_address_widget.dart';
 import '/theme/app_theme.dart';
 import '../booking_controller.dart';
@@ -52,7 +52,7 @@ class CheckoutScreen extends StatelessWidget {
                           _serviceLevelLabel(draft.serviceCategoryName),
                       quantityLabel: _quantityLabel(draft.serviceCategoryName),
                       onResume: () {
-                        controller.setMatchingActive(false);
+                        controller.setMatchingActive(value: false);
                         unawaited(
                           Navigator.of(context).push(
                             buildBookingFlowRoute(
@@ -69,8 +69,9 @@ class CheckoutScreen extends StatelessWidget {
                         );
                       },
                       onCancel: () {
-                        controller.setMatchingActive(false);
-                        controller.setLiveSearchTimedOut(false);
+                        controller
+                          ..setMatchingActive(value: false)
+                          ..setLiveSearchTimedOut(value: false);
                       },
                     )
                   : _CheckoutSheet(

@@ -90,8 +90,7 @@ class _TermsOfServiceWidgetState extends State<TermsOfServiceWidget> {
               ),
               _section(
                 title: 'Contact',
-                body:
-                    'For questions about these terms, please contact us at '
+                body: 'For questions about these terms, please contact us at '
                     'support@serbisyohubph.com.',
               ),
             ],

@@ -5,7 +5,7 @@ import 'package:serbisyohubph/services/psgc_service.dart';
 void main() {
   group('Barangay.fromJson', () {
     test('uses cityCode when PSGC returns a city barangay payload', () {
-      final barangay = Barangay.fromJson({
+      final barangay = Barangay.fromJson(const {
         'code': '012805001',
         'name': 'Aglipay (Pob.)',
         'oldName': '',
@@ -22,7 +22,7 @@ void main() {
     });
 
     test('falls back to municipalityCode when cityCode is absent', () {
-      final barangay = Barangay.fromJson({
+      final barangay = Barangay.fromJson(const {
         'code': '012901001',
         'name': 'Sample',
         'oldName': '',

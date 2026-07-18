@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Persists JWT access/refresh tokens for the SHPH REST API.
@@ -31,6 +33,45 @@ class ShphTokenStorage {
   static Future<bool> hasAccessToken() async {
     final token = await getAccessToken();
     return token != null && token.isNotEmpty;
+  }
+
+  /// Decode the user ID from the stored access token payload.
+  /// Returns `null` if no token is stored or it cannot be parsed.
+  static Future<int?> getCurrentUserId() async {
+    final token = await getAccessToken();
+    if (token == null || token.isEmpty) {
+      return null;
+    }
+    return _decodeUserId(token);
+  }
+
+  static int? _decodeUserId(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) {
+        return null;
+      }
+      final normalized = base64Url.normalize(parts[1]);
+      final decoded = base64Url.decode(normalized);
+      final payload = jsonDecode(utf8.decode(decoded)) as Map<String, dynamic>;
+      final userId = payload['user_id'];
+      if (userId is int) {
+        return userId;
+      }
+      if (userId is String) {
+        return int.tryParse(userId);
+      }
+      final sub = payload['sub'];
+      if (sub is int) {
+        return sub;
+      }
+      if (sub is String) {
+        return int.tryParse(sub);
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
   }
 
   static Future<void> clear() async {

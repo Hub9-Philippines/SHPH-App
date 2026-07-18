@@ -16,17 +16,17 @@ class SkeletonLoadingWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        color: AppTheme.of(context).alternate,
-        borderRadius: borderRadius ?? BorderRadius.circular(8),
-      ),
-      child: _ShimmerAnimation(
-        baseColor: AppTheme.of(context).alternate,
-        highlightColor: AppTheme.of(context).primaryBackground,
-      ),
-    );
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: AppTheme.of(context).alternate,
+          borderRadius: borderRadius ?? BorderRadius.circular(8),
+        ),
+        child: _ShimmerAnimation(
+          baseColor: AppTheme.of(context).alternate,
+          highlightColor: AppTheme.of(context).primaryBackground,
+        ),
+      );
 }
 
 class _ShimmerAnimation extends StatefulWidget {
@@ -68,8 +68,8 @@ class _ShimmerAnimationState extends State<_ShimmerAnimation>
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) => Container(
+        animation: _animation,
+        builder: (context, child) => Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.centerLeft,
@@ -88,7 +88,7 @@ class _ShimmerAnimationState extends State<_ShimmerAnimation>
             borderRadius: BorderRadius.circular(8),
           ),
         ),
-    );
+      );
 }
 
 // Skeleton card for booking items
@@ -97,81 +97,81 @@ class BookingCardSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: AppTheme.of(context).primaryBackground,
-        boxShadow: const [
-          BoxShadow(
-            blurRadius: 4,
-            color: Color(0x1A000000),
-            offset: Offset(0, 2),
-          )
-        ],
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(15),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SkeletonLoadingWidget(
-                  width: 60,
-                  height: 60,
-                  borderRadius: BorderRadius.all(Radius.circular(8)),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SkeletonLoadingWidget(
-                        width: 80,
-                        height: 14,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      const SizedBox(height: 5),
-                      SkeletonLoadingWidget(
-                        width: double.infinity,
-                        height: 18,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      const SizedBox(height: 5),
-                      SkeletonLoadingWidget(
-                        width: 120,
-                        height: 14,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            SkeletonLoadingWidget(
-              width: double.infinity,
-              height: 14,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            const SizedBox(height: 4),
-            SkeletonLoadingWidget(
-              width: double.infinity,
-              height: 14,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            const SizedBox(height: 12),
-            SkeletonLoadingWidget(
-              width: double.infinity,
-              height: 50,
-              borderRadius: BorderRadius.circular(8),
-            ),
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: AppTheme.of(context).primaryBackground,
+          boxShadow: const [
+            BoxShadow(
+              blurRadius: 4,
+              color: Color(0x1A000000),
+              offset: Offset(0, 2),
+            )
           ],
+          borderRadius: BorderRadius.circular(12),
         ),
-      ),
-    );
+        child: Padding(
+          padding: const EdgeInsets.all(15),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SkeletonLoadingWidget(
+                    width: 60,
+                    height: 60,
+                    borderRadius: BorderRadius.all(Radius.circular(8)),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SkeletonLoadingWidget(
+                          width: 80,
+                          height: 14,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        const SizedBox(height: 5),
+                        SkeletonLoadingWidget(
+                          width: double.infinity,
+                          height: 18,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        const SizedBox(height: 5),
+                        SkeletonLoadingWidget(
+                          width: 120,
+                          height: 14,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              SkeletonLoadingWidget(
+                width: double.infinity,
+                height: 14,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              const SizedBox(height: 4),
+              SkeletonLoadingWidget(
+                width: double.infinity,
+                height: 14,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              const SizedBox(height: 12),
+              SkeletonLoadingWidget(
+                width: double.infinity,
+                height: 50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ],
+          ),
+        ),
+      );
 }
 
 // Skeleton card for message items
@@ -180,47 +180,47 @@ class MessageCardSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.of(context).primaryBackground,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          const SkeletonLoadingWidget(
-            width: 50,
-            height: 50,
-            borderRadius: BorderRadius.all(Radius.circular(25)),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SkeletonLoadingWidget(
-                  width: 150,
-                  height: 16,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                const SizedBox(height: 4),
-                SkeletonLoadingWidget(
-                  width: double.infinity,
-                  height: 14,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                const SizedBox(height: 4),
-                SkeletonLoadingWidget(
-                  width: 100,
-                  height: 12,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ],
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.of(context).primaryBackground,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            const SkeletonLoadingWidget(
+              width: 50,
+              height: 50,
+              borderRadius: BorderRadius.all(Radius.circular(25)),
             ),
-          ),
-        ],
-      ),
-    );
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SkeletonLoadingWidget(
+                    width: 150,
+                    height: 16,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  const SizedBox(height: 4),
+                  SkeletonLoadingWidget(
+                    width: double.infinity,
+                    height: 14,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  const SizedBox(height: 4),
+                  SkeletonLoadingWidget(
+                    width: 100,
+                    height: 12,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
 }
 
 // Skeleton card for category items
@@ -229,242 +229,23 @@ class CategoryCardSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: AppTheme.of(context).primaryBackground,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          const SkeletonLoadingWidget(
-            width: double.infinity,
-            height: 80,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(12),
-              topRight: Radius.circular(12),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SkeletonLoadingWidget(
-                  width: double.infinity,
-                  height: 16,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                const SizedBox(height: 4),
-                SkeletonLoadingWidget(
-                  width: 60,
-                  height: 12,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-}
-
-// Skeleton card for service items (home page)
-class ServiceCardSkeleton extends StatelessWidget {
-  const ServiceCardSkeleton({super.key});
-
-  @override
-  Widget build(BuildContext context) => Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: AppTheme.of(context).primaryBackground,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(
-            blurRadius: 4,
-            color: Color(0x1A000000),
-            offset: Offset(0, 2),
-          )
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SkeletonLoadingWidget(
-            width: double.infinity,
-            height: 120,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(12),
-              topRight: Radius.circular(12),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SkeletonLoadingWidget(
-                  width: double.infinity,
-                  height: 16,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                const SizedBox(height: 6),
-                SkeletonLoadingWidget(
-                  width: 100,
-                  height: 14,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    SkeletonLoadingWidget(
-                      width: 40,
-                      height: 14,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    const Spacer(),
-                    SkeletonLoadingWidget(
-                      width: 60,
-                      height: 18,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-}
-
-// Skeleton for profile header
-class ProfileHeaderSkeleton extends StatelessWidget {
-  const ProfileHeaderSkeleton({super.key});
-
-  @override
-  Widget build(BuildContext context) => Padding(
-      padding: const EdgeInsetsDirectional.fromSTEB(16, 10, 16, 0),
-      child: Row(
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          const SkeletonLoadingWidget(
-            width: 70,
-            height: 70,
-            borderRadius: BorderRadius.all(Radius.circular(35)),
-          ),
-          const SizedBox(width: 16),
-          Column(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SkeletonLoadingWidget(
-                width: 150,
-                height: 17,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              const SizedBox(height: 6),
-              SkeletonLoadingWidget(
-                width: 80,
-                height: 15,
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-}
-
-// Skeleton for profile menu item
-class ProfileMenuItemSkeleton extends StatelessWidget {
-  const ProfileMenuItemSkeleton({super.key});
-
-  @override
-  Widget build(BuildContext context) => Container(
-      width: double.infinity,
-      height: 80,
-      decoration: BoxDecoration(
-        color: AppTheme.of(context).primaryBackground,
-        boxShadow: const [
-          BoxShadow(
-            blurRadius: 0,
-            color: Color(0x33000000),
-            offset: Offset(0, 1),
-          )
-        ],
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsetsDirectional.fromSTEB(15, 0, 15, 0),
-        child: Row(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                const SkeletonLoadingWidget(
-                  width: 50,
-                  height: 50,
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                ),
-                const SizedBox(width: 15),
-                Column(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SkeletonLoadingWidget(
-                      width: 120,
-                      height: 16,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    const SizedBox(height: 4),
-                    SkeletonLoadingWidget(
-                      width: 100,
-                      height: 12,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SkeletonLoadingWidget(
-              width: 16,
-              height: 16,
-              borderRadius: BorderRadius.all(Radius.circular(4)),
-            ),
-          ],
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: AppTheme.of(context).primaryBackground,
+          borderRadius: BorderRadius.circular(12),
         ),
-      ),
-    );
-}
-
-// Skeleton for search result items
-class SearchCardSkeleton extends StatelessWidget {
-  const SearchCardSkeleton({super.key});
-
-  @override
-  Widget build(BuildContext context) => Container(
-      width: double.infinity,
-      margin: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 12),
-      decoration: BoxDecoration(
-        color: AppTheme.of(context).secondaryBackground,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsetsDirectional.fromSTEB(12, 12, 12, 12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
           children: [
             const SkeletonLoadingWidget(
-              width: 80,
+              width: double.infinity,
               height: 80,
-              borderRadius: BorderRadius.all(Radius.circular(8)),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
+            Padding(
+              padding: const EdgeInsets.all(8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -475,20 +256,8 @@ class SearchCardSkeleton extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   SkeletonLoadingWidget(
-                    width: 100,
-                    height: 14,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  const SizedBox(height: 4),
-                  SkeletonLoadingWidget(
                     width: 60,
-                    height: 14,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  const SizedBox(height: 8),
-                  SkeletonLoadingWidget(
-                    width: 80,
-                    height: 18,
+                    height: 12,
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ],
@@ -496,8 +265,239 @@ class SearchCardSkeleton extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
+      );
+}
+
+// Skeleton card for service items (home page)
+class ServiceCardSkeleton extends StatelessWidget {
+  const ServiceCardSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: AppTheme.of(context).primaryBackground,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: const [
+            BoxShadow(
+              blurRadius: 4,
+              color: Color(0x1A000000),
+              offset: Offset(0, 2),
+            )
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SkeletonLoadingWidget(
+              width: double.infinity,
+              height: 120,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SkeletonLoadingWidget(
+                    width: double.infinity,
+                    height: 16,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  const SizedBox(height: 6),
+                  SkeletonLoadingWidget(
+                    width: 100,
+                    height: 14,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      SkeletonLoadingWidget(
+                        width: 40,
+                        height: 14,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      const Spacer(),
+                      SkeletonLoadingWidget(
+                        width: 60,
+                        height: 18,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+}
+
+// Skeleton for profile header
+class ProfileHeaderSkeleton extends StatelessWidget {
+  const ProfileHeaderSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsetsDirectional.fromSTEB(16, 10, 16, 0),
+        child: Row(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            const SkeletonLoadingWidget(
+              width: 70,
+              height: 70,
+              borderRadius: BorderRadius.all(Radius.circular(35)),
+            ),
+            const SizedBox(width: 16),
+            Column(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SkeletonLoadingWidget(
+                  width: 150,
+                  height: 17,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                const SizedBox(height: 6),
+                SkeletonLoadingWidget(
+                  width: 80,
+                  height: 15,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+}
+
+// Skeleton for profile menu item
+class ProfileMenuItemSkeleton extends StatelessWidget {
+  const ProfileMenuItemSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: double.infinity,
+        height: 80,
+        decoration: BoxDecoration(
+          color: AppTheme.of(context).primaryBackground,
+          boxShadow: const [
+            BoxShadow(
+              blurRadius: 0,
+              color: Color(0x33000000),
+              offset: Offset(0, 1),
+            )
+          ],
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(15, 0, 15, 0),
+          child: Row(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  const SkeletonLoadingWidget(
+                    width: 50,
+                    height: 50,
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                  ),
+                  const SizedBox(width: 15),
+                  Column(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SkeletonLoadingWidget(
+                        width: 120,
+                        height: 16,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      const SizedBox(height: 4),
+                      SkeletonLoadingWidget(
+                        width: 100,
+                        height: 12,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SkeletonLoadingWidget(
+                width: 16,
+                height: 16,
+                borderRadius: BorderRadius.all(Radius.circular(4)),
+              ),
+            ],
+          ),
+        ),
+      );
+}
+
+// Skeleton for search result items
+class SearchCardSkeleton extends StatelessWidget {
+  const SearchCardSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: double.infinity,
+        margin: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 12),
+        decoration: BoxDecoration(
+          color: AppTheme.of(context).secondaryBackground,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(12, 12, 12, 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SkeletonLoadingWidget(
+                width: 80,
+                height: 80,
+                borderRadius: BorderRadius.all(Radius.circular(8)),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SkeletonLoadingWidget(
+                      width: double.infinity,
+                      height: 16,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    const SizedBox(height: 4),
+                    SkeletonLoadingWidget(
+                      width: 100,
+                      height: 14,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    const SizedBox(height: 4),
+                    SkeletonLoadingWidget(
+                      width: 60,
+                      height: 14,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    const SizedBox(height: 8),
+                    SkeletonLoadingWidget(
+                      width: 80,
+                      height: 18,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
 }
 
 // Skeleton for payment method cards
@@ -506,44 +506,44 @@ class PaymentMethodCardSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.of(context).secondaryBackground,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          const SkeletonLoadingWidget(
-            width: 50,
-            height: 50,
-            borderRadius: BorderRadius.all(Radius.circular(12)),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SkeletonLoadingWidget(
-                  width: 120,
-                  height: 16,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                const SizedBox(height: 4),
-                SkeletonLoadingWidget(
-                  width: 80,
-                  height: 14,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ],
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.of(context).secondaryBackground,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            const SkeletonLoadingWidget(
+              width: 50,
+              height: 50,
+              borderRadius: BorderRadius.all(Radius.circular(12)),
             ),
-          ),
-          const SkeletonLoadingWidget(
-            width: 24,
-            height: 24,
-            borderRadius: BorderRadius.all(Radius.circular(4)),
-          ),
-        ],
-      ),
-    );
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SkeletonLoadingWidget(
+                    width: 120,
+                    height: 16,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  const SizedBox(height: 4),
+                  SkeletonLoadingWidget(
+                    width: 80,
+                    height: 14,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ],
+              ),
+            ),
+            const SkeletonLoadingWidget(
+              width: 24,
+              height: 24,
+              borderRadius: BorderRadius.all(Radius.circular(4)),
+            ),
+          ],
+        ),
+      );
 }

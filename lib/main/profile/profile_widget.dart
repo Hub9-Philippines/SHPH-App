@@ -3,8 +3,9 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
-import '/auth/supabase_auth/auth_util.dart';
-import '/backend/supabase/supabase.dart';
+import '/api/resources/users_api.dart';
+import '/auth/shph_auth/auth_util.dart';
+import '/backend/shph_db/shph_db.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/upload_data.dart';
@@ -151,7 +152,16 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                       .pushNamed(AddressesWidget.routeName),
                                 ),
                                 _ProfileMenuTile(
-                                  icon: Icons.wallet_rounded,
+                                  icon: Icons.account_balance_wallet_rounded,
+                                  iconTint: const Color(0xFF0EA5E9),
+                                  title: 'Wallet',
+                                  subtitle:
+                                      'Check balance, top up, and view transactions',
+                                  onTap: () =>
+                                      context.pushNamed(WalletPage.routeName),
+                                ),
+                                _ProfileMenuTile(
+                                  icon: Icons.credit_card_rounded,
                                   iconTint: const Color(0xFF1B74E4),
                                   title: 'Payment methods',
                                   subtitle:
@@ -173,6 +183,33 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                       'Jump back into the services you saved',
                                   onTap: () => context
                                       .pushNamed(FavoritesWidget.routeName),
+                                ),
+                                _ProfileMenuTile(
+                                  icon: Icons.work_history_rounded,
+                                  iconTint: const Color(0xFF8B5CF6),
+                                  title: 'My Job Requests',
+                                  subtitle:
+                                      'Track your on-demand service requests',
+                                  onTap: () => context
+                                      .pushNamed(OnDemandJobsPage.routeName),
+                                ),
+                                _ProfileMenuTile(
+                                  icon: Icons.recommend_rounded,
+                                  iconTint: const Color(0xFF10B981),
+                                  title: 'Recommendations',
+                                  subtitle:
+                                      'Discover services tailored for you',
+                                  onTap: () => context
+                                      .pushNamed(RecommendationsPage.routeName),
+                                ),
+                                _ProfileMenuTile(
+                                  icon: Icons.gavel_rounded,
+                                  iconTint: const Color(0xFFF43F5E),
+                                  title: 'Disputes',
+                                  subtitle:
+                                      'View and manage your dispute cases',
+                                  onTap: () =>
+                                      context.pushNamed(DisputesPage.routeName),
                                 ),
                                 _ProfileMenuTile(
                                   icon: Icons.notifications_rounded,
@@ -231,6 +268,15 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                       .pushNamed(MyReviewsWidget.routeName),
                                 ),
                                 _ProfileMenuTile(
+                                  icon: Icons.admin_panel_settings_outlined,
+                                  iconTint: const Color(0xFF6366F1),
+                                  title: 'Admin Dashboard',
+                                  subtitle:
+                                      'Manage users, KYC, disputes, and payouts',
+                                  onTap: () => context
+                                      .pushNamed(AdminDashboardPage.routeName),
+                                ),
+                                _ProfileMenuTile(
                                   icon: Icons.security_rounded,
                                   iconTint: const Color(0xFF00A8A8),
                                   title: 'Security',
@@ -247,16 +293,6 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                   subtitle: 'Adjust your app preferences',
                                   onTap: () => context
                                       .pushNamed(SettingsWidget.routeName),
-                                ),
-                                const SizedBox(height: 14),
-                                _ProfileMenuTile(
-                                  icon: Icons.help_rounded,
-                                  iconTint: const Color(0xFF1976D2),
-                                  title: 'Help',
-                                  subtitle:
-                                      'FAQs and chat with our support team',
-                                  onTap: () => context
-                                      .pushNamed(HelpPage.routeName),
                                 ),
                               ],
                             ),
@@ -625,7 +661,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
           )
           .toList();
 
-      downloadUrls = await uploadSupabaseStorageFiles(
+      downloadUrls = await uploadShphStorageFiles(
         bucketName: 'SHPH',
         selectedFiles: selectedMedia,
       );
@@ -653,10 +689,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
       _model.uploadedFileUrl_uploadData2mv = downloadUrls.first;
     });
 
-    await ProfilesTable().update(
-      data: {'face_scan_url': downloadUrls.first},
-      matchingRows: (rows) => rows.eq('id', currentUserUid),
-    );
+    await ShphUsersApi.instance.updateMe({'face_scan_url': downloadUrls.first});
 
     if (mounted) {
       showUploadMessage(context, 'Success!');

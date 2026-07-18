@@ -21,7 +21,7 @@ class DocumentScanModel extends FlutterFlowModel<DocumentScanWidget> {
     backButtonModel = createModel(context, BackButtonModel.new);
   }
 
-  // Upload document to Supabase storage
+  // Upload document to SHPH storage
   Future<void> uploadDocument(XFile image,
       {required Function() onUploadStart,
       required Function() onUploadComplete,

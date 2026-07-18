@@ -4,8 +4,7 @@ import 'dart:ffi';
 import 'package:flutter/material.dart';
 import 'package:from_css_color/from_css_color.dart';
 
-import '/backend/supabase/supabase.dart';
-
+import '/backend/shph_db/shph_db.dart';
 import '../../flutter_flow/place.dart';
 import '../../flutter_flow/uploaded_file.dart';
 
@@ -75,8 +74,8 @@ String? serializeParam(
       case ParamType.dataStruct:
         data = param is Struct ? param.toString() : null;
 
-      case ParamType.supabaseRow:
-        return json.encode((param as SupabaseDataRow).data);
+      case ParamType.shphRow:
+        return json.encode((param as ShphDataRow).data);
       case ParamType.document:
         // TODO: Handle this case.
         throw UnimplementedError();
@@ -160,7 +159,7 @@ enum ParamType {
   document,
   documentReference,
   dataStruct,
-  supabaseRow,
+  shphRow,
 }
 
 dynamic deserializeParam<T>(
@@ -220,7 +219,7 @@ dynamic deserializeParam<T>(
       case ParamType.json:
         return json.decode(param);
 
-      case ParamType.supabaseRow:
+      case ParamType.shphRow:
         final data = json.decode(param) as Map<String, dynamic>;
         switch (T) {
           case ProfilesRow:

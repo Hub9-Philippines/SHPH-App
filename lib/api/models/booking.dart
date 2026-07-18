@@ -19,6 +19,28 @@ class ShphBooking {
     this.clientProfile,
   });
 
+  factory ShphBooking.fromJson(Map<String, dynamic> json) => ShphBooking(
+        id: json['id']?.toString() ?? '',
+        listing: json['listing'] as int? ?? 0,
+        status: json['status'] as String? ?? 'pending',
+        listingTitle: json['listing_title'] as String?,
+        providerName: json['provider_name'] as String?,
+        providerPhoto: json['provider_photo'] as String?,
+        clientId: json['client_id'] as int? ?? json['client'] as int?,
+        providerId: json['provider_id'] as int?,
+        scheduledDate: json['scheduled_date'] as String?,
+        scheduledTime: json['scheduled_time'] as String?,
+        scheduledAt: json['scheduled_at'] as String?,
+        notes: json['notes'] as String?,
+        agreedPrice: _toDouble(json['agreed_price']),
+        totalPrice: _toDouble(json['total_price']),
+        createdAt: json['created_at'] as String?,
+        serviceListing: json['service_listings'] as Map<String, dynamic>? ??
+            json['service_listing'] as Map<String, dynamic>?,
+        clientProfile: json['profiles'] as Map<String, dynamic>? ??
+            json['client_profile'] as Map<String, dynamic>?,
+      );
+
   final String id;
   final int listing;
   final String status;
@@ -37,49 +59,28 @@ class ShphBooking {
   final Map<String, dynamic>? serviceListing;
   final Map<String, dynamic>? clientProfile;
 
-  factory ShphBooking.fromJson(Map<String, dynamic> json) {
-    return ShphBooking(
-      id: json['id']?.toString() ?? '',
-      listing: json['listing'] as int? ?? 0,
-      status: json['status'] as String? ?? 'pending',
-      listingTitle: json['listing_title'] as String?,
-      providerName: json['provider_name'] as String?,
-      providerPhoto: json['provider_photo'] as String?,
-      clientId: json['client_id'] as int? ?? json['client'] as int?,
-      providerId: json['provider_id'] as int?,
-      scheduledDate: json['scheduled_date'] as String?,
-      scheduledTime: json['scheduled_time'] as String?,
-      scheduledAt: json['scheduled_at'] as String?,
-      notes: json['notes'] as String?,
-      agreedPrice: _toDouble(json['agreed_price']),
-      totalPrice: _toDouble(json['total_price']),
-      createdAt: json['created_at'] as String?,
-      serviceListing: json['service_listings'] as Map<String, dynamic>? ??
-          json['service_listing'] as Map<String, dynamic>?,
-      clientProfile: json['profiles'] as Map<String, dynamic>? ??
-          json['client_profile'] as Map<String, dynamic>?,
-    );
-  }
-
   Map<String, dynamic> toCreateJson({
     required int listingId,
     String? scheduledDate,
     String? scheduledTime,
     String? notes,
     double? totalPrice,
-  }) {
-    return {
-      'listing': listingId,
-      if (scheduledDate != null) 'scheduled_date': scheduledDate,
-      if (scheduledTime != null) 'scheduled_time': scheduledTime,
-      if (notes != null) 'notes': notes,
-      if (totalPrice != null) 'total_price': totalPrice,
-    };
-  }
+  }) =>
+      {
+        'listing': listingId,
+        if (scheduledDate != null) 'scheduled_date': scheduledDate,
+        if (scheduledTime != null) 'scheduled_time': scheduledTime,
+        if (notes != null) 'notes': notes,
+        if (totalPrice != null) 'total_price': totalPrice,
+      };
 
   static double? _toDouble(Object? value) {
-    if (value == null) return null;
-    if (value is num) return value.toDouble();
+    if (value == null) {
+      return null;
+    }
+    if (value is num) {
+      return value.toDouble();
+    }
     return double.tryParse(value.toString());
   }
 }

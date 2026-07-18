@@ -1,8 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
+import '/api/resources/chat_api.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/pages/call/call_page.dart';
+import '/services/call/call_controller.dart';
+import '/services/call/call_peer.dart';
+import '/services/error_handler.dart';
 import '/theme/app_theme.dart';
 import 'chat_page_model.dart';
 
@@ -202,6 +210,25 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                       ),
                 ),
               ),
+              const SizedBox(width: 4),
+              ChatCallButton(
+                threadId: widget.roomId ?? '',
+                resolveCallee: () async {
+                  final thread = await ShphChatApi.instance
+                      .getThreadDetails(widget.roomId ?? '');
+                  final other = (thread['other_participant'] as Map?)
+                          ?.cast<String, dynamic>() ??
+                      {};
+                  return CallParticipant(
+                    userId: other['id']?.toString() ?? '',
+                    name:
+                        (other['display_name'] ?? widget.providerName ?? 'User')
+                            .toString(),
+                    photoUrl: (other['photo_url'] ?? widget.providerPhoto)
+                        ?.toString(),
+                  );
+                },
+              ),
             ],
           ),
         ),
@@ -289,9 +316,8 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                 maxWidth: MediaQuery.sizeOf(context).width * 0.68,
               ),
               child: Column(
-                crossAxisAlignment: isMe
-                    ? CrossAxisAlignment.end
-                    : CrossAxisAlignment.start,
+                crossAxisAlignment:
+                    isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                 children: [
                   Container(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
@@ -350,8 +376,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                                         fontWeight: FontWeight.w700,
                                       ),
                                       color: isMe
-                                          ? Colors.white
-                                              .withValues(alpha: 0.86)
+                                          ? Colors.white.withValues(alpha: 0.86)
                                           : const Color(0xFF64748B),
                                     ),
                               ),
@@ -500,4 +525,48 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
         return '';
     }
   }
+}
+
+/// Header button that starts a call in the current chat thread.
+class ChatCallButton extends StatelessWidget {
+  const ChatCallButton({
+    required this.threadId,
+    required this.resolveCallee,
+    super.key,
+  });
+
+  final String threadId;
+  final Future<CallParticipant> Function() resolveCallee;
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+        key: const Key('chat_call_btn'),
+        icon: const Icon(Icons.videocam),
+        onPressed: () async {
+          final controller = context.read<CallController>();
+          if (controller.isBusy) {
+            return;
+          }
+          try {
+            final callee = await resolveCallee();
+            await controller.initiateCall(threadId: threadId, callee: callee);
+            if (context.mounted) {
+              unawaited(Navigator.of(context)
+                  .push(
+                    MaterialPageRoute<void>(
+                      builder: (ctx) =>
+                          ChangeNotifierProvider<CallController>.value(
+                        value: controller,
+                        child: const CallPage(),
+                      ),
+                    ),
+                  )
+                  .catchError((_) {}));
+            }
+          } catch (_) {
+            ErrorHandler.showError(
+                "Couldn't start the call. Please try again.");
+          }
+        },
+      );
 }

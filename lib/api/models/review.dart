@@ -11,6 +11,18 @@ class ShphReview {
     this.serviceListingId,
   });
 
+  factory ShphReview.fromJson(Map<String, dynamic> json) => ShphReview(
+        id: json['id'] as int? ?? 0,
+        rating: json['rating'] as int? ?? 0,
+        booking: json['booking']?.toString(),
+        reviewer: json['reviewer'] as int?,
+        reviewerName: json['reviewer_name'] as String?,
+        reviewerPhoto: json['reviewer_photo'] as String?,
+        comment: json['comment'] as String?,
+        createdAt: json['created_at'] as String?,
+        serviceListingId: json['service_listing_id'] as int?,
+      );
+
   final int id;
   final int rating;
   final String? booking;
@@ -20,18 +32,4 @@ class ShphReview {
   final String? comment;
   final String? createdAt;
   final int? serviceListingId;
-
-  factory ShphReview.fromJson(Map<String, dynamic> json) {
-    return ShphReview(
-      id: json['id'] as int? ?? 0,
-      rating: json['rating'] as int? ?? 0,
-      booking: json['booking']?.toString(),
-      reviewer: json['reviewer'] as int?,
-      reviewerName: json['reviewer_name'] as String?,
-      reviewerPhoto: json['reviewer_photo'] as String?,
-      comment: json['comment'] as String?,
-      createdAt: json['created_at'] as String?,
-      serviceListingId: json['service_listing_id'] as int?,
-    );
-  }
 }

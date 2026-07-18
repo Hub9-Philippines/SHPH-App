@@ -4,7 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/custom_code/widgets/index.dart' as custom_widgets;
 import '/flutter_flow/flutter_flow_util.dart';
-import '/index.dart' show CallHistoryDetailsPageWidget, ChatPageWidget, MyNotificationsWidget;
+import '/index.dart'
+    show CallHistoryDetailsPageWidget, ChatPageWidget, MyNotificationsWidget;
 import '/theme/app_theme.dart';
 import 'messages_model.dart';
 
@@ -213,7 +214,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
               backgroundColor: Colors.white,
               foregroundColor: AppTheme.of(context).primary,
             ),
-            icon: const Icon(Icons.notifications_rounded),
+            icon: const Icon(Icons.tune_rounded),
           ),
           const SizedBox(width: 8),
           IconButton.filledTonal(

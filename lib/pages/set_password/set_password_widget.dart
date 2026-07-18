@@ -47,62 +47,65 @@ class _SetPasswordWidgetState extends State<SetPasswordWidget> {
 
   @override
   Widget build(BuildContext context) => GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-        FocusManager.instance.primaryFocus?.unfocus();
-      },
-      child: Scaffold(
-        key: scaffoldKey,
-        backgroundColor: AppTheme.of(context).primaryBackground,
-        appBar: AppBar(
+        onTap: () {
+          FocusScope.of(context).unfocus();
+          FocusManager.instance.primaryFocus?.unfocus();
+        },
+        child: Scaffold(
+          key: scaffoldKey,
           backgroundColor: AppTheme.of(context).primaryBackground,
-          automaticallyImplyLeading: false,
-          leading: wrapWithModel(
-            model: _model.backButtonModel,
-            updateCallback: () => safeSetState(() {}),
-            child: const BackButtonWidget(),
-          ),
-          title: Text(
-            'Forgot Password',
-            style: AppTheme.of(context).titleLarge.override(
-                  font: GoogleFonts.poppins(
-                    fontWeight:
-                        AppTheme.of(context).titleLarge.fontWeight,
-                    fontStyle:
-                        AppTheme.of(context).titleLarge.fontStyle,
+          appBar: AppBar(
+            backgroundColor: AppTheme.of(context).primaryBackground,
+            automaticallyImplyLeading: false,
+            leading: wrapWithModel(
+              model: _model.backButtonModel,
+              updateCallback: () => safeSetState(() {}),
+              child: const BackButtonWidget(),
+            ),
+            title: Text(
+              'Forgot Password',
+              style: AppTheme.of(context).titleLarge.override(
+                    font: GoogleFonts.poppins(
+                      fontWeight: AppTheme.of(context).titleLarge.fontWeight,
+                      fontStyle: AppTheme.of(context).titleLarge.fontStyle,
+                    ),
+                    letterSpacing: 0,
+                    fontWeight: AppTheme.of(context).titleLarge.fontWeight,
+                    fontStyle: AppTheme.of(context).titleLarge.fontStyle,
                   ),
-                  letterSpacing: 0,
-                  fontWeight:
-                      AppTheme.of(context).titleLarge.fontWeight,
-                  fontStyle: AppTheme.of(context).titleLarge.fontStyle,
-                ),
+            ),
+            actions: const [],
+            centerTitle: true,
+            elevation: 0,
           ),
-          actions: const [],
-          centerTitle: true,
-          elevation: 0,
-        ),
-        body: SafeArea(
-          top: true,
-          child: Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding:
-                            const EdgeInsetsDirectional.fromSTEB(0, 24, 0, 0),
-                        child: Text(
-                          'Forgot Password',
-                          style: AppTheme.of(context)
-                              .displaySmall
-                              .override(
-                                font: GoogleFonts.poppins(
+          body: SafeArea(
+            top: true,
+            child: Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding:
+                              const EdgeInsetsDirectional.fromSTEB(0, 24, 0, 0),
+                          child: Text(
+                            'Forgot Password',
+                            style: AppTheme.of(context).displaySmall.override(
+                                  font: GoogleFonts.poppins(
+                                    fontWeight: AppTheme.of(context)
+                                        .displaySmall
+                                        .fontWeight,
+                                    fontStyle: AppTheme.of(context)
+                                        .displaySmall
+                                        .fontStyle,
+                                  ),
+                                  letterSpacing: 0,
                                   fontWeight: AppTheme.of(context)
                                       .displaySmall
                                       .fontWeight,
@@ -110,271 +113,237 @@ class _SetPasswordWidgetState extends State<SetPasswordWidget> {
                                       .displaySmall
                                       .fontStyle,
                                 ),
-                                letterSpacing: 0,
-                                fontWeight: AppTheme.of(context)
-                                    .displaySmall
-                                    .fontWeight,
-                                fontStyle: AppTheme.of(context)
-                                    .displaySmall
-                                    .fontStyle,
-                              ),
+                          ),
                         ),
-                      ),
-                      Padding(
-                        padding:
-                            const EdgeInsetsDirectional.fromSTEB(0, 8, 0, 0),
-                        child: Text(
-                          'Don\'t worry! It happens. Please enter the email address associated with your account.',
-                          style: AppTheme.of(context)
-                              .bodyMedium
-                              .override(
-                                font: GoogleFonts.poppins(
+                        Padding(
+                          padding:
+                              const EdgeInsetsDirectional.fromSTEB(0, 8, 0, 0),
+                          child: Text(
+                            'Don\'t worry! It happens. Please enter the email address associated with your account.',
+                            style: AppTheme.of(context).bodyMedium.override(
+                                  font: GoogleFonts.poppins(
+                                    fontWeight: AppTheme.of(context)
+                                        .bodyMedium
+                                        .fontWeight,
+                                    fontStyle: AppTheme.of(context)
+                                        .bodyMedium
+                                        .fontStyle,
+                                  ),
+                                  color: AppTheme.of(context).secondaryText,
+                                  letterSpacing: 0,
                                   fontWeight: AppTheme.of(context)
                                       .bodyMedium
                                       .fontWeight,
-                                  fontStyle: AppTheme.of(context)
-                                      .bodyMedium
-                                      .fontStyle,
+                                  fontStyle:
+                                      AppTheme.of(context).bodyMedium.fontStyle,
                                 ),
-                                color:
-                                    AppTheme.of(context).secondaryText,
-                                letterSpacing: 0,
-                                fontWeight: AppTheme.of(context)
-                                    .bodyMedium
-                                    .fontWeight,
-                                fontStyle: AppTheme.of(context)
-                                    .bodyMedium
-                                    .fontStyle,
-                              ),
+                          ),
                         ),
-                      ),
-                      Padding(
-                        padding:
-                            const EdgeInsetsDirectional.fromSTEB(0, 32, 0, 0),
-                        child: Form(
-                          key: _model.formKey,
-                          autovalidateMode: AutovalidateMode.disabled,
-                          child: Padding(
-                            padding: const EdgeInsetsDirectional.fromSTEB(
-                                0, 0, 0, 4),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  width: double.infinity,
-                                  child: TextFormField(
-                                    controller:
-                                        _model.emailTextFieldTextController,
-                                    focusNode: _model.emailTextFieldFocusNode,
-                                    onChanged: (_) => EasyDebounce.debounce(
-                                      '_model.emailTextFieldTextController',
-                                      Duration.zero,
-                                      () async {
-                                        _model.isEmailvalid =
-                                            functions.checkEmailRegex(_model
-                                                .emailTextFieldTextController
-                                                .text);
-                                        safeSetState(() {});
-                                      },
-                                    ),
-                                    autofocus: false,
-                                    textInputAction: TextInputAction.next,
-                                    obscureText: false,
-                                    decoration: InputDecoration(
-                                      isDense: true,
-                                      labelText: 'Email',
-                                      labelStyle: AppTheme.of(context)
+                        Padding(
+                          padding:
+                              const EdgeInsetsDirectional.fromSTEB(0, 32, 0, 0),
+                          child: Form(
+                            key: _model.formKey,
+                            autovalidateMode: AutovalidateMode.disabled,
+                            child: Padding(
+                              padding: const EdgeInsetsDirectional.fromSTEB(
+                                  0, 0, 0, 4),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    width: double.infinity,
+                                    child: TextFormField(
+                                      controller:
+                                          _model.emailTextFieldTextController,
+                                      focusNode: _model.emailTextFieldFocusNode,
+                                      onChanged: (_) => EasyDebounce.debounce(
+                                        '_model.emailTextFieldTextController',
+                                        Duration.zero,
+                                        () async {
+                                          _model.isEmailvalid =
+                                              functions.checkEmailRegex(_model
+                                                  .emailTextFieldTextController
+                                                  .text);
+                                          safeSetState(() {});
+                                        },
+                                      ),
+                                      autofocus: false,
+                                      textInputAction: TextInputAction.next,
+                                      obscureText: false,
+                                      decoration: InputDecoration(
+                                        isDense: true,
+                                        labelText: 'Email',
+                                        labelStyle: AppTheme.of(context)
+                                            .bodyLarge
+                                            .override(
+                                              font: GoogleFonts.poppins(
+                                                fontWeight: AppTheme.of(context)
+                                                    .bodyLarge
+                                                    .fontWeight,
+                                                fontStyle: AppTheme.of(context)
+                                                    .bodyLarge
+                                                    .fontStyle,
+                                              ),
+                                              color: AppTheme.of(context)
+                                                  .secondaryText,
+                                              letterSpacing: 0,
+                                              fontWeight: AppTheme.of(context)
+                                                  .bodyLarge
+                                                  .fontWeight,
+                                              fontStyle: AppTheme.of(context)
+                                                  .bodyLarge
+                                                  .fontStyle,
+                                            ),
+                                        hintStyle: AppTheme.of(context)
+                                            .bodyLarge
+                                            .override(
+                                              font: GoogleFonts.poppins(
+                                                fontWeight: AppTheme.of(context)
+                                                    .bodyLarge
+                                                    .fontWeight,
+                                                fontStyle: AppTheme.of(context)
+                                                    .bodyLarge
+                                                    .fontStyle,
+                                              ),
+                                              color: AppTheme.of(context)
+                                                  .secondaryText,
+                                              letterSpacing: 0,
+                                              fontWeight: AppTheme.of(context)
+                                                  .bodyLarge
+                                                  .fontWeight,
+                                              fontStyle: AppTheme.of(context)
+                                                  .bodyLarge
+                                                  .fontStyle,
+                                            ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                            color: valueOrDefault<Color>(
+                                              !_model.isEmailvalid
+                                                  ? AppTheme.of(context).error
+                                                  : AppTheme.of(context)
+                                                      .alternate,
+                                              AppTheme.of(context).alternate,
+                                            ),
+                                            width: 1,
+                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                            color: valueOrDefault<Color>(
+                                              !_model.isEmailvalid
+                                                  ? AppTheme.of(context).error
+                                                  : AppTheme.of(context)
+                                                      .alternate,
+                                              AppTheme.of(context).accent4,
+                                            ),
+                                            width: 1,
+                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        errorBorder: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                            color: AppTheme.of(context).error,
+                                            width: 1,
+                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        focusedErrorBorder: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                            color: AppTheme.of(context).error,
+                                            width: 1,
+                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        filled: true,
+                                        fillColor: AppTheme.of(context)
+                                            .primaryBackground,
+                                        contentPadding:
+                                            const EdgeInsetsDirectional
+                                                .fromSTEB(16, 20, 16, 20),
+                                        hoverColor: AppTheme.of(context)
+                                            .primaryBackground,
+                                      ),
+                                      style: AppTheme.of(context)
                                           .bodyLarge
                                           .override(
                                             font: GoogleFonts.poppins(
-                                              fontWeight:
-                                                  AppTheme.of(context)
-                                                      .bodyLarge
-                                                      .fontWeight,
-                                              fontStyle:
-                                                  AppTheme.of(context)
-                                                      .bodyLarge
-                                                      .fontStyle,
+                                              fontWeight: AppTheme.of(context)
+                                                  .bodyLarge
+                                                  .fontWeight,
+                                              fontStyle: AppTheme.of(context)
+                                                  .bodyLarge
+                                                  .fontStyle,
                                             ),
-                                            color: AppTheme.of(context)
-                                                .secondaryText,
                                             letterSpacing: 0,
-                                            fontWeight:
-                                                AppTheme.of(context)
-                                                    .bodyLarge
-                                                    .fontWeight,
-                                            fontStyle:
-                                                AppTheme.of(context)
-                                                    .bodyLarge
-                                                    .fontStyle,
+                                            fontWeight: AppTheme.of(context)
+                                                .bodyLarge
+                                                .fontWeight,
+                                            fontStyle: AppTheme.of(context)
+                                                .bodyLarge
+                                                .fontStyle,
                                           ),
-                                      hintStyle: AppTheme.of(context)
-                                          .bodyLarge
+                                      cursorColor:
+                                          AppTheme.of(context).primaryText,
+                                      validator: _model
+                                          .emailTextFieldTextControllerValidator
+                                          .asValidator(context),
+                                    ),
+                                  ),
+                                  if (!_model.isEmailvalid)
+                                    Text(
+                                      'Invalid email',
+                                      style: AppTheme.of(context)
+                                          .bodySmall
                                           .override(
                                             font: GoogleFonts.poppins(
-                                              fontWeight:
-                                                  AppTheme.of(context)
-                                                      .bodyLarge
-                                                      .fontWeight,
-                                              fontStyle:
-                                                  AppTheme.of(context)
-                                                      .bodyLarge
-                                                      .fontStyle,
+                                              fontWeight: AppTheme.of(context)
+                                                  .bodySmall
+                                                  .fontWeight,
+                                              fontStyle: AppTheme.of(context)
+                                                  .bodySmall
+                                                  .fontStyle,
                                             ),
-                                            color: AppTheme.of(context)
-                                                .secondaryText,
+                                            color: AppTheme.of(context).error,
                                             letterSpacing: 0,
-                                            fontWeight:
-                                                AppTheme.of(context)
-                                                    .bodyLarge
-                                                    .fontWeight,
-                                            fontStyle:
-                                                AppTheme.of(context)
-                                                    .bodyLarge
-                                                    .fontStyle,
+                                            fontWeight: AppTheme.of(context)
+                                                .bodySmall
+                                                .fontWeight,
+                                            fontStyle: AppTheme.of(context)
+                                                .bodySmall
+                                                .fontStyle,
                                           ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                          color: valueOrDefault<Color>(
-                                            !_model.isEmailvalid
-                                                ? AppTheme.of(context)
-                                                    .error
-                                                : AppTheme.of(context)
-                                                    .alternate,
-                                            AppTheme.of(context)
-                                                .alternate,
-                                          ),
-                                          width: 1,
-                                        ),
-                                        borderRadius:
-                                            BorderRadius.circular(12),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                          color: valueOrDefault<Color>(
-                                            !_model.isEmailvalid
-                                                ? AppTheme.of(context)
-                                                    .error
-                                                : AppTheme.of(context)
-                                                    .alternate,
-                                            AppTheme.of(context)
-                                                .accent4,
-                                          ),
-                                          width: 1,
-                                        ),
-                                        borderRadius:
-                                            BorderRadius.circular(12),
-                                      ),
-                                      errorBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                          color: AppTheme.of(context)
-                                              .error,
-                                          width: 1,
-                                        ),
-                                        borderRadius:
-                                            BorderRadius.circular(12),
-                                      ),
-                                      focusedErrorBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                          color: AppTheme.of(context)
-                                              .error,
-                                          width: 1,
-                                        ),
-                                        borderRadius:
-                                            BorderRadius.circular(12),
-                                      ),
-                                      filled: true,
-                                      fillColor: AppTheme.of(context)
-                                          .primaryBackground,
-                                      contentPadding:
-                                          const EdgeInsetsDirectional.fromSTEB(
-                                              16, 20, 16, 20),
-                                      hoverColor: AppTheme.of(context)
-                                          .primaryBackground,
                                     ),
-                                    style: AppTheme.of(context)
-                                        .bodyLarge
-                                        .override(
-                                          font: GoogleFonts.poppins(
-                                            fontWeight:
-                                                AppTheme.of(context)
-                                                    .bodyLarge
-                                                    .fontWeight,
-                                            fontStyle:
-                                                AppTheme.of(context)
-                                                    .bodyLarge
-                                                    .fontStyle,
-                                          ),
-                                          letterSpacing: 0,
-                                          fontWeight:
-                                              AppTheme.of(context)
-                                                  .bodyLarge
-                                                  .fontWeight,
-                                          fontStyle:
-                                              AppTheme.of(context)
-                                                  .bodyLarge
-                                                  .fontStyle,
-                                        ),
-                                    cursorColor: AppTheme.of(context)
-                                        .primaryText,
-                                    validator: _model
-                                        .emailTextFieldTextControllerValidator
-                                        .asValidator(context),
-                                  ),
-                                ),
-                                if (!_model.isEmailvalid)
-                                  Text(
-                                    'Invalid email',
-                                    style: AppTheme.of(context)
-                                        .bodySmall
-                                        .override(
-                                          font: GoogleFonts.poppins(
-                                            fontWeight:
-                                                AppTheme.of(context)
-                                                    .bodySmall
-                                                    .fontWeight,
-                                            fontStyle:
-                                                AppTheme.of(context)
-                                                    .bodySmall
-                                                    .fontStyle,
-                                          ),
-                                          color: AppTheme.of(context)
-                                              .error,
-                                          letterSpacing: 0,
-                                          fontWeight:
-                                              AppTheme.of(context)
-                                                  .bodySmall
-                                                  .fontWeight,
-                                          fontStyle:
-                                              AppTheme.of(context)
-                                                  .bodySmall
-                                                  .fontStyle,
-                                        ),
-                                  ),
-                              ].divide(const SizedBox(height: 4)),
+                                ].divide(const SizedBox(height: 4)),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      Builder(
-                        builder: (context) => Padding(
-                          padding: const EdgeInsetsDirectional.fromSTEB(
-                              0, 20, 0, 0),
-                          child: FFButtonWidget(
-                            onPressed: ((_model.emailTextFieldTextController
-                                                .text ==
-                                            '') ||
-                                    !_model.isEmailvalid)
-                                ? null
-                                : () async {
-                                    await showDialog(
-                                      context: context,
-                                      builder: (dialogContext) => Dialog(
+                        Builder(
+                          builder: (context) => Padding(
+                            padding: const EdgeInsetsDirectional.fromSTEB(
+                                0, 20, 0, 0),
+                            child: FFButtonWidget(
+                              onPressed: ((_model.emailTextFieldTextController
+                                              .text ==
+                                          '') ||
+                                      !_model.isEmailvalid)
+                                  ? null
+                                  : () async {
+                                      await showDialog(
+                                        context: context,
+                                        builder: (dialogContext) => Dialog(
                                           elevation: 0,
                                           insetPadding: EdgeInsets.zero,
                                           backgroundColor: Colors.transparent,
-                                          alignment: AlignmentDirectional.topCenter
+                                          alignment: AlignmentDirectional
+                                              .topCenter
                                               .resolve(
                                                   Directionality.of(context)),
                                           child: GestureDetector(
@@ -387,55 +356,60 @@ class _SetPasswordWidgetState extends State<SetPasswordWidget> {
                                             child: const ResetLinkSentWidget(),
                                           ),
                                         ),
-                                    );
-                                  },
-                            text: 'Send Reset Link',
-                            options: FFButtonOptions(
-                              width: double.infinity,
-                              height: 52,
-                              padding: const EdgeInsetsDirectional.fromSTEB(
-                                  16, 0, 16, 0),
-                              iconPadding: EdgeInsetsDirectional.zero,
-                              color: AppTheme.of(context).primary,
-                              textStyle: AppTheme.of(context)
-                                  .titleMedium
-                                  .override(
-                                    font: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.w600,
-                                      fontStyle: AppTheme.of(context)
-                                          .titleMedium
-                                          .fontStyle,
-                                    ),
-                                    color: Colors.white,
-                                    letterSpacing: 0,
-                                    fontWeight: FontWeight.w600,
-                                    fontStyle: AppTheme.of(context)
-                                        .titleMedium
-                                        .fontStyle,
-                                  ),
-                              elevation: 0,
-                              borderRadius: BorderRadius.circular(12),
-                              disabledColor:
-                                  AppTheme.of(context).alternate,
-                              disabledTextColor: AppTheme.of(context)
-                                  .secondaryBackground,
+                                      );
+                                    },
+                              text: 'Send Reset Link',
+                              options: FFButtonOptions(
+                                width: double.infinity,
+                                height: 52,
+                                padding: const EdgeInsetsDirectional.fromSTEB(
+                                    16, 0, 16, 0),
+                                iconPadding: EdgeInsetsDirectional.zero,
+                                color: AppTheme.of(context).primary,
+                                textStyle:
+                                    AppTheme.of(context).titleMedium.override(
+                                          font: GoogleFonts.poppins(
+                                            fontWeight: FontWeight.w600,
+                                            fontStyle: AppTheme.of(context)
+                                                .titleMedium
+                                                .fontStyle,
+                                          ),
+                                          color: Colors.white,
+                                          letterSpacing: 0,
+                                          fontWeight: FontWeight.w600,
+                                          fontStyle: AppTheme.of(context)
+                                              .titleMedium
+                                              .fontStyle,
+                                        ),
+                                elevation: 0,
+                                borderRadius: BorderRadius.circular(12),
+                                disabledColor: AppTheme.of(context).alternate,
+                                disabledTextColor:
+                                    AppTheme.of(context).secondaryBackground,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      Padding(
-                        padding:
-                            const EdgeInsetsDirectional.fromSTEB(0, 20, 0, 0),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.max,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Remember your password? ',
-                              style: AppTheme.of(context)
-                                  .bodyMedium
-                                  .override(
-                                    font: GoogleFonts.poppins(
+                        Padding(
+                          padding:
+                              const EdgeInsetsDirectional.fromSTEB(0, 20, 0, 0),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.max,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Remember your password? ',
+                                style: AppTheme.of(context).bodyMedium.override(
+                                      font: GoogleFonts.poppins(
+                                        fontWeight: AppTheme.of(context)
+                                            .bodyMedium
+                                            .fontWeight,
+                                        fontStyle: AppTheme.of(context)
+                                            .bodyMedium
+                                            .fontStyle,
+                                      ),
+                                      color: AppTheme.of(context).secondaryText,
+                                      letterSpacing: 0,
                                       fontWeight: AppTheme.of(context)
                                           .bodyMedium
                                           .fontWeight,
@@ -443,56 +417,45 @@ class _SetPasswordWidgetState extends State<SetPasswordWidget> {
                                           .bodyMedium
                                           .fontStyle,
                                     ),
-                                    color: AppTheme.of(context)
-                                        .secondaryText,
-                                    letterSpacing: 0,
-                                    fontWeight: AppTheme.of(context)
-                                        .bodyMedium
-                                        .fontWeight,
-                                    fontStyle: AppTheme.of(context)
-                                        .bodyMedium
-                                        .fontStyle,
-                                  ),
-                            ),
-                            InkWell(
-                              splashColor: Colors.transparent,
-                              focusColor: Colors.transparent,
-                              hoverColor: Colors.transparent,
-                              highlightColor: Colors.transparent,
-                              onTap: () async {
-                                await context.pushNamed(SignupWidget.routeName);
-                              },
-                              child: Text(
-                                'Sign In',
-                                style: AppTheme.of(context)
-                                    .bodyMedium
-                                    .override(
-                                      font: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.w600,
-                                        fontStyle: AppTheme.of(context)
-                                            .bodyMedium
-                                            .fontStyle,
-                                      ),
-                                      color:
-                                          AppTheme.of(context).primary,
-                                      letterSpacing: 0,
-                                      fontWeight: FontWeight.w600,
-                                      fontStyle: AppTheme.of(context)
-                                          .bodyMedium
-                                          .fontStyle,
-                                    ),
                               ),
-                            ),
-                          ],
+                              InkWell(
+                                splashColor: Colors.transparent,
+                                focusColor: Colors.transparent,
+                                hoverColor: Colors.transparent,
+                                highlightColor: Colors.transparent,
+                                onTap: () async {
+                                  await context
+                                      .pushNamed(SignupWidget.routeName);
+                                },
+                                child: Text(
+                                  'Sign In',
+                                  style:
+                                      AppTheme.of(context).bodyMedium.override(
+                                            font: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w600,
+                                              fontStyle: AppTheme.of(context)
+                                                  .bodyMedium
+                                                  .fontStyle,
+                                            ),
+                                            color: AppTheme.of(context).primary,
+                                            letterSpacing: 0,
+                                            fontWeight: FontWeight.w600,
+                                            fontStyle: AppTheme.of(context)
+                                                .bodyMedium
+                                                .fontStyle,
+                                          ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
-      ),
-    );
+      );
 }

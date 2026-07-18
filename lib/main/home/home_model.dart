@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '/auth/supabase_auth/auth_util.dart';
-import '/backend/supabase/database/tables/notifications.dart';
+import '/auth/shph_auth/auth_util.dart';
+import '/backend/shph_db/database/tables/notifications.dart';
 import '/components/categoriesgrid/categoriesgrid_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';

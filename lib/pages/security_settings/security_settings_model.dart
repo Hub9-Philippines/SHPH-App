@@ -14,7 +14,6 @@ class SecuritySettingsModel extends FlutterFlowModel<SecuritySettingsWidget> {
   bool showCurrentPassword = false;
   bool showNewPassword = false;
   bool showConfirmPassword = false;
-  bool twoFactorEnabled = false;
 
   @override
   void initState(BuildContext context) {

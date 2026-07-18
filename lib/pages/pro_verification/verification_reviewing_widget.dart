@@ -280,8 +280,10 @@ class _VerificationReviewingWidgetState
                       const SizedBox(height: 24),
                       // Contact Support
                       InkWell(
-                        onTap: () {
-                          // TODO: Navigate to support or open email
+                        onTap: () async {
+                          await launchURL(
+                            'mailto:support@serbisyohubph.com?subject=Verification%20Support',
+                          );
                         },
                         child: Text(
                           'Need help? Contact Support',

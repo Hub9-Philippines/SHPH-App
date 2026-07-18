@@ -130,25 +130,29 @@ void main() {
 
   group('GeoUtils.calculateDistance — Haversine accuracy', () {
     test('zero distance for same point', () {
-      final dist = GeoUtils.calculateDistance(14.5995, 120.9842, 14.5995, 120.9842);
+      final dist =
+          GeoUtils.calculateDistance(14.5995, 120.9842, 14.5995, 120.9842);
       expect(dist, closeTo(0, 0.001));
     });
 
     test('Manila to Makati is roughly 6-7 km', () {
       // Manila (14.5995, 120.9842) to Makati (14.5547, 121.0244)
-      final dist = GeoUtils.calculateDistance(14.5995, 120.9842, 14.5547, 121.0244);
+      final dist =
+          GeoUtils.calculateDistance(14.5995, 120.9842, 14.5547, 121.0244);
       expect(dist, inInclusiveRange(5, 8));
     });
 
     test('Manila to Quezon City is roughly 10-14 km', () {
       // Manila (14.5995, 120.9842) to Quezon City (14.6760, 121.0437)
-      final dist = GeoUtils.calculateDistance(14.5995, 120.9842, 14.6760, 121.0437);
+      final dist =
+          GeoUtils.calculateDistance(14.5995, 120.9842, 14.6760, 121.0437);
       expect(dist, inInclusiveRange(10, 15));
     });
 
     test('Manila to Cebu is roughly 560-580 km', () {
       // Manila (14.5995, 120.9842) to Cebu (10.3157, 123.8854)
-      final dist = GeoUtils.calculateDistance(14.5995, 120.9842, 10.3157, 123.8854);
+      final dist =
+          GeoUtils.calculateDistance(14.5995, 120.9842, 10.3157, 123.8854);
       expect(dist, inInclusiveRange(560, 580));
     });
   });
@@ -161,7 +165,7 @@ void main() {
     });
 
     test('rejects zero/uninitialized coordinates', () {
-      expect(GeoUtils.hasValidLocation(0.0, 0.0), isFalse);
+      expect(GeoUtils.hasValidLocation(0, 0), isFalse);
       expect(GeoUtils.hasValidLocation(0, 120.9), isFalse);
       expect(GeoUtils.hasValidLocation(14.5, 0), isFalse);
     });

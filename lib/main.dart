@@ -4,39 +4,70 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:provider/provider.dart';
 
 import '/api/shph_api.dart';
-import '/backend/supabase/supabase.dart';
 import '/flutter_flow/token_refresh_manager.dart';
+import '/pages/call/incoming_call_overlay.dart';
 import '/router/app_router.dart';
+import '/services/call/call_controller.dart';
+import '/services/call/call_peer.dart';
+import '/services/call/call_signaling.dart';
+import '/services/call/flutter_webrtc_call_peer.dart';
+import '/services/crash_reporting_service.dart';
 import '/theme/app_theme.dart';
-// Authentication imports - Using Supabase for auth
+// Authentication imports - Using SHPH backend for auth
 import 'auth/auth_manager_factory.dart';
-import 'auth/supabase_auth/auth_util.dart';
-import 'auth/supabase_auth/supabase_user_provider.dart';
+import 'auth/shph_auth/auth_util.dart';
+import 'auth/shph_auth/shph_auth_manager.dart';
+import 'auth/shph_auth/shph_user_provider.dart';
 import 'flutter_flow/flutter_flow_util.dart';
 import 'index.dart';
 import 'l10n/app_localizations.dart';
 import 'services/error_handler.dart';
+
+CallController buildCallController() {
+  final api = ShphChatApi.instance;
+  return CallController(
+    signaling: CallSignaling.fromWebSocket(),
+    peerFactory: FlutterWebrtcCallPeer.new,
+    initiateCallApi: api.initiateCall,
+    acceptCallApi: api.acceptCall,
+    rejectCallApi: api.rejectCall,
+    endCallApi: api.endCall,
+    resolveParticipant: (threadId, fallbackUserId) async {
+      try {
+        final thread = await api.getThreadDetails(threadId);
+        final other =
+            (thread['other_participant'] as Map?)?.cast<String, dynamic>() ??
+                {};
+        return CallParticipant(
+          userId: (other['id'] ?? fallbackUserId).toString(),
+          name: (other['display_name'] ?? 'Incoming call').toString(),
+          photoUrl: other['photo_url']?.toString(),
+        );
+      } catch (_) {
+        return CallParticipant(userId: fallbackUserId, name: 'Incoming call');
+      }
+    },
+  );
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   GoRouter.optionURLReflectsImperativeAPIs = true;
   usePathUrlStrategy();
 
-  // Initialize Supabase
-  await SupaFlow.initialize();
+  // Initialize crash reporting (Sentry + Firebase Crashlytics) before any other
+  // service so early failures are captured. No-op if DSN/config is missing.
+  await CrashReportingService.initialize();
 
   // Initialize SHPH REST API client (OpenAPI-backed Dio layer)
   await initializeShphApi();
 
-  // Restore current auth session from local storage
-  final supabaseUser = Supabase.instance.client.auth.currentUser;
-  if (supabaseUser != null) {
-    // Set the global current user immediately so auth state is correct on app start
-    currentUser = SerbisyoHubPHSupabaseUser(supabaseUser);
-  }
+  // Initialize Auth Manager - Using SHPH backend for authentication
+  AuthManagerFactory.initialize(AuthProvider.shph);
 
-  // Initialize Auth Manager - Using Supabase for authentication
-  AuthManagerFactory.initialize(AuthProvider.supabase);
+  // Restore current auth session from stored JWT token
+  final shphManager = AuthManagerFactory.instance as ShphAuthManager;
+  await shphManager.restoreSession();
 
   await AppTheme.initialize();
 
@@ -54,13 +85,13 @@ class MyApp extends StatefulWidget {
   final FFAppState appState;
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  State<MyApp> createState() => MyAppState();
 
-  static _MyAppState of(BuildContext context) =>
-      context.findAncestorStateOfType<_MyAppState>()!;
+  static MyAppState of(BuildContext context) =>
+      context.findAncestorStateOfType<MyAppState>()!;
 }
 
-class _MyAppState extends State<MyApp> {
+class MyAppState extends State<MyApp> {
   ThemeMode _themeMode = AppTheme.themeMode;
 
   late AppStateNotifier _appStateNotifier;
@@ -87,13 +118,20 @@ class _MyAppState extends State<MyApp> {
     super.initState();
 
     _appStateNotifier = AppStateNotifier.instance;
-    _router =
-        AppRouter.createRouter(_appStateNotifier, appState: widget.appState);
+    _router = AppRouter.createRouter(
+      _appStateNotifier,
+      appState: widget.appState,
+      observers: [
+        if (CrashReportingService.navigatorObserver != null)
+          CrashReportingService.navigatorObserver!,
+      ],
+    );
 
-    // Use Supabase user stream for auth state management
-    userStream = serbisyoHubPHSupabaseUserStream()
+    // Use SHPH user stream for auth state management
+    userStream = shphUserStream()
       ..listen((user) {
         _appStateNotifier.update(user);
+        CrashReportingService.setUserId(user.uid);
       });
 
     // Start automatic token refresh monitoring (Fix #5: Token Refresh Interceptor)
@@ -146,31 +184,39 @@ class _MyAppState extends State<MyApp> {
       ];
 
   @override
-  Widget build(BuildContext context) =>
-      ChangeNotifierProvider<FFAppState>.value(
-        value: widget.appState,
-        child: MaterialApp.router(
-          debugShowCheckedModeBanner: false,
-          title: 'SerbisyoHub PH',
-          locale: _locale,
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-            AppLocalizations.delegate,
-          ],
-          supportedLocales: _supportedLocales,
-          theme: ThemeData(
-            brightness: Brightness.light,
-            useMaterial3: false,
+  Widget build(BuildContext context) => ChangeNotifierProvider<CallController>(
+        create: (_) => buildCallController(),
+        child: ChangeNotifierProvider<FFAppState>.value(
+          value: widget.appState,
+          child: MaterialApp.router(
+            debugShowCheckedModeBanner: false,
+            title: 'SerbisyoHub PH',
+            locale: _locale,
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+              AppLocalizations.delegate,
+            ],
+            supportedLocales: _supportedLocales,
+            theme: ThemeData(
+              brightness: Brightness.light,
+              useMaterial3: false,
+            ),
+            darkTheme: ThemeData(
+              brightness: Brightness.dark,
+              useMaterial3: false,
+            ),
+            themeMode: _themeMode,
+            routerConfig: _router,
+            scaffoldMessengerKey: ErrorHandler.scaffoldMessengerKey,
+            builder: (context, child) => Stack(
+              children: [
+                if (child != null) child,
+                const IncomingCallOverlay(),
+              ],
+            ),
           ),
-          darkTheme: ThemeData(
-            brightness: Brightness.dark,
-            useMaterial3: false,
-          ),
-          themeMode: _themeMode,
-          routerConfig: _router,
-          scaffoldMessengerKey: ErrorHandler.scaffoldMessengerKey,
         ),
       );
 }
@@ -188,11 +234,11 @@ class NavBarPage extends StatefulWidget {
   final bool disableResizeToAvoidBottomInset;
 
   @override
-  _NavBarPageState createState() => _NavBarPageState();
+  NavBarPageState createState() => NavBarPageState();
 }
 
-/// This is the private State class that goes with NavBarPage.
-class _NavBarPageState extends State<NavBarPage> {
+/// This is the State class that goes with NavBarPage.
+class NavBarPageState extends State<NavBarPage> {
   String _currentPageName = 'Home';
   late Widget? _currentPage;
 

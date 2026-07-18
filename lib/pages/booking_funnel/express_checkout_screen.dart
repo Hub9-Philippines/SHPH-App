@@ -6,7 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart' as gmaps;
 import 'package:provider/provider.dart';
 
 import '/app_state.dart';
-import '/backend/supabase/supabase.dart';
+import '/backend/shph_db/database/tables/addresses.dart';
 import '/components/edit_address/edit_address_widget.dart';
 import '/models/service_listing.dart';
 import '/theme/app_theme.dart';
@@ -20,8 +20,8 @@ import 'widgets/express_shimmer.dart';
 
 class ExpressCheckoutScreen extends StatelessWidget {
   const ExpressCheckoutScreen({
-    super.key,
     required this.service,
+    super.key,
   });
 
   final ServiceListing service;
@@ -56,7 +56,7 @@ class ExpressCheckoutScreen extends StatelessWidget {
                           key: ValueKey('skeleton'),
                         )
                       : _ExpressSheet(
-                          key: ValueKey('content'),
+                          key: const ValueKey('content'),
                           controller: controller,
                           quote: quote,
                           isScheduled: isScheduled,
@@ -91,10 +91,12 @@ class ExpressCheckoutScreen extends StatelessWidget {
       if (diffMinutes < 120) {
         final appState = FFAppState();
         if (appState.nearestProviderDistance > 4.0) {
-          if (!context.mounted) return;
+          if (!context.mounted) {
+            return;
+          }
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text(
+            const SnackBar(
+              content: Text(
                 'Our closest professional needs at least 2 hours to prepare '
                 'and travel to your location. Please adjust your time selection.',
               ),
@@ -108,7 +110,9 @@ class ExpressCheckoutScreen extends StatelessWidget {
 
     // Schedule or within-range: proceed with reservation
     final success = await controller.attachReservationToken();
-    if (!context.mounted) return;
+    if (!context.mounted) {
+      return;
+    }
     if (!success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -136,7 +140,9 @@ class ExpressCheckoutScreen extends StatelessWidget {
     BookingFlowController controller,
   ) async {
     final success = await controller.attachLiveSearchToken();
-    if (!context.mounted) return;
+    if (!context.mounted) {
+      return;
+    }
     if (!success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -182,13 +188,13 @@ class ExpressCheckoutScreen extends StatelessWidget {
 
 class _ExpressSheet extends StatelessWidget {
   const _ExpressSheet({
-    super.key,
     required this.controller,
     required this.quote,
     required this.isScheduled,
     required this.service,
     required this.onBack,
     required this.onConfirm,
+    super.key,
   });
 
   final BookingFlowController controller;
@@ -354,7 +360,9 @@ class _ExpressSheet extends StatelessWidget {
 
   String _unitLabel(BookingDraft draft) {
     final category = (draft.serviceCategoryName ?? '').toLowerCase();
-    if (category.contains('clean')) return 'rooms';
+    if (category.contains('clean')) {
+      return 'rooms';
+    }
     if (category.contains('repair') || category.contains('install')) {
       return 'items';
     }
@@ -394,7 +402,9 @@ class _ExpressSheet extends StatelessWidget {
         ),
       ),
     );
-    if (!context.mounted || result == null) return;
+    if (!context.mounted || result == null) {
+      return;
+    }
 
     final appState = FFAppState();
     controller.setAddress(
@@ -647,7 +657,9 @@ class _TimeEditSheet extends StatelessWidget {
                   time: time,
                   urgency: BookingUrgency.laterToday,
                 );
-                if (context.mounted) Navigator.of(context).pop();
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                }
               }
             },
           ),
@@ -664,7 +676,9 @@ class _TimeEditSheet extends StatelessWidget {
                 firstDate: DateTime.now(),
                 lastDate: DateTime.now().add(const Duration(days: 60)),
               );
-              if (date == null || !context.mounted) return;
+              if (date == null || !context.mounted) {
+                return;
+              }
               final time = await showTimePicker(
                 context: context,
                 initialTime: const TimeOfDay(hour: 9, minute: 0),
@@ -675,7 +689,9 @@ class _TimeEditSheet extends StatelessWidget {
                   time: time,
                   urgency: BookingUrgency.scheduled,
                 );
-                if (context.mounted) Navigator.of(context).pop();
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                }
               }
             },
           ),
@@ -786,7 +802,9 @@ class _ScopeEditSheetState extends State<_ScopeEditSheet> {
     _rooms = widget.controller.draft.rooms;
     _serviceTypeIndex =
         _serviceTypes.indexOf(widget.controller.draft.cleaningType);
-    if (_serviceTypeIndex < 0) _serviceTypeIndex = 0;
+    if (_serviceTypeIndex < 0) {
+      _serviceTypeIndex = 0;
+    }
   }
 
   @override

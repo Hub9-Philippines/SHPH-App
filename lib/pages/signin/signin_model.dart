@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
-import '/backend/supabase/supabase.dart';
+import '/backend/shph_db/shph_db.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
@@ -13,6 +13,9 @@ class SigninModel extends FlutterFlowModel<SigninWidget> {
   bool isPhoneValid = false;
   bool isEmailvalid = true;
   bool isLoading = false;
+  bool isBiometricAvailable = false;
+  bool isBiometricLoginEnabled = false;
+  bool enableBiometricOnLogin = false;
   String? errorMessage;
 
   ///  State fields for stateful widgets in this page.

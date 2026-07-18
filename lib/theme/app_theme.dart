@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 const _themeModeKey = '__theme_mode__';
 
+// ignore: avoid_classes_with_only_static_members
 class AppTheme {
   static SharedPreferences? _prefs;
 
@@ -155,87 +156,87 @@ class AppTheme {
     );
   }
 
-  static TextTheme _buildTextTheme(AppThemeData data, Brightness brightness) => TextTheme(
-      displayLarge: GoogleFonts.poppins(
-        color: data.primaryText,
-        fontWeight: FontWeight.w600,
-        fontSize: 64,
-      ),
-      displayMedium: GoogleFonts.poppins(
-        color: data.primaryText,
-        fontWeight: FontWeight.w600,
-        fontSize: 44,
-      ),
-      displaySmall: GoogleFonts.poppins(
-        color: data.primaryText,
-        fontWeight: FontWeight.w600,
-        fontSize: 36,
-      ),
-      headlineLarge: GoogleFonts.poppins(
-        color: data.primaryText,
-        fontWeight: FontWeight.w600,
-        fontSize: 32,
-      ),
-      headlineMedium: GoogleFonts.poppins(
-        color: data.primaryText,
-        fontWeight: FontWeight.w600,
-        fontSize: 28,
-      ),
-      headlineSmall: GoogleFonts.poppins(
-        color: data.primaryText,
-        fontWeight: FontWeight.w600,
-        fontSize: 24,
-      ),
-      titleLarge: GoogleFonts.poppins(
-        color: data.primaryText,
-        fontWeight: FontWeight.w600,
-        fontSize: 20,
-      ),
-      titleMedium: GoogleFonts.poppins(
-        color: data.primaryText,
-        fontWeight: FontWeight.w600,
-        fontSize: 18,
-      ),
-      titleSmall: GoogleFonts.poppins(
-        color: data.primaryText,
-        fontWeight: FontWeight.w600,
-        fontSize: 16,
-      ),
-      labelLarge: GoogleFonts.poppins(
-        color: data.secondaryText,
-        fontWeight: FontWeight.normal,
-        fontSize: 16,
-      ),
-      labelMedium: GoogleFonts.poppins(
-        color: data.secondaryText,
-        fontWeight: FontWeight.normal,
-        fontSize: 14,
-      ),
-      labelSmall: GoogleFonts.poppins(
-        color: data.secondaryText,
-        fontWeight: FontWeight.normal,
-        fontSize: 12,
-      ),
-      bodyLarge: GoogleFonts.poppins(
-        color: data.primaryText,
-        fontWeight: FontWeight.normal,
-        fontSize: 16,
-      ),
-      bodyMedium: GoogleFonts.poppins(
-        color: data.primaryText,
-        fontWeight: FontWeight.normal,
-        fontSize: 14,
-      ),
-      bodySmall: GoogleFonts.poppins(
-        color: data.primaryText,
-        fontWeight: FontWeight.normal,
-        fontSize: 12,
-      ),
-    );
+  static TextTheme _buildTextTheme(AppThemeData data, Brightness brightness) =>
+      TextTheme(
+        displayLarge: GoogleFonts.poppins(
+          color: data.primaryText,
+          fontWeight: FontWeight.w600,
+          fontSize: 64,
+        ),
+        displayMedium: GoogleFonts.poppins(
+          color: data.primaryText,
+          fontWeight: FontWeight.w600,
+          fontSize: 44,
+        ),
+        displaySmall: GoogleFonts.poppins(
+          color: data.primaryText,
+          fontWeight: FontWeight.w600,
+          fontSize: 36,
+        ),
+        headlineLarge: GoogleFonts.poppins(
+          color: data.primaryText,
+          fontWeight: FontWeight.w600,
+          fontSize: 32,
+        ),
+        headlineMedium: GoogleFonts.poppins(
+          color: data.primaryText,
+          fontWeight: FontWeight.w600,
+          fontSize: 28,
+        ),
+        headlineSmall: GoogleFonts.poppins(
+          color: data.primaryText,
+          fontWeight: FontWeight.w600,
+          fontSize: 24,
+        ),
+        titleLarge: GoogleFonts.poppins(
+          color: data.primaryText,
+          fontWeight: FontWeight.w600,
+          fontSize: 20,
+        ),
+        titleMedium: GoogleFonts.poppins(
+          color: data.primaryText,
+          fontWeight: FontWeight.w600,
+          fontSize: 18,
+        ),
+        titleSmall: GoogleFonts.poppins(
+          color: data.primaryText,
+          fontWeight: FontWeight.w600,
+          fontSize: 16,
+        ),
+        labelLarge: GoogleFonts.poppins(
+          color: data.secondaryText,
+          fontWeight: FontWeight.normal,
+          fontSize: 16,
+        ),
+        labelMedium: GoogleFonts.poppins(
+          color: data.secondaryText,
+          fontWeight: FontWeight.normal,
+          fontSize: 14,
+        ),
+        labelSmall: GoogleFonts.poppins(
+          color: data.secondaryText,
+          fontWeight: FontWeight.normal,
+          fontSize: 12,
+        ),
+        bodyLarge: GoogleFonts.poppins(
+          color: data.primaryText,
+          fontWeight: FontWeight.normal,
+          fontSize: 16,
+        ),
+        bodyMedium: GoogleFonts.poppins(
+          color: data.primaryText,
+          fontWeight: FontWeight.normal,
+          fontSize: 14,
+        ),
+        bodySmall: GoogleFonts.poppins(
+          color: data.primaryText,
+          fontWeight: FontWeight.normal,
+          fontSize: 12,
+        ),
+      );
 }
 
 class AppThemeData {
-
   AppThemeData({
     required this.primary,
     required this.secondary,
@@ -257,44 +258,44 @@ class AppThemeData {
   });
 
   factory AppThemeData.light() => AppThemeData(
-      primary: const Color(0xFF368EFF),
-      secondary: const Color(0xFF39D2C0),
-      tertiary: const Color(0xFFEE8B60),
-      alternate: const Color(0xFFE0E3E7),
-      primaryText: const Color(0xFF14181B),
-      secondaryText: const Color(0xFF57636C),
-      primaryBackground: const Color(0xFFFFFFFF),
-      secondaryBackground: const Color(0xFFF7F7F7),
-      accent1: const Color(0x4C4B39EF),
-      accent2: const Color(0x4D39D2C0),
-      accent3: const Color(0x4DEE8B60),
-      accent4: const Color(0xCCFFFFFF),
-      success: const Color(0xFF249689),
-      warning: const Color(0xFFF9CF58),
-      error: const Color(0xFFFF5963),
-      info: const Color(0xFFFFFFFF),
-      iconBackground: const Color(0xFFE6F0FF),
-    );
+        primary: const Color(0xFF368EFF),
+        secondary: const Color(0xFF39D2C0),
+        tertiary: const Color(0xFFEE8B60),
+        alternate: const Color(0xFFE0E3E7),
+        primaryText: const Color(0xFF14181B),
+        secondaryText: const Color(0xFF57636C),
+        primaryBackground: const Color(0xFFFFFFFF),
+        secondaryBackground: const Color(0xFFF7F7F7),
+        accent1: const Color(0x4C4B39EF),
+        accent2: const Color(0x4D39D2C0),
+        accent3: const Color(0x4DEE8B60),
+        accent4: const Color(0xCCFFFFFF),
+        success: const Color(0xFF249689),
+        warning: const Color(0xFFF9CF58),
+        error: const Color(0xFFFF5963),
+        info: const Color(0xFFFFFFFF),
+        iconBackground: const Color(0xFFE6F0FF),
+      );
 
   factory AppThemeData.dark() => AppThemeData(
-      primary: const Color(0xFF368EFF),
-      secondary: const Color(0xFF39D2C0),
-      tertiary: const Color(0xFFEE8B60),
-      alternate: const Color(0xFFE0E3E7),
-      primaryText: const Color(0xFFFFFFFF),
-      secondaryText: const Color(0xFF95A1AC),
-      primaryBackground: const Color(0xFF1D2428),
-      secondaryBackground: const Color(0xFF14181B),
-      accent1: const Color(0x4C4B39EF),
-      accent2: const Color(0x4D39D2C0),
-      accent3: const Color(0x4DEE8B60),
-      accent4: const Color(0xB2262D34),
-      success: const Color(0xFF249689),
-      warning: const Color(0xFFF9CF58),
-      error: const Color(0xFFFF5963),
-      info: const Color(0xFFFFFFFF),
-      iconBackground: const Color(0xFFF34966),
-    );
+        primary: const Color(0xFF368EFF),
+        secondary: const Color(0xFF39D2C0),
+        tertiary: const Color(0xFFEE8B60),
+        alternate: const Color(0xFFE0E3E7),
+        primaryText: const Color(0xFFFFFFFF),
+        secondaryText: const Color(0xFF95A1AC),
+        primaryBackground: const Color(0xFF1D2428),
+        secondaryBackground: const Color(0xFF14181B),
+        accent1: const Color(0x4C4B39EF),
+        accent2: const Color(0x4D39D2C0),
+        accent3: const Color(0x4DEE8B60),
+        accent4: const Color(0xB2262D34),
+        success: const Color(0xFF249689),
+        warning: const Color(0xFFF9CF58),
+        error: const Color(0xFFFF5963),
+        info: const Color(0xFFFFFFFF),
+        iconBackground: const Color(0xFFF34966),
+      );
   final Color primary;
   final Color secondary;
   final Color tertiary;
@@ -388,7 +389,7 @@ class AppThemeData {
         color: secondaryText,
         fontWeight: FontWeight.normal,
         fontSize: 12,
-  );
+      );
 }
 
 extension TextStyleHelper on TextStyle {

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/auth/supabase_auth/auth_util.dart';
-import '/backend/supabase/database/tables/reviews.dart';
-import '/backend/supabase/database/tables/service_listings.dart';
+import '/auth/shph_auth/auth_util.dart';
+import '/backend/shph_db/database/tables/reviews.dart';
+import '/backend/shph_db/database/tables/service_listings.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/logging_service.dart';
@@ -55,7 +55,8 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
         return [];
       }
 
-      final serviceIds = reviews.map((review) => review.serviceListingId).toSet();
+      final serviceIds =
+          reviews.map((review) => review.serviceListingId).toSet();
       final services = await ServiceListingsTable().queryRows(
         queryFn: (q) => q.inFilter('id', serviceIds.toList()),
       );
@@ -418,7 +419,8 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
   Widget _buildReviewCard(_UserReviewItem item) {
     final service = item.service;
     final review = item.review;
-    final serviceTitle = service?.title ?? 'Service #${review.serviceListingId}';
+    final serviceTitle =
+        service?.title ?? 'Service #${review.serviceListingId}';
     final category = service?.categoryName ?? 'Service';
     final providerName = service?.providerName ?? 'Service Provider';
 

@@ -84,7 +84,8 @@ class FaceVerificationService {
   /// Gets the time remaining before session expires
   ///
   /// Returns Duration.zero if session is already expired
-  Future<Duration> getSessionTimeRemaining(String userId, int sessionMinutes) async {
+  Future<Duration> getSessionTimeRemaining(
+      String userId, int sessionMinutes) async {
     try {
       final status = await getFaceVerificationStatus(userId);
       final isVerified = status['isVerified'] as bool? ?? false;

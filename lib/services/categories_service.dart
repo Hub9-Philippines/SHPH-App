@@ -1,38 +1,21 @@
 import '/api/bridges/api_row_mapper.dart';
 import '/api/resources/services_api.dart';
-import '/backend/supabase/supabase.dart';
+import '/backend/shph_db/database/tables/categories.dart';
+import '/backend/shph_db/database/tables/service_listings.dart';
 import '/services/logging_service.dart';
 
 class CategoriesService {
   CategoriesService._();
   static final CategoriesService instance = CategoriesService._();
 
-  final _supabase = Supabase.instance.client;
   final _servicesApi = ShphServicesApi.instance;
 
   Future<List<CategoriesRow>> getCategories() async {
-    if (await ApiRowMapper.canUseApi()) {
-      try {
-        final page = await _servicesApi.listCategories();
-        return page.results.map(ApiRowMapper.categoryToRow).toList();
-      } catch (e) {
-        LoggingService.error(
-          'SHPH API getCategories failed, falling back to Supabase: $e',
-          tag: 'CategoriesService',
-        );
-      }
-    }
-
     try {
-      final response = await _supabase
-          .from('categories')
-          .select()
-          .eq('is_active', true)
-          .order('sort_order', ascending: true);
-
-      return response.map(CategoriesRow.new).toList();
+      final page = await _servicesApi.listCategories();
+      return page.results.map(ApiRowMapper.categoryToRow).toList();
     } catch (e) {
-      LoggingService.error('Error fetching categories: $e',
+      LoggingService.error('getCategories failed: $e',
           tag: 'CategoriesService');
       return [];
     }
@@ -49,34 +32,15 @@ class CategoriesService {
   }
 
   Future<List<ServiceListingsRow>> getServicesByCategory(int categoryId) async {
-    if (await ApiRowMapper.canUseApi()) {
-      try {
-        final page = await _servicesApi.listListings();
-        return page.results
-            .where((listing) => listing.category == categoryId)
-            .where((listing) => listing.status == 'active')
-            .map(ApiRowMapper.serviceListingToRow)
-            .toList();
-      } catch (e) {
-        LoggingService.error(
-          'SHPH API getServicesByCategory failed, falling back to Supabase: $e',
-          tag: 'CategoriesService',
-        );
-      }
-    }
-
     try {
-      final response = await _supabase
-          .from('service_listings')
-          .select()
-          .eq('category', categoryId)
-          .eq('status', 'active')
-          .eq('is_available', 'true')
-          .order('created_at', ascending: false);
-
-      return response.map(ServiceListingsRow.new).toList();
+      final page = await _servicesApi.listListings();
+      return page.results
+          .where((listing) => listing.category == categoryId)
+          .where((listing) => listing.status == 'active')
+          .map(ApiRowMapper.serviceListingToRow)
+          .toList();
     } catch (e) {
-      LoggingService.error('Error fetching services by category: $e',
+      LoggingService.error('getServicesByCategory failed: $e',
           tag: 'CategoriesService');
       return [];
     }

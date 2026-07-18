@@ -5,14 +5,15 @@ import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
 
 import '/auth/post_auth_navigation_flow.dart';
-import '/auth/supabase_auth/auth_util.dart';
+import '/auth/shph_auth/auth_util.dart';
+import '/auth/shph_auth/shph_auth_manager.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/custom_functions.dart' as functions;
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
+import '/services/biometric_auth_service.dart';
 import '/theme/app_theme.dart';
-import '../../auth/supabase_auth/supabase_auth_manager.dart';
 import 'signin_model.dart';
 
 export 'signin_model.dart';
@@ -53,6 +54,36 @@ class _SigninWidgetState extends State<SigninWidget>
     _model.passwordTextFieldTextController ??= TextEditingController();
     _model.passwordTextFieldFocusNode ??= FocusNode();
     _model.passwordTextFieldFocusNode!.addListener(() => safeSetState(() {}));
+
+    _checkBiometricAvailability();
+  }
+
+  Future<void> _checkBiometricAvailability() async {
+    final available = await BiometricAuthService.instance.canCheckBiometrics;
+    final enrolled =
+        (await BiometricAuthService.instance.availableBiometrics).isNotEmpty;
+    final enabled = await BiometricAuthService.instance.isBiometricLoginEnabled;
+    if (mounted) {
+      safeSetState(() {
+        _model.isBiometricAvailable = available && enrolled;
+        _model.isBiometricLoginEnabled = enabled;
+      });
+    }
+
+    if (available && enrolled && enabled && mounted) {
+      await _attemptBiometricLogin();
+    }
+  }
+
+  Future<void> _attemptBiometricLogin() async {
+    final user =
+        await (authManager as ShphAuthManager).signInWithBiometric(context);
+    if (user != null && mounted) {
+      await PostAuthNavigationFlow().handlePostAuthNavigation(
+        context: context,
+        userId: user.uid!,
+      );
+    }
   }
 
   @override
@@ -74,7 +105,9 @@ class _SigninWidgetState extends State<SigninWidget>
       child: PopScope(
         canPop: true,
         onPopInvokedWithResult: (didPop, result) async {
-          if (didPop) return;
+          if (didPop) {
+            return;
+          }
           Navigator.of(context).pop();
         },
         child: Scaffold(
@@ -122,623 +155,678 @@ class _SigninWidgetState extends State<SigninWidget>
     );
   }
 
-  Widget _buildHeader(AppThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            color: theme.primary,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Icon(Icons.handyman_rounded, color: Colors.white, size: 28),
-        ),
-        const SizedBox(height: 20),
-        Text(
-          'Welcome back!',
-          style: theme.headlineLarge.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Sign in to continue with your home services.',
-          style: theme.bodyMedium.copyWith(
-            color: const Color(0xFF889096),
-            fontSize: 15,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTabBar(AppThemeData theme) {
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.alternate,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      padding: const EdgeInsets.all(4),
-      child: Row(
+  Widget _buildHeader(AppThemeData theme) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: () => _model.tabBarController!.animateTo(0),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  color: _model.tabBarCurrentIndex == 0
-                      ? theme.secondaryBackground
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: _model.tabBarCurrentIndex == 0
-                      ? [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ]
-                      : null,
-                ),
-                child: Text(
-                  'Phone',
-                  textAlign: TextAlign.center,
-                  style: theme.bodyMedium.copyWith(
-                    fontWeight: _model.tabBarCurrentIndex == 0
-                        ? FontWeight.w600
-                        : FontWeight.normal,
-                    color: _model.tabBarCurrentIndex == 0
-                        ? theme.primaryText
-                        : theme.secondaryText,
-                  ),
-                ),
-              ),
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: theme.primary,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(Icons.handyman_rounded,
+                color: Colors.white, size: 28),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'Welcome back!',
+            style: theme.headlineLarge.copyWith(
+              fontWeight: FontWeight.bold,
             ),
           ),
-          Expanded(
-            child: GestureDetector(
-              onTap: () => _model.tabBarController!.animateTo(1),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  color: _model.tabBarCurrentIndex == 1
-                      ? theme.secondaryBackground
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: _model.tabBarCurrentIndex == 1
-                      ? [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ]
-                      : null,
-                ),
-                child: Text(
-                  'Email',
-                  textAlign: TextAlign.center,
-                  style: theme.bodyMedium.copyWith(
-                    fontWeight: _model.tabBarCurrentIndex == 1
-                        ? FontWeight.w600
-                        : FontWeight.normal,
-                    color: _model.tabBarCurrentIndex == 1
-                        ? theme.primaryText
-                        : theme.secondaryText,
-                  ),
-                ),
-              ),
+          const SizedBox(height: 8),
+          Text(
+            'Sign in to continue with your home services.',
+            style: theme.bodyMedium.copyWith(
+              color: const Color(0xFF889096),
+              fontSize: 15,
             ),
           ),
         ],
-      ),
-    );
-  }
+      );
 
-  Widget _buildPhoneTab(AppThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Mobile number',
-          style: theme.bodyMedium.copyWith(
-            fontWeight: FontWeight.w500,
-            color: theme.primaryText,
-          ),
+  Widget _buildTabBar(AppThemeData theme) => Container(
+        decoration: BoxDecoration(
+          color: theme.alternate,
+          borderRadius: BorderRadius.circular(12),
         ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: _model.phoneFieldTextController,
-          focusNode: _model.phoneFieldFocusNode,
-          onChanged: (_) => EasyDebounce.debounce(
-            '_model.phoneFieldTextController',
-            Duration.zero,
-            () {
-              _model.isPhoneValid =
-                  _model.phoneFieldTextController.text.length == 13;
-              FFAppState().phone = _model.phoneFieldTextController.text;
-              safeSetState(() {});
-            },
-          ),
-          autofocus: false,
-          textInputAction: TextInputAction.go,
-          obscureText: false,
-          decoration: InputDecoration(
-            labelText: '+63',
-            labelStyle: theme.labelMedium.copyWith(fontSize: 16),
-            hintText: '9123456789',
-            hintStyle: theme.labelMedium.copyWith(
-              fontSize: 16,
-              color: theme.secondaryText,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(
-                color: _model.isPhoneValid ? theme.secondaryText : theme.error,
-                width: 1,
-              ),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(
-                color: _model.isPhoneValid ? theme.secondaryText : theme.error,
-                width: 1.5,
-              ),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: theme.error, width: 1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: theme.error, width: 1.5),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            filled: true,
-            fillColor: theme.secondaryBackground,
-          ),
-          style: theme.bodyMedium.copyWith(fontSize: 16),
-          textAlign: TextAlign.start,
-          maxLength: 13,
-          maxLengthEnforcement: MaxLengthEnforcement.enforced,
-          buildCounter: (context,
-                  {required currentLength,
-                  required isFocused,
-                  maxLength}) =>
-              null,
-          keyboardType: TextInputType.phone,
-          cursorColor: theme.primaryText,
-          enableInteractiveSelection: true,
-          validator:
-              _model.phoneFieldTextControllerValidator.asValidator(context),
-          inputFormatters: [_model.phoneFieldMask],
-        ),
-        if (_model.errorMessage != null && _model.tabBarCurrentIndex == 0)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              _model.errorMessage!,
-              style: theme.bodySmall.copyWith(color: theme.error),
-            ),
-          ),
-        const SizedBox(height: 20),
-        FFButtonWidget(
-          onPressed: _model.isPhoneLoginLoading
-              ? null
-              : (_model.phoneFieldTextController.text == '' ||
-                      !_model.isPhoneValid)
-                  ? null
-                  : () async {
-                      _model.errorMessage = null;
-                      _model.isPhoneLoginLoading = true;
-                      safeSetState(() {});
-                      final phoneNumberVal =
-                          _model.phoneFieldTextController.text;
-                      if (phoneNumberVal.isEmpty ||
-                          !phoneNumberVal.startsWith('+')) {
-                        _model.isPhoneLoginLoading = false;
-                        _model.errorMessage =
-                            'Phone Number is required and has to start with +.';
-                        safeSetState(() {});
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                                'Phone Number is required and has to start with +.'),
-                          ),
-                        );
-                        return;
-                      }
-                      try {
-                        await beginPhoneAuth(
-                          context: context,
-                          phoneNumber: phoneNumberVal,
-                          onCodeSent: (context) async {
-                            if (!context.mounted) return;
-                            context.goNamedAuth(
-                              PhoneVerifyUserWidget.routeName,
-                              context.mounted,
-                              ignoreRedirect: true,
-                            );
-                          },
-                        );
-                      } catch (e) {
-                        _model.isPhoneLoginLoading = false;
-                        _model.errorMessage =
-                            'An error occurred. Please try again.';
-                        safeSetState(() {});
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error: ${e.toString()}')),
-                        );
-                      }
-                    },
-          text: _model.isPhoneLoginLoading ? 'Signing In...' : 'Sign In',
-          options: FFButtonOptions(
-            width: double.infinity,
-            height: 52,
-            color: _model.isPhoneLoginLoading ? theme.alternate : theme.primary,
-            textStyle: theme.titleMedium.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
-            elevation: 0,
-            borderRadius: BorderRadius.circular(12),
-            disabledColor: theme.alternate,
-            disabledTextColor: theme.secondaryBackground,
-          ),
-        ),
-        const SizedBox(height: 16),
-        _OrDivider(),
-        const SizedBox(height: 16),
-        _SocialButton(
-          icon: Icons.g_mobiledata_rounded,
-          label: 'Continue with Google',
-          onTap: () async {
-            final user = await (authManager as SupabaseAuthManager)
-                .signInWithGoogle(context);
-            if (user != null && context.mounted) {
-              await PostAuthNavigationFlow().handlePostAuthNavigation(
-                context: context,
-                userId: user.uid!,
-              );
-            }
-          },
-        ),
-        const SizedBox(height: 10),
-        _SocialButton(
-          icon: Icons.apple_rounded,
-          label: 'Continue with Apple',
-          onTap: () async {
-            final user = await (authManager as SupabaseAuthManager)
-                .signInWithApple(context);
-            if (user != null && context.mounted) {
-              await PostAuthNavigationFlow().handlePostAuthNavigation(
-                context: context,
-                userId: user.uid!,
-              );
-            }
-          },
-        ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
+        padding: const EdgeInsets.all(4),
+        child: Row(
           children: [
-            GestureDetector(
-              onTap: () => context.goNamed(ForgotPasswordWidget.routeName),
-              child: Text(
-                'Forgot password',
-                style: theme.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: theme.primary,
+            Expanded(
+              child: GestureDetector(
+                onTap: () => _model.tabBarController!.animateTo(0),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: _model.tabBarCurrentIndex == 0
+                        ? theme.secondaryBackground
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: _model.tabBarCurrentIndex == 0
+                        ? [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Text(
+                    'Phone',
+                    textAlign: TextAlign.center,
+                    style: theme.bodyMedium.copyWith(
+                      fontWeight: _model.tabBarCurrentIndex == 0
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                      color: _model.tabBarCurrentIndex == 0
+                          ? theme.primaryText
+                          : theme.secondaryText,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: GestureDetector(
+                onTap: () => _model.tabBarController!.animateTo(1),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: _model.tabBarCurrentIndex == 1
+                        ? theme.secondaryBackground
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: _model.tabBarCurrentIndex == 1
+                        ? [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Text(
+                    'Email',
+                    textAlign: TextAlign.center,
+                    style: theme.bodyMedium.copyWith(
+                      fontWeight: _model.tabBarCurrentIndex == 1
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                      color: _model.tabBarCurrentIndex == 1
+                          ? theme.primaryText
+                          : theme.secondaryText,
+                    ),
+                  ),
                 ),
               ),
             ),
           ],
         ),
-        const Spacer(),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              "Don't have an account yet? ",
-              style: theme.bodyMedium.copyWith(color: theme.secondaryText),
-            ),
-            GestureDetector(
-              onTap: () => context.goNamed(SignupWidget.routeName),
-              child: Text(
-                'Sign Up',
-                style: theme.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: theme.primary,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
+      );
 
-  Widget _buildEmailTab(AppThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Email',
-          style: theme.bodyMedium.copyWith(
-            fontWeight: FontWeight.w500,
-            color: theme.primaryText,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: _model.emailTextFieldTextController,
-          focusNode: _model.emailTextFieldFocusNode,
-          onChanged: (_) => EasyDebounce.debounce(
-            '_model.emailTextFieldTextController',
-            Duration.zero,
-            () {
-              _model.isEmailvalid = functions.checkEmailRegex(
-                  _model.emailTextFieldTextController.text);
-              safeSetState(() {});
-            },
-          ),
-          autofocus: false,
-          textInputAction: TextInputAction.next,
-          obscureText: false,
-          decoration: InputDecoration(
-            labelText: 'Email address',
-            labelStyle: theme.bodyLarge.copyWith(color: theme.secondaryText),
-            hintText: 'you@example.com',
-            hintStyle: theme.bodyLarge.copyWith(color: theme.secondaryText),
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(
-                color:
-                    !_model.isEmailvalid ? theme.error : theme.alternate,
-                width: 1,
-              ),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(
-                color:
-                    !_model.isEmailvalid ? theme.error : theme.alternate,
-                width: 1.5,
-              ),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: theme.error, width: 1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: theme.error, width: 1.5),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            filled: true,
-            fillColor: theme.primaryBackground,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-          ),
-          style: theme.bodyLarge,
-          cursorColor: theme.primaryText,
-          validator:
-              _model.emailTextFieldTextControllerValidator.asValidator(context),
-        ),
-        if (!_model.isEmailvalid)
-          Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Text(
-              'Invalid email',
-              style: theme.bodySmall.copyWith(color: theme.error),
+  Widget _buildPhoneTab(AppThemeData theme) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Mobile number',
+            style: theme.bodyMedium.copyWith(
+              fontWeight: FontWeight.w500,
+              color: theme.primaryText,
             ),
           ),
-        const SizedBox(height: 16),
-        Text(
-          'Password',
-          style: theme.bodyMedium.copyWith(
-            fontWeight: FontWeight.w500,
-            color: theme.primaryText,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: _model.passwordTextFieldTextController,
-          focusNode: _model.passwordTextFieldFocusNode,
-          onChanged: (_) => EasyDebounce.debounce(
-            '_model.passwordTextFieldTextController',
-            Duration.zero,
-            () => safeSetState(() {}),
-          ),
-          autofocus: false,
-          textInputAction: TextInputAction.done,
-          obscureText: !_model.passwordTextFieldVisibility,
-          decoration: InputDecoration(
-            labelText: 'Enter your password',
-            labelStyle: theme.bodyLarge.copyWith(color: theme.secondaryText),
-            hintText: '••••••••',
-            hintStyle: theme.bodyLarge.copyWith(color: theme.secondaryText),
-            enabledBorder: OutlineInputBorder(
-              borderSide:
-                  BorderSide(color: theme.alternate, width: 1),
-              borderRadius: BorderRadius.circular(12),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _model.phoneFieldTextController,
+            focusNode: _model.phoneFieldFocusNode,
+            onChanged: (_) => EasyDebounce.debounce(
+              '_model.phoneFieldTextController',
+              Duration.zero,
+              () {
+                _model.isPhoneValid =
+                    _model.phoneFieldTextController.text.length == 13;
+                FFAppState().phone = _model.phoneFieldTextController.text;
+                safeSetState(() {});
+              },
             ),
-            focusedBorder: OutlineInputBorder(
-              borderSide:
-                  BorderSide(color: theme.alternate, width: 1.5),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: theme.error, width: 1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: theme.error, width: 1.5),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            filled: true,
-            fillColor: theme.primaryBackground,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-            suffixIcon: InkWell(
-              onTap: () => safeSetState(
-                  () => _model.passwordTextFieldVisibility = !_model.passwordTextFieldVisibility),
-              focusNode: FocusNode(skipTraversal: true),
-              child: Icon(
-                _model.passwordTextFieldVisibility
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined,
+            autofocus: false,
+            textInputAction: TextInputAction.go,
+            obscureText: false,
+            decoration: InputDecoration(
+              labelText: '+63',
+              labelStyle: theme.labelMedium.copyWith(fontSize: 16),
+              hintText: '9123456789',
+              hintStyle: theme.labelMedium.copyWith(
+                fontSize: 16,
                 color: theme.secondaryText,
-                size: 24,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color:
+                      _model.isPhoneValid ? theme.secondaryText : theme.error,
+                  width: 1,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color:
+                      _model.isPhoneValid ? theme.secondaryText : theme.error,
+                  width: 1.5,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: theme.error, width: 1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: theme.error, width: 1.5),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              filled: true,
+              fillColor: theme.secondaryBackground,
+            ),
+            style: theme.bodyMedium.copyWith(fontSize: 16),
+            textAlign: TextAlign.start,
+            maxLength: 13,
+            maxLengthEnforcement: MaxLengthEnforcement.enforced,
+            buildCounter: (context,
+                    {required currentLength, required isFocused, maxLength}) =>
+                null,
+            keyboardType: TextInputType.phone,
+            cursorColor: theme.primaryText,
+            enableInteractiveSelection: true,
+            validator:
+                _model.phoneFieldTextControllerValidator.asValidator(context),
+            inputFormatters: [_model.phoneFieldMask],
+          ),
+          if (_model.errorMessage != null && _model.tabBarCurrentIndex == 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                _model.errorMessage!,
+                style: theme.bodySmall.copyWith(color: theme.error),
               ),
             ),
-          ),
-          style: theme.bodyLarge,
-          cursorColor: theme.primaryText,
-          validator: _model.passwordTextFieldTextControllerValidator
-              .asValidator(context),
-        ),
-        if (_model.errorMessage != null && _model.tabBarCurrentIndex == 1)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              _model.errorMessage!,
-              style: theme.bodySmall.copyWith(color: theme.error),
-            ),
-          ),
-        const SizedBox(height: 20),
-        FFButtonWidget(
-          onPressed: _model.isEmailLoginLoading
-              ? null
-              : (_model.emailTextFieldTextController.text == '' ||
-                      _model.passwordTextFieldTextController.text == '' ||
-                      !_model.isEmailvalid)
-                  ? null
-                  : () async {
-                      _model.errorMessage = null;
-                      _model.isEmailLoginLoading = true;
-                      safeSetState(() {});
-                      try {
-                        GoRouter.of(context).prepareAuthEvent();
-                        final user = await (authManager
-                                as SupabaseAuthManager)
-                            .signInWithEmail(
-                          context,
-                          _model.emailTextFieldTextController.text,
-                          _model.passwordTextFieldTextController.text,
-                        );
-                        if (user == null) {
-                          _model.isEmailLoginLoading = false;
-                          _model.errorMessage = 'Invalid email or password';
+          const SizedBox(height: 20),
+          FFButtonWidget(
+            onPressed: _model.isPhoneLoginLoading
+                ? null
+                : (_model.phoneFieldTextController.text == '' ||
+                        !_model.isPhoneValid)
+                    ? null
+                    : () async {
+                        _model.errorMessage = null;
+                        _model.isPhoneLoginLoading = true;
+                        safeSetState(() {});
+                        final phoneNumberVal =
+                            _model.phoneFieldTextController.text;
+                        if (phoneNumberVal.isEmpty ||
+                            !phoneNumberVal.startsWith('+')) {
+                          _model.isPhoneLoginLoading = false;
+                          _model.errorMessage =
+                              'Phone Number is required and has to start with +.';
                           safeSetState(() {});
+                          if (!mounted) {
+                            return;
+                          }
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                  'Phone Number is required and has to start with +.'),
+                            ),
+                          );
                           return;
                         }
-                        if (!context.mounted) return;
-                        await PostAuthNavigationFlow()
-                            .handlePostAuthNavigation(
-                          context: context,
-                          userId: user.uid!,
-                        );
-                      } catch (e) {
-                        _model.isEmailLoginLoading = false;
-                        _model.errorMessage =
-                            'An error occurred. Please try again.';
-                        safeSetState(() {});
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error: ${e.toString()}')),
-                        );
-                      }
-                    },
-          text: _model.isEmailLoginLoading ? 'Signing In...' : 'Sign In',
-          options: FFButtonOptions(
-            width: double.infinity,
-            height: 52,
-            color: _model.isEmailLoginLoading ? theme.alternate : theme.primary,
-            textStyle: theme.titleMedium.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
+                        try {
+                          await beginPhoneAuth(
+                            context: context,
+                            phoneNumber: phoneNumberVal,
+                            onCodeSent: (context) async {
+                              if (!mounted) {
+                                return;
+                              }
+                              context.goNamedAuth(
+                                PhoneVerifyUserWidget.routeName,
+                                context.mounted,
+                                ignoreRedirect: true,
+                              );
+                            },
+                          );
+                        } catch (e) {
+                          _model.isPhoneLoginLoading = false;
+                          _model.errorMessage =
+                              'An error occurred. Please try again.';
+                          safeSetState(() {});
+                          if (!mounted) {
+                            return;
+                          }
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error: ${e.toString()}')),
+                          );
+                        }
+                      },
+            text: _model.isPhoneLoginLoading ? 'Signing In...' : 'Sign In',
+            options: FFButtonOptions(
+              width: double.infinity,
+              height: 52,
+              color:
+                  _model.isPhoneLoginLoading ? theme.alternate : theme.primary,
+              textStyle: theme.titleMedium.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+              elevation: 0,
+              borderRadius: BorderRadius.circular(12),
+              disabledColor: theme.alternate,
+              disabledTextColor: theme.secondaryBackground,
             ),
-            elevation: 0,
-            borderRadius: BorderRadius.circular(12),
-            disabledColor: theme.alternate,
-            disabledTextColor: theme.secondaryBackground,
           ),
-        ),
-        const SizedBox(height: 16),
-        _OrDivider(),
-        const SizedBox(height: 16),
-        _SocialButton(
-          icon: Icons.g_mobiledata_rounded,
-          label: 'Continue with Google',
-          onTap: () async {
-            final user = await (authManager as SupabaseAuthManager)
-                .signInWithGoogle(context);
-            if (user != null && context.mounted) {
+          const SizedBox(height: 16),
+          _OrDivider(),
+          const SizedBox(height: 16),
+          _SocialButton(
+            icon: Icons.g_mobiledata_rounded,
+            label: 'Continue with Google',
+            onTap: () async {
+              final user = await (authManager as ShphAuthManager)
+                  .signInWithGoogle(context);
+              if (user != null && mounted) {
+                await PostAuthNavigationFlow().handlePostAuthNavigation(
+                  context: context,
+                  userId: user.uid!,
+                );
+              }
+            },
+          ),
+          const SizedBox(height: 10),
+          _SocialButton(
+            icon: Icons.apple_rounded,
+            label: 'Continue with Apple',
+            onTap: () async {
+              final user = await (authManager as ShphAuthManager)
+                  .signInWithApple(context);
+              if (user == null || !mounted) {
+                return;
+              }
               await PostAuthNavigationFlow().handlePostAuthNavigation(
                 context: context,
                 userId: user.uid!,
               );
-            }
-          },
-        ),
-        const SizedBox(height: 10),
-        _SocialButton(
-          icon: Icons.apple_rounded,
-          label: 'Continue with Apple',
-          onTap: () async {
-            final user = await (authManager as SupabaseAuthManager)
-                .signInWithApple(context);
-            if (user != null && context.mounted) {
+            },
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              GestureDetector(
+                onTap: () => context.goNamed(ForgotPasswordWidget.routeName),
+                child: Text(
+                  'Forgot password',
+                  style: theme.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const Spacer(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                "Don't have an account yet? ",
+                style: theme.bodyMedium.copyWith(color: theme.secondaryText),
+              ),
+              GestureDetector(
+                onTap: () => context.goNamed(SignupWidget.routeName),
+                child: Text(
+                  'Sign Up',
+                  style: theme.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+
+  Widget _buildEmailTab(AppThemeData theme) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Email',
+            style: theme.bodyMedium.copyWith(
+              fontWeight: FontWeight.w500,
+              color: theme.primaryText,
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _model.emailTextFieldTextController,
+            focusNode: _model.emailTextFieldFocusNode,
+            onChanged: (_) => EasyDebounce.debounce(
+              '_model.emailTextFieldTextController',
+              Duration.zero,
+              () {
+                _model.isEmailvalid = functions
+                    .checkEmailRegex(_model.emailTextFieldTextController.text);
+                safeSetState(() {});
+              },
+            ),
+            autofocus: false,
+            textInputAction: TextInputAction.next,
+            obscureText: false,
+            decoration: InputDecoration(
+              labelText: 'Email address',
+              labelStyle: theme.bodyLarge.copyWith(color: theme.secondaryText),
+              hintText: 'you@example.com',
+              hintStyle: theme.bodyLarge.copyWith(color: theme.secondaryText),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: !_model.isEmailvalid ? theme.error : theme.alternate,
+                  width: 1,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: !_model.isEmailvalid ? theme.error : theme.alternate,
+                  width: 1.5,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: theme.error, width: 1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: theme.error, width: 1.5),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              filled: true,
+              fillColor: theme.primaryBackground,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+            ),
+            style: theme.bodyLarge,
+            cursorColor: theme.primaryText,
+            validator: _model.emailTextFieldTextControllerValidator
+                .asValidator(context),
+          ),
+          if (!_model.isEmailvalid)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                'Invalid email',
+                style: theme.bodySmall.copyWith(color: theme.error),
+              ),
+            ),
+          const SizedBox(height: 16),
+          Text(
+            'Password',
+            style: theme.bodyMedium.copyWith(
+              fontWeight: FontWeight.w500,
+              color: theme.primaryText,
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _model.passwordTextFieldTextController,
+            focusNode: _model.passwordTextFieldFocusNode,
+            onChanged: (_) => EasyDebounce.debounce(
+              '_model.passwordTextFieldTextController',
+              Duration.zero,
+              () => safeSetState(() {}),
+            ),
+            autofocus: false,
+            textInputAction: TextInputAction.done,
+            obscureText: !_model.passwordTextFieldVisibility,
+            decoration: InputDecoration(
+              labelText: 'Enter your password',
+              labelStyle: theme.bodyLarge.copyWith(color: theme.secondaryText),
+              hintText: '••••••••',
+              hintStyle: theme.bodyLarge.copyWith(color: theme.secondaryText),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: theme.alternate, width: 1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: theme.alternate, width: 1.5),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: theme.error, width: 1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: theme.error, width: 1.5),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              filled: true,
+              fillColor: theme.primaryBackground,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+              suffixIcon: InkWell(
+                onTap: () => safeSetState(() =>
+                    _model.passwordTextFieldVisibility =
+                        !_model.passwordTextFieldVisibility),
+                focusNode: FocusNode(skipTraversal: true),
+                child: Icon(
+                  _model.passwordTextFieldVisibility
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                  color: theme.secondaryText,
+                  size: 24,
+                ),
+              ),
+            ),
+            style: theme.bodyLarge,
+            cursorColor: theme.primaryText,
+            validator: _model.passwordTextFieldTextControllerValidator
+                .asValidator(context),
+          ),
+          if (_model.errorMessage != null && _model.tabBarCurrentIndex == 1)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                _model.errorMessage!,
+                style: theme.bodySmall.copyWith(color: theme.error),
+              ),
+            ),
+          if (_model.isBiometricAvailable && !_model.isBiometricLoginEnabled)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Row(
+                children: [
+                  SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: Checkbox(
+                      value: _model.enableBiometricOnLogin,
+                      onChanged: (value) {
+                        safeSetState(() {
+                          _model.enableBiometricOnLogin = value ?? false;
+                        });
+                      },
+                      activeColor: theme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Enable biometric login for faster access',
+                      style: theme.bodyMedium.copyWith(
+                        color: theme.secondaryText,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 20),
+          FFButtonWidget(
+            onPressed: _model.isEmailLoginLoading
+                ? null
+                : (_model.emailTextFieldTextController.text == '' ||
+                        _model.passwordTextFieldTextController.text == '' ||
+                        !_model.isEmailvalid)
+                    ? null
+                    : () async {
+                        _model.errorMessage = null;
+                        _model.isEmailLoginLoading = true;
+                        safeSetState(() {});
+                        try {
+                          GoRouter.of(context).prepareAuthEvent();
+                          final user = await (authManager as ShphAuthManager)
+                              .signInWithEmail(
+                            context,
+                            _model.emailTextFieldTextController.text,
+                            _model.passwordTextFieldTextController.text,
+                          );
+                          if (user == null) {
+                            _model.isEmailLoginLoading = false;
+                            _model.errorMessage = 'Invalid email or password';
+                            safeSetState(() {});
+                            return;
+                          }
+                          if (_model.enableBiometricOnLogin) {
+                            await (authManager as ShphAuthManager)
+                                .enableBiometricLogin();
+                          }
+                          if (!mounted) {
+                            return;
+                          }
+                          await PostAuthNavigationFlow()
+                              .handlePostAuthNavigation(
+                            context: context,
+                            userId: user.uid!,
+                          );
+                        } catch (e) {
+                          _model.isEmailLoginLoading = false;
+                          _model.errorMessage =
+                              'An error occurred. Please try again.';
+                          safeSetState(() {});
+                          if (!mounted) {
+                            return;
+                          }
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error: ${e.toString()}')),
+                          );
+                        }
+                      },
+            text: _model.isEmailLoginLoading ? 'Signing In...' : 'Sign In',
+            options: FFButtonOptions(
+              width: double.infinity,
+              height: 52,
+              color:
+                  _model.isEmailLoginLoading ? theme.alternate : theme.primary,
+              textStyle: theme.titleMedium.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+              elevation: 0,
+              borderRadius: BorderRadius.circular(12),
+              disabledColor: theme.alternate,
+              disabledTextColor: theme.secondaryBackground,
+            ),
+          ),
+          if (_model.isBiometricAvailable &&
+              _model.isBiometricLoginEnabled) ...[
+            const SizedBox(height: 16),
+            _SocialButton(
+              icon: Icons.fingerprint,
+              label: 'Sign in with biometrics',
+              onTap: () async {
+                final user = await (authManager as ShphAuthManager)
+                    .signInWithBiometric(context);
+                if (user != null && mounted) {
+                  await PostAuthNavigationFlow().handlePostAuthNavigation(
+                    context: context,
+                    userId: user.uid!,
+                  );
+                }
+              },
+            ),
+          ],
+          const SizedBox(height: 16),
+          _OrDivider(),
+          const SizedBox(height: 16),
+          _SocialButton(
+            icon: Icons.g_mobiledata_rounded,
+            label: 'Continue with Google',
+            onTap: () async {
+              final user = await (authManager as ShphAuthManager)
+                  .signInWithGoogle(context);
+              if (user != null && mounted) {
+                await PostAuthNavigationFlow().handlePostAuthNavigation(
+                  context: context,
+                  userId: user.uid!,
+                );
+              }
+            },
+          ),
+          const SizedBox(height: 10),
+          _SocialButton(
+            icon: Icons.apple_rounded,
+            label: 'Continue with Apple',
+            onTap: () async {
+              final user = await (authManager as ShphAuthManager)
+                  .signInWithApple(context);
+              if (user == null || !mounted) {
+                return;
+              }
               await PostAuthNavigationFlow().handlePostAuthNavigation(
                 context: context,
                 userId: user.uid!,
               );
-            }
-          },
-        ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            GestureDetector(
-              onTap: () => context.goNamed(ForgotPasswordWidget.routeName),
-              child: Text(
-                'Forgot password',
-                style: theme.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: theme.primary,
+            },
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              GestureDetector(
+                onTap: () => context.goNamed(ForgotPasswordWidget.routeName),
+                child: Text(
+                  'Forgot password',
+                  style: theme.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.primary,
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-        const Spacer(),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              "Don't have an account yet? ",
-              style: theme.bodyMedium.copyWith(color: theme.secondaryText),
-            ),
-            GestureDetector(
-              onTap: () => context.goNamed(SignOptionsWidget.routeName),
-              child: Text(
-                'Sign Up',
-                style: theme.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: theme.primary,
+            ],
+          ),
+          const Spacer(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                "Don't have an account yet? ",
+                style: theme.bodyMedium.copyWith(color: theme.secondaryText),
+              ),
+              GestureDetector(
+                onTap: () => context.goNamed(SignOptionsWidget.routeName),
+                child: Text(
+                  'Sign Up',
+                  style: theme.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.primary,
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
+            ],
+          ),
+        ],
+      );
 }
 
 class _OrDivider extends StatelessWidget {

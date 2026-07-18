@@ -1,201 +1,106 @@
 import 'dart:async';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '/api/api_config.dart';
+import 'dart:convert';
+
 import '/api/shph_token_storage.dart';
+import '../api/shph_api.dart' show ShphApiClient;
+import '../api/shph_api_client.dart' show ShphApiClient;
 import 'auth_logger.dart';
 
-/// Manages automatic token refresh to prevent session expiration
-/// Monitors token expiry and refreshes before expiration occurs
+/// Lightweight monitor for SHPH JWT token expiry.
+///
+/// The actual token refresh is performed by the [ShphApiClient] interceptor
+/// when a 401 response is received. This manager only logs the remaining
+/// lifetime and clears stored tokens when the token is no longer valid.
 class TokenRefreshManager {
-
   factory TokenRefreshManager() => _instance;
 
   TokenRefreshManager._internal();
   static final TokenRefreshManager _instance = TokenRefreshManager._internal();
 
-  Timer? _refreshTimer;
-  bool _isRefreshing = false;
-  
-  /// Duration before actual expiry to trigger refresh (e.g., 5 minutes before expiry)
-  static const Duration _refreshBuffer = Duration(minutes: 5);
-  
-  /// Minimum interval between refresh attempts (prevents rapid refresh loops)
-  static const Duration _minRefreshInterval = Duration(seconds: 10);
-  DateTime? _lastRefreshAttempt;
+  Timer? _timer;
 
-  /// Start monitoring and auto-refreshing the session token
+  /// How often to check the stored token.
+  static const Duration _checkInterval = Duration(minutes: 5);
+
+  /// Start monitoring the stored SHPH JWT token.
   void startTokenRefreshMonitoring() {
-    AuthLogger.debug('Starting token refresh monitoring', tag: 'TokenRefresh');
-
-    if (ApiConfig.preferShphApi) {
-      AuthLogger.debug(
-        'SHPH API mode enabled; JWT refresh handled by ShphApiClient interceptor',
-        tag: 'TokenRefresh',
-      );
-    }
-
-    // Check token expiry immediately
-    _scheduleTokenRefresh();
-    
-    // Also listen for auth state changes (login/logout)
-    Supabase.instance.client.auth.onAuthStateChange.listen((event) {
-      AuthLogger.debug('Auth state changed: ${event.event}', tag: 'TokenRefresh');
-      _refreshTimer?.cancel();
-      _scheduleTokenRefresh();
-    });
+    AuthLogger.debug('Starting SHPH token refresh monitoring',
+        tag: 'TokenRefresh');
+    _timer?.cancel();
+    _timer = Timer.periodic(_checkInterval, (_) => _checkToken());
+    _checkToken();
   }
 
-  /// Schedule the next token refresh based on current token expiry
-  void _scheduleTokenRefresh() {
-    _refreshTimer?.cancel();
+  /// Stop monitoring.
+  void stopTokenRefreshMonitoring() {
+    AuthLogger.debug('Stopping SHPH token refresh monitoring',
+        tag: 'TokenRefresh');
+    _timer?.cancel();
+    _timer = null;
+  }
 
-    final session = Supabase.instance.client.auth.currentSession;
-    
-    if (session == null) {
-      AuthLogger.debug('No active session for token refresh', tag: 'TokenRefresh');
+  Future<void> _checkToken() async {
+    final token = await ShphTokenStorage.getAccessToken();
+    if (token == null || token.isEmpty) {
       return;
     }
 
-    final expiresAt = session.expiresAt;
-    if (expiresAt == null) {
-      AuthLogger.debug('Session has no expiry time', tag: 'TokenRefresh');
+    final expiry = _extractExpiry(token);
+    if (expiry == null) {
       return;
     }
 
-    final now = DateTime.now();
-    final expiresAtDateTime = DateTime.fromMillisecondsSinceEpoch(expiresAt * 1000);
-    final timeUntilExpiry = expiresAtDateTime.difference(now);
-
-    // Calculate when to refresh (before expiry minus buffer time)
-    final refreshTime = timeUntilExpiry - _refreshBuffer;
-
+    final remaining = expiry.difference(DateTime.now());
     AuthLogger.debug(
-      'Token expires in ${timeUntilExpiry.inMinutes} minutes. '
-      'Scheduling refresh in ${refreshTime.inMinutes} minutes.',
+      'SHPH token expires in ${remaining.inMinutes} minutes',
       tag: 'TokenRefresh',
     );
 
-    if (refreshTime.isNegative || refreshTime.inSeconds < 30) {
-      // Token expires soon or already expired, refresh immediately
-      _performTokenRefresh();
-    } else {
-      // Schedule refresh for calculated time
-      _refreshTimer = Timer(refreshTime, _performTokenRefresh);
+    if (remaining.inSeconds <= 0) {
+      AuthLogger.warning(
+        'SHPH token appears expired; clearing stored tokens',
+        tag: 'TokenRefresh',
+      );
+      await ShphTokenStorage.clear();
     }
   }
 
-  /// Perform the actual token refresh
-  Future<void> _performTokenRefresh() async {
-    if (ApiConfig.preferShphApi) {
-      final hasShphToken = await ShphTokenStorage.hasAccessToken();
-      if (hasShphToken) {
-        AuthLogger.debug(
-          'Skipping Supabase refresh while SHPH API token is active',
-          tag: 'TokenRefresh',
-        );
-        return;
-      }
-    }
-
-    // Prevent overlapping refresh attempts
-    if (_isRefreshing) {
-      AuthLogger.debug('Token refresh already in progress, skipping', tag: 'TokenRefresh');
-      return;
-    }
-
-    // Enforce minimum interval between refresh attempts
-    if (_lastRefreshAttempt != null) {
-      final timeSinceLastAttempt = DateTime.now().difference(_lastRefreshAttempt!);
-      if (timeSinceLastAttempt < _minRefreshInterval) {
-        AuthLogger.debug(
-          'Refresh attempted too soon (${timeSinceLastAttempt.inSeconds}s ago), waiting',
-          tag: 'TokenRefresh',
-        );
-        _scheduleTokenRefresh();
-        return;
-      }
-    }
-
-    _isRefreshing = true;
-    _lastRefreshAttempt = DateTime.now();
-
+  DateTime? _extractExpiry(String token) {
     try {
-      AuthLogger.debug('Attempting to refresh session token', tag: 'TokenRefresh');
-      
-      final session = Supabase.instance.client.auth.currentSession;
-      
-      if (session == null) {
-        AuthLogger.debug('No session available for refresh', tag: 'TokenRefresh');
-        _isRefreshing = false;
-        return;
+      final parts = token.split('.');
+      if (parts.length != 3) {
+        return null;
       }
-
-      // Refresh the session - Supabase handles this automatically
-      // but we explicitly call it for security monitoring
-      final refreshToken = session.refreshToken;
-      if (refreshToken == null) {
-        AuthLogger.error(
-          'No refresh token available for session refresh',
-          tag: 'TokenRefresh',
-        );
-        _isRefreshing = false;
-        _scheduleTokenRefresh();
-        return;
+      final normalized = base64Url.normalize(parts[1]);
+      final decoded = base64Url.decode(normalized);
+      final payload = jsonDecode(utf8.decode(decoded)) as Map<String, dynamic>;
+      final exp = payload['exp'];
+      if (exp is int) {
+        return DateTime.fromMillisecondsSinceEpoch(exp * 1000);
       }
-
-      // Attempt to refresh session
-      await Supabase.instance.client.auth.refreshSession();
-      
-      AuthLogger.debug('Session token refreshed successfully', tag: 'TokenRefresh');
-      
-      // Reschedule the next refresh
-      _scheduleTokenRefresh();
-    } on AuthException catch (e) {
-      AuthLogger.error(
-        'Failed to refresh token - ${e.message}',
-        tag: 'TokenRefresh',
-        error: e,
-      );
-      
-      // If refresh failed, reschedule for retry (shorter interval)
-      _refreshTimer = Timer(const Duration(minutes: 1), _performTokenRefresh);
+      return null;
     } catch (e) {
-      AuthLogger.error(
-        'Unexpected error during token refresh',
-        tag: 'TokenRefresh',
-        error: e,
-      );
-      
-      // Reschedule for retry
-      _refreshTimer = Timer(const Duration(minutes: 1), _performTokenRefresh);
-    } finally {
-      _isRefreshing = false;
-    }
-  }
-
-  /// Stop monitoring token expiry
-  void stopTokenRefreshMonitoring() {
-    AuthLogger.debug('Stopping token refresh monitoring', tag: 'TokenRefresh');
-    _refreshTimer?.cancel();
-    _refreshTimer = null;
-  }
-
-  /// Get time until token expiry (for UI display, e.g., warning messages)
-  Duration? getTimeUntilTokenExpiry() {
-    final session = Supabase.instance.client.auth.currentSession;
-    if (session == null || session.expiresAt == null) {
       return null;
     }
-
-    final expiresAtDateTime = DateTime.fromMillisecondsSinceEpoch(session.expiresAt! * 1000);
-    final timeUntilExpiry = expiresAtDateTime.difference(DateTime.now());
-
-    return timeUntilExpiry.isNegative ? Duration.zero : timeUntilExpiry;
   }
 
-  /// Check if token is expired
-  bool isTokenExpired() {
-    final timeUntilExpiry = getTimeUntilTokenExpiry();
-    return timeUntilExpiry == null || timeUntilExpiry.inSeconds <= 0;
+  /// Get time until token expiry (for UI display, e.g., warning messages).
+  Future<Duration?> getTimeUntilTokenExpiry() async {
+    final token = await ShphTokenStorage.getAccessToken();
+    if (token == null || token.isEmpty) {
+      return null;
+    }
+    final expiry = _extractExpiry(token);
+    if (expiry == null) {
+      return null;
+    }
+    final remaining = expiry.difference(DateTime.now());
+    return remaining.isNegative ? Duration.zero : remaining;
+  }
+
+  /// Check if token is expired.
+  Future<bool> isTokenExpired() async {
+    final remaining = await getTimeUntilTokenExpiry();
+    return remaining == null || remaining.inSeconds <= 0;
   }
 }

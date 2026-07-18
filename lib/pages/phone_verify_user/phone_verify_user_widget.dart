@@ -5,7 +5,7 @@ import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:provider/provider.dart';
 
 import '/auth/post_auth_navigation_flow.dart';
-import '/auth/supabase_auth/auth_util.dart';
+import '/auth/shph_auth/auth_util.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -68,14 +68,11 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
             'Phone Verification',
             style: AppTheme.of(context).titleLarge.override(
                   font: GoogleFonts.poppins(
-                    fontWeight:
-                        AppTheme.of(context).titleLarge.fontWeight,
-                    fontStyle:
-                        AppTheme.of(context).titleLarge.fontStyle,
+                    fontWeight: AppTheme.of(context).titleLarge.fontWeight,
+                    fontStyle: AppTheme.of(context).titleLarge.fontStyle,
                   ),
                   letterSpacing: 0,
-                  fontWeight:
-                      AppTheme.of(context).titleLarge.fontWeight,
+                  fontWeight: AppTheme.of(context).titleLarge.fontWeight,
                   fontStyle: AppTheme.of(context).titleLarge.fontStyle,
                 ),
           ),
@@ -100,9 +97,7 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                           const EdgeInsetsDirectional.fromSTEB(0, 40, 0, 16),
                       child: Text(
                         'Enter verification code',
-                        style: AppTheme.of(context)
-                            .headlineMedium
-                            .override(
+                        style: AppTheme.of(context).headlineMedium.override(
                               font: GoogleFonts.poppins(
                                 fontWeight: AppTheme.of(context)
                                     .headlineMedium
@@ -115,9 +110,8 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                               fontWeight: AppTheme.of(context)
                                   .headlineMedium
                                   .fontWeight,
-                              fontStyle: AppTheme.of(context)
-                                  .headlineMedium
-                                  .fontStyle,
+                              fontStyle:
+                                  AppTheme.of(context).headlineMedium.fontStyle,
                             ),
                       ),
                     ),
@@ -129,21 +123,17 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                         textAlign: TextAlign.center,
                         style: AppTheme.of(context).bodyMedium.override(
                               font: GoogleFonts.poppins(
-                                fontWeight: AppTheme.of(context)
-                                    .bodyMedium
-                                    .fontWeight,
-                                fontStyle: AppTheme.of(context)
-                                    .bodyMedium
-                                    .fontStyle,
+                                fontWeight:
+                                    AppTheme.of(context).bodyMedium.fontWeight,
+                                fontStyle:
+                                    AppTheme.of(context).bodyMedium.fontStyle,
                               ),
                               color: AppTheme.of(context).secondaryText,
                               letterSpacing: 0,
-                              fontWeight: AppTheme.of(context)
-                                  .bodyMedium
-                                  .fontWeight,
-                              fontStyle: AppTheme.of(context)
-                                  .bodyMedium
-                                  .fontStyle,
+                              fontWeight:
+                                  AppTheme.of(context).bodyMedium.fontWeight,
+                              fontStyle:
+                                  AppTheme.of(context).bodyMedium.fontStyle,
                             ),
                       ),
                     ),
@@ -161,8 +151,9 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                           const numCells = 6;
                           const totalSpacing = (numCells - 1) * spacing;
                           final availableWidth = constraints.maxWidth;
-                          final cellSize = (availableWidth - totalSpacing) / numCells;
-                          
+                          final cellSize =
+                              (availableWidth - totalSpacing) / numCells;
+
                           return MaterialPinField(
                             length: 6,
                             pinController: _model.pinCodeController,
@@ -179,19 +170,19 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                               cellSize: Size(cellSize, cellSize),
                               spacing: spacing,
                               borderRadius: BorderRadius.circular(12),
-                              textStyle: AppTheme.of(context)
-                                  .bodyLarge
-                                  .override(
-                                    font: GoogleFonts.poppins(
-                                      fontWeight: AppTheme.of(context)
-                                          .bodyLarge
-                                          .fontWeight,
-                                    ),
-                                    letterSpacing: 2,
-                                    fontSize: 28,
-                                  ),
+                              textStyle:
+                                  AppTheme.of(context).bodyLarge.override(
+                                        font: GoogleFonts.poppins(
+                                          fontWeight: AppTheme.of(context)
+                                              .bodyLarge
+                                              .fontWeight,
+                                        ),
+                                        letterSpacing: 2,
+                                        fontSize: 28,
+                                      ),
                               entryAnimation: MaterialPinAnimation.slide,
-                              fillColor: AppTheme.of(context).secondaryBackground,
+                              fillColor:
+                                  AppTheme.of(context).secondaryBackground,
                               showCursor: false,
                             ),
                             keyboardType: TextInputType.number,
@@ -204,7 +195,8 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsetsDirectional.fromSTEB(0, 24, 0, 16),
+                      padding:
+                          const EdgeInsetsDirectional.fromSTEB(0, 24, 0, 16),
                       child: FFButtonWidget(
                         onPressed: () async {
                           GoRouter.of(context).prepareAuthEvent();
@@ -236,7 +228,9 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                           }
 
                           // Handle post-auth navigation based on profile completeness and account type
-                          if (!context.mounted) return;
+                          if (!context.mounted) {
+                            return;
+                          }
                           await PostAuthNavigationFlow()
                               .handlePostAuthNavigation(
                             context: context,
@@ -250,25 +244,21 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                           padding: const EdgeInsets.all(8),
                           iconPadding: EdgeInsetsDirectional.zero,
                           color: AppTheme.of(context).primary,
-                          textStyle:
-                              AppTheme.of(context).titleSmall.override(
-                                    font: GoogleFonts.poppins(
-                                      fontWeight: AppTheme.of(context)
-                                          .titleSmall
-                                          .fontWeight,
-                                      fontStyle: AppTheme.of(context)
-                                          .titleSmall
-                                          .fontStyle,
-                                    ),
-                                    color: Colors.white,
-                                    letterSpacing: 0,
-                                    fontWeight: AppTheme.of(context)
-                                        .titleSmall
-                                        .fontWeight,
-                                    fontStyle: AppTheme.of(context)
-                                        .titleSmall
-                                        .fontStyle,
-                                  ),
+                          textStyle: AppTheme.of(context).titleSmall.override(
+                                font: GoogleFonts.poppins(
+                                  fontWeight: AppTheme.of(context)
+                                      .titleSmall
+                                      .fontWeight,
+                                  fontStyle:
+                                      AppTheme.of(context).titleSmall.fontStyle,
+                                ),
+                                color: Colors.white,
+                                letterSpacing: 0,
+                                fontWeight:
+                                    AppTheme.of(context).titleSmall.fontWeight,
+                                fontStyle:
+                                    AppTheme.of(context).titleSmall.fontStyle,
+                              ),
                           elevation: 0,
                           borderSide: const BorderSide(
                             color: Colors.transparent,
@@ -279,27 +269,22 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                       ),
                     ),
                     Padding(
-                      padding:
-                          const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 8),
+                      padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 8),
                       child: Text(
                         'Didn\'t receive the code?',
                         style: AppTheme.of(context).bodySmall.override(
                               font: GoogleFonts.poppins(
-                                fontWeight: AppTheme.of(context)
-                                    .bodySmall
-                                    .fontWeight,
-                                fontStyle: AppTheme.of(context)
-                                    .bodySmall
-                                    .fontStyle,
+                                fontWeight:
+                                    AppTheme.of(context).bodySmall.fontWeight,
+                                fontStyle:
+                                    AppTheme.of(context).bodySmall.fontStyle,
                               ),
                               color: AppTheme.of(context).secondaryText,
                               letterSpacing: 0,
-                              fontWeight: AppTheme.of(context)
-                                  .bodySmall
-                                  .fontWeight,
-                              fontStyle: AppTheme.of(context)
-                                  .bodySmall
-                                  .fontStyle,
+                              fontWeight:
+                                  AppTheme.of(context).bodySmall.fontWeight,
+                              fontStyle:
+                                  AppTheme.of(context).bodySmall.fontStyle,
                             ),
                       ),
                     ),
@@ -325,7 +310,7 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                         _model.pinCodeController.clearError();
                         _model.pinCodeValue = '';
                         safeSetState(() {});
-                        
+
                         await beginPhoneAuth(
                           context: context,
                           phoneNumber: phoneNumberVal,
@@ -341,16 +326,14 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                         style: AppTheme.of(context).bodySmall.override(
                               font: GoogleFonts.poppins(
                                 fontWeight: FontWeight.w600,
-                                fontStyle: AppTheme.of(context)
-                                    .bodySmall
-                                    .fontStyle,
+                                fontStyle:
+                                    AppTheme.of(context).bodySmall.fontStyle,
                               ),
                               color: AppTheme.of(context).primary,
                               letterSpacing: 0,
                               fontWeight: FontWeight.w600,
-                              fontStyle: AppTheme.of(context)
-                                  .bodySmall
-                                  .fontStyle,
+                              fontStyle:
+                                  AppTheme.of(context).bodySmall.fontStyle,
                             ),
                       ),
                     ),

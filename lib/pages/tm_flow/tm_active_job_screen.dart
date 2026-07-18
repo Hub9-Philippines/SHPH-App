@@ -525,9 +525,8 @@ class _TMChatTab extends StatelessWidget {
               ),
             ),
             child: Column(
-              crossAxisAlignment: isUser
-                  ? CrossAxisAlignment.end
-                  : CrossAxisAlignment.start,
+              crossAxisAlignment:
+                  isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
               children: [
                 Text(
                   message.$1,

@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '/backend/supabase/database/tables/payment_methods.dart';
+import '/auth/shph_auth/auth_util.dart';
+import '/backend/shph_db/database/tables/payment_methods.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import '/services/chat_service.dart';
@@ -12,6 +12,7 @@ import '/services/dispatch/dispatch_models.dart';
 import '/services/dispatch/dispatch_service.dart';
 import '/services/logging_service.dart';
 import '/services/pro_bookings_service.dart';
+import '/services/profiles_service.dart';
 import '/theme/app_theme.dart';
 
 // Profile pages
@@ -263,7 +264,9 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            success ? 'Offer accepted — job confirmed' : 'Failed to accept offer',
+            success
+                ? 'Offer accepted — job confirmed'
+                : 'Failed to accept offer',
           ),
         ),
       );
@@ -458,14 +461,16 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
                           Text(
                             'Dispatch match',
                             style: theme.labelMedium.override(
-                              font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                              font: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w700),
                               color: Colors.white.withValues(alpha: 0.82),
                             ),
                           ),
                           Text(
                             'New offer available',
                             style: theme.titleSmall.override(
-                              font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                              font: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w700),
                               color: Colors.white,
                             ),
                           ),
@@ -484,7 +489,8 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
                       child: Text(
                         '${elapsed.inSeconds ~/ 60}m ago',
                         style: theme.labelSmall.override(
-                          font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                          font:
+                              GoogleFonts.poppins(fontWeight: FontWeight.w600),
                           color: Colors.white,
                         ),
                       ),
@@ -494,19 +500,22 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    Icon(Icons.person_outline, size: 16, color: Colors.white.withValues(alpha: 0.82)),
+                    Icon(Icons.person_outline,
+                        size: 16, color: Colors.white.withValues(alpha: 0.82)),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         clientName,
                         style: theme.bodyMedium.override(
-                          font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                          font:
+                              GoogleFonts.poppins(fontWeight: FontWeight.w600),
                           color: Colors.white,
                         ),
                       ),
                     ),
                     const SizedBox(width: 16),
-                    Icon(Icons.build_outlined, size: 16, color: Colors.white.withValues(alpha: 0.82)),
+                    Icon(Icons.build_outlined,
+                        size: 16, color: Colors.white.withValues(alpha: 0.82)),
                     const SizedBox(width: 6),
                     Text(
                       serviceType,
@@ -533,7 +542,8 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
                               child: Text(
                                 'Accept',
                                 style: theme.bodyMedium.override(
-                                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                                  font: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.w700),
                                   color: const Color(0xFF0F766E),
                                 ),
                               ),
@@ -560,7 +570,8 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
                           child: Text(
                             'Decline',
                             style: theme.bodyMedium.override(
-                              font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                              font: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w600),
                             ),
                           ),
                         ),
@@ -972,9 +983,9 @@ class _ProScheduleWidgetState extends State<ProScheduleWidget> {
                             final job = scheduledJobs[index];
                             return _buildScheduleCard(context, job);
                           },
-                    ),
-                  ),
-              );
+                        ),
+                      ),
+      );
 
   Widget _buildScheduleCard(BuildContext context, Map<String, dynamic> job) {
     final serviceListing = job['service_listings'] as Map<String, dynamic>?;
@@ -1384,8 +1395,8 @@ class _ProEarningsWidgetState extends State<ProEarningsWidget> {
       [];
 
   Future<void> _handleCashOut() async {
-    final userId = Supabase.instance.client.auth.currentUser?.id;
-    if (userId == null) {
+    final userId = currentUserUid;
+    if (userId.isEmpty) {
       if (!mounted) {
         return;
       }
@@ -1449,8 +1460,8 @@ class _ProEarningsWidgetState extends State<ProEarningsWidget> {
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton(
-                    onPressed: () =>
-                        Navigator.of(context).pop(hasEwallet ? 'manage' : 'add'),
+                    onPressed: () => Navigator.of(context)
+                        .pop(hasEwallet ? 'manage' : 'add'),
                     child: Text(
                       hasEwallet ? 'Manage Payout Wallet' : 'Add Payout Wallet',
                     ),
@@ -1839,9 +1850,10 @@ class _ProEarningsWidgetState extends State<ProEarningsWidget> {
   ) {
     final isEarning = transaction['type'] == 'earning';
     final amount = (transaction['amount'] as num?)?.toDouble() ?? 0.0;
-    final serviceName =
-        (transaction['serviceName'] ?? transaction['description'] ?? 'Transaction')
-            .toString();
+    final serviceName = (transaction['serviceName'] ??
+            transaction['description'] ??
+            'Transaction')
+        .toString();
     final clientName = (transaction['clientName'] ?? '').toString().trim();
     final date = (transaction['date'] ?? 'Unknown date').toString();
 
@@ -1864,9 +1876,7 @@ class _ProEarningsWidgetState extends State<ProEarningsWidget> {
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(
-              isEarning
-                  ? Icons.south_west_rounded
-                  : Icons.north_east_rounded,
+              isEarning ? Icons.south_west_rounded : Icons.north_east_rounded,
               color: isEarning
                   ? AppTheme.of(context).success
                   : AppTheme.of(context).error,
@@ -2096,8 +2106,8 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
   Future<void> _loadChatRooms() async {
     safeSetState(() => _isLoading = true);
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) {
+      final userId = currentUserUid;
+      if (userId.isEmpty) {
         safeSetState(() {
           _chatRooms = const [];
           _isLoading = false;
@@ -2117,27 +2127,6 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
             .toList();
       } catch (_) {
         rooms = const [];
-      }
-
-      if (rooms.isEmpty) {
-        final chatRoomsResponse = await Supabase.instance.client
-            .from('chat_rooms')
-            .select('''
-              *,
-              profiles!chat_rooms_client_id_fkey(
-                id,
-                display_name,
-                first_name,
-                photo_url
-              )
-            ''')
-            .eq('provider_id', userId)
-            .order('updated_at', ascending: false);
-
-        rooms = List<Map<String, dynamic>>.from(chatRoomsResponse)
-            .map(_normalizeChatRoom)
-            .whereType<Map<String, dynamic>>()
-            .toList();
       }
 
       rooms.sort(_sortChatRoomsByActivity);
@@ -2165,17 +2154,16 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
   }
 
   void _subscribeToChatRooms() {
-    final userId = Supabase.instance.client.auth.currentUser?.id;
-    if (userId == null) {
+    final userId = currentUserUid;
+    if (userId.isEmpty) {
       return;
     }
 
-    // Subscribe to all chat rooms and let _loadChatRooms filter appropriately
-    _chatRoomsSubscription = Supabase.instance.client
-        .from('chat_rooms')
-        .stream(primaryKey: ['id']).listen((data) {
-      _loadChatRooms();
-    });
+    // Poll chat rooms every 5 seconds as a replacement for real-time streams
+    _chatRoomsSubscription = Stream.periodic(
+      const Duration(seconds: 5),
+      (_) => _loadChatRooms(),
+    ).listen((_) {});
   }
 
   String _formatTime(DateTime? dateTime) {
@@ -2231,7 +2219,8 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
       return nested.map((key, value) => MapEntry('$key', value));
     }
 
-    final clientId = _stringValue(room['client_id']) ?? _stringValue(room['other_user_id']);
+    final clientId =
+        _stringValue(room['client_id']) ?? _stringValue(room['other_user_id']);
     final displayName = _stringValue(room['client_name']) ??
         _stringValue(room['other_user_name']) ??
         _stringValue(room['customer_name']) ??
@@ -2286,9 +2275,8 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
       };
 
   int _readUnreadCount(Map<String, dynamic> room) {
-    final raw = room['unread_provider_count'] ??
-        room['unread_count'] ??
-        room['unread'];
+    final raw =
+        room['unread_provider_count'] ?? room['unread_count'] ?? room['unread'];
     if (raw is int) {
       return raw;
     }
@@ -2314,11 +2302,13 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
     Map<String, dynamic> b,
   ) {
     final aLast = _parseRoomDate(
-      _stringValue((a['last_message'] as Map<String, dynamic>?)?['created_at']) ??
+      _stringValue(
+              (a['last_message'] as Map<String, dynamic>?)?['created_at']) ??
           _stringValue(a['updated_at']),
     );
     final bLast = _parseRoomDate(
-      _stringValue((b['last_message'] as Map<String, dynamic>?)?['created_at']) ??
+      _stringValue(
+              (b['last_message'] as Map<String, dynamic>?)?['created_at']) ??
           _stringValue(b['updated_at']),
     );
     if (aLast == null && bLast == null) {
@@ -2567,14 +2557,13 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
                             Expanded(
                               child: Text(
                                 'Recent conversations',
-                                style: AppTheme.of(context)
-                                    .titleMedium
-                                    .override(
-                                      font: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                      color: const Color(0xFF0F172A),
-                                    ),
+                                style:
+                                    AppTheme.of(context).titleMedium.override(
+                                          font: GoogleFonts.poppins(
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                          color: const Color(0xFF0F172A),
+                                        ),
                               ),
                             ),
                             Container(
@@ -2742,8 +2731,9 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
     final customerName =
         customer?['display_name'] ?? customer?['first_name'] ?? 'Customer';
     final customerPhoto = customer?['photo_url'];
-    final lastMessageText =
-        lastMessage?['content'] ?? chatRoom['last_message_text'] ?? 'No messages yet';
+    final lastMessageText = lastMessage?['content'] ??
+        chatRoom['last_message_text'] ??
+        'No messages yet';
     final lastMessageTime = lastMessage?['created_at'] != null
         ? DateTime.tryParse(lastMessage!['created_at'].toString())
         : null;
@@ -2866,7 +2856,7 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
                   style: AppTheme.of(context).labelSmall.override(
                         font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
                         color: Colors.white,
-                  ),
+                      ),
                 ),
               ),
             if (unreadCount <= 0)
@@ -2915,19 +2905,23 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
       setState(() => isLoading = true);
     }
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) {
+      final userId = currentUserUid;
+      if (userId.isEmpty) {
         if (mounted) {
           setState(() => isLoading = false);
         }
         return;
       }
 
-      final response = await Supabase.instance.client
-          .from('profiles')
-          .select()
-          .eq('id', userId)
-          .single();
+      final response = await ProfilesService.instance
+          .getProfile()
+          .then((row) => row?.data ?? <String, dynamic>{});
+      if (response.isEmpty) {
+        if (mounted) {
+          setState(() => isLoading = false);
+        }
+        return;
+      }
 
       if (!mounted) {
         return;
@@ -2952,14 +2946,12 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
 
   Future<void> _updateAvailability(bool value) async {
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) {
+      final userId = currentUserUid;
+      if (userId.isEmpty) {
         return;
       }
 
-      await Supabase.instance.client
-          .from('profiles')
-          .update({'is_available': value}).eq('id', userId);
+      await ProfilesService.instance.updateProfile({'is_available': value});
 
       if (!mounted) {
         return;
@@ -2982,7 +2974,8 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to update availability right now')),
+        const SnackBar(
+            content: Text('Unable to update availability right now')),
       );
     }
   }
@@ -3000,15 +2993,13 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
     }
 
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) {
+      final userId = currentUserUid;
+      if (userId.isEmpty) {
         return;
       }
 
       setState(() => _isSavingRate = true);
-      await Supabase.instance.client
-          .from('profiles')
-          .update({'hourly_rate': parsedRate}).eq('id', userId);
+      await ProfilesService.instance.updateProfile({'hourly_rate': parsedRate});
 
       if (!mounted) {
         return;
@@ -3069,7 +3060,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
     }
 
     try {
-      await Supabase.instance.client.auth.signOut();
+      await authManager.signOut();
       if (mounted) {
         context.go('/');
       }
@@ -3086,20 +3077,20 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        backgroundColor: const Color(0xFFF4F7FB),
-        appBar: _buildDashboardAppBar(
-          context,
-          title: 'Profile',
-          subtitle:
-              'Manage your provider presence, pricing, service area, and trust signals.',
-          onRefresh: _loadProfile,
-        ),
-        body: isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : RefreshIndicator(
-                onRefresh: _loadProfile,
-                child: SingleChildScrollView(
-                  child: Column(
+      backgroundColor: const Color(0xFFF4F7FB),
+      appBar: _buildDashboardAppBar(
+        context,
+        title: 'Profile',
+        subtitle:
+            'Manage your provider presence, pricing, service area, and trust signals.',
+        onRefresh: _loadProfile,
+      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _loadProfile,
+              child: SingleChildScrollView(
+                child: Column(
                   mainAxisSize: MainAxisSize.max,
                   children: [
                     // Profile Header
@@ -3145,8 +3136,8 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                       bottom: 0,
                                       right: 0,
                                       child: GestureDetector(
-                                        onTap: () => context
-                                            .pushNamed(ProEditProfileWidget.routeName),
+                                        onTap: () => context.pushNamed(
+                                            ProEditProfileWidget.routeName),
                                         child: Container(
                                           width: 34,
                                           height: 34,
@@ -3207,11 +3198,11 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                           vertical: 7,
                                         ),
                                         decoration: BoxDecoration(
-                                          color:
-                                              (profileData?['verification_status'] ==
-                                                      'verified')
-                                                  ? const Color(0xFFECFDF3)
-                                                  : const Color(0xFFFFF7ED),
+                                          color: (profileData?[
+                                                      'verification_status'] ==
+                                                  'verified')
+                                              ? const Color(0xFFECFDF3)
+                                              : const Color(0xFFFFF7ED),
                                           borderRadius:
                                               BorderRadius.circular(999),
                                         ),
@@ -3275,7 +3266,8 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                 Expanded(
                                   child: _buildProviderHeroStat(
                                     label: 'Rate',
-                                    value: 'PHP ${hourlyRate.toStringAsFixed(0)}',
+                                    value:
+                                        'PHP ${hourlyRate.toStringAsFixed(0)}',
                                   ),
                                 ),
                                 const SizedBox(width: 10),
@@ -3416,10 +3408,11 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                 const SizedBox(height: 4),
                                 Text(
                                   'Keep your pricing current so quotes and customer expectations stay aligned.',
-                                  style: AppTheme.of(context).bodySmall.override(
-                                        font: GoogleFonts.poppins(),
-                                        color: const Color(0xFF64748B),
-                                      ),
+                                  style:
+                                      AppTheme.of(context).bodySmall.override(
+                                            font: GoogleFonts.poppins(),
+                                            color: const Color(0xFF64748B),
+                                          ),
                                 ),
                                 const SizedBox(height: 12),
                                 Row(
@@ -3496,7 +3489,8 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                   child: InkWell(
-                                    onTap: _isSavingRate ? null : _saveHourlyRate,
+                                    onTap:
+                                        _isSavingRate ? null : _saveHourlyRate,
                                     child: Center(
                                       child: Text(
                                         _isSavingRate
@@ -3649,10 +3643,35 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                           ),
                           _buildMenuOption(
                             context,
+                            Icons.analytics_outlined,
+                            'Analytics',
+                            () => context
+                                .pushNamed(ProviderAnalyticsPage.routeName),
+                          ),
+                          _buildMenuOption(
+                            context,
+                            Icons.account_balance_wallet_outlined,
+                            'Earnings',
+                            () => context.pushNamed(EarningsPage.routeName),
+                          ),
+                          _buildMenuOption(
+                            context,
+                            Icons.gavel_outlined,
+                            'My Bids',
+                            () => context.pushNamed(ProviderBidsPage.routeName),
+                          ),
+                          _buildMenuOption(
+                            context,
+                            Icons.rate_review_outlined,
+                            'My Reviews',
+                            () => context.pushNamed(MyReviewsPage.routeName),
+                          ),
+                          _buildMenuOption(
+                            context,
                             Icons.description_outlined,
                             'Service History',
-                            () =>
-                                context.pushNamed(ServiceHistoryWidget.routeName),
+                            () => context
+                                .pushNamed(ServiceHistoryWidget.routeName),
                           ),
                           _buildMenuOption(
                             context,

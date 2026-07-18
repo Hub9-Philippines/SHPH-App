@@ -50,4 +50,54 @@ class ShphChatApi {
     );
     return response.data ?? {};
   }
+
+  Future<Map<String, dynamic>> getOrCreateDirectThread({
+    required String providerId,
+  }) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/api/chat/threads/direct/',
+      data: {'provider_id': int.tryParse(providerId) ?? providerId},
+    );
+    return response.data ?? {};
+  }
+
+  // --- Video/voice calls (/api/chat/calls/*) ---
+
+  Future<Map<String, dynamic>> initiateCall({
+    required String threadId,
+    required int calleeId,
+  }) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/api/chat/calls/initiate/',
+      data: {'thread_id': threadId, 'callee_id': calleeId},
+    );
+    return response.data ?? {};
+  }
+
+  Future<void> acceptCall(String callId) async {
+    await _client.post('/api/chat/calls/$callId/accept/');
+  }
+
+  Future<void> rejectCall(String callId, {String? reason}) async {
+    await _client.post(
+      '/api/chat/calls/$callId/reject/',
+      data: {if (reason != null) 'reason': reason},
+    );
+  }
+
+  Future<void> endCall(String callId, {String? reason, int? duration}) async {
+    await _client.post(
+      '/api/chat/calls/$callId/end/',
+      data: {
+        if (reason != null) 'reason': reason,
+        if (duration != null) 'duration': duration,
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>> listCalls() async {
+    final response =
+        await _client.get<Map<String, dynamic>>('/api/chat/calls/');
+    return response.data ?? {};
+  }
 }

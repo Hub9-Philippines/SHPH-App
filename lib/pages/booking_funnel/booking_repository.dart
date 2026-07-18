@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '/backend/supabase/supabase.dart';
+import '/auth/shph_auth/auth_util.dart';
+import '/backend/shph_db/database/tables/bookings.dart';
+import '/services/bookings_service.dart';
 import '/services/logging_service.dart';
 import 'booking_models.dart';
 
@@ -37,9 +39,8 @@ class ShphBookingRepository implements BookingRepository {
     required String notesPrefix,
     required String bookingStatus,
   }) async {
-    final supabase = Supabase.instance.client;
-    final userId = supabase.auth.currentUser?.id;
-    if (userId == null) {
+    final userId = currentUserUid;
+    if (userId.isEmpty) {
       throw StateError('You must be signed in to create a booking.');
     }
 
@@ -55,26 +56,22 @@ class ShphBookingRepository implements BookingRepository {
     ].join(' | ');
 
     try {
-      final response = await supabase
-          .from('bookings')
-          .insert({
-            'user_id': userId,
-            'service_listing_id': listingId,
-            'booking_date':
-                scheduledDateTime.toIso8601String().split('T').first,
-            'booking_time':
-                '${scheduledDateTime.hour.toString().padLeft(2, '0')}:${scheduledDateTime.minute.toString().padLeft(2, '0')}:00',
-            'notes': notes,
-            'status': bookingStatus,
-            'total_price': _estimateTotal(draft),
-          })
-          .select()
-          .single();
-
-      return BookingsRow(response);
+      final booking = await BookingsService.instance.createBooking(
+        serviceListingId: listingId,
+        bookingDate: scheduledDateTime,
+        bookingTime:
+            '${scheduledDateTime.hour.toString().padLeft(2, '0')}:${scheduledDateTime.minute.toString().padLeft(2, '0')}:00',
+        notes: notes,
+        totalPrice: _estimateTotal(draft),
+        paymentStatus: 'pending',
+      );
+      if (booking == null) {
+        throw StateError('Failed to create booking via SHPH API.');
+      }
+      return booking;
     } catch (e) {
       LoggingService.error(
-        'Supabase booking insert failed: $e',
+        'SHPH booking create failed: $e',
         tag: 'BookingRepository',
         error: e,
       );

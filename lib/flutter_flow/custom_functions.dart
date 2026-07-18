@@ -9,8 +9,8 @@ import 'lat_lng.dart';
 import 'place.dart';
 import 'uploaded_file.dart';
 
-import '/backend/supabase/supabase.dart';
-import '/auth/supabase_auth/auth_util.dart';
+import '/backend/shph_db/shph_db.dart';
+import '/auth/shph_auth/auth_util.dart';
 
 dynamic passCheckupJSON(String? pass) {
   var ret = {

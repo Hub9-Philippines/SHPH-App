@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'backend/supabase/supabase.dart';
+import 'backend/shph_db/database/tables/addresses.dart';
+import 'backend/shph_db/database/tables/profiles.dart';
 import 'flutter_flow/request_manager.dart';
 
 class FFAppState extends ChangeNotifier {
@@ -121,7 +122,7 @@ class FFAppState extends ChangeNotifier {
   String _selectedLocationMode = 'device';
   String get selectedLocationMode => _selectedLocationMode;
 
-  double _nearestProviderDistance = 99.0;
+  double _nearestProviderDistance = 99;
   double get nearestProviderDistance => _nearestProviderDistance;
   set nearestProviderDistance(double value) {
     _nearestProviderDistance = value;
@@ -177,9 +178,10 @@ class FFAppState extends ChangeNotifier {
     } else {
       prefs.setInt('ff_selectedAddressId', id);
     }
-    prefs.setString('ff_selectedAddressLabel', label);
-    prefs.setString('ff_selectedAddressLine1', line1);
-    prefs.setString('ff_selectedAddressCity', city);
+    prefs
+      ..setString('ff_selectedAddressLabel', label)
+      ..setString('ff_selectedAddressLine1', line1)
+      ..setString('ff_selectedAddressCity', city);
     if (latitude == null) {
       prefs.remove('ff_selectedLatitude');
     } else {

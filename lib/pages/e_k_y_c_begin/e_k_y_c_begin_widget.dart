@@ -431,8 +431,7 @@ class _EKYCBeginWidgetState extends State<EKYCBeginWidget> {
                         width: double.infinity,
                         height: 52,
                         padding: const EdgeInsets.all(8),
-                        iconPadding:
-                            EdgeInsetsDirectional.zero,
+                        iconPadding: EdgeInsetsDirectional.zero,
                         color: AppTheme.of(context).primary,
                         textStyle: AppTheme.of(context).titleSmall.override(
                               font: GoogleFonts.poppins(

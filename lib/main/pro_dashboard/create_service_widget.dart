@@ -1,8 +1,11 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '/api/resources/services_api.dart';
+import '/auth/shph_auth/auth_util.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
@@ -27,7 +30,7 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
 
   String? _selectedCategory;
   bool isLoading = false;
-  List<File> _selectedImages = [];
+  final List<File> _selectedImages = [];
 
   final List<String> _categories = [
     'Cleaning',
@@ -73,7 +76,9 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
       }
     } catch (e) {
       LoggingService.error('Error picking images: $e', tag: 'CreateService');
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error selecting images: $e')),
       );
@@ -86,36 +91,32 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
     });
   }
 
-  Future<List<String>> _uploadImages(String serviceId) async {
-    final List<String> urls = [];
-
-    for (int i = 0; i < _selectedImages.length; i++) {
+  Future<List<String>> _uploadImages(int listingId) async {
+    final uploadedUrls = <String>[];
+    for (final file in _selectedImages) {
       try {
-        final file = _selectedImages[i];
-        final fileName =
-            '$serviceId-$i-${DateTime.now().millisecondsSinceEpoch}.jpg';
-        final filePath = 'service-images/$fileName';
-
-        await Supabase.instance.client.storage
-            .from('services')
-            .upload(filePath, file);
-
-        final url = Supabase.instance.client.storage
-            .from('services')
-            .getPublicUrl(filePath);
-
-        urls.add(url);
+        final result = await ShphServicesApi.instance.uploadListingImage(
+          listingId,
+          file,
+        );
+        final url = result['url'] as String?;
+        if (url != null && url.isNotEmpty) {
+          uploadedUrls.add(url);
+        }
       } catch (e) {
-        LoggingService.error('Error uploading image $i: $e',
-            tag: 'CreateService');
+        LoggingService.error(
+          'Failed to upload listing image: $e',
+          tag: 'CreateService',
+        );
       }
     }
-
-    return urls;
+    return uploadedUrls;
   }
 
   Future<void> _createService() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
     if (_selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a category')),
@@ -125,23 +126,13 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
 
     setState(() => isLoading = true);
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) {
+      final userId = currentUserUid;
+      if (userId.isEmpty) {
         throw Exception('User not authenticated');
       }
 
-      // Generate service ID
-      final serviceId = DateTime.now().millisecondsSinceEpoch.toString();
-
-      // Upload images first
-      List<String> imageUrls = [];
-      if (_selectedImages.isNotEmpty) {
-        imageUrls = await _uploadImages(serviceId);
-      }
-
-      // Create service in database
+      // Create service in database first so we have a real listing ID
       final serviceData = {
-        'id': serviceId,
         'provider_id': userId,
         'name': _nameController.text.trim(),
         'description': _descriptionController.text.trim(),
@@ -149,15 +140,16 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
         'base_price': double.tryParse(_priceController.text) ?? 0.0,
         'duration_minutes': int.tryParse(_durationController.text) ?? 60,
         'additional_info': _additionalInfoController.text.trim(),
-        'images': imageUrls,
         'is_active': true,
-        'created_at': DateTime.now().toIso8601String(),
-        'updated_at': DateTime.now().toIso8601String(),
       };
 
-      await Supabase.instance.client
-          .from('service_listings')
-          .insert(serviceData);
+      final listing = await ShphServicesApi.instance.createListing(serviceData);
+      final serviceId = listing.id;
+
+      // Upload images now that the listing exists
+      if (_selectedImages.isNotEmpty) {
+        await _uploadImages(serviceId);
+      }
 
       LoggingService.info('Service created: $serviceId', tag: 'CreateService');
 
@@ -182,313 +174,308 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Create Service',
-          style: AppTheme.of(context).titleLarge.override(
-                font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-              ),
-        ),
-        backgroundColor: AppTheme.of(context).primaryBackground,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Images Section
-              Text(
-                'Service Images',
-                style: AppTheme.of(context).titleMedium.override(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Add up to 5 photos of your service (optional)',
-                style: AppTheme.of(context).bodySmall.override(
-                      color: AppTheme.of(context).secondaryText,
-                    ),
-              ),
-              const SizedBox(height: 12),
-
-              // Image Grid
-              if (_selectedImages.isNotEmpty)
-                SizedBox(
-                  height: 100,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _selectedImages.length +
-                        (_selectedImages.length < 5 ? 1 : 0),
-                    separatorBuilder: (_, __) => const SizedBox(width: 12),
-                    itemBuilder: (context, index) {
-                      if (index == _selectedImages.length) {
-                        // Add button
-                        return _buildAddImageButton();
-                      }
-                      return _buildImagePreview(index);
-                    },
-                  ),
-                )
-              else
-                _buildAddImageButton(isFullWidth: true),
-
-              const SizedBox(height: 24),
-
-              // Service Name
-              _buildTextField(
-                controller: _nameController,
-                label: 'Service Name *',
-                hint: 'e.g., Deep House Cleaning, Pipe Repair, etc.',
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Service name is required';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Category Dropdown
-              Text(
-                'Category *',
-                style: AppTheme.of(context).bodyMedium.override(
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                decoration: BoxDecoration(
-                  color: AppTheme.of(context).secondaryBackground,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: _selectedCategory == null
-                        ? AppTheme.of(context).error.withValues(alpha: 0.5)
-                        : AppTheme.of(context)
-                            .primaryText
-                            .withValues(alpha: 0.1),
-                  ),
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(
+          title: Text(
+            'Create Service',
+            style: AppTheme.of(context).titleLarge.override(
+                  font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
                 ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _selectedCategory,
-                    hint: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        'Select a category',
-                        style: AppTheme.of(context).bodyMedium.override(
-                              color: AppTheme.of(context).secondaryText,
-                            ),
+          ),
+          backgroundColor: AppTheme.of(context).primaryBackground,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.pop(),
+          ),
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Images Section
+                Text(
+                  'Service Images',
+                  style: AppTheme.of(context).titleMedium.override(
+                        fontWeight: FontWeight.bold,
                       ),
-                    ),
-                    isExpanded: true,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    borderRadius: BorderRadius.circular(12),
-                    items: _categories.map((category) {
-                      return DropdownMenuItem(
-                        value: category,
-                        child: Text(category),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedCategory = value;
-                      });
-                    },
-                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 8),
+                Text(
+                  'Add up to 5 photos of your service (optional)',
+                  style: AppTheme.of(context).bodySmall.override(
+                        color: AppTheme.of(context).secondaryText,
+                      ),
+                ),
+                const SizedBox(height: 12),
 
-              // Description
-              _buildTextField(
-                controller: _descriptionController,
-                label: 'Description *',
-                hint:
-                    'Describe what your service includes, your experience, etc.',
-                maxLines: 4,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Description is required';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Price and Duration Row
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTextField(
-                      controller: _priceController,
-                      label: 'Base Price (₱) *',
-                      hint: '500',
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Required';
+                // Image Grid
+                if (_selectedImages.isNotEmpty)
+                  SizedBox(
+                    height: 100,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _selectedImages.length +
+                          (_selectedImages.length < 5 ? 1 : 0),
+                      separatorBuilder: (_, __) => const SizedBox(width: 12),
+                      itemBuilder: (context, index) {
+                        if (index == _selectedImages.length) {
+                          // Add button
+                          return _buildAddImageButton();
                         }
-                        if (double.tryParse(value) == null) {
-                          return 'Invalid';
-                        }
-                        return null;
+                        return _buildImagePreview(index);
                       },
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildTextField(
-                      controller: _durationController,
-                      label: 'Duration (mins) *',
-                      hint: '60',
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Required';
-                        }
-                        if (int.tryParse(value) == null) {
-                          return 'Invalid';
-                        }
-                        return null;
-                      },
+                  )
+                else
+                  _buildAddImageButton(isFullWidth: true),
+
+                const SizedBox(height: 24),
+
+                // Service Name
+                _buildTextField(
+                  controller: _nameController,
+                  label: 'Service Name *',
+                  hint: 'e.g., Deep House Cleaning, Pipe Repair, etc.',
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Service name is required';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Category Dropdown
+                Text(
+                  'Category *',
+                  style: AppTheme.of(context).bodyMedium.override(
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.of(context).secondaryBackground,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _selectedCategory == null
+                          ? AppTheme.of(context).error.withValues(alpha: 0.5)
+                          : AppTheme.of(context)
+                              .primaryText
+                              .withValues(alpha: 0.1),
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Additional Info
-              _buildTextField(
-                controller: _additionalInfoController,
-                label: 'Additional Information',
-                hint: 'Any special requirements, tools needed, etc. (optional)',
-                maxLines: 3,
-              ),
-              const SizedBox(height: 32),
-
-              // Create Button
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: isLoading ? null : _createService,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.of(context).primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: isLoading
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : Text(
-                          'Create Service',
-                          style: AppTheme.of(context).titleSmall.override(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _selectedCategory,
+                      hint: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          'Select a category',
+                          style: AppTheme.of(context).bodyMedium.override(
+                                color: AppTheme.of(context).secondaryText,
                               ),
                         ),
+                      ),
+                      isExpanded: true,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      borderRadius: BorderRadius.circular(12),
+                      items: _categories
+                          .map((category) => DropdownMenuItem(
+                                value: category,
+                                child: Text(category),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedCategory = value;
+                        });
+                      },
+                    ),
+                  ),
                 ),
+                const SizedBox(height: 16),
+
+                // Description
+                _buildTextField(
+                  controller: _descriptionController,
+                  label: 'Description *',
+                  hint:
+                      'Describe what your service includes, your experience, etc.',
+                  maxLines: 4,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Description is required';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Price and Duration Row
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildTextField(
+                        controller: _priceController,
+                        label: 'Base Price (₱) *',
+                        hint: '500',
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Required';
+                          }
+                          if (double.tryParse(value) == null) {
+                            return 'Invalid';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildTextField(
+                        controller: _durationController,
+                        label: 'Duration (mins) *',
+                        hint: '60',
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Required';
+                          }
+                          if (int.tryParse(value) == null) {
+                            return 'Invalid';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // Additional Info
+                _buildTextField(
+                  controller: _additionalInfoController,
+                  label: 'Additional Information',
+                  hint:
+                      'Any special requirements, tools needed, etc. (optional)',
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 32),
+
+                // Create Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: isLoading ? null : _createService,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.of(context).primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: isLoading
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : Text(
+                            'Create Service',
+                            style: AppTheme.of(context).titleSmall.override(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 32),
+              ],
+            ),
+          ),
+        ),
+      );
+
+  Widget _buildAddImageButton({bool isFullWidth = false}) => GestureDetector(
+        onTap: _pickImages,
+        child: Container(
+          width: isFullWidth ? double.infinity : 100,
+          height: 100,
+          decoration: BoxDecoration(
+            color: AppTheme.of(context).secondaryBackground,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: AppTheme.of(context).primary.withValues(alpha: 0.3),
+              width: 2,
+              style: BorderStyle.solid,
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.add_photo_alternate,
+                size: 32,
+                color: AppTheme.of(context).primary,
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 4),
+              Text(
+                'Add Photo',
+                style: AppTheme.of(context).bodySmall.override(
+                      color: AppTheme.of(context).primary,
+                    ),
+              ),
             ],
           ),
         ),
-      ),
-    );
-  }
+      );
 
-  Widget _buildAddImageButton({bool isFullWidth = false}) {
-    return GestureDetector(
-      onTap: _pickImages,
-      child: Container(
-        width: isFullWidth ? double.infinity : 100,
-        height: 100,
-        decoration: BoxDecoration(
-          color: AppTheme.of(context).secondaryBackground,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppTheme.of(context).primary.withValues(alpha: 0.3),
-            width: 2,
-            style: BorderStyle.solid,
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.add_photo_alternate,
-              size: 32,
-              color: AppTheme.of(context).primary,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Add Photo',
-              style: AppTheme.of(context).bodySmall.override(
-                    color: AppTheme.of(context).primary,
-                  ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildImagePreview(int index) {
-    return Stack(
-      children: [
-        Container(
-          width: 100,
-          height: 100,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            image: DecorationImage(
-              fit: BoxFit.cover,
-              image: FileImage(_selectedImages[index]),
-            ),
-          ),
-        ),
-        Positioned(
-          top: 4,
-          right: 4,
-          child: GestureDetector(
-            onTap: () => _removeImage(index),
-            child: Container(
-              width: 24,
-              height: 24,
-              decoration: const BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.close,
-                color: Colors.white,
-                size: 16,
+  Widget _buildImagePreview(int index) => Stack(
+        children: [
+          Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              image: DecorationImage(
+                fit: BoxFit.cover,
+                image: FileImage(_selectedImages[index]),
               ),
             ),
           ),
-        ),
-      ],
-    );
-  }
+          Positioned(
+            top: 4,
+            right: 4,
+            child: GestureDetector(
+              onTap: () => _removeImage(index),
+              child: Container(
+                width: 24,
+                height: 24,
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.close,
+                  color: Colors.white,
+                  size: 16,
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
 
   Widget _buildTextField({
     required TextEditingController controller,
@@ -497,59 +484,60 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
     int maxLines = 1,
     TextInputType? keyboardType,
     String? Function(String?)? validator,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: AppTheme.of(context).bodyMedium.override(
-                fontWeight: FontWeight.w600,
-              ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          maxLines: maxLines,
-          keyboardType: keyboardType,
-          validator: validator,
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: AppTheme.of(context).bodyMedium.override(
-                  color: AppTheme.of(context).secondaryText,
+  }) =>
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: AppTheme.of(context).bodyMedium.override(
+                  fontWeight: FontWeight.w600,
                 ),
-            filled: true,
-            fillColor: AppTheme.of(context).secondaryBackground,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: AppTheme.of(context).primaryText.withValues(alpha: 0.1),
-              ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: AppTheme.of(context).primaryText.withValues(alpha: 0.1),
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: AppTheme.of(context).primary,
-                width: 2,
-              ),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: AppTheme.of(context).error,
-              ),
-            ),
-            contentPadding: const EdgeInsets.all(16),
           ),
-          style: AppTheme.of(context).bodyLarge,
-        ),
-      ],
-    );
-  }
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: controller,
+            maxLines: maxLines,
+            keyboardType: keyboardType,
+            validator: validator,
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: AppTheme.of(context).bodyMedium.override(
+                    color: AppTheme.of(context).secondaryText,
+                  ),
+              filled: true,
+              fillColor: AppTheme.of(context).secondaryBackground,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color:
+                      AppTheme.of(context).primaryText.withValues(alpha: 0.1),
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color:
+                      AppTheme.of(context).primaryText.withValues(alpha: 0.1),
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: AppTheme.of(context).primary,
+                  width: 2,
+                ),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: AppTheme.of(context).error,
+                ),
+              ),
+              contentPadding: const EdgeInsets.all(16),
+            ),
+            style: AppTheme.of(context).bodyLarge,
+          ),
+        ],
+      );
 }

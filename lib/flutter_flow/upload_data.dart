@@ -9,7 +9,7 @@ import 'package:mime_type/mime_type.dart';
 import 'package:video_player/video_player.dart';
 
 import '/theme/app_theme.dart';
-import '../auth/supabase_auth/auth_util.dart';
+import '../auth/shph_auth/auth_util.dart';
 import 'flutter_flow_util.dart';
 
 const allowedFormats = {'image/png', 'image/jpeg', 'video/mp4', 'image/gif'};

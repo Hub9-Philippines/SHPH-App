@@ -6,8 +6,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
-import '/auth/supabase_auth/auth_util.dart';
-import '/backend/supabase/supabase.dart' hide LatLng;
+import '/auth/shph_auth/auth_util.dart';
+import '/backend/shph_db/shph_db.dart' hide LatLng;
 import '/flutter_flow/flutter_flow_util.dart' hide LatLng;
 import '/index.dart';
 import '/models/service_listing.dart';

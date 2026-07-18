@@ -7,16 +7,12 @@ class ShphApiException implements Exception {
     this.cause,
   });
 
-  final String message;
-  final int? statusCode;
-  final Object? cause;
-
   factory ShphApiException.fromDio(DioException error) {
     final response = error.response;
     final statusCode = response?.statusCode;
     final data = response?.data;
 
-    String message = error.message ?? 'Request failed';
+    var message = error.message ?? 'Request failed';
     if (data is Map && data['detail'] != null) {
       message = data['detail'].toString();
     } else if (data is Map && data['message'] != null) {
@@ -32,7 +28,10 @@ class ShphApiException implements Exception {
     );
   }
 
+  final String message;
+  final int? statusCode;
+  final Object? cause;
+
   @override
-  String toString() =>
-      'ShphApiException($statusCode): $message';
+  String toString() => 'ShphApiException($statusCode): $message';
 }

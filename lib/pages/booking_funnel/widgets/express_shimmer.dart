@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 /// so no hidden rendering load persists.
 class ExpressShimmer extends StatefulWidget {
   const ExpressShimmer({
-    super.key,
     required this.child,
+    super.key,
   });
 
   final Widget child;
@@ -103,9 +103,11 @@ class ExpressCheckoutSkeleton extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _shimmerBlock(width: 160, height: 18, borderRadius: 6, color: base),
+                  _shimmerBlock(
+                      width: 160, height: 18, borderRadius: 6, color: base),
                   const SizedBox(height: 6),
-                  _shimmerBlock(width: 200, height: 14, borderRadius: 6, color: base),
+                  _shimmerBlock(
+                      width: 200, height: 14, borderRadius: 6, color: base),
                 ],
               ),
             ),
@@ -126,15 +128,17 @@ class ExpressCheckoutSkeleton extends StatelessWidget {
         const SizedBox(height: 12),
         // Payment pills row (3 pills)
         Row(
-          children: List.generate(3, (i) => Padding(
-            padding: EdgeInsets.only(right: i < 2 ? 10 : 0),
-            child: _shimmerBlock(
-              width: 82,
-              height: 38,
-              borderRadius: 999,
-              color: base,
-            ),
-          )),
+          children: List.generate(
+              3,
+              (i) => Padding(
+                    padding: EdgeInsets.only(right: i < 2 ? 10 : 0),
+                    child: _shimmerBlock(
+                      width: 82,
+                      height: 38,
+                      borderRadius: 999,
+                      color: base,
+                    ),
+                  )),
         ),
         const SizedBox(height: 18),
         // Total card row
@@ -156,47 +160,46 @@ class ExpressCheckoutSkeleton extends StatelessWidget {
     );
   }
 
-  Widget _sectionRow(Color base) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Row(
-        children: [
-          _shimmerBlock(width: 42, height: 42, borderRadius: 14, color: base),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _shimmerBlock(width: 120, height: 15, borderRadius: 6, color: base),
-                const SizedBox(height: 6),
-                _shimmerBlock(width: 180, height: 13, borderRadius: 6, color: base),
-              ],
+  Widget _sectionRow(Color base) => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: Row(
+          children: [
+            _shimmerBlock(width: 42, height: 42, borderRadius: 14, color: base),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _shimmerBlock(
+                      width: 120, height: 15, borderRadius: 6, color: base),
+                  const SizedBox(height: 6),
+                  _shimmerBlock(
+                      width: 180, height: 13, borderRadius: 6, color: base),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          _shimmerBlock(width: 18, height: 18, borderRadius: 4, color: base),
-        ],
-      ),
-    );
-  }
+            const SizedBox(width: 12),
+            _shimmerBlock(width: 18, height: 18, borderRadius: 4, color: base),
+          ],
+        ),
+      );
 
   Widget _shimmerBlock({
     required double? width,
     required double height,
     required double borderRadius,
     required Color color,
-  }) {
-    return Container(
-      width: width == double.infinity ? double.infinity : width,
-      height: height,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(borderRadius),
-      ),
-    );
-  }
+  }) =>
+      Container(
+        width: width == double.infinity ? double.infinity : width,
+        height: height,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(borderRadius),
+        ),
+      );
 }

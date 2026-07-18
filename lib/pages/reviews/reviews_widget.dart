@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/backend/supabase/database/tables/reviews.dart';
+import '/backend/shph_db/database/tables/reviews.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/theme/app_theme.dart';
@@ -12,7 +12,9 @@ export 'reviews_model.dart';
 
 class ReviewsWidget extends StatefulWidget {
   const ReviewsWidget({
-    required this.serviceId, required this.serviceName, super.key,
+    required this.serviceId,
+    required this.serviceName,
+    super.key,
   });
 
   static String routeName = 'Reviews';
@@ -69,7 +71,7 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
-    
+
     if (difference.inDays == 0) {
       if (difference.inHours == 0) {
         return '${difference.inMinutes} min ago';
@@ -160,8 +162,11 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
                                 const SizedBox(height: 8),
                                 Text(
                                   'Be the first to review ${widget.serviceName}',
-                                  style: AppTheme.of(context).bodySmall.override(
-                                        color: AppTheme.of(context).secondaryText,
+                                  style: AppTheme.of(context)
+                                      .bodySmall
+                                      .override(
+                                        color:
+                                            AppTheme.of(context).secondaryText,
                                       ),
                                   textAlign: TextAlign.center,
                                 ),
@@ -171,7 +176,8 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
                         : ListView.separated(
                             padding: const EdgeInsets.all(16),
                             itemCount: _reviews.length,
-                            separatorBuilder: (context, index) => const SizedBox(height: 12),
+                            separatorBuilder: (context, index) =>
+                                const SizedBox(height: 12),
                             itemBuilder: (context, index) {
                               final review = _reviews[index];
                               return _buildReviewCard(context, review);
@@ -182,82 +188,78 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
       );
 
   Widget _buildReviewCard(BuildContext context, ReviewsRow review) => Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.of(context).secondaryBackground,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppTheme.of(context).accent2,
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    review.userId.substring(0, 2).toUpperCase(),
-                    style: AppTheme.of(context)
-                        .bodyMedium
-                        .override(
-                          font: GoogleFonts.poppins(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.of(context).secondaryBackground,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppTheme.of(context).accent2,
+                    shape: BoxShape.circle,
                   ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'User',
-                      style: AppTheme.of(context)
-                          .bodyMedium
-                          .override(
+                  child: Center(
+                    child: Text(
+                      review.userId.substring(0, 2).toUpperCase(),
+                      style: AppTheme.of(context).bodyMedium.override(
                             font: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                     ),
-                    Row(
-                      children: List.generate(
-                        review.rating,
-                        (index) => const FaIcon(
-                          FontAwesomeIcons.solidStar,
-                          color: Colors.orange,
-                          size: 12,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'User',
+                        style: AppTheme.of(context).bodyMedium.override(
+                              font: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                      ),
+                      Row(
+                        children: List.generate(
+                          review.rating,
+                          (index) => const FaIcon(
+                            FontAwesomeIcons.solidStar,
+                            color: Colors.orange,
+                            size: 12,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+                Text(
+                  _formatDate(review.createdAt),
+                  style: AppTheme.of(context).bodySmall.override(
+                        color: AppTheme.of(context).secondaryText,
+                      ),
+                ),
+              ],
+            ),
+            if (review.comment != null && review.comment!.isNotEmpty) ...[
+              const SizedBox(height: 12),
               Text(
-                _formatDate(review.createdAt),
-                style: AppTheme.of(context).bodySmall.override(
+                review.comment!,
+                style: AppTheme.of(context).bodyMedium.override(
                       color: AppTheme.of(context).secondaryText,
                     ),
               ),
             ],
-          ),
-          if (review.comment != null && review.comment!.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(
-              review.comment!,
-              style: AppTheme.of(context).bodyMedium.override(
-                    color: AppTheme.of(context).secondaryText,
-                  ),
-            ),
           ],
-        ],
-      ),
-    );
+        ),
+      );
 }

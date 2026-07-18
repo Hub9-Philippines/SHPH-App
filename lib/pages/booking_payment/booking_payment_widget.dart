@@ -619,8 +619,9 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                   Expanded(
                     child: FFButtonWidget(
                       onPressed: _model.isLoading ? null : _confirmPayment,
-                      text:
-                          _model.isLoading ? 'Processing...' : 'Confirm Payment',
+                      text: _model.isLoading
+                          ? 'Processing...'
+                          : 'Confirm Payment',
                       options: FFButtonOptions(
                         width: double.infinity,
                         height: 54,

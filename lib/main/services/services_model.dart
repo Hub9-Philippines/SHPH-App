@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '/backend/supabase/database/tables/service_listings.dart';
+import '/backend/shph_db/database/tables/service_listings.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/logging_service.dart';
 import '/services/nearby_pro_mock_data.dart';

@@ -1,31 +1,20 @@
 import 'package:flutter/foundation.dart';
 
-/// Log levels for categorizing log messages
-enum LogLevel {
-  verbose,
-  debug,
-  info,
-  warning,
-  error,
-  critical,
-}
+import 'crash_reporting_service.dart';
+import 'log_level.dart';
 
 /// Centralized logging service for the application
 /// Replaces scattered debugPrint() calls with structured logging
 class LoggingService {
-
   factory LoggingService() => _instance;
 
   LoggingService._internal();
   static final LoggingService _instance = LoggingService._internal();
 
   static const String _defaultTag = 'APP';
-  static LogLevel _minLogLevel = kDebugMode ? LogLevel.verbose : LogLevel.info;
 
-  /// Set the minimum log level (useful for environment-based configuration)
-  static void setMinLogLevel(LogLevel level) {
-    _minLogLevel = level;
-  }
+  /// The minimum log level (useful for environment-based configuration)
+  static LogLevel minLogLevel = kDebugMode ? LogLevel.verbose : LogLevel.info;
 
   /// Log verbose message (lowest priority)
   static void verbose(
@@ -96,7 +85,7 @@ class LoggingService {
     StackTrace? stackTrace,
   ) {
     // Only log if level meets minimum threshold
-    if (level.index < _minLogLevel.index) {
+    if (level.index < minLogLevel.index) {
       return;
     }
 
@@ -115,10 +104,15 @@ class LoggingService {
       print(formattedMessage);
     }
 
-    // TODO: Integrate with crash reporting service (Sentry, Firebase Crashlytics)
-    // if (level.index >= LogLevel.error.index) {
-    //   CrashReportingService.recordError(error, stackTrace);
-    // }
+    // Forward errors and critical issues to crash reporters.
+    if (level.index >= LogLevel.error.index && error != null) {
+      CrashReportingService.recordError(
+        error,
+        stackTrace,
+        tag: tag,
+        fatal: level == LogLevel.critical,
+      );
+    }
   }
 
   /// Get current timestamp in readable format

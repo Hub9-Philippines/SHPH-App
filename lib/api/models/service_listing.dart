@@ -21,6 +21,29 @@ class ShphServiceListing {
     this.isTimeMaterial = false,
   });
 
+  factory ShphServiceListing.fromJson(Map<String, dynamic> json) =>
+      ShphServiceListing(
+        id: json['id'] as int? ?? 0,
+        title: json['title'] as String? ?? '',
+        category: json['category'] as int?,
+        categoryName: json['category_name'] as String?,
+        provider: json['provider'] as int?,
+        providerName: json['provider_name'] as String?,
+        providerPhoto: json['provider_photo'] as String?,
+        description: json['description'] as String?,
+        basePrice: _toDouble(json['base_price']),
+        priceUnit: json['price_unit'] as String?,
+        status: json['status'] as String?,
+        isAvailable: json['is_available']?.toString(),
+        rating: json['rating']?.toString(),
+        thumbnail: json['thumbnail'] as String?,
+        reviewCount: json['review_count'] as int?,
+        createdAt: json['created_at'] as String?,
+        city: json['city'] as String?,
+        province: json['province'] as String?,
+        isTimeMaterial: json['is_time_material'] as bool? ?? false,
+      );
+
   final int id;
   final String title;
   final int? category;
@@ -41,33 +64,13 @@ class ShphServiceListing {
   final String? province;
   final bool isTimeMaterial;
 
-  factory ShphServiceListing.fromJson(Map<String, dynamic> json) {
-    return ShphServiceListing(
-      id: json['id'] as int? ?? 0,
-      title: json['title'] as String? ?? '',
-      category: json['category'] as int?,
-      categoryName: json['category_name'] as String?,
-      provider: json['provider'] as int?,
-      providerName: json['provider_name'] as String?,
-      providerPhoto: json['provider_photo'] as String?,
-      description: json['description'] as String?,
-      basePrice: _toDouble(json['base_price']),
-      priceUnit: json['price_unit'] as String?,
-      status: json['status'] as String?,
-      isAvailable: json['is_available']?.toString(),
-      rating: json['rating']?.toString(),
-      thumbnail: json['thumbnail'] as String?,
-      reviewCount: json['review_count'] as int?,
-      createdAt: json['created_at'] as String?,
-      city: json['city'] as String?,
-      province: json['province'] as String?,
-      isTimeMaterial: json['is_time_material'] as bool? ?? false,
-    );
-  }
-
   static double? _toDouble(Object? value) {
-    if (value == null) return null;
-    if (value is num) return value.toDouble();
+    if (value == null) {
+      return null;
+    }
+    if (value is num) {
+      return value.toDouble();
+    }
     return double.tryParse(value.toString());
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/backend/supabase/database/tables/addresses.dart';
+import '/backend/shph_db/database/tables/addresses.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/components/edit_address/edit_address_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -210,7 +210,8 @@ class _BookingWidgetState extends State<BookingWidget> {
                       _buildStepCard(
                         step: '1',
                         title: 'Select Date',
-                        subtitle: 'Pick the day you want the provider to arrive.',
+                        subtitle:
+                            'Pick the day you want the provider to arrive.',
                         child: _buildActionTile(
                           icon: Icons.calendar_today_rounded,
                           label: _model.selectedDate != null
@@ -238,7 +239,8 @@ class _BookingWidgetState extends State<BookingWidget> {
                       _buildStepCard(
                         step: '3',
                         title: 'Service Address',
-                        subtitle: 'Tell the provider exactly where the work happens.',
+                        subtitle:
+                            'Tell the provider exactly where the work happens.',
                         child: _buildActionTile(
                           icon: Icons.location_on_rounded,
                           label: _selectedAddressTitle,
@@ -498,7 +500,9 @@ class _BookingWidgetState extends State<BookingWidget> {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFFF0FBF7) : const Color(0xFFF8FAFC),
+              color: isSelected
+                  ? const Color(0xFFF0FBF7)
+                  : const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: isSelected
@@ -687,10 +691,8 @@ class _BookingWidgetState extends State<BookingWidget> {
 
     final line1 = _model.selectedAddress!.addressLine1 ?? '';
     final city = _model.selectedAddress!.city ?? '';
-    final composed = [line1, city]
-        .where((part) => part.trim().isNotEmpty)
-        .join(', ')
-        .trim();
+    final composed =
+        [line1, city].where((part) => part.trim().isNotEmpty).join(', ').trim();
     return composed.isEmpty ? null : composed;
   }
 }

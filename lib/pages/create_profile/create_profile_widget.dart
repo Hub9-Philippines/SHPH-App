@@ -5,8 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:provider/provider.dart';
 
-import '/auth/supabase_auth/auth_util.dart';
-import '/backend/supabase/supabase.dart';
+import '/api/resources/users_api.dart';
+import '/auth/shph_auth/auth_util.dart';
 import '/components/password_validation_item/password_validation_item_widget.dart';
 import '/custom_code/actions/index.dart' as actions;
 import '/flutter_flow/custom_functions.dart' as functions;
@@ -108,7 +108,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
     }
   }
 
-  /// Load existing profile data from Supabase and pre-populate fields
+  /// Load existing profile data from the SHPH API and pre-populate fields
   Future<void> _loadExistingProfileData() async {
     try {
       final userId = currentUserUid;
@@ -125,13 +125,9 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
         tag: 'CreateProfile',
       );
 
-      final response = await Supabase.instance.client
-          .from('profiles')
-          .select('first_name, last_name, email, phone_number')
-          .eq('id', userId)
-          .maybeSingle();
+      final response = await ShphUsersApi.instance.getMe();
 
-      if (response == null) {
+      if (response.isEmpty) {
         LoggingService.debug(
           'No existing profile found, showing empty form',
           tag: 'CreateProfile',
@@ -168,7 +164,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
             _model.isEmailvalid = functions.checkEmailRegex(email);
           }
 
-          // Phone (from FFAppState or Supabase)
+          // Phone (from FFAppState or SHPH API)
           final phone = response['phone_number'] as String?;
           if (phone != null && phone.isNotEmpty) {
             FFAppState().phone = phone;
@@ -1189,7 +1185,9 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                             );
 
                                             if (_model.register == 'success') {
-                                              if (!context.mounted) return;
+                                              if (!context.mounted) {
+                                                return;
+                                              }
                                               LoggingService.info(
                                                 'Profile created successfully',
                                                 tag: 'CreateProfile',
@@ -1233,8 +1231,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                   width: double.infinity,
                                   height: 56,
                                   padding: const EdgeInsets.all(8),
-                                  iconPadding:
-EdgeInsetsDirectional.zero,
+                                  iconPadding: EdgeInsetsDirectional.zero,
                                   color: AppTheme.of(context).primary,
                                   textStyle:
                                       AppTheme.of(context).titleMedium.override(

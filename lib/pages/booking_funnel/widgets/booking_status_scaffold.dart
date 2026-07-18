@@ -19,9 +19,6 @@ class BookingStatusScaffold extends StatelessWidget {
     this.isDraggable = false,
     this.mapVisibleFraction = _kDefaultMapVisibleFraction,
     this.sheetMaxFraction = _kDefaultSheetMaxFraction,
-    this.sheetInitialFraction = 0.35,
-    this.sheetMinFraction = 0.12,
-    this.sheetMaxDraggableFraction = 0.75,
     super.key,
   });
 
@@ -35,14 +32,10 @@ class BookingStatusScaffold extends StatelessWidget {
   final bool isDraggable;
   final double mapVisibleFraction;
   final double sheetMaxFraction;
-  final double sheetInitialFraction;
-  final double sheetMinFraction;
-  final double sheetMaxDraggableFraction;
 
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
-    final bottomInset = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
@@ -88,36 +81,34 @@ class BookingStatusScaffold extends StatelessWidget {
                           tiltGesturesEnabled: false,
                           scrollGesturesEnabled: false,
                           zoomGesturesEnabled: false,
-                          padding: EdgeInsets.only(bottom: 48 + bottomInset),
                           markers: markers ??
-                            {
-                              Marker(
-                                markerId: const MarkerId('booking_location'),
-                                position: location,
-                                anchor: const Offset(0.5, 1),
-                                icon: BitmapDescriptor.defaultMarkerWithHue(
-                                  markerHue,
+                              {
+                                Marker(
+                                  markerId: const MarkerId('booking_location'),
+                                  position: location,
+                                  anchor: const Offset(0.5, 1),
+                                  icon: BitmapDescriptor.defaultMarkerWithHue(
+                                    markerHue,
+                                  ),
                                 ),
-                              ),
-                            },
+                              },
                         ),
                       )
                     : const SizedBox.shrink(),
               ),
               if (center != null) Center(child: center!),
               if (isDraggable)
-                _DraggableBottomSheet(
-                  child: bottomSheet,
-                  initialFraction: sheetInitialFraction,
-                  minFraction: sheetMinFraction,
-                  maxFraction: sheetMaxDraggableFraction,
-                )
+                _DraggableBottomSheet(child: bottomSheet)
               else
                 Align(
                   alignment: Alignment.bottomCenter,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxHeight: sheetMaxHeight),
-                    child: bottomSheet,
+                  child: MediaQuery.removePadding(
+                    context: context,
+                    removeBottom: true,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxHeight: sheetMaxHeight),
+                      child: bottomSheet,
+                    ),
                   ),
                 ),
               if (topCard != null)
@@ -136,46 +127,42 @@ class BookingStatusScaffold extends StatelessWidget {
 }
 
 class _DraggableBottomSheet extends StatelessWidget {
-  const _DraggableBottomSheet({
-    required this.child,
-    this.initialFraction = 0.35,
-    this.minFraction = 0.12,
-    this.maxFraction = 0.75,
-  });
+  const _DraggableBottomSheet({required this.child});
 
   final Widget child;
-  final double initialFraction;
-  final double minFraction;
-  final double maxFraction;
 
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
 
-    return DraggableScrollableSheet(
-      initialChildSize: initialFraction,
-      minChildSize: minFraction,
-      maxChildSize: maxFraction,
-      builder: (context, scrollController) => Container(
-        decoration: BoxDecoration(
-          color: theme.primaryBackground.withValues(alpha: 0.98),
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(32),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.10),
-              blurRadius: 24,
-              offset: const Offset(0, -8),
+    return MediaQuery.removePadding(
+      context: context,
+      removeBottom: true,
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.35,
+        minChildSize: 0.12,
+        maxChildSize: 0.75,
+        builder: (context, scrollController) => Container(
+          decoration: BoxDecoration(
+            color: theme.primaryBackground.withValues(alpha: 0.98),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(32),
             ),
-          ],
-        ),
-        child: SafeArea(
-          top: false,
-          child: ListView(
-            controller: scrollController,
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
-            children: [child],
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.10),
+                blurRadius: 24,
+                offset: const Offset(0, -8),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            top: false,
+            child: ListView(
+              controller: scrollController,
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
+              children: [child],
+            ),
           ),
         ),
       ),

@@ -5,10 +5,8 @@ import 'package:flutter/scheduler.dart';
 
 import '/app_state.dart';
 import '/models/service_listing.dart';
-import '/pages/dispatch/dispatch_repository.dart';
 import '/services/logging_service.dart';
 import '/utils/geo_utils.dart';
-
 import 'tm_catalog.dart';
 import 'tm_models.dart';
 import 'tm_repository.dart';
@@ -17,20 +15,11 @@ enum TMBroadcastStage { idle, nearbySearch, expandedSearch, failed }
 
 class TMFlowController extends ChangeNotifier {
   TMFlowController({required this.selectedService, TMRepository? repository})
-      : repository = repository ?? _createDispatchRepository(),
+      : repository = repository ?? _createMockRepository(),
         _subCategories = tmSubCategoriesForService(selectedService);
 
-  static DispatchTMRepository _createDispatchRepository() {
-    final appState = FFAppState();
-    final lat = appState.selectedLatitude;
-    final lng = appState.selectedLongitude;
-    return DispatchTMRepository(
-      clientLatitude:
-          GeoUtils.hasValidLocation(lat, lng) ? lat! : GeoUtils.fallbackLat,
-      clientLongitude:
-          GeoUtils.hasValidLocation(lat, lng) ? lng! : GeoUtils.fallbackLng,
-    );
-  }
+  static PersistentMockTMRepository _createMockRepository() =>
+      PersistentMockTMRepository();
 
   final ServiceListing selectedService;
   final TMRepository repository;

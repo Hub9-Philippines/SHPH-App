@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '/auth/supabase_auth/auth_util.dart';
+import '/auth/shph_auth/auth_util.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
@@ -183,7 +183,8 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                       icon: Icons.edit_outlined,
                       title: 'Edit profile',
                       subtitle: 'Update your personal information',
-                      onTap: () => context.pushNamed(EditProfileWidget.routeName),
+                      onTap: () =>
+                          context.pushNamed(EditProfileWidget.routeName),
                     ),
                   ],
                 ),
@@ -191,6 +192,20 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                 _buildSection(
                   title: 'Support',
                   children: [
+                    _buildSettingTile(
+                      icon: Icons.help_outline,
+                      title: 'Help & Support',
+                      subtitle: 'FAQs, contact support, and more',
+                      onTap: () =>
+                          context.pushNamed(ClientHelpSupportWidget.routeName),
+                    ),
+                    _buildSettingTile(
+                      icon: Icons.report_problem_outlined,
+                      title: 'Report a problem',
+                      subtitle: 'Submit a support ticket for app issues',
+                      onTap: () =>
+                          context.pushNamed(ReportProblemWidget.routeName),
+                    ),
                     _buildSettingTile(
                       icon: Icons.feedback_outlined,
                       title: 'Send feedback',
@@ -202,14 +217,17 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                     _buildSettingTile(
                       icon: Icons.description_outlined,
                       title: 'Terms of Service',
-                      subtitle: 'Read the terms governing your use of SerbisyoHub',
-                      onTap: () => context.pushNamed(TermsOfServiceWidget.routeName),
+                      subtitle:
+                          'Read the terms governing your use of SerbisyoHub',
+                      onTap: () =>
+                          context.pushNamed(TermsOfServiceWidget.routeName),
                     ),
                     _buildSettingTile(
                       icon: Icons.privacy_tip_outlined,
                       title: 'Privacy Policy',
                       subtitle: 'Understand how we collect and use your data',
-                      onTap: () => context.pushNamed(PrivacyPolicyWidget.routeName),
+                      onTap: () =>
+                          context.pushNamed(PrivacyPolicyWidget.routeName),
                     ),
                   ],
                 ),
@@ -287,7 +305,8 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                   Text(
                     'Control your app experience',
                     style: AppTheme.of(context).titleMedium.override(
-                          font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                          font:
+                              GoogleFonts.poppins(fontWeight: FontWeight.w700),
                           color: Colors.white,
                         ),
                   ),
@@ -427,7 +446,8 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                   Text(
                     title,
                     style: AppTheme.of(context).titleSmall.override(
-                          font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                          font:
+                              GoogleFonts.poppins(fontWeight: FontWeight.w700),
                           color: const Color(0xFF14213D),
                         ),
                   ),

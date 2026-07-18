@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/auth/supabase_auth/auth_util.dart';
-import '/backend/supabase/supabase.dart';
+import '/auth/shph_auth/auth_util.dart';
+import '/backend/shph_db/shph_db.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -51,9 +51,8 @@ class _AddressesWidgetState extends State<AddressesWidget> {
       return;
     }
     _addressesFuture = AddressesTable().queryRows(
-      queryFn: (q) => q
-          .eq('user_id', currentUserUid)
-          .order('is_default', ascending: false),
+      queryFn: (q) =>
+          q.eq('user_id', currentUserUid).order('is_default', ascending: false),
     );
   }
 
@@ -587,13 +586,11 @@ class _AddressesWidgetState extends State<AddressesWidget> {
         ),
       );
 
-  String _formatAddress(AddressesRow address) {
-    return [
-      address.addressLine1,
-      address.barangay,
-      address.city,
-    ].whereType<String>().where((part) => part.trim().isNotEmpty).join(', ');
-  }
+  String _formatAddress(AddressesRow address) => [
+        address.addressLine1,
+        address.barangay,
+        address.city,
+      ].whereType<String>().where((part) => part.trim().isNotEmpty).join(', ');
 
   Future<void> _setDefaultAddress(String addressId) async {
     try {
@@ -653,8 +650,9 @@ class _AddressesWidgetState extends State<AddressesWidget> {
     }
 
     try {
-      final deletedSelectedAddress = FFAppState().selectedLocationMode == 'saved' &&
-          FFAppState().selectedAddressId == address.id;
+      final deletedSelectedAddress =
+          FFAppState().selectedLocationMode == 'saved' &&
+              FFAppState().selectedAddressId == address.id;
       await AddressesTable().delete(
         matchingRows: (q) => q.eq('id', address.id),
       );
@@ -726,34 +724,32 @@ class _AddressHeaderMetric extends StatelessWidget {
   final String value;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: AppTheme.of(context).titleMedium.override(
-                  font: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w700,
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Column(
+          children: [
+            Text(
+              value,
+              style: AppTheme.of(context).titleMedium.override(
+                    font: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w700,
+                    ),
+                    color: Colors.white,
                   ),
-                  color: Colors.white,
-                ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: AppTheme.of(context).bodySmall.override(
-                  font: GoogleFonts.poppins(),
-                  color: Colors.white.withValues(alpha: 0.78),
-                ),
-          ),
-        ],
-      ),
-    );
-  }
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: AppTheme.of(context).bodySmall.override(
+                    font: GoogleFonts.poppins(),
+                    color: Colors.white.withValues(alpha: 0.78),
+                  ),
+            ),
+          ],
+        ),
+      );
 }

@@ -1,208 +1,164 @@
-import '/api/bridges/api_row_mapper.dart';
+import 'dart:async';
+
 import '/api/resources/chat_api.dart';
-import '/backend/supabase/supabase.dart';
 import '/services/logging_service.dart';
+import '/services/websocket_service.dart';
 
 class ChatService {
   ChatService._();
   static final ChatService instance = ChatService._();
 
-  final _supabase = Supabase.instance.client;
   final _chatApi = ShphChatApi.instance;
+  final _ws = ShphWebSocketService.instance;
 
-  /// Returns a list of chat room maps. Structure depends on backend.
+  StreamSubscription<Map<String, dynamic>>? _messageSubscription;
+  final _messageController = StreamController<Map<String, dynamic>>.broadcast();
+  final _threadUpdateController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _typingController = StreamController<Map<String, dynamic>>.broadcast();
+
+  /// Emits incoming chat message events (`chat.message`).
+  Stream<Map<String, dynamic>> get messageStream => _messageController.stream;
+
+  /// Emits thread metadata updates (`chat.thread_updated`).
+  Stream<Map<String, dynamic>> get threadUpdateStream =>
+      _threadUpdateController.stream;
+
+  /// Emits typing indicator events (`chat.typing`).
+  Stream<Map<String, dynamic>> get typingStream => _typingController.stream;
+
+  /// True when the WebSocket is connected and ready for real-time traffic.
+  bool get isWebSocketConnected => _ws.isConnected;
+
+  /// Initialize the global WebSocket connection for chat. Safe to call multiple
+  /// times; will no-op if already connected or connecting.
+  Future<void> initializeWebSocket() async {
+    await _ws.connect();
+    _messageSubscription ??= _ws.messages.listen(_routeMessage);
+  }
+
+  void _routeMessage(Map<String, dynamic> message) {
+    final type = message['type'] as String?;
+    switch (type) {
+      case 'chat.message':
+      case 'chat.message_edited':
+      case 'chat.message_deleted':
+        _messageController.add(message);
+        break;
+      case 'chat.thread_updated':
+        _threadUpdateController.add(message);
+        break;
+      case 'chat.typing':
+        _typingController.add(message);
+        break;
+      default:
+        break;
+    }
+  }
+
+  /// Close the global WebSocket connection and stop listening to events.
+  void closeWebSocket() {
+    _messageSubscription?.cancel();
+    _messageSubscription = null;
+    _ws.disconnect();
+  }
+
+  void dispose() {
+    closeWebSocket();
+    _messageController.close();
+    _threadUpdateController.close();
+    _typingController.close();
+  }
+
+  /// Returns a list of chat thread maps from the SHPH API.
   Future<List<Map<String, dynamic>>> getChatRooms() async {
-    if (await ApiRowMapper.canUseApi()) {
-      try {
-        final dynamic resp = await _chatApi.listThreads();
-        final results = resp['results'];
-        if (results is List) {
-          return List<Map<String, dynamic>>.from(results);
-        }
-        // If API returns a flat list
-        if (resp is List) {
-          return List<Map<String, dynamic>>.from(resp);
-        }
-      } catch (e) {
-        LoggingService.error('SHPH API getChatRooms failed, falling back: $e',
-            tag: 'ChatService');
-      }
-    }
-
     try {
-      // Fallback: query Supabase chat_rooms
-      final userId = _supabase.auth.currentUser?.id;
-      if (userId == null) {
-        return [];
+      final dynamic resp = await _chatApi.listThreads();
+      final results = resp['results'];
+      if (results is List) {
+        return List<Map<String, dynamic>>.from(results);
       }
-
-      final chatRoomsResponse = await _supabase.from('chat_rooms').select();
-      final rooms = List<Map<String, dynamic>>.from(chatRoomsResponse);
-      return rooms;
+      if (resp is List) {
+        return List<Map<String, dynamic>>.from(resp);
+      }
     } catch (e) {
-      LoggingService.error('Supabase getChatRooms failed: $e',
-          tag: 'ChatService');
-      return [];
+      LoggingService.error('getChatRooms failed: $e', tag: 'ChatService');
     }
+    return [];
   }
 
   Future<List<Map<String, dynamic>>> getMessages(String threadId) async {
-    if (await ApiRowMapper.canUseApi()) {
-      try {
-        final dynamic resp = await _chatApi.listMessages(threadId);
-        final results = resp['results'];
-        if (results is List) {
-          return List<Map<String, dynamic>>.from(results);
-        }
-        if (resp is List) {
-          return List<Map<String, dynamic>>.from(resp);
-        }
-      } catch (e) {
-        LoggingService.error('SHPH API getMessages failed, falling back: $e',
-            tag: 'ChatService');
-      }
-    }
-
     try {
-      final response = await _supabase
-          .from('chat_messages')
-          .select()
-          .eq('chat_room_id', threadId)
-          .order('created_at', ascending: true);
-      return List<Map<String, dynamic>>.from(response);
+      final dynamic resp = await _chatApi.listMessages(threadId);
+      final results = resp['results'];
+      if (results is List) {
+        return List<Map<String, dynamic>>.from(results);
+      }
+      if (resp is List) {
+        return List<Map<String, dynamic>>.from(resp);
+      }
     } catch (e) {
-      LoggingService.error('Supabase getMessages failed: $e',
-          tag: 'ChatService');
-      return [];
+      LoggingService.error('getMessages failed: $e', tag: 'ChatService');
     }
+    return [];
   }
 
   Future<bool> sendMessage(String threadId, String content) async {
-    if (await ApiRowMapper.canUseApi()) {
+    // Prefer WebSocket for real-time delivery when connected.
+    if (_ws.isConnected) {
       try {
-        await _chatApi.sendMessage(threadId, content);
+        _ws.sendChatMessage(threadId, content);
         return true;
       } catch (e) {
-        LoggingService.error('SHPH API sendMessage failed, falling back: $e',
+        LoggingService.error('WebSocket sendMessage failed, falling back: $e',
             tag: 'ChatService');
       }
     }
 
+    // Fallback to REST API
     try {
-      final currentUserId = _supabase.auth.currentUser?.id;
-      if (currentUserId == null) {
-        return false;
-      }
-
-      final room = await _supabase
-          .from('chat_rooms')
-          .select('client_id')
-          .eq('id', threadId)
-          .maybeSingle();
-      if (room == null) {
-        return false;
-      }
-
-      final isClient = room['client_id'] == currentUserId;
-
-      final insertedMessage = await _supabase.from('chat_messages').insert({
-        'chat_room_id': threadId,
-        'sender_id': isClient ? 'client' : 'provider',
-        'message_text': content,
-      }).select('id').maybeSingle();
-
-      await _supabase.from('chat_rooms').update({
-        'updated_at': DateTime.now().toIso8601String(),
-        if (insertedMessage?['id'] != null)
-          'last_message_id': insertedMessage!['id'],
-      }).eq('id', threadId);
+      await _chatApi.sendMessage(threadId, content);
       return true;
     } catch (e) {
-      LoggingService.error('Supabase sendMessage failed: $e',
-          tag: 'ChatService');
+      LoggingService.error('sendMessage failed: $e', tag: 'ChatService');
       return false;
     }
   }
 
+  /// Fetch thread details from the SHPH API.
   Future<Map<String, dynamic>?> getRoom(String threadId) async {
     try {
-      final room = await _supabase
-          .from('chat_rooms')
-          .select()
-          .eq('id', threadId)
-          .maybeSingle();
-      if (room != null) {
-        return Map<String, dynamic>.from(room);
-      }
+      return await _chatApi.getThreadDetails(threadId);
     } catch (e) {
-      LoggingService.error('Supabase getRoom failed: $e', tag: 'ChatService');
+      LoggingService.error('getRoom failed: $e', tag: 'ChatService');
+      return null;
     }
-    return null;
   }
 
   Future<void> markRead(String threadId) async {
-    if (await ApiRowMapper.canUseApi()) {
+    if (_ws.isConnected) {
       try {
-        await _chatApi.markRead(threadId);
+        _ws.markRead(threadId);
         return;
       } catch (e) {
-        LoggingService.error('SHPH API markRead failed, falling back: $e',
+        LoggingService.error('WebSocket markRead failed, falling back: $e',
             tag: 'ChatService');
       }
     }
 
     try {
-      final currentUserId = _supabase.auth.currentUser?.id;
-      if (currentUserId == null) {
-        return;
-      }
-
-      await _supabase
-          .from('chat_messages')
-          .update({'is_read': true})
-          .eq('chat_room_id', threadId)
-          .eq('recipient_id', currentUserId);
+      await _chatApi.markRead(threadId);
     } catch (e) {
-      LoggingService.error('Supabase markRead failed: $e', tag: 'ChatService');
+      LoggingService.error('markRead failed: $e', tag: 'ChatService');
     }
   }
 
   Future<Map<String, dynamic>?> getOrCreateThreadForBooking(
       String bookingId) async {
-    if (await ApiRowMapper.canUseApi()) {
-      try {
-        return await _chatApi.getOrCreateThreadForBooking(bookingId);
-      } catch (e) {
-        LoggingService.error(
-            'SHPH API getOrCreateThread failed, falling back: $e',
-            tag: 'ChatService');
-      }
-    }
-
     try {
-      final response = await _supabase
-          .from('chat_rooms')
-          .select()
-          .eq('booking_id', bookingId)
-          .maybeSingle();
-      if (response != null) {
-        return Map<String, dynamic>.from(response);
-      }
-
-      // Create a new chat room
-      final insert = await _supabase
-          .from('chat_rooms')
-          .insert({
-            'booking_id': bookingId,
-          })
-          .select()
-          .maybeSingle();
-      if (insert != null) {
-        return Map<String, dynamic>.from(insert);
-      }
-      return null;
+      return await _chatApi.getOrCreateThreadForBooking(bookingId);
     } catch (e) {
-      LoggingService.error('Supabase getOrCreateThread failed: $e',
+      LoggingService.error('getOrCreateThreadForBooking failed: $e',
           tag: 'ChatService');
       return null;
     }
@@ -210,50 +166,17 @@ class ChatService {
 
   Future<Map<String, dynamic>?> getOrCreateDirectThread({
     required String providerId,
-    String? providerName,
-    String? providerPhoto,
   }) async {
-    final currentUserId = _supabase.auth.currentUser?.id;
-    if (currentUserId == null || providerId.isEmpty) {
+    if (providerId.isEmpty) {
       return null;
     }
 
     try {
-      final existing = await _supabase
-          .from('chat_rooms')
-          .select()
-          .eq('client_id', currentUserId)
-          .eq('provider_id', providerId)
-          .maybeSingle();
-      if (existing != null) {
-        return Map<String, dynamic>.from(existing);
-      }
-
-      final insertPayload = <String, dynamic>{
-        'client_id': currentUserId,
-        'provider_id': providerId,
-        'updated_at': DateTime.now().toIso8601String(),
-        if ((providerName ?? '').trim().isNotEmpty)
-          'provider_name': providerName!.trim(),
-        if ((providerPhoto ?? '').trim().isNotEmpty)
-          'provider_photo': providerPhoto!.trim(),
-      };
-
-      final created = await _supabase
-          .from('chat_rooms')
-          .insert(insertPayload)
-          .select()
-          .maybeSingle();
-      if (created != null) {
-        return Map<String, dynamic>.from(created);
-      }
+      return await _chatApi.getOrCreateDirectThread(providerId: providerId);
     } catch (e) {
-      LoggingService.error(
-        'Supabase getOrCreateDirectThread failed: $e',
-        tag: 'ChatService',
-      );
+      LoggingService.error('getOrCreateDirectThread failed: $e',
+          tag: 'ChatService');
+      return null;
     }
-
-    return null;
   }
 }

@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/api/shph_token_storage.dart';
 import '/components/back_button/back_button_model.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/chat_service.dart';
@@ -15,11 +15,12 @@ class ChatPageModel extends FlutterFlowModel<ChatPageWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   late BackButtonModel backButtonModel;
 
-  // Messages list - populated from Supabase
+  // Messages list - populated from API/WebSocket
   List<Map<String, dynamic>> messages = [];
-  RealtimeChannel? _messagesChannel;
+  StreamSubscription<Map<String, dynamic>>? _wsSubscription;
   bool isLoading = true;
 
+  int? _currentUserId;
   bool _isClient = true;
 
   // Callback for widget rebuild
@@ -30,36 +31,36 @@ class ChatPageModel extends FlutterFlowModel<ChatPageWidget> {
     backButtonModel = createModel(context, BackButtonModel.new);
   }
 
-  // Initialize Supabase real-time subscription for chat messages
+  // Initialize real-time subscription for chat messages via SHPH WebSocket.
   Future<void> initializeChatSubscription(String roomId) async {
-    // Fetch room details to determine if current user is client or provider
     await _resolveUserRole(roomId);
+
+    // Ensure the global WebSocket connection is active
+    await ChatService.instance.initializeWebSocket();
 
     // Fetch initial messages
     unawaited(_fetchMessages(roomId));
 
-    // Set up real-time subscription
-    _messagesChannel = Supabase.instance.client
-        .channel('chat_messages:$roomId')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'chat_messages',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'chat_room_id',
-            value: roomId,
-          ),
-          callback: _handleMessageChange,
-        )
-        .subscribe();
+    // Listen to SHPH WebSocket chat events
+    _wsSubscription = ChatService.instance.messageStream.listen(
+      (event) => _handleWebSocketMessage(event, roomId),
+    );
   }
 
   Future<void> _resolveUserRole(String roomId) async {
+    _currentUserId = await ShphTokenStorage.getCurrentUserId();
+    if (_currentUserId == null) {
+      return;
+    }
+
     final room = await ChatService.instance.getRoom(roomId);
     if (room != null) {
-      final currentUserId = Supabase.instance.client.auth.currentUser?.id;
-      _isClient = currentUserId != null && room['client_id'] == currentUserId;
+      final clientId = room['client_id'];
+      if (clientId is int) {
+        _isClient = clientId == _currentUserId;
+      } else if (clientId != null) {
+        _isClient = int.tryParse(clientId.toString()) == _currentUserId;
+      }
     }
   }
 
@@ -69,16 +70,7 @@ class ChatPageModel extends FlutterFlowModel<ChatPageWidget> {
       onStateChanged?.call();
       final response = await ChatService.instance.getMessages(roomId);
 
-      messages = response
-          .map((msg) => {
-                'text': msg['message_text'] ?? msg['content'] ?? msg['text'],
-                'isMe': _isSenderMe(msg['sender_id'] as String? ?? ''),
-                'time': _formatTime(_parseDateTime(
-                  msg['created_at'] ?? msg['createdAt'] ?? msg['timestamp'],
-                )),
-                'status': 'delivered',
-              })
-          .toList();
+      messages = response.map(_normalizeMessage).toList();
     } catch (e) {
       messages = [];
       LoggingService.error('Error fetching messages: $e', tag: 'ChatPage');
@@ -88,38 +80,81 @@ class ChatPageModel extends FlutterFlowModel<ChatPageWidget> {
     }
   }
 
-  bool _isSenderMe(String senderId) =>
-      _isClient ? senderId == 'client' : senderId == 'provider';
+  Map<String, dynamic> _normalizeMessage(Map<String, dynamic> msg) {
+    final senderId = _extractSenderId(msg);
+    return {
+      'text': msg['message_text'] ?? msg['content'] ?? msg['text'] ?? '',
+      'isMe': _isSenderMe(senderId),
+      'time': _formatTime(_parseDateTime(
+        msg['created_at'] ?? msg['createdAt'] ?? msg['timestamp'],
+      )),
+      'status': 'delivered',
+    };
+  }
 
-  void _handleMessageChange(PostgresChangePayload payload) {
-    final eventType = payload.eventType;
-    final record = payload.newRecord;
+  dynamic _extractSenderId(Map<String, dynamic> msg) =>
+      msg['sender_id'] ?? msg['sender']?['id'] ?? '';
 
-    if (eventType == PostgresChangeEvent.insert ||
-        eventType == PostgresChangeEvent.update) {
-      final senderId = (record['sender_id'] ?? '') as String;
-      final newMessage = {
-        'text': (record['message_text'] ?? record['content'] ?? '') as String,
-        'isMe': _isSenderMe(senderId),
-        'time': _formatTime(_parseDateTime(record['created_at'])),
-        'status': 'delivered',
-      };
+  bool _isSenderMe(dynamic senderId) {
+    if (_currentUserId != null && senderId is int) {
+      return senderId == _currentUserId;
+    }
+    if (_currentUserId != null && senderId is String) {
+      return int.tryParse(senderId) == _currentUserId;
+    }
+    return _isClient ? senderId == 'client' : senderId == 'provider';
+  }
 
-      // Check if this is a duplicate of an optimistic message
-      final existingIndex = messages.indexWhere((msg) =>
-          msg['text'] == newMessage['text'] &&
-          msg['isMe'] == newMessage['isMe'] &&
-          (msg['status'] == 'sending' || msg['status'] == 'sent'));
+  void _handleWebSocketMessage(Map<String, dynamic> event, String roomId) {
+    final eventThreadId = event['thread_id']?.toString();
+    if (eventThreadId != null && eventThreadId != roomId) {
+      return;
+    }
 
-      if (existingIndex != -1) {
-        messages[existingIndex] = newMessage;
-        onStateChanged?.call();
-      } else if (!messages.any((msg) =>
-          msg['text'] == newMessage['text'] &&
-          msg['time'] == newMessage['time'])) {
-        messages.add(newMessage);
+    final type = event['type'] as String?;
+    if (type == 'chat.message') {
+      final message = event['message'];
+      if (message is! Map<String, dynamic>) {
+        return;
+      }
+      final newMessage = _normalizeMessage(message);
+      _upsertMessage(newMessage);
+    } else if (type == 'chat.message_edited') {
+      final message = event['message'];
+      if (message is! Map<String, dynamic>) {
+        return;
+      }
+      final updated = _normalizeMessage(message);
+      final index = messages.indexWhere((m) => m['text'] == updated['text']);
+      if (index != -1) {
+        messages[index] = updated;
         onStateChanged?.call();
       }
+    } else if (type == 'chat.message_deleted') {
+      final messageId = event['message_id']?.toString();
+      if (messageId == null) {
+        return;
+      }
+      messages.removeWhere((m) => m['id']?.toString() == messageId);
+      onStateChanged?.call();
+    }
+  }
+
+  void _upsertMessage(Map<String, dynamic> newMessage) {
+    final existingIndex = messages.indexWhere((msg) =>
+        msg['text'] == newMessage['text'] &&
+        msg['isMe'] == newMessage['isMe'] &&
+        (msg['status'] == 'sending' || msg['status'] == 'sent'));
+
+    if (existingIndex != -1) {
+      messages[existingIndex] = newMessage;
+      onStateChanged?.call();
+    } else if (!messages.any((msg) =>
+        msg['text'] == newMessage['text'] &&
+        msg['time'] == newMessage['time'] &&
+        msg['isMe'] == newMessage['isMe'])) {
+      messages.add(newMessage);
+      onStateChanged?.call();
     }
   }
 
@@ -154,9 +189,8 @@ class ChatPageModel extends FlutterFlowModel<ChatPageWidget> {
     }
   }
 
-  // Send message to Supabase with optimistic UI
+  // Send message with optimistic UI
   Future<void> sendMessage(String content, String roomId) async {
-    // Optimistic UI: Add message immediately to local list
     final tempId = DateTime.now().millisecondsSinceEpoch.toString();
     final optimisticMessage = {
       'text': content,
@@ -181,9 +215,7 @@ class ChatPageModel extends FlutterFlowModel<ChatPageWidget> {
   @override
   void dispose() {
     backButtonModel.dispose();
-    // Cancel real-time subscription
-    if (_messagesChannel != null) {
-      Supabase.instance.client.removeChannel(_messagesChannel!);
-    }
+    _wsSubscription?.cancel();
+    _wsSubscription = null;
   }
 }

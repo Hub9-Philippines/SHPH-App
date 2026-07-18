@@ -8,14 +8,21 @@ export 'bridges/shph_auth_bridge.dart';
 export 'models/booking.dart';
 export 'models/category.dart';
 export 'models/paginated_response.dart';
+export 'models/project.dart';
 export 'models/review.dart';
+export 'models/room.dart';
 export 'models/service_listing.dart';
+export 'models/session.dart';
+export 'models/support_ticket.dart';
 export 'resources/auth_api.dart';
 export 'resources/bookings_api.dart';
 export 'resources/chat_api.dart';
 export 'resources/favorites_api.dart';
 export 'resources/kyc_api.dart';
+export 'resources/projects_api.dart';
+export 'resources/rooms_api.dart';
 export 'resources/services_api.dart';
+export 'resources/support_api.dart';
 export 'resources/users_api.dart';
 export 'shph_api_client.dart';
 export 'shph_api_exception.dart';
@@ -33,7 +40,7 @@ Future<void> initializeShphApi() async {
 
   await ShphApiClient.initialize();
   LoggingService.info(
-    'SHPH API client ready (enabled=${ApiConfig.preferShphApi}, base=${ApiConfig.baseUrl})',
+    'SHPH API client ready (base=${ApiConfig.baseUrl})',
     tag: 'ShphApi',
   );
 }

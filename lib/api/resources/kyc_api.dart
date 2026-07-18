@@ -9,7 +9,8 @@ class ShphKycApi {
   final _client = ShphApiClient.instance;
 
   Future<Map<String, dynamic>> getStatus() async {
-    final response = await _client.get<Map<String, dynamic>>('/api/kyc/status/');
+    final response =
+        await _client.get<Map<String, dynamic>>('/api/kyc/status/');
     return response.data ?? {};
   }
 

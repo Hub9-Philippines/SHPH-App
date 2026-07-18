@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '/backend/supabase/database/tables/addresses.dart';
+import '/backend/shph_db/database/tables/addresses.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'booking_widget.dart' show BookingWidget;

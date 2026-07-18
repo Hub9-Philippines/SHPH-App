@@ -47,7 +47,9 @@ class _LanguageSettingsWidgetState extends State<LanguageSettingsWidget> {
 
   String _localeToName(String code) {
     for (final lang in _languages) {
-      if (lang['code'] == code) return lang['name']!;
+      if (lang['code'] == code) {
+        return lang['name']!;
+      }
     }
     return 'English';
   }
@@ -60,10 +62,14 @@ class _LanguageSettingsWidgetState extends State<LanguageSettingsWidget> {
         break;
       }
     }
-    if (newCode == null) return;
+    if (newCode == null) {
+      return;
+    }
 
     FFAppState().locale = newCode;
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     setState(() {
       _selectedLanguage = language;
@@ -171,12 +177,13 @@ class _LanguageSettingsWidgetState extends State<LanguageSettingsWidget> {
                             const SizedBox(height: 6),
                             Text(
                               _selectedLanguage,
-                              style: AppTheme.of(context).headlineSmall.override(
-                                    font: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                    color: Colors.white,
-                                  ),
+                              style:
+                                  AppTheme.of(context).headlineSmall.override(
+                                        font: GoogleFonts.poppins(
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                        color: Colors.white,
+                                      ),
                             ),
                           ],
                         ),

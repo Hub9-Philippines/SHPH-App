@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/auth/supabase_auth/auth_util.dart';
-import '/backend/supabase/supabase.dart';
+import '/auth/shph_auth/auth_util.dart';
+import '/backend/shph_db/shph_db.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
@@ -25,7 +25,6 @@ class MyNotificationsWidget extends StatefulWidget {
 class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
   late MyNotificationsModel _model;
   late Future<List<NotificationsRow>> _notificationsFuture;
-  RealtimeChannel? _realtimeChannel;
   bool _isMarkingAllRead = false;
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -34,62 +33,6 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
     super.initState();
     _model = createModel(context, MyNotificationsModel.new);
     _loadNotifications();
-    _subscribeRealtime();
-  }
-
-  void _subscribeRealtime() {
-    final userId = currentUserUid;
-    if (userId.isEmpty) {
-      return;
-    }
-
-    _realtimeChannel = SupaFlow.client
-        .channel('notifications:$userId')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.insert,
-          schema: 'public',
-          table: 'notifications',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'user_id',
-            value: userId,
-          ),
-          callback: (_) {
-            _reloadFromRealtime();
-          },
-        )
-        .onPostgresChanges(
-          event: PostgresChangeEvent.update,
-          schema: 'public',
-          table: 'notifications',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'user_id',
-            value: userId,
-          ),
-          callback: (_) {
-            _reloadFromRealtime();
-          },
-        )
-        .onPostgresChanges(
-          event: PostgresChangeEvent.delete,
-          schema: 'public',
-          table: 'notifications',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'user_id',
-            value: userId,
-          ),
-          callback: (_) {
-            _reloadFromRealtime();
-          },
-        )
-        .subscribe();
-  }
-
-  void _reloadFromRealtime() {
-    _loadNotifications();
-    safeSetState(() {});
   }
 
   void _loadNotifications() {
@@ -163,9 +106,8 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
           'is_read': true,
           'read_at': DateTime.now().toIso8601String(),
         },
-        matchingRows: (rows) => rows
-            .eq('user_id', currentUserUid)
-            .eq('is_read', false),
+        matchingRows: (rows) =>
+            rows.eq('user_id', currentUserUid).eq('is_read', false),
       );
       await _refreshNotifications();
     } catch (e, stackTrace) {
@@ -324,9 +266,6 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
 
   @override
   void dispose() {
-    if (_realtimeChannel != null) {
-      SupaFlow.client.removeChannel(_realtimeChannel!);
-    }
     _model.dispose();
     super.dispose();
   }
@@ -513,8 +452,9 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton(
-                onPressed:
-                    unreadCount == 0 || _isMarkingAllRead ? null : _markAllAsRead,
+                onPressed: unreadCount == 0 || _isMarkingAllRead
+                    ? null
+                    : _markAllAsRead,
                 style: OutlinedButton.styleFrom(
                   side: BorderSide(
                     color: Colors.white.withValues(alpha: 0.34),
@@ -572,7 +512,8 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                     color: AppTheme.of(context).primary.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Icon(icon, size: 30, color: AppTheme.of(context).primary),
+                  child:
+                      Icon(icon, size: 30, color: AppTheme.of(context).primary),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -598,7 +539,8 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
         ),
       );
 
-  Widget _buildNotificationCard(NotificationsRow notification) => GestureDetector(
+  Widget _buildNotificationCard(NotificationsRow notification) =>
+      GestureDetector(
         onTap: () => _handleNotificationTap(notification),
         child: Container(
           padding: const EdgeInsets.all(16),
@@ -666,10 +608,9 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      (notification.body?.trim().isNotEmpty == true
-                              ? notification.body
-                              : null) ??
-                          'Open this update to see more details.',
+                      notification.body?.trim().isNotEmpty == true
+                          ? notification.body!
+                          : 'Open this update to see more details.',
                       style: AppTheme.of(context).bodyMedium.override(
                             font: GoogleFonts.poppins(),
                             color: const Color(0xFF64748B),

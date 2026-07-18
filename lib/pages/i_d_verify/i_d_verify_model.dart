@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/index.dart';
 import 'i_d_verify_widget.dart' show IDVerifyWidget;
 
 class IDVerifyModel extends FlutterFlowModel<IDVerifyWidget> {

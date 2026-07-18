@@ -172,7 +172,6 @@ class NearbyProMockData {
 }
 
 class _MockProProfile {
-
   const _MockProProfile(this.name, this.photo, this.rating, this.completedJobs);
   final String name;
   final String photo;

@@ -4,8 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
 
-import '/auth/supabase_auth/auth_util.dart';
-import '/backend/supabase/supabase.dart';
+import '/auth/shph_auth/auth_util.dart';
+import '/backend/shph_db/shph_db.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -60,7 +60,9 @@ class _SignupWidgetState extends State<SignupWidget> {
       child: PopScope(
         canPop: true,
         onPopInvokedWithResult: (didPop, result) async {
-          if (didPop) return;
+          if (didPop) {
+            return;
+          }
           Navigator.of(context).pop();
         },
         child: Scaffold(
@@ -97,262 +99,271 @@ class _SignupWidgetState extends State<SignupWidget> {
     );
   }
 
-  Widget _buildHeader(AppThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            color: theme.primary,
-            borderRadius: BorderRadius.circular(16),
+  Widget _buildHeader(AppThemeData theme) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: theme.primary,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(Icons.person_add_rounded,
+                color: Colors.white, size: 28),
           ),
-          child: Icon(Icons.person_add_rounded, color: Colors.white, size: 28),
-        ),
-        const SizedBox(height: 20),
-        Text(
-          'Create Account',
-          style: theme.headlineLarge.copyWith(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Join SerbisyoHub PH and access home services at your fingertips.',
-          style: theme.bodyMedium.copyWith(
-            color: const Color(0xFF889096),
-            fontSize: 15,
+          const SizedBox(height: 20),
+          Text(
+            'Create Account',
+            style: theme.headlineLarge.copyWith(fontWeight: FontWeight.bold),
           ),
-        ),
-      ],
-    );
-  }
+          const SizedBox(height: 8),
+          Text(
+            'Join SerbisyoHub PH and access home services at your fingertips.',
+            style: theme.bodyMedium.copyWith(
+              color: const Color(0xFF889096),
+              fontSize: 15,
+            ),
+          ),
+        ],
+      );
 
-  Widget _buildForm(AppThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Mobile number',
-          style: theme.bodyMedium.copyWith(
-            fontWeight: FontWeight.w500,
-            color: theme.primaryText,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: _model.phoneFieldTextController,
-          focusNode: _model.phoneFieldFocusNode,
-          onChanged: (_) => EasyDebounce.debounce(
-            '_model.phoneFieldTextController',
-            const Duration(milliseconds: 100),
-            () async {
-              _model.isPhoneValid =
-                  _model.phoneFieldTextController.text.length == 13;
-              safeSetState(() {});
-              FFAppState().phone = _model.phoneFieldTextController.text;
-              safeSetState(() {});
-            },
-          ),
-          autofocus: true,
-          textInputAction: TextInputAction.go,
-          obscureText: false,
-          decoration: InputDecoration(
-            labelText: '+63',
-            labelStyle: theme.labelMedium.copyWith(fontSize: 16),
-            hintText: '9123456789',
-            hintStyle: theme.labelMedium.copyWith(
-              fontSize: 16,
-              color: theme.secondaryText,
+  Widget _buildForm(AppThemeData theme) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Mobile number',
+            style: theme.bodyMedium.copyWith(
+              fontWeight: FontWeight.w500,
+              color: theme.primaryText,
             ),
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(
-                color: _model.isPhoneValid ? theme.secondaryText : theme.error,
-                width: 1,
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _model.phoneFieldTextController,
+            focusNode: _model.phoneFieldFocusNode,
+            onChanged: (_) => EasyDebounce.debounce(
+              '_model.phoneFieldTextController',
+              const Duration(milliseconds: 100),
+              () async {
+                _model.isPhoneValid =
+                    _model.phoneFieldTextController.text.length == 13;
+                safeSetState(() {});
+                FFAppState().phone = _model.phoneFieldTextController.text;
+                safeSetState(() {});
+              },
+            ),
+            autofocus: true,
+            textInputAction: TextInputAction.go,
+            obscureText: false,
+            decoration: InputDecoration(
+              labelText: '+63',
+              labelStyle: theme.labelMedium.copyWith(fontSize: 16),
+              hintText: '9123456789',
+              hintStyle: theme.labelMedium.copyWith(
+                fontSize: 16,
+                color: theme.secondaryText,
               ),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(
-                color: _model.isPhoneValid ? theme.secondaryText : theme.error,
-                width: 1.5,
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color:
+                      _model.isPhoneValid ? theme.secondaryText : theme.error,
+                  width: 1,
+                ),
+                borderRadius: BorderRadius.circular(12),
               ),
-              borderRadius: BorderRadius.circular(12),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color:
+                      _model.isPhoneValid ? theme.secondaryText : theme.error,
+                  width: 1.5,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: theme.error, width: 1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: theme.error, width: 1.5),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              filled: true,
+              fillColor: theme.secondaryBackground,
             ),
-            errorBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: theme.error, width: 1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: theme.error, width: 1.5),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            filled: true,
-            fillColor: theme.secondaryBackground,
+            style: theme.bodyMedium.copyWith(fontSize: 16),
+            textAlign: TextAlign.start,
+            maxLength: 13,
+            maxLengthEnforcement: MaxLengthEnforcement.enforced,
+            buildCounter: (context,
+                    {required currentLength, required isFocused, maxLength}) =>
+                null,
+            keyboardType: TextInputType.phone,
+            cursorColor: theme.primaryText,
+            enableInteractiveSelection: true,
+            validator:
+                _model.phoneFieldTextControllerValidator.asValidator(context),
+            inputFormatters: [_model.phoneFieldMask],
           ),
-          style: theme.bodyMedium.copyWith(fontSize: 16),
-          textAlign: TextAlign.start,
-          maxLength: 13,
-          maxLengthEnforcement: MaxLengthEnforcement.enforced,
-          buildCounter: (context,
-                  {required currentLength,
-                  required isFocused,
-                  maxLength}) =>
-              null,
-          keyboardType: TextInputType.phone,
-          cursorColor: theme.primaryText,
-          enableInteractiveSelection: true,
-          validator:
-              _model.phoneFieldTextControllerValidator.asValidator(context),
-          inputFormatters: [_model.phoneFieldMask],
-        ),
-        if (_model.errorMessage != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              _model.errorMessage!,
-              style: theme.bodySmall.copyWith(color: theme.error),
+          if (_model.errorMessage != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                _model.errorMessage!,
+                style: theme.bodySmall.copyWith(color: theme.error),
+              ),
             ),
-          ),
-        const SizedBox(height: 24),
-        FFButtonWidget(
-          onPressed: _model.isLoading
-              ? null
-              : () async {
-                  _model.errorMessage = null;
-                  _model.isLoading = true;
-                  safeSetState(() {});
+          const SizedBox(height: 24),
+          FFButtonWidget(
+            onPressed: _model.isLoading
+                ? null
+                : () async {
+                    _model.errorMessage = null;
+                    _model.isLoading = true;
+                    safeSetState(() {});
 
-                  if (_model.phoneFieldTextController.text != '') {
-                    try {
-                      _model.isPhoneExists =
-                          await ProfilesTable().queryRows(
-                        queryFn: (q) => q.eqOrNull(
-                          'phone_number',
-                          FFAppState().phone,
-                        ),
-                      );
-                      if (_model.isPhoneExists?.firstOrNull?.phoneNumber ==
-                          FFAppState().phone) {
-                        _model.isLoading = false;
-                        _model.errorMessage =
-                            'This phone number is already associated with an account. Please login instead.';
-                        safeSetState(() {});
-                        if (!context.mounted) return;
-                        await showDialog(
-                          context: context,
-                          builder: (alertDialogContext) => AlertDialog(
-                            title: const Text('Account Already Exists'),
-                            content: const Text(
-                                'This phone number is already associated with an account. Please login instead.'),
-                            actions: [
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.pop(alertDialogContext),
-                                child: const Text('Ok'),
-                              ),
-                            ],
+                    if (_model.phoneFieldTextController.text != '') {
+                      try {
+                        _model.isPhoneExists = await ProfilesTable().queryRows(
+                          queryFn: (q) => q.eqOrNull(
+                            'phone_number',
+                            FFAppState().phone,
                           ),
                         );
-                      } else {
-                        final phoneNumberVal =
-                            _model.phoneFieldTextController.text;
-                        if (phoneNumberVal.isEmpty ||
-                            !phoneNumberVal.startsWith('+')) {
+                        if (_model.isPhoneExists?.firstOrNull?.phoneNumber ==
+                            FFAppState().phone) {
                           _model.isLoading = false;
                           _model.errorMessage =
-                              'Phone Number is required and has to start with +.';
+                              'This phone number is already associated with an account. Please login instead.';
                           safeSetState(() {});
-                          if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                  'Phone Number is required and has to start with +.'),
+                          if (!mounted) {
+                            return;
+                          }
+                          await showDialog(
+                            context: context,
+                            builder: (alertDialogContext) => AlertDialog(
+                              title: const Text('Account Already Exists'),
+                              content: const Text(
+                                  'This phone number is already associated with an account. Please login instead.'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(alertDialogContext),
+                                  child: const Text('Ok'),
+                                ),
+                              ],
                             ),
                           );
+                        } else {
+                          final phoneNumberVal =
+                              _model.phoneFieldTextController.text;
+                          if (phoneNumberVal.isEmpty ||
+                              !phoneNumberVal.startsWith('+')) {
+                            _model.isLoading = false;
+                            _model.errorMessage =
+                                'Phone Number is required and has to start with +.';
+                            safeSetState(() {});
+                            if (!mounted) {
+                              return;
+                            }
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                    'Phone Number is required and has to start with +.'),
+                              ),
+                            );
+                            return;
+                          }
+                          if (!mounted) {
+                            return;
+                          }
+                          await beginPhoneAuth(
+                            context: context,
+                            phoneNumber: phoneNumberVal,
+                            onCodeSent: (context) async {
+                              if (!mounted) {
+                                return;
+                              }
+                              await context.pushNamed(
+                                PhoneVerifyUserWidget.routeName,
+                              );
+                            },
+                          );
+                          _model.isLoading = false;
+                          safeSetState(() {});
+                        }
+                      } catch (e) {
+                        _model.isLoading = false;
+                        _model.errorMessage =
+                            'An error occurred. Please try again.';
+                        safeSetState(() {});
+                        if (!mounted) {
                           return;
                         }
-                        if (!context.mounted) return;
-                        await beginPhoneAuth(
-                          context: context,
-                          phoneNumber: phoneNumberVal,
-                          onCodeSent: (context) async {
-                            if (!context.mounted) return;
-                            await context.pushNamed(
-                              PhoneVerifyUserWidget.routeName,
-                            );
-                          },
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Error: ${e.toString()}')),
                         );
-                        _model.isLoading = false;
-                        safeSetState(() {});
                       }
-                    } catch (e) {
+                    } else {
                       _model.isLoading = false;
                       _model.errorMessage =
-                          'An error occurred. Please try again.';
+                          'Please input your phone number to continue';
                       safeSetState(() {});
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error: ${e.toString()}')),
+                      if (!mounted) {
+                        return;
+                      }
+                      await showDialog(
+                        context: context,
+                        builder: (alertDialogContext) => AlertDialog(
+                          title: const Text('Phone number is empty'),
+                          content: const Text(
+                              'Please input your phone number to continue'),
+                          actions: [
+                            TextButton(
+                              onPressed: () =>
+                                  Navigator.pop(alertDialogContext),
+                              child: const Text('Ok'),
+                            ),
+                          ],
+                        ),
                       );
                     }
-                  } else {
-                    _model.isLoading = false;
-                    _model.errorMessage =
-                        'Please input your phone number to continue';
                     safeSetState(() {});
-                    if (!context.mounted) return;
-                    await showDialog(
-                      context: context,
-                      builder: (alertDialogContext) => AlertDialog(
-                        title: const Text('Phone number is empty'),
-                        content: const Text(
-                            'Please input your phone number to continue'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(alertDialogContext),
-                            child: const Text('Ok'),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-                  safeSetState(() {});
-                },
-          text: _model.isLoading ? 'Signing Up...' : 'Sign Up',
-          options: FFButtonOptions(
-            width: double.infinity,
-            height: 52,
-            color: _model.isLoading ? theme.alternate : theme.primary,
-            textStyle: theme.titleMedium.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
+                  },
+            text: _model.isLoading ? 'Signing Up...' : 'Sign Up',
+            options: FFButtonOptions(
+              width: double.infinity,
+              height: 52,
+              color: _model.isLoading ? theme.alternate : theme.primary,
+              textStyle: theme.titleMedium.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+              elevation: 0,
+              borderRadius: BorderRadius.circular(12),
+              disabledColor: theme.alternate,
             ),
-            elevation: 0,
-            borderRadius: BorderRadius.circular(12),
-            disabledColor: theme.alternate,
           ),
-        ),
-        const SizedBox(height: 24),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Already have an account? ',
-              style: theme.bodyMedium.copyWith(color: theme.secondaryText),
-            ),
-            GestureDetector(
-              onTap: () => context.pushNamed(SigninWidget.routeName),
-              child: Text(
-                'Sign In',
-                style: theme.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: theme.primary,
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Already have an account? ',
+                style: theme.bodyMedium.copyWith(color: theme.secondaryText),
+              ),
+              GestureDetector(
+                onTap: () => context.pushNamed(SigninWidget.routeName),
+                child: Text(
+                  'Sign In',
+                  style: theme.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.primary,
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
+            ],
+          ),
+        ],
+      );
 }

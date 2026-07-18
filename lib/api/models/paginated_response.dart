@@ -6,11 +6,6 @@ class PaginatedResponse<T> {
     this.previous,
   });
 
-  final int count;
-  final List<T> results;
-  final String? next;
-  final String? previous;
-
   factory PaginatedResponse.fromJson(
     Map<String, dynamic> json,
     T Function(Map<String, dynamic>) fromJsonT,
@@ -21,11 +16,13 @@ class PaginatedResponse<T> {
       next: json['next'] as String?,
       previous: json['previous'] as String?,
       results: rawResults is List
-          ? rawResults
-              .whereType<Map<String, dynamic>>()
-              .map(fromJsonT)
-              .toList()
+          ? rawResults.whereType<Map<String, dynamic>>().map(fromJsonT).toList()
           : const [],
     );
   }
+
+  final int count;
+  final List<T> results;
+  final String? next;
+  final String? previous;
 }

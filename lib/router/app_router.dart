@@ -2,9 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '/backend/supabase/database/tables/payment_methods.dart';
+import '/api/resources/users_api.dart';
+import '/auth/shph_auth/auth_util.dart';
+import '/backend/shph_db/database/tables/payment_methods.dart';
 import '/flutter_flow/lat_lng.dart';
 import '/index.dart';
 import '/main.dart';
@@ -15,13 +16,7 @@ import '/pages/geographic_selection/geographic_selection_widget.dart';
 // Helper function to fetch user profile for role-based routing
 Future<Map<String, dynamic>?> _fetchUserProfile(String userId) async {
   try {
-    final response = await Supabase.instance.client
-        .from('profiles')
-        .select(
-            'role, verification_status, email, display_name, is_profile_complete, first_name, last_name')
-        .eq('id', userId)
-        .single();
-    return response;
+    return await ShphUsersApi.instance.getMe();
   } catch (e) {
     return null;
   }
@@ -99,10 +94,15 @@ class AppRouter {
   // Private constructor to prevent instantiation
   AppRouter._();
 
-  static GoRouter createRouter(dynamic appStateNotifier, {dynamic appState}) =>
+  static GoRouter createRouter(
+    dynamic appStateNotifier, {
+    dynamic appState,
+    List<NavigatorObserver> observers = const [],
+  }) =>
       GoRouter(
         initialLocation: '/',
         debugLogDiagnostics: true,
+        observers: observers,
         refreshListenable: appStateNotifier,
         redirect: (context, state) =>
             RoleBasedRedirectGuard.checkRedirect(appStateNotifier, state),
@@ -381,6 +381,16 @@ class AppRouter {
             builder: (context, state) => const ForgotPasswordWidget(),
           ),
           GoRoute(
+            path: ClientHelpSupportWidget.routePath,
+            name: ClientHelpSupportWidget.routeName,
+            builder: (context, state) => const ClientHelpSupportWidget(),
+          ),
+          GoRoute(
+            path: ReportProblemWidget.routePath,
+            name: ReportProblemWidget.routeName,
+            builder: (context, state) => const ReportProblemWidget(),
+          ),
+          GoRoute(
             path: SetPasswordWidget.routePath,
             name: SetPasswordWidget.routeName,
             builder: (context, state) => const SetPasswordWidget(),
@@ -596,16 +606,6 @@ class AppRouter {
             },
           ),
           GoRoute(
-            path: HelpPage.routePath,
-            name: HelpPage.routeName,
-            builder: (context, state) => const HelpPage(),
-          ),
-          GoRoute(
-            path: ChatbotPage.routePath,
-            name: ChatbotPage.routeName,
-            builder: (context, state) => const ChatbotPage(),
-          ),
-          GoRoute(
             path: TMActiveJobScreen.routePath,
             name: TMActiveJobScreen.routeName,
             builder: (context, state) => const TMActiveJobScreen(),
@@ -662,6 +662,214 @@ class AppRouter {
               );
             },
           ),
+          // Provider Suite
+          GoRoute(
+            path: ProviderAnalyticsPage.routePath,
+            name: ProviderAnalyticsPage.routeName,
+            builder: (context, state) => const ProviderAnalyticsPage(),
+          ),
+          GoRoute(
+            path: ProviderBidsPage.routePath,
+            name: ProviderBidsPage.routeName,
+            builder: (context, state) => const ProviderBidsPage(),
+          ),
+          GoRoute(
+            path: EarningsPage.routePath,
+            name: EarningsPage.routeName,
+            builder: (context, state) => const EarningsPage(),
+          ),
+          GoRoute(
+            path: MyReviewsPage.routePath,
+            name: MyReviewsPage.routeName,
+            builder: (context, state) => const MyReviewsPage(),
+          ),
+          // Wallet & Payments
+          GoRoute(
+            path: WalletPage.routePath,
+            name: WalletPage.routeName,
+            builder: (context, state) => const WalletPage(),
+          ),
+          // Admin Suite
+          GoRoute(
+            path: AdminDashboardPage.routePath,
+            name: AdminDashboardPage.routeName,
+            builder: (context, state) => const AdminDashboardPage(),
+          ),
+          GoRoute(
+            path: AdminKycQueuePage.routePath,
+            name: AdminKycQueuePage.routeName,
+            builder: (context, state) => const AdminKycQueuePage(),
+          ),
+          GoRoute(
+            path: AdminDisputesPage.routePath,
+            name: AdminDisputesPage.routeName,
+            builder: (context, state) => const AdminDisputesPage(),
+          ),
+          GoRoute(
+            path: AdminPayoutsPage.routePath,
+            name: AdminPayoutsPage.routeName,
+            builder: (context, state) => const AdminPayoutsPage(),
+          ),
+          GoRoute(
+            path: AdminUsersPage.routePath,
+            name: AdminUsersPage.routeName,
+            builder: (context, state) => const AdminUsersPage(),
+          ),
+          GoRoute(
+            path: AdminAuditLogsPage.routePath,
+            name: AdminAuditLogsPage.routeName,
+            builder: (context, state) => const AdminAuditLogsPage(),
+          ),
+          // Client Gaps
+          GoRoute(
+            path: OnDemandJobsPage.routePath,
+            name: OnDemandJobsPage.routeName,
+            builder: (context, state) => const OnDemandJobsPage(),
+          ),
+          GoRoute(
+            path: RecommendationsPage.routePath,
+            name: RecommendationsPage.routeName,
+            builder: (context, state) => const RecommendationsPage(),
+          ),
+          GoRoute(
+            path: DisputesPage.routePath,
+            name: DisputesPage.routeName,
+            builder: (context, state) => const DisputesPage(),
+          ),
+          // Projects (SHPH-134)
+          GoRoute(
+            path: ProjectListPage.routePath,
+            name: ProjectListPage.routeName,
+            builder: (context, state) => const ProjectListPage(),
+          ),
+          GoRoute(
+            path: ProjectCreatePage.routePath,
+            name: ProjectCreatePage.routeName,
+            builder: (context, state) => const ProjectCreatePage(),
+          ),
+          GoRoute(
+            path: ProjectDetailPage.routePath,
+            name: ProjectDetailPage.routeName,
+            builder: (context, state) {
+              final id = int.tryParse(
+                state.pathParameters['projectId'] ?? '',
+              );
+              return ProjectDetailPage(projectId: id ?? 0);
+            },
+          ),
+          // Rooms (SHPH-133)
+          GoRoute(
+            path: RoomListPage.routePath,
+            name: RoomListPage.routeName,
+            builder: (context, state) => const RoomListPage(),
+          ),
+          GoRoute(
+            path: RoomCreatePage.routePath,
+            name: RoomCreatePage.routeName,
+            builder: (context, state) => const RoomCreatePage(),
+          ),
+          GoRoute(
+            path: RoomJoinPage.routePath,
+            name: RoomJoinPage.routeName,
+            builder: (context, state) => const RoomJoinPage(),
+          ),
+          GoRoute(
+            path: RoomDetailPage.routePath,
+            name: RoomDetailPage.routeName,
+            builder: (context, state) => RoomDetailPage(
+              roomId: state.pathParameters['roomId'] ?? '',
+            ),
+          ),
+          // Provider Suite (extended)
+          GoRoute(
+            path: ProviderDashboardPage.routePath,
+            name: ProviderDashboardPage.routeName,
+            builder: (context, state) => const ProviderDashboardPage(),
+          ),
+          GoRoute(
+            path: ProviderHomePage.routePath,
+            name: ProviderHomePage.routeName,
+            builder: (context, state) => const ProviderHomePage(),
+          ),
+          GoRoute(
+            path: MyServicesPage.routePath,
+            name: MyServicesPage.routeName,
+            builder: (context, state) => const MyServicesPage(),
+          ),
+          GoRoute(
+            path: PostServicePage.routePath,
+            name: PostServicePage.routeName,
+            builder: (context, state) {
+              final idStr = state.uri.queryParameters['listingId'];
+              final id = int.tryParse(idStr ?? '');
+              return PostServicePage(listingId: id);
+            },
+          ),
+          GoRoute(
+            path: ProviderAvailabilityPage.routePath,
+            name: ProviderAvailabilityPage.routeName,
+            builder: (context, state) => const ProviderAvailabilityPage(),
+          ),
+          GoRoute(
+            path: ProviderProfilePage.routePath,
+            name: ProviderProfilePage.routeName,
+            builder: (context, state) => ProviderProfilePage(
+              providerId:
+                  int.tryParse(state.pathParameters['providerId'] ?? '') ?? 0,
+            ),
+          ),
+          GoRoute(
+            path: ReviewScanPage.routePath,
+            name: ReviewScanPage.routeName,
+            builder: (context, state) => const ReviewScanPage(),
+          ),
+          // Security & Preferences
+          GoRoute(
+            path: SessionsPage.routePath,
+            name: SessionsPage.routeName,
+            builder: (context, state) => const SessionsPage(),
+          ),
+          GoRoute(
+            path: BiometricSetupPage.routePath,
+            name: BiometricSetupPage.routeName,
+            builder: (context, state) => const BiometricSetupPage(),
+          ),
+          GoRoute(
+            path: NotificationPreferencesPage.routePath,
+            name: NotificationPreferencesPage.routeName,
+            builder: (context, state) => const NotificationPreferencesPage(),
+          ),
+          // Discovery & Support
+          GoRoute(
+            path: CategoryDetailPage.routePath,
+            name: CategoryDetailPage.routeName,
+            builder: (context, state) => CategoryDetailPage(
+              categoryId:
+                  int.tryParse(state.pathParameters['categoryId'] ?? '') ?? 0,
+              categoryName: state.uri.queryParameters['name'],
+            ),
+          ),
+          GoRoute(
+            path: SubcategoryPage.routePath,
+            name: SubcategoryPage.routeName,
+            builder: (context, state) => SubcategoryPage(
+              parentId:
+                  int.tryParse(state.pathParameters['parentId'] ?? '') ?? 0,
+              parentName: state.uri.queryParameters['name'],
+            ),
+          ),
+          GoRoute(
+            path: EtaTrackingPage.routePath,
+            name: EtaTrackingPage.routeName,
+            builder: (context, state) => EtaTrackingPage(
+              token: state.pathParameters['token'] ?? '',
+            ),
+          ),
+          GoRoute(
+            path: HelpAssistantPage.routePath,
+            name: HelpAssistantPage.routeName,
+            builder: (context, state) => const HelpAssistantPage(),
+          ),
         ],
       );
 }
@@ -670,6 +878,17 @@ class AppRouter {
 class RoleBasedRedirectGuard {
   // Private constructor to prevent instantiation
   RoleBasedRedirectGuard._();
+
+  /// Provider-only path prefixes. Non-pro users hitting these are sent home.
+  static const _providerOnlyPrefixes = [
+    '/provider-dashboard',
+    '/provider-home',
+    '/provider/my-services',
+    '/provider/post-service',
+    '/provider/availability',
+    '/provider/profile/',
+    '/provider/review-scan',
+  ];
 
   /// Check if user needs to be redirected based on their role and verification status
   static Future<String?> checkRedirect(
@@ -682,22 +901,51 @@ class RoleBasedRedirectGuard {
       return redirectLocation;
     }
 
-    // Role-based routing logic with 4-state pro account lifecycle
-    if (appStateNotifier.loggedIn) {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId != null) {
-        final userProfile = await _fetchUserProfile(userId);
-        if (userProfile != null) {
-          final currentPath = state.uri.toString();
-          final proRedirect = _getProUserRedirect(userProfile, currentPath);
+    if (!appStateNotifier.loggedIn) {
+      return null;
+    }
 
-          if (proRedirect != null) {
-            return proRedirect;
-          }
-        }
-      }
+    final userId = currentUserUid;
+    if (userId.isEmpty) {
+      return null;
+    }
+
+    final userProfile = await _fetchUserProfile(userId);
+    if (userProfile == null) {
+      return null;
+    }
+
+    final currentPath = state.uri.toString();
+
+    // Gate provider-only pages: non-pro users get redirected home.
+    if (_isProviderOnlyPath(currentPath) && !_isProvider(userProfile)) {
+      return '/home';
+    }
+
+    // Role-based routing logic with 4-state pro account lifecycle
+    final proRedirect = _getProUserRedirect(userProfile, currentPath);
+    if (proRedirect != null) {
+      return proRedirect;
     }
 
     return null;
+  }
+
+  /// Whether the given path requires pro/provider role.
+  static bool _isProviderOnlyPath(String path) {
+    for (final prefix in _providerOnlyPrefixes) {
+      if (path == prefix || path.startsWith(prefix)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// Whether the profile belongs to a provider. Booleans are source of truth
+  /// (per AGENTS.md); `role == 'pro'` is the legacy fallback.
+  static bool _isProvider(Map<String, dynamic> profile) {
+    final isProvider = profile['is_provider'] as bool?;
+    if (isProvider != null) return isProvider;
+    return profile['role'] == 'pro';
   }
 }

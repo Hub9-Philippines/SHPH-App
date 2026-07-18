@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/auth/supabase_auth/auth_util.dart';
-import '/backend/supabase/supabase.dart';
+import '/auth/shph_auth/auth_util.dart';
+import '/backend/shph_db/shph_db.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -284,12 +284,11 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
             updatedRows.isNotEmpty ? updatedRows.first : null;
 
         final editingId = int.tryParse(_model.editingAddressId ?? '');
-        final shouldRefreshSelectedAddress =
-            updatedAddress != null &&
-                ((editingId != null &&
-                        FFAppState().selectedAddressId == editingId) ||
-                    (_model.isDefault &&
-                        FFAppState().selectedLocationMode == 'saved'));
+        final shouldRefreshSelectedAddress = updatedAddress != null &&
+            ((editingId != null &&
+                    FFAppState().selectedAddressId == editingId) ||
+                (_model.isDefault &&
+                    FFAppState().selectedLocationMode == 'saved'));
         if (shouldRefreshSelectedAddress) {
           FFAppState().setSelectedAddressFromRow(updatedAddress);
         }
@@ -679,10 +678,14 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                   setState(() {
                     _model.onRegionChanged(result);
                     _model.loadProvinces(result.code).then((_) {
-                      if (mounted) safeSetState(() {});
+                      if (mounted) {
+                        safeSetState(() {});
+                      }
                     });
                     _model.loadCitiesMunicipalities(result.code).then((_) {
-                      if (mounted) safeSetState(() {});
+                      if (mounted) {
+                        safeSetState(() {});
+                      }
                     });
                   });
                 }
@@ -752,7 +755,9 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                           _model
                               .loadCitiesMunicipalitiesByProvince(result.code)
                               .then((_) {
-                            if (mounted) safeSetState(() {});
+                            if (mounted) {
+                              safeSetState(() {});
+                            }
                           });
                         });
                       }
@@ -786,7 +791,9 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                     Icon(
                       Icons.chevron_right,
                       color: _model.selectedRegion == null
-                          ? AppTheme.of(context).secondaryText.withValues(alpha: 0.5)
+                          ? AppTheme.of(context)
+                              .secondaryText
+                              .withValues(alpha: 0.5)
                           : AppTheme.of(context).secondaryText,
                     ),
                   ],
@@ -819,7 +826,9 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                       // Otherwise, use the region code (e.g. NCR with no provinces)
                       final parentCode = _model.selectedProvince?.code ??
                           _model.selectedRegion?.code;
-                      if (parentCode == null) return;
+                      if (parentCode == null) {
+                        return;
+                      }
 
                       final result = await context.pushNamed(
                         GeographicSelectionWidget.routeName,
@@ -834,7 +843,9 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                         setState(() {
                           _model.onCityMunicipalityChanged(result);
                           _model.loadBarangays(result.code).then((_) {
-                            if (mounted) safeSetState(() {});
+                            if (mounted) {
+                              safeSetState(() {});
+                            }
                           });
                         });
                       }
@@ -871,7 +882,9 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                       Icons.chevron_right,
                       color: (_model.selectedRegion == null &&
                               _model.selectedProvince == null)
-                          ? AppTheme.of(context).secondaryText.withValues(alpha: 0.5)
+                          ? AppTheme.of(context)
+                              .secondaryText
+                              .withValues(alpha: 0.5)
                           : AppTheme.of(context).secondaryText,
                     ),
                   ],
@@ -901,148 +914,143 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
       builder: (sheetContext) {
         final searchController = TextEditingController();
         final searchFocus = FocusNode();
-        List<Barangay> filteredBarangays = List.from(_model.barangays);
+        var filteredBarangays = List<Barangay>.from(_model.barangays);
 
         return StatefulBuilder(
-          builder: (context, setSheetState) {
-            return DraggableScrollableSheet(
-              initialChildSize: 0.7,
-              minChildSize: 0.4,
-              maxChildSize: 0.9,
-              expand: false,
-              builder: (context, scrollController) {
-                return Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Handle bar
-                      Center(
-                        child: Container(
-                          width: 40,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: AppTheme.of(context).alternate,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
+          builder: (context, setSheetState) => DraggableScrollableSheet(
+            initialChildSize: 0.7,
+            minChildSize: 0.4,
+            maxChildSize: 0.9,
+            expand: false,
+            builder: (context, scrollController) => Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Handle bar
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppTheme.of(context).alternate,
+                        borderRadius: BorderRadius.circular(2),
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Select Barangay',
-                        style: AppTheme.of(context).titleLarge.override(
-                              font: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                      ),
-                      const SizedBox(height: 16),
-                      // Search field
-                      Container(
-                        decoration: BoxDecoration(
-                          color: AppTheme.of(context).secondaryBackground,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppTheme.of(context).alternate,
-                          ),
-                        ),
-                        child: TextField(
-                          controller: searchController,
-                          focusNode: searchFocus,
-                          onChanged: (value) {
-                            setSheetState(() {
-                              filteredBarangays = _model.barangays
-                                  .where((b) => b.name
-                                      .toLowerCase()
-                                      .contains(value.toLowerCase()))
-                                  .toList();
-                            });
-                          },
-                          decoration: InputDecoration(
-                            hintText: 'Search barangay...',
-                            prefixIcon: Icon(
-                              Icons.search,
-                              color: AppTheme.of(context).secondaryText,
-                            ),
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      // Barangay list
-                      Expanded(
-                        child: filteredBarangays.isEmpty
-                            ? Center(
-                                child: Text(
-                                  'No barangays found',
-                                  style: AppTheme.of(context).bodyMedium,
-                                ),
-                              )
-                            : ListView.separated(
-                                controller: scrollController,
-                                itemCount: filteredBarangays.length,
-                                separatorBuilder: (_, __) => const Divider(
-                                  height: 1,
-                                ),
-                                itemBuilder: (context, index) {
-                                  final barangay = filteredBarangays[index];
-                                  final isSelected = barangay.code ==
-                                      _model.selectedBarangayCode;
-                                  return InkWell(
-                                    onTap: () {
-                                      setState(() {
-                                        _model.onBarangayChanged(barangay);
-                                      });
-                                      Navigator.pop(context);
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 14,
-                                        horizontal: 4,
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              barangay.name,
-                                              style: AppTheme.of(context)
-                                                  .bodyMedium
-                                                  .override(
-                                                    fontWeight: isSelected
-                                                        ? FontWeight.w600
-                                                        : FontWeight.normal,
-                                                    color: isSelected
-                                                        ? AppTheme.of(context)
-                                                            .primary
-                                                        : AppTheme.of(context)
-                                                            .primaryText,
-                                                  ),
-                                            ),
-                                          ),
-                                          if (isSelected)
-                                            Icon(
-                                              Icons.check,
-                                              color:
-                                                  AppTheme.of(context).primary,
-                                              size: 20,
-                                            ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                      ),
-                    ],
+                    ),
                   ),
-                );
-              },
-            );
-          },
+                  const SizedBox(height: 16),
+                  Text(
+                    'Select Barangay',
+                    style: AppTheme.of(context).titleLarge.override(
+                          font: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Search field
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppTheme.of(context).secondaryBackground,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppTheme.of(context).alternate,
+                      ),
+                    ),
+                    child: TextField(
+                      controller: searchController,
+                      focusNode: searchFocus,
+                      onChanged: (value) {
+                        setSheetState(() {
+                          filteredBarangays = _model.barangays
+                              .where((b) => b.name
+                                  .toLowerCase()
+                                  .contains(value.toLowerCase()))
+                              .toList();
+                        });
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Search barangay...',
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: AppTheme.of(context).secondaryText,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Barangay list
+                  Expanded(
+                    child: filteredBarangays.isEmpty
+                        ? Center(
+                            child: Text(
+                              'No barangays found',
+                              style: AppTheme.of(context).bodyMedium,
+                            ),
+                          )
+                        : ListView.separated(
+                            controller: scrollController,
+                            itemCount: filteredBarangays.length,
+                            separatorBuilder: (_, __) => const Divider(
+                              height: 1,
+                            ),
+                            itemBuilder: (context, index) {
+                              final barangay = filteredBarangays[index];
+                              final isSelected =
+                                  barangay.code == _model.selectedBarangayCode;
+                              return InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    _model.onBarangayChanged(barangay);
+                                  });
+                                  Navigator.pop(context);
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                    horizontal: 4,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          barangay.name,
+                                          style: AppTheme.of(context)
+                                              .bodyMedium
+                                              .override(
+                                                fontWeight: isSelected
+                                                    ? FontWeight.w600
+                                                    : FontWeight.normal,
+                                                color: isSelected
+                                                    ? AppTheme.of(context)
+                                                        .primary
+                                                    : AppTheme.of(context)
+                                                        .primaryText,
+                                              ),
+                                        ),
+                                      ),
+                                      if (isSelected)
+                                        Icon(
+                                          Icons.check,
+                                          color: AppTheme.of(context).primary,
+                                          size: 20,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         );
       },
     );
@@ -1093,7 +1101,9 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                     Icon(
                       Icons.chevron_right,
                       color: _model.selectedCityMunicipality == null
-                          ? AppTheme.of(context).secondaryText.withValues(alpha: 0.5)
+                          ? AppTheme.of(context)
+                              .secondaryText
+                              .withValues(alpha: 0.5)
                           : AppTheme.of(context).secondaryText,
                     ),
                   ],
@@ -1117,7 +1127,9 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
       );
     }
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     final result = await context.pushNamed(
       PinLocationWidget.routeName,
       extra: startLocation,
@@ -1292,15 +1304,18 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                   }
                 }
 
-                if (!context.mounted) return;
+                if (!context.mounted) {
+                  return;
+                }
                 Navigator.pop(context);
                 context.pop();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Address deleted successfully')),
+                  const SnackBar(content: Text('Address deleted successfully')),
                 );
               } catch (e) {
-                if (!context.mounted) return;
+                if (!context.mounted) {
+                  return;
+                }
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Error deleting address: $e')),

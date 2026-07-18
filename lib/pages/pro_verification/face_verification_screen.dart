@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/auth/shph_auth/auth_util.dart';
 import '/services/profiles_service.dart';
 import '../../services/face_verification/face_verification_service.dart';
 
@@ -197,7 +197,9 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
           _cameraController!.value.isInitialized) {
         await Future.delayed(const Duration(milliseconds: 300));
 
-        if (!mounted || _state != VerificationState.preview) break;
+        if (!mounted || _state != VerificationState.preview) {
+          break;
+        }
 
         try {
           final image = await _cameraController!.takePicture();
@@ -217,7 +219,9 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
 
   /// Detect face in captured image
   Future<void> _detectFace(String imagePath) async {
-    if (_faceDetector == null) return;
+    if (_faceDetector == null) {
+      return;
+    }
 
     try {
       final inputImage = InputImage.fromFilePath(imagePath);
@@ -251,7 +255,7 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
     await Future.delayed(const Duration(milliseconds: 50));
 
     const maxRetries = 5;
-    int attempts = 0;
+    var attempts = 0;
 
     while (attempts < maxRetries) {
       try {
@@ -301,13 +305,12 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
     setState(() => _state = VerificationState.uploading);
 
     try {
-      final userId =
-          widget.userId ?? Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) {
+      final userId = widget.userId ?? currentUserUid;
+      if (userId.isEmpty) {
         throw Exception('User not authenticated');
       }
 
-      // Upload via ProfilesService (REST-first, else Supabase)
+      // Upload via ProfilesService (SHPH API)
       final file = File(_capturedImagePath!);
       final fileBytes = await file.readAsBytes();
       final fileName =
@@ -401,8 +404,8 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
             Container(
               width: 120,
               height: 120,
-              decoration: BoxDecoration(
-                color: const Color(0x31368EFF),
+              decoration: const BoxDecoration(
+                color: Color(0x31368EFF),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -695,13 +698,13 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
       );
 
   /// Success view
-  Widget _buildSuccessView() => Center(
+  Widget _buildSuccessView() => const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.check_circle, size: 80, color: Colors.green),
-            const SizedBox(height: 24),
-            const Text(
+            Icon(Icons.check_circle, size: 80, color: Colors.green),
+            SizedBox(height: 24),
+            Text(
               'Verification Submitted!',
               style: TextStyle(
                 fontSize: 24,
@@ -709,8 +712,8 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
                 color: Colors.green,
               ),
             ),
-            const SizedBox(height: 16),
-            const Text(
+            SizedBox(height: 16),
+            Text(
               'Redirecting to status page...',
               style: TextStyle(color: Colors.grey),
             ),

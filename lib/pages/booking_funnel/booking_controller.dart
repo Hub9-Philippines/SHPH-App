@@ -123,12 +123,12 @@ class BookingFlowController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setMatchingActive(bool value) {
+  void setMatchingActive({required bool value}) {
     isMatchingActive = value;
     notifyListeners();
   }
 
-  void setLiveSearchTimedOut(bool value) {
+  void setLiveSearchTimedOut({required bool value}) {
     liveSearchTimedOut = value;
     notifyListeners();
   }
@@ -213,16 +213,20 @@ class BookingFlowController extends ChangeNotifier {
       final hasProviderNearby = mockNearby.any((pro) {
         final proLat = pro['providerLatitude'] as double?;
         final proLng = pro['providerLongitude'] as double?;
-        if (proLat == null || proLng == null) return false;
+        if (proLat == null || proLng == null) {
+          return false;
+        }
         final dist = GeoUtils.calculateDistance(
-          originLat, originLng, proLat, proLng,
+          originLat,
+          originLng,
+          proLat,
+          proLng,
         );
         return dist <= nearbyThresholdKm;
       });
 
       if (!hasProviderNearby) {
-        lastError =
-            'No providers available within 10 km of your location. '
+        lastError = 'No providers available within 10 km of your location. '
             'Try expanding your search area or scheduling for later.';
         isSubmitting = false;
         notifyListeners();

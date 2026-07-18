@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '/auth/supabase_auth/auth_util.dart';
+import '/auth/shph_auth/auth_util.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -79,11 +79,13 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
   }
 
   Future<void> _saveProfile() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
     try {
       if (_verificationStatus == 'pending') {
-        // Save locally to SharedPreferences instead of remote Supabase profiles table
+        // Save locally to SharedPreferences instead of the remote profiles API
         final prefs = await SharedPreferences.getInstance();
         final stagedData = {
           'display_name': _displayNameController.text.trim(),
@@ -101,7 +103,7 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
           context.pop();
         }
       } else {
-        // Save via ProfilesService (will use SHPH API if enabled, otherwise Supabase)
+        // Save via ProfilesService (SHPH REST API)
         await ProfilesService.instance.updateProfile({
           'display_name': _displayNameController.text.trim(),
           'email': _emailController.text.trim(),

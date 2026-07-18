@@ -12,10 +12,10 @@ import 'package:provider/provider.dart';
 import '/main.dart';
 import '/services/nearby_pro_mock_data.dart';
 import '/theme/app_theme.dart';
-import '../status_page.dart';
 import '../../../api/app_config.dart';
 import '../booking_controller.dart';
 import '../booking_models.dart';
+import '../status_page.dart';
 
 // ────────────────────────────────────────────────────────────────────────
 // Screen
@@ -218,7 +218,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
         _radarController.stop();
         _gradientController.stop();
       } else if (_secondsRemaining == 20 || _secondsRemaining == 10) {
-        _gradientController.forward(from: 0.0);
+        _gradientController.forward(from: 0);
         _animateMapZoom();
       }
     });
@@ -348,8 +348,8 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
 
   void _popClean() {
     final booking = context.read<BookingFlowController?>();
-    booking?.setMatchingActive(true);
-    booking?.setLiveSearchTimedOut(true);
+    booking?.setMatchingActive(value: true);
+    booking?.setLiveSearchTimedOut(value: true);
     if (mounted) {
       Navigator.of(context).pop();
     }
@@ -371,26 +371,20 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     final showActive = !_timedOut && _matchedPro == null;
 
     if (_matchedPro != null && _providerLatLng != null) {
-      return PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (didPop, _) {
-          if (!didPop) _goHome();
-        },
-        child: _AssignedProviderRouteMap(
-          clientLocation: location,
-          providerLocation: _providerLatLng!,
-          pro: _matchedPro!,
-          serviceTitle: serviceTitle,
-          addressLabel: draft?.address.label ?? 'Pinned location',
-          addressLine:
-              '${draft?.address.line1 ?? 'Location loading'}${(draft?.address.city ?? '').isNotEmpty ? ', ${draft!.address.city}' : ''}',
-          referenceId: booking?.activeReferenceId,
-          locationLabel: _resolveLocationLabel(draft),
-          bookingStatus: bookingStatus,
-          bookingDate: widget.bookingDate,
-          onFindAnotherProvider: _retryProviderSearch,
-          onBackHome: _goHome,
-        ),
+      return _AssignedProviderRouteMap(
+        clientLocation: location,
+        providerLocation: _providerLatLng!,
+        pro: _matchedPro!,
+        serviceTitle: serviceTitle,
+        addressLabel: draft?.address.label ?? 'Pinned location',
+        addressLine:
+            '${draft?.address.line1 ?? 'Location loading'}${(draft?.address.city ?? '').isNotEmpty ? ', ${draft!.address.city}' : ''}',
+        referenceId: booking?.activeReferenceId,
+        locationLabel: _resolveLocationLabel(draft),
+        bookingStatus: bookingStatus,
+        bookingDate: widget.bookingDate,
+        onFindAnotherProvider: _retryProviderSearch,
+        onBackHome: _goHome,
       );
     }
 
@@ -934,20 +928,15 @@ class _AssignedProviderRouteMapState extends State<_AssignedProviderRouteMap> {
   }
 
   void _openStatusPage() {
-    Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+    Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => StatusPage(
           bookingStatus: widget.bookingStatus,
           bookingDate: widget.bookingDate,
           providerName: widget.pro['providerName'] as String? ?? 'Professional',
           serviceTitle: widget.serviceTitle,
-          clientLocation: widget.clientLocation,
-          providerLocation: widget.providerLocation,
-          providerPhoto: widget.pro['providerPhoto'] as String?,
-          shouldPopToHome: true,
         ),
       ),
-      (route) => route.isFirst,
     );
   }
 
@@ -1656,10 +1645,10 @@ class _RadarPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final maxRadius = size.shortestSide * 0.38;
 
-    for (int i = 0; i < 3; i++) {
+    for (var i = 0; i < 3; i++) {
       final phase = (progress + i * 0.33) % 1.0;
       final curved = Curves.easeOutCubic.transform(phase);
-      final radius = math.max(10.0, curved * maxRadius);
+      final radius = math.max(10, curved * maxRadius).toDouble();
       final opacity = (1.0 - curved) *
           (i == 0
               ? 0.55

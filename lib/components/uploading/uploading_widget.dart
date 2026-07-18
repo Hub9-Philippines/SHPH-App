@@ -38,31 +38,30 @@ class _UploadingWidgetState extends State<UploadingWidget> {
 
   @override
   Widget build(BuildContext context) => Container(
-      width: 200,
-      height: 100,
-      decoration: BoxDecoration(
-        color: AppTheme.of(context).primaryBackground,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            'Uploading ID...',
-            style: AppTheme.of(context).bodyMedium.override(
-                  font: GoogleFonts.poppins(
+        width: 200,
+        height: 100,
+        decoration: BoxDecoration(
+          color: AppTheme.of(context).primaryBackground,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Uploading ID...',
+              style: AppTheme.of(context).bodyMedium.override(
+                    font: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      fontStyle: AppTheme.of(context).bodyMedium.fontStyle,
+                    ),
+                    fontSize: 16,
+                    letterSpacing: 0,
                     fontWeight: FontWeight.w600,
-                    fontStyle:
-                        AppTheme.of(context).bodyMedium.fontStyle,
+                    fontStyle: AppTheme.of(context).bodyMedium.fontStyle,
                   ),
-                  fontSize: 16,
-                  letterSpacing: 0,
-                  fontWeight: FontWeight.w600,
-                  fontStyle: AppTheme.of(context).bodyMedium.fontStyle,
-                ),
-          ),
-        ],
-      ),
-    );
+            ),
+          ],
+        ),
+      );
 }

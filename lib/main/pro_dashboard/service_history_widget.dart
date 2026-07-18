@@ -480,7 +480,9 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
                       width: 56,
                       height: 56,
                       decoration: BoxDecoration(
-                        color: AppTheme.of(context).primary.withValues(alpha: 0.10),
+                        color: AppTheme.of(context)
+                            .primary
+                            .withValues(alpha: 0.10),
                         shape: BoxShape.circle,
                         image: photoUrl == null
                             ? null
@@ -696,7 +698,8 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
                   child: Text(
                     actionLabel,
                     style: AppTheme.of(context).labelLarge.override(
-                          font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                          font:
+                              GoogleFonts.poppins(fontWeight: FontWeight.w700),
                           color: Colors.white,
                         ),
                   ),

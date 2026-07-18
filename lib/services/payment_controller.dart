@@ -71,8 +71,9 @@ class PaymentController {
         transactionId: _extractTransactionId(clientSecret),
       );
     } on StripeException catch (e) {
-      final isCancel = e.error.localizedMessage?.toLowerCase().contains('cancel') == true ||
-          e.error.code == FailureCode.Canceled;
+      final isCancel =
+          e.error.localizedMessage?.toLowerCase().contains('cancel') == true ||
+              e.error.code == FailureCode.Canceled;
       return PaymentResult(
         status: isCancel ? PaymentStatus.cancelled : PaymentStatus.failed,
         errorMessage: e.error.localizedMessage ?? 'Payment failed',
@@ -151,8 +152,7 @@ class PaymentController {
         transactionId: checkoutUrl,
       );
     } catch (e) {
-      LoggingService.error('Maya payment error: $e',
-          tag: 'PaymentController');
+      LoggingService.error('Maya payment error: $e', tag: 'PaymentController');
       return PaymentResult(
         status: PaymentStatus.failed,
         errorMessage: e.toString(),

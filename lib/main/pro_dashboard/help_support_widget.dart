@@ -62,128 +62,128 @@ class _HelpSupportWidgetState extends State<HelpSupportWidget> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Help & Support',
-          style: AppTheme.of(context).titleLarge.override(
-                font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-              ),
-        ),
-        backgroundColor: AppTheme.of(context).primaryBackground,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Contact Support Card
-            Container(
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppTheme.of(context).primary,
-                    AppTheme.of(context).primary.withValues(alpha: 0.8),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+        appBar: AppBar(
+          title: Text(
+            'Help & Support',
+            style: AppTheme.of(context).titleLarge.override(
+                  font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
                 ),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Need more help?',
-                    style: AppTheme.of(context).titleMedium.override(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+          ),
+          backgroundColor: AppTheme.of(context).primaryBackground,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.pop(),
+          ),
+        ),
+        body: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Contact Support Card
+              Container(
+                margin: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.of(context).primary,
+                      AppTheme.of(context).primary.withValues(alpha: 0.8),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Our support team is available 24/7 to assist you with any issues or questions.',
-                    style: AppTheme.of(context).bodyMedium.override(
-                          color: Colors.white70,
-                        ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildContactButton(
-                          icon: Icons.email,
-                          label: 'Email Us',
-                          onTap: () => _openSupportEmail(
-                            subject: 'Provider Support Request',
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Need more help?',
+                      style: AppTheme.of(context).titleMedium.override(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Our support team is available 24/7 to assist you with any issues or questions.',
+                      style: AppTheme.of(context).bodyMedium.override(
+                            color: Colors.white70,
+                          ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildContactButton(
+                            icon: Icons.email,
+                            label: 'Email Us',
+                            onTap: () => _openSupportEmail(
+                              subject: 'Provider Support Request',
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildContactButton(
-                          icon: Icons.chat,
-                          label: 'Live Chat',
-                          onTap: () async {
-                            final messenger = ScaffoldMessenger.of(context);
-                            await _openSupportEmail(
-                              subject: 'Provider Live Support Request',
-                              body:
-                                  'Please describe your issue and include any booking or account details that can help the support team assist you faster.',
-                            );
-                            if (!mounted) {
-                              return;
-                            }
-                            messenger.showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Live support is currently routed to support email.',
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildContactButton(
+                            icon: Icons.chat,
+                            label: 'Live Chat',
+                            onTap: () async {
+                              final messenger = ScaffoldMessenger.of(context);
+                              await _openSupportEmail(
+                                subject: 'Provider Live Support Request',
+                                body:
+                                    'Please describe your issue and include any booking or account details that can help the support team assist you faster.',
+                              );
+                              if (!mounted) {
+                                return;
+                              }
+                              messenger.showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Live support is currently routed to support email.',
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
+                              );
+                            },
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            // FAQs
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Text(
-                    'Frequently Asked Questions',
-                    style: AppTheme.of(context).titleMedium.override(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                ],
+              // FAQs
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Text(
+                      'Frequently Asked Questions',
+                      style: AppTheme.of(context).titleMedium.override(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
+              const SizedBox(height: 12),
 
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: faqs.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (context, index) => _buildFaqCard(faqs[index]),
-            ),
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: faqs.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                itemBuilder: (context, index) => _buildFaqCard(faqs[index]),
+              ),
 
-            const SizedBox(height: 32),
-          ],
+              const SizedBox(height: 32),
+            ],
+          ),
         ),
-      ),
-    );
+      );
 
   Future<void> _openSupportEmail({
     required String subject,
@@ -202,60 +202,60 @@ class _HelpSupportWidgetState extends State<HelpSupportWidget> {
     required VoidCallback onTap,
   }) =>
       GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 20,
-              color: AppTheme.of(context).primary,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: AppTheme.of(context).bodyMedium.override(
-                    color: AppTheme.of(context).primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-          ],
-        ),
-      ),
-    );
-
-  Widget _buildFaqCard(Map<String, dynamic> faq) => ExpansionTile(
-      tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      collapsedBackgroundColor: AppTheme.of(context).secondaryBackground,
-      backgroundColor: AppTheme.of(context).secondaryBackground,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      collapsedShape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      title: Text(
-        faq['question'],
-        style: AppTheme.of(context).bodyLarge.override(
-              fontWeight: FontWeight.w600,
-            ),
-      ),
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          child: Text(
-            faq['answer'],
-            style: AppTheme.of(context).bodyMedium.override(
-                  color: AppTheme.of(context).secondaryText,
-                ),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: AppTheme.of(context).primary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: AppTheme.of(context).bodyMedium.override(
+                      color: AppTheme.of(context).primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ],
           ),
         ),
-      ],
-    );
+      );
+
+  Widget _buildFaqCard(Map<String, dynamic> faq) => ExpansionTile(
+        tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        collapsedBackgroundColor: AppTheme.of(context).secondaryBackground,
+        backgroundColor: AppTheme.of(context).secondaryBackground,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        collapsedShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        title: Text(
+          faq['question'],
+          style: AppTheme.of(context).bodyLarge.override(
+                fontWeight: FontWeight.w600,
+              ),
+        ),
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Text(
+              faq['answer'],
+              style: AppTheme.of(context).bodyMedium.override(
+                    color: AppTheme.of(context).secondaryText,
+                  ),
+            ),
+          ),
+        ],
+      );
 }

@@ -33,7 +33,7 @@ class ShphFavoritesApi {
   }
 }
 
-/// Reviews endpoints from SHPH API.yaml (`/api/services/listings/{id}/reviews/`).
+/// Reviews endpoints from SHPH API (`/api/services/`).
 class ShphReviewsApi {
   ShphReviewsApi._();
 
@@ -46,6 +46,32 @@ class ShphReviewsApi {
   }) async {
     final response = await _client.get<Map<String, dynamic>>(
       '/api/services/listings/$listingId/reviews/',
+      queryParameters: {if (page != null) 'page': page},
+    );
+    return PaginatedResponse.fromJson(
+      response.data ?? {},
+      ShphReview.fromJson,
+    );
+  }
+
+  Future<Map<String, dynamic>> createReview({
+    required String bookingId,
+    required int rating,
+    String? comment,
+  }) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/api/services/bookings/$bookingId/review/',
+      data: {
+        'rating': rating,
+        if (comment != null) 'comment': comment,
+      },
+    );
+    return response.data ?? {};
+  }
+
+  Future<PaginatedResponse<ShphReview>> listMyReviews({int? page}) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/api/services/reviews/mine/',
       queryParameters: {if (page != null) 'page': page},
     );
     return PaginatedResponse.fromJson(

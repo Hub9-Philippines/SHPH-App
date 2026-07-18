@@ -88,7 +88,7 @@ class OtpRateLimiter {
   }
 
   /// Record an OTP request attempt
-  /// Call this AFTER successful OTP request to Supabase
+  /// Call this AFTER successful OTP request to the SHPH API
   void recordOtpRequest(String phoneNumber) {
     final normalizedPhone = _normalizePhoneNumber(phoneNumber);
     final now = DateTime.now();

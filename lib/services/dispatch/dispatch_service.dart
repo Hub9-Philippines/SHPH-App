@@ -1,17 +1,24 @@
 import 'dart:async';
 
-import '/backend/supabase/supabase.dart';
+import '/api/shph_token_storage.dart';
+import '/services/bookings_service.dart';
 import '/services/logging_service.dart';
-
 import 'dispatch_models.dart';
 
+/// Service that previously coordinated a realtime dispatch engine.
+///
+/// The SHPH backend does not have `job_requests`/`dispatch_offers` tables or
+/// realtime streams, so the dispatch-specific methods are now stubbed to keep
+/// the app compiling. Booking-related operations delegate to
+/// [BookingsService] where possible.
 class DispatchService {
   DispatchService._();
   static final DispatchService instance = DispatchService._();
 
-  final _supabase = Supabase.instance.client;
-
-  String? get _currentUserId => _supabase.auth.currentUser?.id;
+  Future<String?> get _currentUserId async {
+    final id = await ShphTokenStorage.getCurrentUserId();
+    return id?.toString();
+  }
 
   Future<String> createJob({
     required String serviceType,
@@ -20,230 +27,104 @@ class DispatchService {
     String? bookingId,
     DateTime? requestedTime,
   }) async {
-    final userId = _currentUserId;
+    final userId = await _currentUserId;
     if (userId == null) {
       throw StateError('User must be logged in to create a job request.');
     }
 
-    final payload = {
-      'client_id': userId,
-      'service_type': serviceType,
-      'location_lat': latitude,
-      'location_lng': longitude,
-      'requested_time': (requestedTime ?? DateTime.now()).toIso8601String(),
-      'status': 'searching',
-      if (bookingId != null) 'booking_id': bookingId,
-    };
+    LoggingService.warning(
+      'Dispatch engine is not available in the SHPH backend; '
+      'returning a mock job id for booking $bookingId',
+      tag: 'DispatchService',
+    );
 
-    try {
-      final response = await _supabase
-          .from('job_requests')
-          .insert(payload)
-          .select()
-          .single();
-
-      return response['id'] as String;
-    } catch (e) {
-      LoggingService.error(
-        'Failed to create job request: $e',
-        tag: 'DispatchService',
-      );
-      rethrow;
-    }
+    // Return a stable mock id so callers do not crash.
+    return bookingId ?? 'dispatch-job-${DateTime.now().millisecondsSinceEpoch}';
   }
 
   Future<bool> cancelJob(String jobId) async {
-    final userId = _currentUserId;
-    if (userId == null) {
-      return false;
-    }
-
-    try {
-      final result = await _supabase.rpc('cancel_job', params: {
-        'p_job_id': jobId,
-      });
-      return result == true;
-    } catch (e) {
-      LoggingService.error(
-        'Failed to cancel job: $e',
-        tag: 'DispatchService',
-      );
-      return false;
-    }
+    LoggingService.warning(
+      'Dispatch cancel not available in the SHPH backend; jobId=$jobId',
+      tag: 'DispatchService',
+    );
+    return false;
   }
 
-  Stream<ClientJobView?> watchClientJob(String jobId) => _supabase
-      .from('job_requests')
-      .stream(primaryKey: ['id'])
-      .eq('id', jobId)
-      .asyncMap((rows) async {
-        if (rows.isEmpty) {
-          return null;
-        }
-        final job = DispatchJobRequest.fromJson(rows.first);
-
-        DispatchOffer? offer;
-        Map<String, dynamic>? profile;
-
-        final providerId = job.assignedProviderId;
-        if (providerId != null) {
-          final offerResp = await _supabase
-              .from('dispatch_offers')
-              .select()
-              .eq('job_id', jobId)
-              .eq('provider_id', providerId)
-              .maybeSingle();
-          if (offerResp != null) {
-            offer = DispatchOffer.fromJson(offerResp);
-          }
-
-          final profileResp = await _supabase
-              .from('profiles')
-              .select('id, display_name, photo_url, skill_profession')
-              .eq('id', providerId)
-              .maybeSingle();
-          if (profileResp != null) {
-            profile = profileResp;
-          }
-        }
-
-        return ClientJobView(job: job, offer: offer, providerProfile: profile);
-      });
+  Stream<ClientJobView?> watchClientJob(String jobId) {
+    LoggingService.debug(
+      'Realtime dispatch watch not available in the SHPH backend; '
+      'jobId=$jobId',
+      tag: 'DispatchService',
+    );
+    return const Stream.empty();
+  }
 
   Stream<List<ProviderOfferView>> watchProviderOffers() {
-    final userId = _currentUserId;
-    if (userId == null) {
-      return const Stream.empty();
-    }
-
-    return _supabase
-        .from('dispatch_offers')
-        .stream(primaryKey: ['id'])
-        .eq('provider_id', userId)
-        .asyncMap((rows) async {
-          final views = <ProviderOfferView>[];
-          for (final row in rows) {
-            final status = row['status'] as String?;
-            if (status != 'pending' && status != 'accepted') {
-              continue;
-            }
-
-            final offer = DispatchOffer.fromJson(row);
-            final jobResp = await _supabase
-                .from('job_requests')
-                .select('*, profiles!job_requests_client_id_fkey(display_name)')
-                .eq('id', offer.jobId)
-                .single();
-            final job = DispatchJobRequest.fromJson(jobResp);
-            final clientName = (jobResp['profiles']
-                as Map<String, dynamic>?)?['display_name'] as String?;
-
-            views.add(ProviderOfferView(
-              offer: offer,
-              job: job,
-              clientDisplayName: clientName,
-            ));
-          }
-          return views;
-        });
+    LoggingService.debug(
+      'Realtime provider offers not available in the SHPH backend',
+      tag: 'DispatchService',
+    );
+    return const Stream.empty();
   }
 
   Future<bool> acceptOffer(String jobId) async {
-    final providerId = _currentUserId;
-    if (providerId == null) {
-      return false;
-    }
-
-    try {
-      final result = await _supabase.rpc('accept_offer', params: {
-        'p_job_id': jobId,
-        'p_provider_id': providerId,
-      });
-      return result == true;
-    } catch (e) {
-      LoggingService.error(
-        'Failed to accept offer: $e',
-        tag: 'DispatchService',
-      );
-      return false;
-    }
+    LoggingService.warning(
+      'Dispatch offer acceptance not available in the SHPH backend; '
+      'jobId=$jobId',
+      tag: 'DispatchService',
+    );
+    return false;
   }
 
   Future<bool> rejectOffer(String jobId) async {
-    final providerId = _currentUserId;
-    if (providerId == null) {
-      return false;
-    }
-
-    try {
-      final result = await _supabase.rpc('reject_offer_and_rematch', params: {
-        'p_job_id': jobId,
-        'p_provider_id': providerId,
-      });
-      return result != null;
-    } catch (e) {
-      LoggingService.error(
-        'Failed to reject offer: $e',
-        tag: 'DispatchService',
-      );
-      return false;
-    }
+    LoggingService.warning(
+      'Dispatch offer rejection not available in the SHPH backend; '
+      'jobId=$jobId',
+      tag: 'DispatchService',
+    );
+    return false;
   }
 
   Future<bool> completeJob(String jobId) async {
-    try {
-      await _supabase
-          .from('job_requests')
-          .update({'status': 'completed'})
-          .eq('id', jobId);
-      return true;
-    } catch (e) {
-      LoggingService.error(
-        'Failed to complete job: $e',
-        tag: 'DispatchService',
-      );
-      return false;
-    }
+    LoggingService.warning(
+      'Dispatch complete not available in the SHPH backend; jobId=$jobId',
+      tag: 'DispatchService',
+    );
+    return false;
   }
 
   Future<DispatchJobRequest?> getJobById(String jobId) async {
-    try {
-      final response = await _supabase
-          .from('job_requests')
-          .select()
-          .eq('id', jobId)
-          .maybeSingle();
-      if (response == null) {
-        return null;
-      }
-      return DispatchJobRequest.fromJson(response);
-    } catch (e) {
-      LoggingService.error(
-        'Failed to fetch job: $e',
-        tag: 'DispatchService',
-      );
-      return null;
-    }
+    LoggingService.warning(
+      'Dispatch job lookup not available in the SHPH backend; jobId=$jobId',
+      tag: 'DispatchService',
+    );
+    return null;
   }
 
   Future<DispatchOffer?> getOffer(String jobId, String providerId) async {
-    try {
-      final response = await _supabase
-          .from('dispatch_offers')
-          .select()
-          .eq('job_id', jobId)
-          .eq('provider_id', providerId)
-          .maybeSingle();
-      if (response == null) {
-        return null;
-      }
-      return DispatchOffer.fromJson(response);
-    } catch (e) {
-      LoggingService.error(
-        'Failed to fetch offer: $e',
-        tag: 'DispatchService',
-      );
-      return null;
-    }
+    LoggingService.warning(
+      'Dispatch offer lookup not available in the SHPH backend; '
+      'jobId=$jobId providerId=$providerId',
+      tag: 'DispatchService',
+    );
+    return null;
+  }
+
+  /// Fetches all job requests created by the current client user.
+  Future<List<Map<String, dynamic>>> getClientJobs() async {
+    LoggingService.warning(
+      'Dispatch client jobs not available in the SHPH backend',
+      tag: 'DispatchService',
+    );
+    return [];
+  }
+
+  /// Fetches all bids (dispatch offers) made by the current provider user.
+  Future<List<Map<String, dynamic>>> getProviderBids() async {
+    LoggingService.warning(
+      'Dispatch provider bids not available in the SHPH backend',
+      tag: 'DispatchService',
+    );
+    return [];
   }
 }

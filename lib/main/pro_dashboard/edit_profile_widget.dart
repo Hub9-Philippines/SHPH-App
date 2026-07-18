@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/auth/shph_auth/auth_util.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import '/services/logging_service.dart';
@@ -193,15 +193,15 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
 
     setState(() => isSaving = true);
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) {
+      final userId = currentUserUid;
+      if (userId.isEmpty) {
         throw Exception('User not authenticated');
       }
 
       // Upload photo if selected
       final photoUrl = await _uploadPhoto(userId);
 
-      // Update profile via ProfilesService (REST-first, else Supabase)
+      // Update profile via ProfilesService
       final updates = <String, dynamic>{
         'first_name': _firstNameController.text.trim(),
         'last_name': _lastNameController.text.trim(),

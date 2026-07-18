@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
@@ -57,6 +59,7 @@ class MessagesModel extends FlutterFlowModel<MessagesWidget> {
 
   List<ChatRoom> chatRooms = const [];
   List<CallHistory> callHistory = const [];
+  StreamSubscription<Map<String, dynamic>>? _threadUpdateSubscription;
 
   @override
   void initState(BuildContext context) {
@@ -66,6 +69,12 @@ class MessagesModel extends FlutterFlowModel<MessagesWidget> {
   }
 
   Future<void> _loadChatRooms() async {
+    // Ensure WebSocket is available for real-time chat updates
+    await ChatService.instance.initializeWebSocket();
+    _threadUpdateSubscription ??=
+        ChatService.instance.threadUpdateStream.listen(
+      (_) => _refreshChatRooms(),
+    );
     try {
       final rooms = await ChatService.instance.getChatRooms();
       if (rooms.isEmpty) {
@@ -127,6 +136,10 @@ class MessagesModel extends FlutterFlowModel<MessagesWidget> {
     return _loadChatRooms();
   }
 
+  Future<void> _refreshChatRooms() async {
+    await _loadChatRooms();
+  }
+
   void _syncUnreadCount() {
     final total = chatRooms
         .where((room) => room.unreadCount > 0)
@@ -136,6 +149,8 @@ class MessagesModel extends FlutterFlowModel<MessagesWidget> {
 
   @override
   void dispose() {
+    _threadUpdateSubscription?.cancel();
+    _threadUpdateSubscription = null;
     pageViewController?.dispose();
   }
 }

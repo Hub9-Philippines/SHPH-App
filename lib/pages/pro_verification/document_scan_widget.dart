@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '/auth/shph_auth/auth_util.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
@@ -18,7 +19,7 @@ export 'document_scan_model.dart';
 /// Combines document capture and review in a single page:
 /// 1. User selects image (camera/gallery)
 /// 2. Preview shown with retake/submit options
-/// 3. Upload to Supabase storage on submit
+/// 3. Upload to SHPH backend via ProfilesService
 /// 4. Navigate to face verification on success
 class DocumentScanWidget extends StatefulWidget {
   const DocumentScanWidget({super.key});
@@ -75,7 +76,7 @@ class _DocumentScanWidgetState extends State<DocumentScanWidget> {
     });
   }
 
-  /// Upload document to Supabase and update profile
+  /// Upload document to the SHPH backend and update profile
   Future<void> _submitDocument() async {
     if (_model.selectedImage == null) {
       _showError('No image selected');
@@ -85,12 +86,12 @@ class _DocumentScanWidgetState extends State<DocumentScanWidget> {
     setState(() => _model.isUploading = true);
 
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) {
+      final userId = currentUserUid;
+      if (userId.isEmpty) {
         throw Exception('User not authenticated');
       }
 
-      // Submit via ProfilesService (uses SHPH API when enabled)
+      // Submit via ProfilesService (uses SHPH API)
       final file = _model.selectedImage!;
       final fileBytes = await file.readAsBytes();
       final fileName = '${DateTime.now().millisecondsSinceEpoch}_document.jpg';
@@ -101,7 +102,9 @@ class _DocumentScanWidgetState extends State<DocumentScanWidget> {
       setState(() => _model.isUploading = false);
 
       if (resp != null) {
-        if (mounted) _showSuccessAndNavigate();
+        if (mounted) {
+          _showSuccessAndNavigate();
+        }
       } else {
         _showError('Upload failed');
       }

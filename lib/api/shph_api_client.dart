@@ -26,8 +26,7 @@ class ShphApiClient {
   }
 
   static Future<void> initialize() async {
-    final self = instance;
-    self._dio = Dio(
+    final dio = Dio(
       BaseOptions(
         baseUrl: ApiConfig.baseUrl,
         connectTimeout: const Duration(seconds: 30),
@@ -39,7 +38,7 @@ class ShphApiClient {
       ),
     );
 
-    self._dio!.interceptors.add(
+    dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           final token = await ShphTokenStorage.getAccessToken();
@@ -58,7 +57,7 @@ class ShphApiClient {
           }
 
           try {
-            final refreshed = await self._refreshAccessToken();
+            final refreshed = await instance._refreshAccessToken();
             if (!refreshed) {
               handler.next(error);
               return;
@@ -69,7 +68,7 @@ class ShphApiClient {
             requestOptions.headers['Authorization'] = 'Bearer $token';
             requestOptions.extra['retried'] = true;
 
-            final response = await self._dio!.fetch(requestOptions);
+            final response = await instance._dio!.fetch(requestOptions);
             handler.resolve(response);
           } catch (_) {
             handler.next(error);
@@ -79,7 +78,7 @@ class ShphApiClient {
     );
 
     if (kDebugMode) {
-      self._dio!.interceptors.add(
+      dio.interceptors.add(
         LogInterceptor(
           requestBody: true,
           responseBody: true,
@@ -88,10 +87,14 @@ class ShphApiClient {
         ),
       );
     }
+
+    instance._dio = dio;
   }
 
   Future<bool> _refreshAccessToken() async {
-    if (_isRefreshing) return false;
+    if (_isRefreshing) {
+      return false;
+    }
     _isRefreshing = true;
 
     try {

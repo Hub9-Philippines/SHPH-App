@@ -47,7 +47,7 @@
 		<true/>
 		<key>UIStatusBarHidden</key>
 		<false/>
-		
+
 		<!-- Mandatory Apple UIScene Lifecycle Support -->
 		<key>UIApplicationSceneManifest</key>
 		<dict>
@@ -57,13 +57,17 @@
 			<dict/>
 		</dict>
 
-		<!-- Camera and Photo Library permissions for image picker and camera capture -->
+		<!-- Camera, Microphone, and Photo Library permissions for image picker, camera capture, and video calls -->
+		<key>NSMicrophoneUsageDescription</key>
+		<string>SerbisyoHub needs microphone access for voice and video calls.</string>
 		<key>NSCameraUsageDescription</key>
 		<string>This app needs camera access to capture your ID document and face selfie for provider verification.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>This app needs photo library access to select your ID document for provider verification.</string>
 		<key>NSPhotoLibraryAddUsageDescription</key>
 		<string>This app needs permission to save photos to your library.</string>
+<key>NSFaceIDUsageDescription</key>
+<string>This app uses Face ID / Touch ID to securely sign you in.</string>
 		<!-- Location permissions for geolocation services -->
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>This app needs location access to find nearby service providers and show them on the map.</string>

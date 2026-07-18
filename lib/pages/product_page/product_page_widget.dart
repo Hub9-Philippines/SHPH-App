@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/backend/supabase/database/tables/reviews.dart';
+import '/backend/shph_db/database/tables/reviews.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -211,7 +211,8 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                 ),
                 actions: [
                   Padding(
-                    padding: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
+                    padding:
+                        const EdgeInsets.only(right: 16, top: 8, bottom: 8),
                     child: Material(
                       color: Colors.white.withValues(alpha: 0.94),
                       borderRadius: BorderRadius.circular(18),
@@ -220,7 +221,8 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                             ? const SizedBox(
                                 width: 22,
                                 height: 22,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               )
                             : Icon(
                                 _isFavorite
@@ -275,7 +277,9 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                                   ),
                                   child: Text(
                                     widget.category,
-                                    style: AppTheme.of(context).labelMedium.override(
+                                    style: AppTheme.of(context)
+                                        .labelMedium
+                                        .override(
                                           font: GoogleFonts.poppins(
                                             fontWeight: FontWeight.w700,
                                           ),
@@ -286,7 +290,9 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                                 const SizedBox(height: 12),
                                 Text(
                                   widget.serviceName,
-                                  style: AppTheme.of(context).headlineMedium.override(
+                                  style: AppTheme.of(context)
+                                      .headlineMedium
+                                      .override(
                                         font: GoogleFonts.poppins(
                                           fontWeight: FontWeight.w700,
                                         ),
@@ -504,7 +510,8 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                 ),
                 _overviewPill(
                   icon: Icons.shield_outlined,
-                  label: widget.isVerified ? 'Verified provider' : 'Open listing',
+                  label:
+                      widget.isVerified ? 'Verified provider' : 'Open listing',
                 ),
                 _overviewPill(
                   icon: Icons.category_rounded,
@@ -840,7 +847,8 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                 ),
                 if (widget.reviewCount > 0)
                   TextButton(
-                    onPressed: widget.serviceId == null ? null : _openAllReviews,
+                    onPressed:
+                        widget.serviceId == null ? null : _openAllReviews,
                     child: const Text('See all'),
                   ),
               ],

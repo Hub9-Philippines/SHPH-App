@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/api/resources/reviews_api.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/logging_service.dart';
@@ -18,8 +18,6 @@ class ReviewsRatingsWidget extends StatefulWidget {
 }
 
 class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
-  final _supabase = Supabase.instance.client;
-
   List<Map<String, dynamic>> _reviews = const [];
   bool _isLoading = true;
   String? _errorMessage;
@@ -38,30 +36,22 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
     });
 
     try {
-      final userId = _supabase.auth.currentUser?.id;
-      if (userId == null) {
-        safeSetState(() {
-          _reviews = const [];
-          _stats = const _ReviewStats();
-          _isLoading = false;
-        });
-        return;
-      }
+      final response = await ShphReviewsApi.instance.getMine();
 
-      final response = await _supabase
-          .from('bookings')
-          .select('''
-            *,
-            service_listings(*),
-            profiles!bookings_user_id_fkey(*)
-          ''')
-          .eq('provider_id', userId)
-          .not('rating', 'is', 'null')
-          .order('rating_created_at', ascending: false)
-          .order('completed_at', ascending: false)
-          .order('updated_at', ascending: false);
-
-      final reviews = List<Map<String, dynamic>>.from(response)
+      final reviews = response
+          .map((item) => {
+                'rating': item['rating'],
+                'comment': item['comment'],
+                'created_at': item['created_at'],
+                'profiles': {
+                  'display_name': item['reviewer_name'],
+                  'photo_url': item['reviewer_photo'],
+                },
+                'service_listings': {
+                  'title': item['service_listing_name'],
+                  'category_name': item['service_category_name'],
+                },
+              })
           .where((item) => _readRating(item) > 0)
           .toList();
 
@@ -126,9 +116,8 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
 
   String? _clientPhoto(Map<String, dynamic> review) {
     final profile = review['profiles'] as Map<String, dynamic>?;
-    final value = (profile?['photo_url'] ?? profile?['avatar_url'])
-        ?.toString()
-        .trim();
+    final value =
+        (profile?['photo_url'] ?? profile?['avatar_url'])?.toString().trim();
     return value == null || value.isEmpty ? null : value;
   }
 
@@ -388,7 +377,8 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
                   Text(
                     '${_stats.total} total reviews',
                     style: AppTheme.of(context).titleMedium.override(
-                          font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                          font:
+                              GoogleFonts.poppins(fontWeight: FontWeight.w700),
                           color: Colors.white,
                         ),
                   ),
@@ -580,7 +570,8 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
                     Text(
                       clientName,
                       style: AppTheme.of(context).titleSmall.override(
-                            font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                            font: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w700),
                             color: const Color(0xFF14213D),
                           ),
                     ),
@@ -728,7 +719,8 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
                   child: Text(
                     actionLabel,
                     style: AppTheme.of(context).labelLarge.override(
-                          font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                          font:
+                              GoogleFonts.poppins(fontWeight: FontWeight.w700),
                           color: Colors.white,
                         ),
                   ),

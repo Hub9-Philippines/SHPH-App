@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/backend/shph_db/database/tables/service_listings.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -59,11 +59,10 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
           await BookingsService.instance.getBookingById(widget.bookingId!);
 
       if (booking != null) {
-        final service = await Supabase.instance.client
-            .from('service_listings')
-            .select()
-            .eq('id', booking.serviceListingId)
-            .maybeSingle();
+        final rows = await ServiceListingsTable().queryRows(
+          queryFn: (q) => q.eq('id', booking.serviceListingId).limit(1),
+        );
+        final service = rows.isNotEmpty ? rows.first.data : null;
 
         if (!mounted) {
           return;
@@ -123,7 +122,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pop(context, true);
+        Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -216,7 +215,8 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                             color: AppTheme.of(context).primary,
                             onRefresh: _loadBookingDetails,
                             child: ListView(
-                              padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+                              padding:
+                                  const EdgeInsets.fromLTRB(20, 12, 20, 28),
                               children: [
                                 _buildTopBar(context),
                                 const SizedBox(height: 18),
@@ -253,7 +253,8 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                                     _buildInfoRow(
                                       context,
                                       'Payment status',
-                                      _model.booking!.paymentStatus ?? 'Pending',
+                                      _model.booking!.paymentStatus ??
+                                          'Pending',
                                     ),
                                   ],
                                 ),
@@ -418,7 +419,8 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                     color: AppTheme.of(context).primary,
                     textStyle: AppTheme.of(context).bodySmall.override(
                           color: Colors.white,
-                          font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                          font:
+                              GoogleFonts.poppins(fontWeight: FontWeight.w600),
                         ),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -534,7 +536,8 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                     'PHP ${(_model.booking!.totalPrice ?? 0).toStringAsFixed(2)}',
                     style: AppTheme.of(context).titleMedium.override(
                           color: AppTheme.of(context).primary,
-                          font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                          font:
+                              GoogleFonts.poppins(fontWeight: FontWeight.w700),
                         ),
                   ),
                 ],

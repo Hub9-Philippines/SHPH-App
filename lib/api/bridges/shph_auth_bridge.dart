@@ -1,49 +1,53 @@
-import '/api/api_config.dart';
 import '/api/resources/auth_api.dart';
 import '/api/shph_api_client.dart';
 import '/api/shph_token_storage.dart';
+import '/services/chat_service.dart';
 import '/services/logging_service.dart';
 
-/// Bridges Supabase auth flows with SHPH REST API JWT tokens.
+/// Synchronizes SHPH REST API JWT tokens after authentication flows.
+///
+/// Domain services rely on the access/refresh tokens stored by
+/// [ShphTokenStorage]; this bridge performs the initial token exchange after
+/// each sign-in path (email, social, phone OTP) and tears down the session on
+/// sign-out.
 class ShphAuthBridge {
   ShphAuthBridge._();
 
   static final ShphAuthBridge instance = ShphAuthBridge._();
 
-  /// After a successful Supabase email sign-in, obtain SHPH API tokens so
-  /// domain services can call the REST API.
+  /// After a successful email sign-in, obtain SHPH API tokens so domain
+  /// services can call the REST API.
   Future<void> syncAfterEmailSignIn({
     required String email,
     required String password,
   }) async {
-    if (!ApiConfig.preferShphApi) return;
-
     try {
       await ShphAuthApi.instance.login(email: email, password: password);
+      // Start WebSocket so chat messages/notifications arrive immediately
+      await ChatService.instance.initializeWebSocket();
       LoggingService.info('SHPH API tokens synced after sign-in',
           tag: 'ShphAuthBridge');
     } catch (e) {
       LoggingService.error(
-        'SHPH API login failed after Supabase sign-in; Supabase fallback remains active: $e',
+        'SHPH API login failed after email sign-in: $e',
         tag: 'ShphAuthBridge',
       );
     }
   }
 
   Future<void> clearOnSignOut() async {
-    if (!ApiConfig.preferShphApi) return;
+    ChatService.instance.closeWebSocket();
     await ShphTokenStorage.clear();
   }
 
   /// After social sign-in (Google, Apple, GitHub), exchange the provider token for SHPH JWTs.
   ///
   /// This method handles the token exchange with the SHPH API after successful OAuth.
-  /// If [idToken] is provided, it uses the actual provider token. Otherwise, it attempts
-  /// to sync using the Supabase session (provider parameter indicates which OAuth provider).
+  /// If [providerOrToken] is a provider ID token, it uses the actual provider token.
+  /// Otherwise, it attempts to sync using the OAuth session (provider parameter
+  /// indicates which OAuth provider).
   Future<void> syncAfterSocialSignIn(String providerOrToken,
       {String? provider}) async {
-    if (!ApiConfig.preferShphApi) return;
-
     try {
       final endpoint = provider != null
           ? '/api/auth/social/$provider/'
@@ -67,30 +71,32 @@ class ShphAuthBridge {
       if (access != null) {
         await ShphTokenStorage.saveTokens(
             accessToken: access, refreshToken: refresh);
+        // Start WebSocket so chat messages/notifications arrive immediately
+        await ChatService.instance.initializeWebSocket();
         LoggingService.info('SHPH API tokens synced after social sign-in',
             tag: 'ShphAuthBridge');
       }
     } catch (e) {
       LoggingService.error(
-        'SHPH API social token exchange failed; Supabase fallback remains active: $e',
+        'SHPH API social token exchange failed: $e',
         tag: 'ShphAuthBridge',
       );
     }
   }
 
-  /// After phone OTP verification via Supabase, exchange the code for SHPH JWTs.
+  /// After phone OTP verification, exchange the code for SHPH JWTs.
   Future<void> syncAfterPhoneSignIn(String phoneNumber, String smsCode) async {
-    if (!ApiConfig.preferShphApi) return;
-
     try {
       await ShphAuthApi.instance.verifyOtpPin(
         payload: {'phone_number': phoneNumber, 'pin': smsCode},
       );
+      // Start WebSocket so chat messages/notifications arrive immediately
+      await ChatService.instance.initializeWebSocket();
       LoggingService.info('SHPH API tokens synced after phone sign-in',
           tag: 'ShphAuthBridge');
     } catch (e) {
       LoggingService.error(
-        'SHPH API OTP verify failed; Supabase fallback remains active: $e',
+        'SHPH API OTP verify failed: $e',
         tag: 'ShphAuthBridge',
       );
     }
