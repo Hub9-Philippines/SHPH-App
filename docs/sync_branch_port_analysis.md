@@ -22,6 +22,7 @@ Working branch: `feature/safe-sync-port`
 | App-level guardrail integration | Complete | `d559ca4` | 11 guardrail tests passed; scoped analysis has no errors or warnings |
 | Sensitive-action step-up | Complete | `6b63260` | Guardrail tests pass; payout and session operations fail closed |
 | Privacy-safe crash boundary | Complete | `e019296` | 15 guardrail tests passed; focused crash analysis reports no issues |
+| Token and OTP protection | Complete | `8a952dc` | 22 combined guardrail tests passed; scoped analysis reports no issues |
 | Realtime communication | Pending | - | Requires deployed WebSocket and ICE/TURN verification |
 | Projects | Pending | - | Requires deployed API contract verification |
 | Rooms | Pending | - | Requires deployed API contract verification |
@@ -68,6 +69,8 @@ All runtime guardrail work is derived from definitions on
 | `lib/services/step_up_auth_service.dart` | `lib/services/step_up_auth_service.dart` | Preserved device-auth-first verification; removed the source password modal because it returned an unverified password without calling an API. |
 | `lib/widgets/auth_prompt_modal.dart` | Step-up failure messaging at protected actions | Used as the authentication-prompt UX reference; did not reuse its login/register actions for an already authenticated user. |
 | `lib/services/crash_reporting_service.dart` | `lib/services/crash_reporting_service.dart` | Preserved Flutter/platform global error capture while excluding unconfigured Firebase/Sentry SDKs, external transmission, and user identifiers. |
+| `lib/flutter_flow/token_refresh_manager.dart` | `lib/flutter_flow/token_refresh_manager.dart` | Preserved JWT expiry parsing and monitoring; does not clear expired access/refresh credentials before the API interceptor can securely refresh them. |
+| `lib/flutter_flow/otp_rate_limiter.dart` | `lib/flutter_flow/otp_rate_limiter.dart` | Preserved the source cooldown and daily limit while removing phone numbers from debug logs. |
 | No source app-root wiring | `lib/widgets/app_guardrail_scope.dart` and `lib/main.dart` | Completes the network/session integration that the source branch defined but left unused. |
 
 The source branch contains no call sites for `StepUpAuthService`. The safe port
@@ -94,6 +97,17 @@ revocation, and admin payout status changes.
   information.
 - Avoids adding Firebase/Sentry packages or build configuration until a
   telemetry provider and privacy policy are explicitly approved.
+
+### Completed: token and OTP protection
+
+- Restored the source branch's periodic SHPH JWT expiry monitoring.
+- Parses JWT expiry locally without logging or transmitting token contents.
+- Emits deduplicated expiring-soon and expired events.
+- Preserves refresh credentials so the existing API interceptor can rotate an
+  expired access token after a 401 response.
+- Retains the source OTP limits of one request per 60 seconds and five requests
+  per phone number over 24 hours.
+- Removes normalized phone numbers from OTP limiter logs.
 
 ### Known baseline issue
 
