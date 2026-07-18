@@ -72,4 +72,39 @@ void main() {
       expect(result[1]['id'], 2);
     });
   });
+
+  group('Formatters.toNullableInt', () {
+    test('returns null for null input', () {
+      expect(Formatters.toNullableInt(null), isNull);
+    });
+
+    test('parses int values', () {
+      expect(Formatters.toNullableInt(42), 42);
+      expect(Formatters.toNullableInt(0), 0);
+      expect(Formatters.toNullableInt(-7), -7);
+    });
+
+    test('truncates double values to int', () {
+      expect(Formatters.toNullableInt(3.9), 3);
+      expect(Formatters.toNullableInt(120.0), 120);
+      expect(Formatters.toNullableInt(-2.7), -2);
+    });
+
+    test('parses numeric strings', () {
+      expect(Formatters.toNullableInt('120'), 120);
+      expect(Formatters.toNullableInt('0'), 0);
+      expect(Formatters.toNullableInt('-42'), -42);
+    });
+
+    test('returns null for unparseable strings', () {
+      expect(Formatters.toNullableInt('abc'), isNull);
+      expect(Formatters.toNullableInt(''), isNull);
+      expect(Formatters.toNullableInt('not a number'), isNull);
+    });
+
+    test('handles API string-wrapped numbers like "120"', () {
+      expect(Formatters.toNullableInt('120'), 120);
+      expect(Formatters.toNullableInt('3600'), 3600);
+    });
+  });
 }

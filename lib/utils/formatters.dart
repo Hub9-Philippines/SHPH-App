@@ -27,6 +27,21 @@ class Formatters {
     return double.tryParse(value.toString());
   }
 
+  /// Parses a dynamic value (num, String, or null) to a nullable int.
+  /// Handles API responses that may return numbers as strings (e.g. "120").
+  static int? toNullableInt(Object? value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is int) {
+      return value;
+    }
+    if (value is double) {
+      return value.toInt();
+    }
+    return int.tryParse(value.toString());
+  }
+
   /// Formats a double as PHP currency string with 2 decimal places.
   static String currency(double amount) => 'PHP ${amount.toStringAsFixed(2)}';
 

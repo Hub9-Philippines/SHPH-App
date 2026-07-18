@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/chat_service.dart';
+import '/utils/formatters.dart';
 import 'messages_widget.dart' show MessagesWidget;
 
 class ChatRoom {
@@ -152,7 +153,8 @@ class MessagesModel extends FlutterFlowModel<MessagesWidget> {
         final callType = c['call_type']?.toString() ?? 'video';
         final callStatus = c['status']?.toString() ?? 'completed';
         final durationSeconds =
-            (c['duration_seconds'] ?? c['duration'] ?? 0) as int? ?? 0;
+            Formatters.toNullableInt(c['duration_seconds'] ?? c['duration']) ??
+                0;
 
         DateTime? createdAt;
         final ca = c['created_at'];
