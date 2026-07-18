@@ -37,6 +37,7 @@ class SignalingMessage {
     required this.targetUserId,
     this.callId,
     this.callerUserId,
+    this.callType,
     this.sdp,
     this.candidate,
     this.reason,
@@ -47,6 +48,7 @@ class SignalingMessage {
   final String targetUserId;
   final String? callId;
   final String? callerUserId;
+  final String? callType;
   final Map<String, dynamic>? sdp;
   final Map<String, dynamic>? candidate;
   final String? reason;
@@ -57,6 +59,7 @@ class SignalingMessage {
         'targetUserId': targetUserId,
         if (callId != null) 'callId': callId,
         if (callerUserId != null) 'callerUserId': callerUserId,
+        if (callType != null) 'callType': callType,
         if (sdp != null) 'sdp': sdp,
         if (candidate != null) 'candidate': candidate,
         if (reason != null) 'reason': reason,
@@ -90,6 +93,7 @@ class SignalingMessage {
       targetUserId: targetUserId,
       callId: data['callId']?.toString(),
       callerUserId: data['callerUserId']?.toString(),
+      callType: data['callType']?.toString(),
       sdp: sdp,
       candidate: candidate,
       reason: data['reason']?.toString(),
