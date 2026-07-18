@@ -19,7 +19,7 @@ Working branch: `feature/safe-sync-port`
 | Analysis and porting guide | Complete | `68e4e0a` | Branch comparison documented |
 | Safe standalone utilities | Complete | `57bb0d2` | 10 focused tests passed; scoped analysis has no errors or warnings |
 | Runtime safety guardrails | Complete | `a7db350` | 8 focused tests passed; scoped analysis reports no issues |
-| App-level guardrail integration | Pending | - | Requires lifecycle, UX, and logout policy decisions |
+| App-level guardrail integration | Complete | `d559ca4` | 11 guardrail tests passed; scoped analysis has no errors or warnings |
 | Realtime communication | Pending | - | Requires deployed WebSocket and ICE/TURN verification |
 | Projects | Pending | - | Requires deployed API contract verification |
 | Rooms | Pending | - | Requires deployed API contract verification |
@@ -41,6 +41,18 @@ Working branch: `feature/safe-sync-port`
 - Added biometric/device step-up verification that fails closed.
 - Deliberately excluded the source branch's unverified password fallback.
 - Kept logout and navigation outside the timer service to avoid unexpected auth mutations without a valid widget context.
+
+### Completed: app-level guardrail integration
+
+- Wrapped routed application content in `AppGuardrailScope`.
+- Initialized SHPH reachability monitoring when the application starts.
+- Added a non-blocking banner while the SHPH API host is unreachable.
+- Reset authenticated inactivity timers on pointer activity and app resume.
+- Displayed a two-minute session-expiry warning.
+- Logged out through the existing SHPH auth manager when inactivity expires.
+- Updated the auth notifier and routed expired sessions to sign-in options.
+- Initialized the global scaffold messenger key so guardrail notices are visible.
+- Stopped network and inactivity timers when the app wrapper is disposed.
 
 ### Known baseline issue
 
@@ -152,9 +164,9 @@ The local Node backend and deployment assets should only be removed after confir
 - [x] Add inactivity warning and timeout primitives.
 - [x] Add fail-closed biometric/device step-up verification.
 - [x] Add focused tests and run scoped analysis.
-- [ ] Integrate network state with user-facing offline messaging.
-- [ ] Integrate inactivity tracking with authenticated app lifecycle.
-- [ ] Define and implement timeout warning and logout navigation UX.
+- [x] Integrate network state with user-facing offline messaging.
+- [x] Integrate inactivity tracking with authenticated app lifecycle.
+- [x] Define and implement timeout warning and logout navigation UX.
 - [ ] Apply step-up verification to selected sensitive actions.
 
 ### Batch B: Realtime communication
