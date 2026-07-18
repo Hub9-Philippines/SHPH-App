@@ -21,6 +21,7 @@ Working branch: `feature/safe-sync-port`
 | Runtime safety guardrails | Complete | `a7db350` | 8 focused tests passed; scoped analysis reports no issues |
 | App-level guardrail integration | Complete | `d559ca4` | 11 guardrail tests passed; scoped analysis has no errors or warnings |
 | Sensitive-action step-up | Complete | `6b63260` | Guardrail tests pass; payout and session operations fail closed |
+| Privacy-safe crash boundary | Complete | `e019296` | 15 guardrail tests passed; focused crash analysis reports no issues |
 | Realtime communication | Pending | - | Requires deployed WebSocket and ICE/TURN verification |
 | Projects | Pending | - | Requires deployed API contract verification |
 | Rooms | Pending | - | Requires deployed API contract verification |
@@ -66,6 +67,7 @@ All runtime guardrail work is derived from definitions on
 | `lib/services/session_timeout_service.dart` | `lib/services/session_timeout_service.dart` | Preserved the 30-minute timeout and two-minute warning; replaced loose callbacks with typed events and explicit activity/lifecycle integration. |
 | `lib/services/step_up_auth_service.dart` | `lib/services/step_up_auth_service.dart` | Preserved device-auth-first verification; removed the source password modal because it returned an unverified password without calling an API. |
 | `lib/widgets/auth_prompt_modal.dart` | Step-up failure messaging at protected actions | Used as the authentication-prompt UX reference; did not reuse its login/register actions for an already authenticated user. |
+| `lib/services/crash_reporting_service.dart` | `lib/services/crash_reporting_service.dart` | Preserved Flutter/platform global error capture while excluding unconfigured Firebase/Sentry SDKs, external transmission, and user identifiers. |
 | No source app-root wiring | `lib/widgets/app_guardrail_scope.dart` and `lib/main.dart` | Completes the network/session integration that the source branch defined but left unused. |
 
 The source branch contains no call sites for `StepUpAuthService`. The safe port
@@ -80,6 +82,18 @@ revocation, and admin payout status changes.
 - Requires verified device authentication before admin payout status changes.
 - Fails closed and does not call the API when verification is unavailable,
   cancelled, or unsuccessful.
+
+### Completed: privacy-safe crash boundary
+
+- Installs the Flutter framework error boundary used by the source branch.
+- Captures uncaught platform-dispatcher errors and preserves earlier handlers.
+- Supports an injectable, testable crash-report sink for a future approved
+  telemetry provider.
+- Performs no external transmission by default.
+- Does not collect user IDs, arbitrary context, or personally identifiable
+  information.
+- Avoids adding Firebase/Sentry packages or build configuration until a
+  telemetry provider and privacy policy are explicitly approved.
 
 ### Known baseline issue
 
