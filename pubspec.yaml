@@ -99,6 +99,7 @@ dependencies:
   video_player: ^2.11.0
   flutter_stripe: ^13.0.0
   webview_flutter: ^4.13.1
+  web_socket_channel: ^3.0.2
   smart_liveliness_detection: ^0.3.9
 
   # The following adds the Cupertino Icons font to your application.

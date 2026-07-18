@@ -1,4 +1,4 @@
-import 'dart:async';
+import '/services/websocket_service.dart';
 
 import 'signaling_message.dart';
 
@@ -14,6 +14,11 @@ class CallSignaling {
     required Stream<Map<String, dynamic>> messages,
   })  : _send = send,
         _messages = messages;
+
+  factory CallSignaling.fromWebSocket([ShphWebSocketService? service]) {
+    final socket = service ?? ShphWebSocketService.instance;
+    return CallSignaling(send: socket.send, messages: socket.messages);
+  }
 
   final SignalSender _send;
   final Stream<Map<String, dynamic>> _messages;
