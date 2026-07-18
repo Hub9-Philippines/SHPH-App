@@ -1,5 +1,4 @@
-import '/api/models/support_ticket.dart';
-import '/api/resources/support_api.dart';
+import '/services/gemini_models.dart';
 import '/services/logging_service.dart';
 
 class GeminiService {
@@ -12,52 +11,104 @@ class GeminiService {
     return false;
   }
 
-  Future<String?> askSupport({
-    required String question,
-    List<Map<String, String>> history = const [],
-  }) async {
-    if (!isEnabled) return null;
+  bool get allowPii => false;
+  bool get accountToolsEnabled => false;
+  bool get actionToolsEnabled => false;
 
-    // When google_generative_ai is added:
-    // 1. Build prompt from FAQ + history + question
-    // 2. Call GenerativeModel.generateContent()
-    // 3. Return text response
-    return null;
-  }
-
-  Future<List<ShphFaq>> loadFaq() async {
-    try {
-      return await ShphSupportApi.instance.listFaq();
-    } catch (e) {
-      LoggingService.error('loadFaq failed: $e', tag: 'GeminiService');
-      return [];
+  String languageName(String locale) {
+    switch (locale) {
+      case 'fil':
+        return 'Filipino';
+      default:
+        return 'English';
     }
   }
 
-  Future<String?> diagnosePhoto({
-    required String base64Image,
-    required String mimeType,
-    String? category,
+  Future<String?> askSupport({
+    required String question,
+    List<ChatTurn> history = const [],
+    List<FaqItem> faq = const [],
+    String locale = 'en',
   }) async {
-    if (!isEnabled) return null;
+    if (!isEnabled || !allowPii) return null;
+    if (question.trim().length < 2) return null;
 
-    // When google_generative_ai is added:
-    // 1. Build prompt with image + category context
-    // 2. Call GenerativeModel.generateContent([TextPart, DataPart])
-    // 3. Return diagnosis text
-    return null;
+    try {
+      // ignore: unused_local_variable
+      final prompt = buildSupportPrompt(
+        faq,
+        history,
+        question.trim(),
+        languageName(locale),
+        allowAccountTools: accountToolsEnabled,
+      );
+
+      // When google_generative_ai is added:
+      // 1. Build GenerativeModel with prompt
+      // 2. Call model.generateContent([Content.text(prompt)])
+      // 3. Return response.text
+      return null;
+    } catch (e) {
+      LoggingService.error('askSupport failed: $e', tag: 'GeminiService');
+      return null;
+    }
   }
 
-  Future<String?> smartSearch({
-    required String query,
-    String? userLocation,
+  Future<PhotoDiagnosis?> diagnosePhoto({
+    required GeminiImage image,
+    String? categoryName,
+    double? suggestedMin,
+    double? suggestedMax,
+    String locale = 'en',
   }) async {
-    if (!isEnabled) return null;
+    if (!isEnabled || !allowPii) return null;
 
-    // When google_generative_ai is added:
-    // 1. Build prompt with query + location context
-    // 2. Call GenerativeModel.generateContent()
-    // 3. Return enhanced search suggestions
-    return null;
+    try {
+      // ignore: unused_local_variable
+      final prompt = buildDiagnosisPrompt(
+        categoryName ?? 'general',
+        suggestedMin,
+        suggestedMax,
+        languageName(locale),
+      );
+
+      // When google_generative_ai is added:
+      // 1. Build GenerativeModel with responseSchema
+      // 2. Call model.generateContent([
+      //      Content.multi([TextPart(prompt), DataPart(image.mimeType, image.bytes)])
+      //    ])
+      // 3. Parse JSON response -> PhotoDiagnosis.fromJson
+      return null;
+    } catch (e) {
+      LoggingService.error('diagnosePhoto failed: $e', tag: 'GeminiService');
+      return null;
+    }
+  }
+
+  Future<SmartSearchFilters?> smartSearch({
+    required String query,
+    List<DraftCandidate> categories = const [],
+    String locale = 'en',
+  }) async {
+    if (!isEnabled || !allowPii) return null;
+    if (query.trim().length < 3 || categories.isEmpty) return null;
+
+    try {
+      // ignore: unused_local_variable
+      final prompt = buildSmartSearchPrompt(
+        query.trim(),
+        categories,
+        languageName(locale),
+      );
+
+      // When google_generative_ai is added:
+      // 1. Build GenerativeModel with responseSchema
+      // 2. Call model.generateContent([Content.text(prompt)])
+      // 3. Parse JSON response -> SmartSearchFilters.fromJson
+      return null;
+    } catch (e) {
+      LoggingService.error('smartSearch failed: $e', tag: 'GeminiService');
+      return null;
+    }
   }
 }

@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 
 import '/api/models/support_ticket.dart';
 import '/api/resources/support_api.dart';
+import '/services/gemini_models.dart';
+import '/services/gemini_service.dart';
 import '/theme/app_theme.dart';
 
-/// Help assistant — FAQ accordion + support ticket creation.
+/// Help assistant — FAQ accordion + support ticket creation + AI chat.
 ///
-/// Mirrors `shph-app/src/views/support/HelpAssistantPage.vue`. The Vue page
-/// uses Gemini AI for chat; the SHPH backend only exposes FAQ + tickets, so
-/// this Flutter port is FAQ + ticket form only (no AI chat).
+/// Mirrors `shph-app/src/views/support/HelpAssistantPage.vue`. When Gemini AI
+/// is enabled, an AI chat section appears above the FAQ. When disabled, the
+/// page degrades gracefully to FAQ + ticket form only.
 class HelpAssistantPage extends StatefulWidget {
   const HelpAssistantPage({super.key});
 
@@ -29,6 +31,12 @@ class _HelpAssistantPageState extends State<HelpAssistantPage> {
   bool _isSubmitting = false;
   String? _submitMessage;
 
+  // AI chat state
+  final List<ChatTurn> _chatMessages = [];
+  final _chatCtrl = TextEditingController();
+  bool _isAsking = false;
+  bool get _aiEnabled => GeminiService.instance.isEnabled;
+
   static const _categories = [
     ('general', 'General'),
     ('booking', 'Booking'),
@@ -46,6 +54,7 @@ class _HelpAssistantPageState extends State<HelpAssistantPage> {
   @override
   void dispose() {
     _messageCtrl.dispose();
+    _chatCtrl.dispose();
     super.dispose();
   }
 
@@ -104,6 +113,43 @@ class _HelpAssistantPageState extends State<HelpAssistantPage> {
     }
   }
 
+  Future<void> _askAi() async {
+    final q = _chatCtrl.text.trim();
+    if (q.length < 2) return;
+    setState(() {
+      _chatMessages.add(ChatTurn(role: 'user', text: q));
+      _chatCtrl.clear();
+      _isAsking = true;
+    });
+
+    final history = _chatMessages.sublist(0, _chatMessages.length - 1);
+    final faqItems = _faq
+        .map((f) => FaqItem(
+              id: f.id,
+              question: f.question,
+              answer: f.answer,
+              category: f.category ?? 'general',
+            ))
+        .toList();
+
+    final answer = await GeminiService.instance.askSupport(
+      question: q,
+      history: history,
+      faq: faqItems,
+    );
+
+    if (mounted) {
+      setState(() {
+        _chatMessages.add(ChatTurn(
+          role: 'assistant',
+          text: answer ??
+              'I couldn\'t reach the assistant right now \u2014 please check the FAQ below or contact support.',
+        ));
+        _isAsking = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
@@ -118,6 +164,40 @@ class _HelpAssistantPageState extends State<HelpAssistantPage> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
         children: [
+          // AI Chat section (only when enabled)
+          if (_aiEnabled) ...[
+            Text('AI Assistant',
+                style: theme.titleMedium.override(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 8),
+            ..._chatMessages.map((m) => _ChatBubble(turn: m)),
+            if (_isAsking)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+              ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _chatCtrl,
+                    decoration: const InputDecoration(
+                      hintText: 'Ask a question\u2026',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    onSubmitted: (_) => _askAi(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton.filled(
+                  onPressed: _isAsking ? null : _askAi,
+                  icon: const Icon(Icons.send),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+          ],
           Text('Frequently Asked Questions',
               style: theme.titleMedium.override(fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
@@ -129,7 +209,7 @@ class _HelpAssistantPageState extends State<HelpAssistantPage> {
           else if (_faqError != null)
             _ErrorRow(message: _faqError!, onRetry: _loadFaq)
           else if (_faq.isEmpty)
-            _EmptyCard(label: 'No FAQ entries yet')
+            const _EmptyCard(label: 'No FAQ entries yet')
           else
             ..._faq.map((f) => _FaqTile(faq: f)),
           const SizedBox(height: 24),
@@ -184,6 +264,32 @@ class _HelpAssistantPageState extends State<HelpAssistantPage> {
             label: Text(_isSubmitting ? 'Submitting…' : 'Submit Ticket'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ChatBubble extends StatelessWidget {
+  const _ChatBubble({required this.turn});
+  final ChatTurn turn;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+    final isUser = turn.role == 'user';
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: isUser ? theme.primary : theme.secondaryBackground,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+      child: Text(
+        turn.text,
+        style: theme.bodyMedium.override(
+          color: isUser ? Colors.white : theme.primaryText,
+        ),
       ),
     );
   }

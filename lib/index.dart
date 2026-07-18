@@ -103,6 +103,8 @@ export 'pages/location_permission/location_permission_page.dart'
 export 'pages/my_reviews_page/my_reviews_page.dart' show MyReviewsPage;
 // Provider Suite
 export 'pages/my_services/my_services_page.dart' show MyServicesPage;
+// 404
+export 'pages/not_found/not_found_page.dart' show NotFoundPage;
 export 'pages/notification_preferences/notification_preferences_page.dart'
     show NotificationPreferencesPage;
 export 'pages/on_demand_jobs/on_demand_jobs_page.dart' show OnDemandJobsPage;
