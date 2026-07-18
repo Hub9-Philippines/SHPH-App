@@ -23,7 +23,7 @@ Working branch: `feature/safe-sync-port`
 | Sensitive-action step-up | Complete | `6b63260` | Guardrail tests pass; payout and session operations fail closed |
 | Privacy-safe crash boundary | Complete | `e019296` | 15 guardrail tests passed; focused crash analysis reports no issues |
 | Token and OTP protection | Complete | `8a952dc` | 22 combined guardrail tests passed; scoped analysis reports no issues |
-| Realtime communication | In progress | `efe612b`, `05509ff`, `9aebee8` | Protocol, guarded transport, and controller: 23 focused tests passed |
+| Realtime communication | In progress | `efe612b`, `05509ff`, `9aebee8`, `9533e9b` | Protocol, transport, controller, and peer adapter: 28 focused tests passed |
 | Projects | Pending | - | Requires deployed API contract verification |
 | Rooms | Pending | - | Requires deployed API contract verification |
 | Supabase and Node cleanup | Pending | - | Requires runtime/deployment usage audit |
@@ -118,6 +118,7 @@ The Batch B protocol foundation is adapted from these source-branch files:
 - `lib/services/call/call_peer.dart`
 - `lib/services/call/ice_config.dart`
 - `lib/services/call/call_controller.dart`
+- `lib/services/call/flutter_webrtc_call_peer.dart`
 
 Completed foundation work:
 
@@ -144,13 +145,19 @@ Completed foundation work:
 - Handles offer, answer, and ICE forwarding with fail-closed local cleanup.
 - Preserves audio/video, mute, camera, reject, and end-call state transitions
   without coupling the controller to an unverified native peer implementation.
+- Added the source-referenced `flutter_webrtc` peer adapter and dependency.
+- Validates remote SDP and ICE fields before passing them to native WebRTC.
+- Rolls back partially initialized native media resources on failure and makes
+  disposal safe to repeat.
+- Added Android and iOS microphone permission declarations from the source
+  branch; the existing camera declarations are retained.
 
 Remaining gates before live calls can be enabled:
 
 - Verify a successful `shph-auth` upgrade using a valid deployed JWT.
 - Provision and test approved TURN servers and credentials.
-- Add `flutter_webrtc` after the native media contract is confirmed.
-- Port the concrete peer adapter, call UI, and chat integration.
+- Validate native microphone, camera, and peer negotiation on physical devices.
+- Port the call UI and chat integration.
 
 #### Contract audit against `shph-web`
 
@@ -353,7 +360,7 @@ The local Node backend and deployment assets should only be removed after confir
   (route and invalid-auth rejection are confirmed).
 - [x] Add WebSocket transport and lifecycle handling.
 - [x] Add and test the WebRTC call controller.
-- [ ] Add the concrete `flutter_webrtc` peer adapter.
+- [x] Add and validate the concrete `flutter_webrtc` peer adapter.
 - [ ] Integrate incoming/outgoing calls with chat.
 - [ ] Add call widget tests.
 - [ ] Validate with two authenticated devices against the deployed API.
