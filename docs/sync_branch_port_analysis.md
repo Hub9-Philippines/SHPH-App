@@ -23,7 +23,7 @@ Working branch: `feature/safe-sync-port`
 | Sensitive-action step-up | Complete | `6b63260` | Guardrail tests pass; payout and session operations fail closed |
 | Privacy-safe crash boundary | Complete | `e019296` | 15 guardrail tests passed; focused crash analysis reports no issues |
 | Token and OTP protection | Complete | `8a952dc` | 22 combined guardrail tests passed; scoped analysis reports no issues |
-| Realtime communication | In progress | `efe612b`, `05509ff` | Protocol and guarded transport: 15 focused tests passed |
+| Realtime communication | In progress | `efe612b`, `05509ff`, `9aebee8` | Protocol, guarded transport, and controller: 23 focused tests passed |
 | Projects | Pending | - | Requires deployed API contract verification |
 | Rooms | Pending | - | Requires deployed API contract verification |
 | Supabase and Node cleanup | Pending | - | Requires runtime/deployment usage audit |
@@ -117,6 +117,7 @@ The Batch B protocol foundation is adapted from these source-branch files:
 - `lib/services/call/call_signaling.dart`
 - `lib/services/call/call_peer.dart`
 - `lib/services/call/ice_config.dart`
+- `lib/services/call/call_controller.dart`
 
 Completed foundation work:
 
@@ -136,15 +137,20 @@ Completed foundation work:
 - Uses bounded exponential reconnect and stops after an explicit disconnect.
 - Discards malformed inbound JSON without terminating the message stream.
 - Avoids logging JWTs and signaling payload contents.
+- Added the source call state machine for caller and callee flows behind
+  injected REST and peer interfaces.
+- Rejects concurrent incoming calls as busy and ignores stale or cross-call
+  signaling messages.
+- Handles offer, answer, and ICE forwarding with fail-closed local cleanup.
+- Preserves audio/video, mute, camera, reject, and end-call state transitions
+  without coupling the controller to an unverified native peer implementation.
 
 Remaining gates before live calls can be enabled:
 
-- Verify the deployed SHPH WebSocket URL and `/chat/` route.
-- Verify the `shph-auth` WebSocket subprotocol with the deployed backend.
+- Verify a successful `shph-auth` upgrade using a valid deployed JWT.
 - Provision and test approved TURN servers and credentials.
-- Add `web_socket_channel` and `flutter_webrtc` only after those contracts are
-  confirmed.
-- Port the controller, concrete peer adapter, call UI, and chat integration.
+- Add `flutter_webrtc` after the native media contract is confirmed.
+- Port the concrete peer adapter, call UI, and chat integration.
 
 #### Contract audit against `shph-web`
 
@@ -346,9 +352,10 @@ The local Node backend and deployment assets should only be removed after confir
 - [ ] Complete WebSocket authorization and TURN deployment verification
   (route and invalid-auth rejection are confirmed).
 - [x] Add WebSocket transport and lifecycle handling.
-- [ ] Add the WebRTC controller and concrete peer adapter.
+- [x] Add and test the WebRTC call controller.
+- [ ] Add the concrete `flutter_webrtc` peer adapter.
 - [ ] Integrate incoming/outgoing calls with chat.
-- [ ] Add controller and call widget tests.
+- [ ] Add call widget tests.
 - [ ] Validate with two authenticated devices against the deployed API.
 
 ### Batch C: Projects
