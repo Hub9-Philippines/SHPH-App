@@ -1,3 +1,5 @@
+import '/utils/formatters.dart';
+
 class ShphBooking {
   const ShphBooking({
     required this.id,
@@ -32,8 +34,8 @@ class ShphBooking {
         scheduledTime: json['scheduled_time'] as String?,
         scheduledAt: json['scheduled_at'] as String?,
         notes: json['notes'] as String?,
-        agreedPrice: _toDouble(json['agreed_price']),
-        totalPrice: _toDouble(json['total_price']),
+        agreedPrice: Formatters.toNullableDouble(json['agreed_price']),
+        totalPrice: Formatters.toNullableDouble(json['total_price']),
         createdAt: json['created_at'] as String?,
         serviceListing: json['service_listings'] as Map<String, dynamic>? ??
             json['service_listing'] as Map<String, dynamic>?,
@@ -73,14 +75,4 @@ class ShphBooking {
         if (notes != null) 'notes': notes,
         if (totalPrice != null) 'total_price': totalPrice,
       };
-
-  static double? _toDouble(Object? value) {
-    if (value == null) {
-      return null;
-    }
-    if (value is num) {
-      return value.toDouble();
-    }
-    return double.tryParse(value.toString());
-  }
 }

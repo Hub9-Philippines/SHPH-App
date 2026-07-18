@@ -16,7 +16,8 @@ class AuthPromptModal extends StatelessWidget {
     super.key,
   });
 
-  static Future<void> show(BuildContext context, {
+  static Future<void> show(
+    BuildContext context, {
     String? title,
     String? message,
     VoidCallback? onLogin,

@@ -1,3 +1,5 @@
+import '/utils/formatters.dart';
+
 class ShphServiceListing {
   const ShphServiceListing({
     required this.id,
@@ -31,7 +33,7 @@ class ShphServiceListing {
         providerName: json['provider_name'] as String?,
         providerPhoto: json['provider_photo'] as String?,
         description: json['description'] as String?,
-        basePrice: _toDouble(json['base_price']),
+        basePrice: Formatters.toNullableDouble(json['base_price']),
         priceUnit: json['price_unit'] as String?,
         status: json['status'] as String?,
         isAvailable: json['is_available']?.toString(),
@@ -63,14 +65,4 @@ class ShphServiceListing {
   final String? city;
   final String? province;
   final bool isTimeMaterial;
-
-  static double? _toDouble(Object? value) {
-    if (value == null) {
-      return null;
-    }
-    if (value is num) {
-      return value.toDouble();
-    }
-    return double.tryParse(value.toString());
-  }
 }

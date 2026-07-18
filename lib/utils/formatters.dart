@@ -14,6 +14,19 @@ class Formatters {
     return 0;
   }
 
+  /// Nullable variant of [parseAmount] — returns null instead of 0 when
+  /// the value is null or unparseable. Used by API model `fromJson` methods
+  /// where a missing field should remain null rather than default to 0.
+  static double? toNullableDouble(Object? value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is num) {
+      return value.toDouble();
+    }
+    return double.tryParse(value.toString());
+  }
+
   /// Formats a double as PHP currency string with 2 decimal places.
   static String currency(double amount) => 'PHP ${amount.toStringAsFixed(2)}';
 

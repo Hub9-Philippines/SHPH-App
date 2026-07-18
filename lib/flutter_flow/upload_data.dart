@@ -16,7 +16,8 @@ const allowedFormats = {'image/png', 'image/jpeg', 'video/mp4', 'image/gif'};
 
 class SelectedFile {
   const SelectedFile({
-    required this.bytes, this.storagePath = '',
+    required this.bytes,
+    this.storagePath = '',
     this.filePath,
     this.dimensions,
     this.blurHash,
@@ -47,7 +48,8 @@ enum MediaSource {
 
 Future<List<SelectedFile>?> selectMediaWithSourceBottomSheet({
   required BuildContext context,
-  required bool allowPhoto, String? storageFolderPath,
+  required bool allowPhoto,
+  String? storageFolderPath,
   double? maxWidth,
   double? maxHeight,
   int? imageQuality,
@@ -58,78 +60,79 @@ Future<List<SelectedFile>?> selectMediaWithSourceBottomSheet({
   bool includeDimensions = false,
   bool includeBlurHash = false,
 }) async {
-  ListTile createUploadMediaListTile(String label, MediaSource mediaSource) => ListTile(
-            title: Text(
-              label,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.getFont(
-                pickerFontFamily,
-                color: textColor,
-                fontWeight: FontWeight.w600,
-                fontSize: 20,
-              ),
-            ),
-            tileColor: backgroundColor,
-            dense: false,
-            onTap: () => Navigator.pop(
-              context,
-              mediaSource,
-            ),
-          );
+  ListTile createUploadMediaListTile(String label, MediaSource mediaSource) =>
+      ListTile(
+        title: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.getFont(
+            pickerFontFamily,
+            color: textColor,
+            fontWeight: FontWeight.w600,
+            fontSize: 20,
+          ),
+        ),
+        tileColor: backgroundColor,
+        dense: false,
+        onTap: () => Navigator.pop(
+          context,
+          mediaSource,
+        ),
+      );
   final mediaSource = await showModalBottomSheet<MediaSource>(
       context: context,
       backgroundColor: backgroundColor,
       builder: (context) => Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (!kIsWeb) ...[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
-                child: ListTile(
-                  title: Text(
-                    'Choose Source',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.getFont(
-                      pickerFontFamily,
-                      color: textColor.applyAlpha(0.65),
-                      fontWeight: FontWeight.w500,
-                      fontSize: 20,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (!kIsWeb) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
+                  child: ListTile(
+                    title: Text(
+                      'Choose Source',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.getFont(
+                        pickerFontFamily,
+                        color: textColor.applyAlpha(0.65),
+                        fontWeight: FontWeight.w500,
+                        fontSize: 20,
+                      ),
                     ),
+                    tileColor: backgroundColor,
+                    dense: false,
                   ),
-                  tileColor: backgroundColor,
-                  dense: false,
                 ),
-              ),
-              const Divider(),
+                const Divider(),
+              ],
+              if (allowPhoto && allowVideo) ...[
+                createUploadMediaListTile(
+                  'Gallery (Photo)',
+                  MediaSource.photoGallery,
+                ),
+                const Divider(),
+                createUploadMediaListTile(
+                  'Gallery (Video)',
+                  MediaSource.videoGallery,
+                ),
+              ] else if (allowPhoto)
+                createUploadMediaListTile(
+                  'Gallery',
+                  MediaSource.photoGallery,
+                )
+              else
+                createUploadMediaListTile(
+                  'Gallery',
+                  MediaSource.videoGallery,
+                ),
+              if (!kIsWeb) ...[
+                const Divider(),
+                createUploadMediaListTile('Camera', MediaSource.camera),
+                const Divider(),
+              ],
+              const SizedBox(height: 10),
             ],
-            if (allowPhoto && allowVideo) ...[
-              createUploadMediaListTile(
-                'Gallery (Photo)',
-                MediaSource.photoGallery,
-              ),
-              const Divider(),
-              createUploadMediaListTile(
-                'Gallery (Video)',
-                MediaSource.videoGallery,
-              ),
-            ] else if (allowPhoto)
-              createUploadMediaListTile(
-                'Gallery',
-                MediaSource.photoGallery,
-              )
-            else
-              createUploadMediaListTile(
-                'Gallery',
-                MediaSource.videoGallery,
-              ),
-            if (!kIsWeb) ...[
-              const Divider(),
-              createUploadMediaListTile('Camera', MediaSource.camera),
-              const Divider(),
-            ],
-            const SizedBox(height: 10),
-          ],
-        ));
+          ));
   if (mediaSource == null) {
     return null;
   }
@@ -319,8 +322,7 @@ Future<MediaDimensions> _getImageDimensions(Uint8List mediaBytes) async {
 }
 
 Future<MediaDimensions> _getVideoDimensions(String path) async {
-  final videoPlayerController =
-      VideoPlayerController.asset(path);
+  final videoPlayerController = VideoPlayerController.asset(path);
   await videoPlayerController.initialize();
   final size = videoPlayerController.value.size;
   return MediaDimensions(width: size.width, height: size.height);
@@ -371,7 +373,8 @@ void showUploadMessage(
             Text(message),
           ],
         ),
-        duration: showLoading ? const Duration(days: 1) : const Duration(seconds: 4),
+        duration:
+            showLoading ? const Duration(days: 1) : const Duration(seconds: 4),
       ),
     );
 }

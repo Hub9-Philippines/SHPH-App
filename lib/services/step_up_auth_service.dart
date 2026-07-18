@@ -12,8 +12,7 @@ class StepUpAuthService {
       final biometricResult = await _tryBiometric();
       if (biometricResult != null) return biometricResult;
     } catch (e) {
-      LoggingService.info('Biometric step-up failed: $e',
-          tag: 'StepUpAuth');
+      LoggingService.info('Biometric step-up failed: $e', tag: 'StepUpAuth');
     }
 
     // Fall back to password re-entry

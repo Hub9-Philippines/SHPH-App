@@ -4,7 +4,6 @@ import 'logging_service.dart';
 /// Centralized error handling for the application
 /// Replaces scattered ScaffoldMessenger.showSnackBar() calls
 class ErrorHandler {
-
   factory ErrorHandler() => _instance;
 
   ErrorHandler._internal();
@@ -129,23 +128,24 @@ class ErrorHandler {
     required String message,
     String confirmLabel = 'Confirm',
     String cancelLabel = 'Cancel',
-  }) => showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(cancelLabel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(confirmLabel),
-          ),
-        ],
-      ),
-    ).then((value) => value ?? false);
+  }) =>
+      showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(cancelLabel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(confirmLabel),
+            ),
+          ],
+        ),
+      ).then((value) => value ?? false);
 
   /// Handle and display exception
   static void handleException(

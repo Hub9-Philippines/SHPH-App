@@ -5,6 +5,7 @@ import '/backend/shph_db/database/tables/bookings.dart';
 import '/models/service_listing.dart';
 import '/services/bookings_service.dart';
 import '/services/logging_service.dart';
+import '/utils/formatters.dart';
 import 'tm_models.dart';
 
 abstract class TMRepository {
@@ -430,7 +431,9 @@ class PersistentMockTMRepository implements TMRepository {
                 title: hardwareMap['title']?.toString() ??
                     'Hardware Parts Required',
                 description: hardwareMap['description']?.toString() ?? '',
-                additionalCost: _toDouble(hardwareMap['additional_cost']) ?? 0,
+                additionalCost: Formatters.toNullableDouble(
+                        hardwareMap['additional_cost']) ??
+                    0,
               ),
       );
     } catch (e) {
@@ -466,7 +469,9 @@ class PersistentMockTMRepository implements TMRepository {
                 title: hardwareMap['title']?.toString() ??
                     'Hardware Parts Required',
                 description: hardwareMap['description']?.toString() ?? '',
-                additionalCost: _toDouble(hardwareMap['additional_cost']) ?? 0,
+                additionalCost: Formatters.toNullableDouble(
+                        hardwareMap['additional_cost']) ??
+                    0,
               ),
       );
     }
@@ -520,12 +525,12 @@ class PersistentMockTMRepository implements TMRepository {
       id: providerMap['id']?.toString() ?? '',
       name: providerMap['name']?.toString() ?? 'Provider',
       specialty: providerMap['specialty']?.toString() ?? '',
-      rating: _toDouble(providerMap['rating']) ?? 0,
+      rating: Formatters.toNullableDouble(providerMap['rating']) ?? 0,
       completedJobs: (providerMap['completed_jobs'] as num?)?.toInt() ?? 0,
       etaMinutes: (providerMap['eta_minutes'] as num?)?.toInt() ?? 0,
       vehicleLabel: providerMap['vehicle_label']?.toString() ?? 'Service unit',
-      latitude: _toDouble(providerMap['latitude']),
-      longitude: _toDouble(providerMap['longitude']),
+      latitude: Formatters.toNullableDouble(providerMap['latitude']),
+      longitude: Formatters.toNullableDouble(providerMap['longitude']),
     );
   }
 
@@ -599,15 +604,5 @@ class PersistentMockTMRepository implements TMRepository {
     final hour = dateTime.hour.toString().padLeft(2, '0');
     final minute = dateTime.minute.toString().padLeft(2, '0');
     return '$hour:$minute:00';
-  }
-
-  double? _toDouble(Object? value) {
-    if (value == null) {
-      return null;
-    }
-    if (value is num) {
-      return value.toDouble();
-    }
-    return double.tryParse(value.toString());
   }
 }

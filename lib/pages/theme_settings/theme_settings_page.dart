@@ -110,8 +110,8 @@ class _ThemeSettingsPageState extends State<ThemeSettingsPage> {
                       style: theme.bodyLarge
                           .override(fontWeight: FontWeight.w600)),
                   Text(subtitle,
-                      style: theme.bodySmall
-                          .override(color: theme.secondaryText)),
+                      style:
+                          theme.bodySmall.override(color: theme.secondaryText)),
                 ],
               ),
             ),

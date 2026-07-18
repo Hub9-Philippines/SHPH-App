@@ -72,11 +72,8 @@ class CategoriesgridModel extends FlutterFlowModel<CategoriesgridWidget> {
   ];
 
   @override
-  void initState(BuildContext context) {
-    
-  }
+  void initState(BuildContext context) {}
 
   @override
-  void dispose() {
-  }
+  void dispose() {}
 }

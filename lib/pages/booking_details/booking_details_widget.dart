@@ -312,7 +312,8 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                                         },
                                         queryParameters: {
                                           'serviceListingId': booking
-                                              .serviceListingId.toString(),
+                                              .serviceListingId
+                                              .toString(),
                                         },
                                       );
                                     },

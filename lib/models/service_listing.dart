@@ -1,3 +1,5 @@
+import '/utils/formatters.dart';
+
 class ServiceListing {
   ServiceListing({
     required this.id,
@@ -27,7 +29,7 @@ class ServiceListing {
         providerPhoto: json['provider_photo'] as String?,
         title: json['title'] as String,
         description: json['description'] as String?,
-        basePrice: (json['base_price'] as num?)?.toDouble(),
+        basePrice: Formatters.toNullableDouble(json['base_price']),
         priceUnit: json['price_unit'] as String?,
         status: json['status'] as String?,
         isAvailable: json['is_available'] as String?,

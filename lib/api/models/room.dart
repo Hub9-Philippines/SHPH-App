@@ -1,3 +1,5 @@
+import '/utils/formatters.dart';
+
 /// Group-Demand ROOM (SHPH-133): N participants → 1 shared slot → N settlements.
 ///
 /// Mirrors `shph-api/services/serializers.py::RoomSerializer`.
@@ -47,11 +49,11 @@ class ShphRoom {
         eventDate: json['event_date'] as String? ?? '',
         eventTime: json['event_time'] as String? ?? '',
         eventLocation: json['event_location'] as String? ?? '',
-        latitude: _toDouble(json['latitude']),
-        longitude: _toDouble(json['longitude']),
+        latitude: Formatters.toNullableDouble(json['latitude']),
+        longitude: Formatters.toNullableDouble(json['longitude']),
         radiusKm: json['radius_km'] as int? ?? 4,
         headsRequired: json['heads_required'] as int? ?? 0,
-        pricePerHead: _toDouble(json['price_per_head']) ?? 0,
+        pricePerHead: Formatters.toNullableDouble(json['price_per_head']) ?? 0,
         feeBreakdown: _map(json['fee_breakdown']),
         joinToken: json['join_token'] as String?,
         status: json['status'] as String? ?? 'open',
@@ -112,12 +114,6 @@ class ShphRoom {
   static Map<String, dynamic> _map(Object? raw) {
     if (raw is Map<String, dynamic>) return raw;
     return const {};
-  }
-
-  static double? _toDouble(Object? value) {
-    if (value == null) return null;
-    if (value is num) return value.toDouble();
-    return double.tryParse(value.toString());
   }
 }
 

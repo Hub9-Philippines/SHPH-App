@@ -203,8 +203,8 @@ class _AdminKycQueuePageState extends State<AdminKycQueuePage> {
               children: [
                 Expanded(
                   child: Text(name,
-                      style:
-                          theme.titleSmall.override(fontWeight: FontWeight.w700)),
+                      style: theme.titleSmall
+                          .override(fontWeight: FontWeight.w700)),
                 ),
                 Text(status.toUpperCase(),
                     style: theme.labelSmall.override(
@@ -237,8 +237,8 @@ class _AdminKycQueuePageState extends State<AdminKycQueuePage> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () => _reject(id),
-                      style:
-                          OutlinedButton.styleFrom(foregroundColor: theme.error),
+                      style: OutlinedButton.styleFrom(
+                          foregroundColor: theme.error),
                       child: const Text('Reject'),
                     ),
                   ),

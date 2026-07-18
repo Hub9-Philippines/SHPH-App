@@ -11,7 +11,13 @@ import 'place.dart';
 
 class FlutterFlowPlacePicker extends StatefulWidget {
   const FlutterFlowPlacePicker({
-    required this.iOSGoogleMapsApiKey, required this.androidGoogleMapsApiKey, required this.webGoogleMapsApiKey, required this.defaultText, required this.buttonOptions, required this.onSelect, Key? key,
+    required this.iOSGoogleMapsApiKey,
+    required this.androidGoogleMapsApiKey,
+    required this.webGoogleMapsApiKey,
+    required this.defaultText,
+    required this.buttonOptions,
+    required this.onSelect,
+    Key? key,
     this.icon,
     this.proxyBaseUrl,
   }) : super(key: key);

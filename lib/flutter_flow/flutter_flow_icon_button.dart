@@ -3,7 +3,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class FlutterFlowIconButton extends StatefulWidget {
   const FlutterFlowIconButton({
-    required this.icon, Key? key,
+    required this.icon,
+    Key? key,
     this.borderColor,
     this.borderRadius,
     this.borderWidth,

@@ -151,7 +151,6 @@ class TransitionInfo {
   final TransitionType transitionType;
   final Duration duration;
   final Alignment? alignment;
-
 }
 
 extension GoRouterLocationExtension on GoRouter {

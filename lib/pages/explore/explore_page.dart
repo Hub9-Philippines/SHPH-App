@@ -67,8 +67,8 @@ class _ExplorePageState extends State<ExplorePage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(_error!,
-                            style: theme.bodyMedium
-                                .override(color: theme.error)),
+                            style:
+                                theme.bodyMedium.override(color: theme.error)),
                         const SizedBox(height: 16),
                         FilledButton(
                           onPressed: _loadListings,
@@ -125,15 +125,13 @@ class _ExplorePageState extends State<ExplorePage> {
                                     children: [
                                       Text(listing.title,
                                           style: theme.titleSmall.override(
-                                              fontWeight:
-                                                  FontWeight.w600)),
+                                              fontWeight: FontWeight.w600)),
                                       if (listing.providerName != null &&
                                           listing.providerName!.isNotEmpty) ...[
                                         const SizedBox(height: 2),
                                         Text(listing.providerName!,
                                             style: theme.bodySmall.override(
-                                                color:
-                                                    theme.secondaryText)),
+                                                color: theme.secondaryText)),
                                       ],
                                       const SizedBox(height: 4),
                                       Row(
@@ -144,8 +142,7 @@ class _ExplorePageState extends State<ExplorePage> {
                                           const SizedBox(width: 4),
                                           Text(listing.rating ?? 'N/A',
                                               style: theme.bodySmall.override(
-                                                  color:
-                                                      theme.secondaryText)),
+                                                  color: theme.secondaryText)),
                                           if (listing.basePrice != null) ...[
                                             const SizedBox(width: 12),
                                             Text(

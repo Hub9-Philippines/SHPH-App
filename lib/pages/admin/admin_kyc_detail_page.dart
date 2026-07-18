@@ -269,7 +269,8 @@ class _AdminKycDetailPageState extends State<AdminKycDetailPage> {
                           'ID Front', _submission!['id_front_url'], theme),
                       _buildDocCard(
                           'ID Back', _submission!['id_back_url'], theme),
-                      _buildDocCard('Selfie', _submission!['selfie_url'], theme),
+                      _buildDocCard(
+                          'Selfie', _submission!['selfie_url'], theme),
                       _buildDocCard('NBI / Police Clearance',
                           _submission!['nbi_clearance_url'], theme),
                       _buildDocCard(
@@ -308,8 +309,7 @@ class _AdminKycDetailPageState extends State<AdminKycDetailPage> {
                                     width: 20,
                                     height: 20,
                                     child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white),
+                                        strokeWidth: 2, color: Colors.white),
                                   )
                                 : const Text('Approve'),
                           ),

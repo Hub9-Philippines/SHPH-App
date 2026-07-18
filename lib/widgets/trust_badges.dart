@@ -5,7 +5,6 @@ import '/theme/app_theme.dart';
 enum TrustBadgeType { topRated, verified, popular, highlyRated }
 
 class TrustBadge {
-
   const TrustBadge({
     required this.type,
     required this.label,
@@ -19,7 +18,6 @@ class TrustBadge {
 }
 
 class TrustBadgeInput {
-
   const TrustBadgeInput({
     this.rating = 0,
     this.reviewCount = 0,

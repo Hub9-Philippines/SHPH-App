@@ -79,7 +79,8 @@ abstract class FlutterFlowModel<W extends Widget> {
   VoidCallback _updateCallback = () {};
   void onUpdate() => updateOnChange ? _updateCallback() : () {};
   FlutterFlowModel setOnUpdate({
-    required VoidCallback onUpdate, bool updateOnChange = false,
+    required VoidCallback onUpdate,
+    bool updateOnChange = false,
   }) =>
       this
         .._updateCallback = onUpdate
@@ -106,14 +107,14 @@ class FlutterFlowDynamicModels<T extends FlutterFlowModel> {
   }
 
   List<S> getValues<S>(S? Function(T) getValue) => _childrenIndexes.entries
-        // Sort keys by index.
-        .sorted((a, b) => a.value.compareTo(b.value))
-        .where((e) => _childrenModels[e.key] != null)
-        // Map each model to the desired value and return as list. In order
-        // to preserve index order, rather than removing null values we provide
-        // default values (for types with reasonable defaults).
-        .map((e) => getValue(_childrenModels[e.key]!) ?? _getDefaultValue<S>()!)
-        .toList();
+      // Sort keys by index.
+      .sorted((a, b) => a.value.compareTo(b.value))
+      .where((e) => _childrenModels[e.key] != null)
+      // Map each model to the desired value and return as list. In order
+      // to preserve index order, rather than removing null values we provide
+      // default values (for types with reasonable defaults).
+      .map((e) => getValue(_childrenModels[e.key]!) ?? _getDefaultValue<S>()!)
+      .toList();
 
   S? getValueAtIndex<S>(int index, S? Function(T) getValue) {
     final uniqueKey =

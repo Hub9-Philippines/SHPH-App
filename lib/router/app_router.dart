@@ -882,8 +882,7 @@ class AppRouter {
             path: AdminKycDetailPage.routePath,
             name: AdminKycDetailPage.routeName,
             builder: (context, state) => AdminKycDetailPage(
-              submissionId:
-                  int.tryParse(state.pathParameters['id'] ?? '') ?? 0,
+              submissionId: int.tryParse(state.pathParameters['id'] ?? '') ?? 0,
             ),
           ),
           GoRoute(

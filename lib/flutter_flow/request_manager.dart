@@ -11,7 +11,8 @@ class FutureRequestManager<T> {
   final int cacheLimit;
   final Map<String, Future<T>> _requests = {};
   Future<T> performRequest({
-    required Future<T> Function() requestFn, String? uniqueQueryKey,
+    required Future<T> Function() requestFn,
+    String? uniqueQueryKey,
     bool? overrideCache,
   }) {
     final key = _requestKey(uniqueQueryKey);
@@ -23,8 +24,7 @@ class FutureRequestManager<T> {
     }
     // Remove the first cached result if we have reached the specified limit,
     // since we will be adding another.
-    if (!_requests.containsKey(key) &&
-        _requests.length >= cacheLimit) {
+    if (!_requests.containsKey(key) && _requests.length >= cacheLimit) {
       _requests.remove(_requests.keys.first);
     }
     // Return the cached query result or set it to the new value.
@@ -43,7 +43,8 @@ class StreamRequestManager<T> {
   final Map<String, BehaviorSubject<T>> _streamSubjects = {};
   final Map<String, StreamSubscription<T>> _requestSubscriptions = {};
   Stream<T> performRequest({
-    required Stream<T> Function() requestFn, String? uniqueQueryKey,
+    required Stream<T> Function() requestFn,
+    String? uniqueQueryKey,
     bool? overrideCache,
   }) {
     final key = _requestKey(uniqueQueryKey);
@@ -67,9 +68,8 @@ class StreamRequestManager<T> {
 
     // Create a subscription that stores the latest result in the behavior subject.
     final streamSubject = BehaviorSubject<T>();
-    _requestSubscriptions[key] = requestFn()
-        .asBroadcastStream()
-        .listen(streamSubject.add);
+    _requestSubscriptions[key] =
+        requestFn().asBroadcastStream().listen(streamSubject.add);
     _streamSubjects[key] = streamSubject;
 
     return streamSubject.stream;

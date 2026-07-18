@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '/theme/app_theme.dart';
 
 class OnboardingOverlay extends StatefulWidget {
-
   const OnboardingOverlay({
     required this.child,
     required this.steps,
@@ -17,7 +16,6 @@ class OnboardingOverlay extends StatefulWidget {
 }
 
 class OnboardingStep {
-
   const OnboardingStep({
     required this.title,
     required this.description,
@@ -102,15 +100,15 @@ class _OnboardingOverlayState extends State<OnboardingOverlay> {
                   const SizedBox(height: 16),
                   Text(
                     step.title,
-                    style: theme.titleMedium
-                        .override(fontWeight: FontWeight.w700),
+                    style:
+                        theme.titleMedium.override(fontWeight: FontWeight.w700),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(
                     step.description,
-                    style: theme.bodyMedium
-                        .override(color: theme.secondaryText),
+                    style:
+                        theme.bodyMedium.override(color: theme.secondaryText),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 20),

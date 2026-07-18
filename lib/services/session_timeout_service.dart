@@ -40,8 +40,8 @@ class SessionTimeoutService {
     if (!loggedIn) return;
 
     _warningTimer = Timer(_inactiveTimeout - _warningBefore, () {
-      LoggingService.info(
-          'Session about to expire — 2 min warning', tag: 'SessionTimeout');
+      LoggingService.info('Session about to expire — 2 min warning',
+          tag: 'SessionTimeout');
       onWarning?.call();
     });
 

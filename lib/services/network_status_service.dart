@@ -5,7 +5,8 @@ class NetworkStatusService {
   NetworkStatusService._();
   static final NetworkStatusService instance = NetworkStatusService._();
 
-  final StreamController<bool> _onlineController = StreamController<bool>.broadcast();
+  final StreamController<bool> _onlineController =
+      StreamController<bool>.broadcast();
   bool _isOnline = true;
   Timer? _checkTimer;
 

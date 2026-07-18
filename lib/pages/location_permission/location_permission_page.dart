@@ -168,8 +168,7 @@ class _LocationPermissionPageState extends State<LocationPermissionPage> {
                       Expanded(
                         child: Text(
                           'Location access is blocked. Please enable it in your device settings, then tap the button below.',
-                          style: theme.bodySmall
-                              .override(color: theme.warning),
+                          style: theme.bodySmall.override(color: theme.warning),
                         ),
                       ),
                     ],

@@ -51,7 +51,10 @@ class FFButtonOptions {
 
 class FFButtonWidget extends StatefulWidget {
   const FFButtonWidget({
-    required this.text, required this.onPressed, required this.options, super.key,
+    required this.text,
+    required this.onPressed,
+    required this.options,
+    super.key,
     this.icon,
     this.iconData,
     this.showLoadingIndicator = true,
@@ -311,7 +314,6 @@ double? _getTextWidth(String? text, TextStyle? style, int maxLines) =>
         : null;
 
 class FFFocusIndicator extends StatefulWidget {
-
   const FFFocusIndicator({
     super.key,
     this.builder,

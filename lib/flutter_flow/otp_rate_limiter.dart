@@ -3,7 +3,6 @@ import 'auth_logger.dart';
 /// Manages rate limiting for OTP requests
 /// Prevents brute force attacks and excessive API usage
 class OtpRateLimiter {
-
   factory OtpRateLimiter() => _instance;
 
   OtpRateLimiter._internal();
@@ -144,7 +143,8 @@ class OtpRateLimiter {
 
   /// Normalize phone number for consistent tracking
   /// Removes spaces, dashes, and other formatting
-  String _normalizePhoneNumber(String phoneNumber) => phoneNumber.replaceAll(RegExp('[^0-9+]'), '');
+  String _normalizePhoneNumber(String phoneNumber) =>
+      phoneNumber.replaceAll(RegExp('[^0-9+]'), '');
 
   /// Reset all rate limit data (for testing or config changes)
   void reset() {

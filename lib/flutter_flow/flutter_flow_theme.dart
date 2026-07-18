@@ -26,9 +26,10 @@ abstract class FlutterFlowTheme {
       ? _prefs?.remove(kThemeModeKey)
       : _prefs?.setBool(kThemeModeKey, mode == ThemeMode.dark);
 
-  static FlutterFlowTheme of(BuildContext context) => Theme.of(context).brightness == Brightness.dark
-        ? DarkModeTheme()
-        : LightModeTheme();
+  static FlutterFlowTheme of(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? DarkModeTheme()
+          : LightModeTheme();
 
   @Deprecated('Use primary instead')
   Color get primaryColor => primary;
