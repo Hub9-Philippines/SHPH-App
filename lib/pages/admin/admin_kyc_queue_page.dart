@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '/api/resources/admin_api.dart';
+import '/index.dart';
 import '/theme/app_theme.dart';
 
 class AdminKycQueuePage extends StatefulWidget {
@@ -181,71 +183,89 @@ class _AdminKycQueuePageState extends State<AdminKycQueuePage> {
     final idType = sub['id_type'] as String? ?? 'N/A';
     final submittedAt = sub['created_at'] as String?;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.primaryBackground,
-        borderRadius: BorderRadius.circular(16),
+    return GestureDetector(
+      onTap: () => context.pushNamed(
+        AdminKycDetailPage.routeName,
+        pathParameters: {'id': id.toString()},
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(name,
-                    style:
-                        theme.titleSmall.override(fontWeight: FontWeight.w700)),
-              ),
-              Text(status.toUpperCase(),
-                  style: theme.labelSmall.override(
-                    color: status == 'approved'
-                        ? theme.success
-                        : status == 'rejected'
-                            ? theme.error
-                            : theme.warning,
-                    fontWeight: FontWeight.w700,
-                  )),
-            ],
-          ),
-          if (email.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(email,
-                style: theme.bodySmall.override(color: theme.secondaryText)),
-          ],
-          const SizedBox(height: 8),
-          Text('ID Type: $idType',
-              style: theme.bodySmall.override(color: theme.secondaryText)),
-          if (submittedAt != null) ...[
-            const SizedBox(height: 4),
-            Text('Submitted: $submittedAt',
-                style: theme.bodySmall.override(color: theme.secondaryText)),
-          ],
-          if (status == 'pending') ...[
-            const SizedBox(height: 12),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.primaryBackground,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => _reject(id),
-                    style:
-                        OutlinedButton.styleFrom(foregroundColor: theme.error),
-                    child: const Text('Reject'),
-                  ),
+                  child: Text(name,
+                      style:
+                          theme.titleSmall.override(fontWeight: FontWeight.w700)),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () => _approve(id),
-                    child: const Text('Approve'),
-                  ),
-                ),
+                Text(status.toUpperCase(),
+                    style: theme.labelSmall.override(
+                      color: status == 'approved'
+                          ? theme.success
+                          : status == 'rejected'
+                              ? theme.error
+                              : theme.warning,
+                      fontWeight: FontWeight.w700,
+                    )),
               ],
             ),
+            if (email.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(email,
+                  style: theme.bodySmall.override(color: theme.secondaryText)),
+            ],
+            const SizedBox(height: 8),
+            Text('ID Type: $idType',
+                style: theme.bodySmall.override(color: theme.secondaryText)),
+            if (submittedAt != null) ...[
+              const SizedBox(height: 4),
+              Text('Submitted: $submittedAt',
+                  style: theme.bodySmall.override(color: theme.secondaryText)),
+            ],
+            if (status == 'pending') ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => _reject(id),
+                      style:
+                          OutlinedButton.styleFrom(foregroundColor: theme.error),
+                      child: const Text('Reject'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () => _approve(id),
+                      child: const Text('Approve'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () => context.pushNamed(
+                  AdminKycDetailPage.routeName,
+                  pathParameters: {'id': id.toString()},
+                ),
+                child: Text('View Details',
+                    style: TextStyle(color: theme.primary, fontSize: 13)),
+              ),
+            ),
           ],
-        ],
+        ),
       ),
     );
   }

@@ -5,6 +5,7 @@ import '/backend/shph_db/database/tables/service_listings.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import '/pages/write_review/write_review_page.dart';
 import '/services/bookings_service.dart';
 import '/theme/app_theme.dart';
 import 'booking_details_model.dart';
@@ -302,7 +303,19 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                                   ),
                                 if (_model.booking!.status == 'completed')
                                   FFButtonWidget(
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      final booking = _model.booking!;
+                                      context.pushNamed(
+                                        WriteReviewPage.routeName,
+                                        pathParameters: {
+                                          'bookingId': booking.id,
+                                        },
+                                        queryParameters: {
+                                          'serviceListingId': booking
+                                              .serviceListingId.toString(),
+                                        },
+                                      );
+                                    },
                                     text: 'Leave a Review',
                                     options: FFButtonOptions(
                                       width: double.infinity,

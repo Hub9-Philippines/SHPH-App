@@ -17,38 +17,23 @@ A service provider marketplace mobile application built for Filipinos. Clients c
 - **Framework**: Flutter 3.x (Dart 3.0+, Android, iOS, Web)
 - **State Management**: Provider
 - **Routing**: go_router
-- **Auth**: Supabase Auth (Google Sign-In, Apple Sign-In, email/password)
-- **Backend Client**: Dio (REST), supabase_flutter (Realtime, Storage)
+- **Auth**: JWT-based auth (email/password, biometric)
+- **Backend Client**: Dio (REST)
 - **Maps**: Google Maps / Google Places
 - **ML Kit**: Face detection, document scanning
 - **UI**: Lottie, Flutter Animate, Smooth Page Indicator, Skeletonizer
 - **Push Notifications**: Firebase Cloud Messaging
 
-### Backend API (Node.js)
-- **Runtime**: Node.js (TypeScript)
-- **Framework**: Express.js
-- **Database**: PostgreSQL (primary) via TypeORM
-- **Cache**: Redis (ioredis)
-- **Auth**: JWT (jsonwebtoken, bcrypt)
-- **Validation**: Zod
-- **Security**: Helmet, CORS
-
-### Backend (Supabase)
-- **Auth**: User management, session handling, RLS policies
-- **Database**: PostgreSQL (profiles, service_listings, bookings, reviews, messages, notifications, favorites, addresses, categories)
-- **Storage**: Document uploads, profile photos
-- **Realtime**: Chat, notifications
-
-### Infrastructure (AWS)
-- **Orchestration**: ECS Fargate (via CDK)
-- **Database**: RDS PostgreSQL 15
-- **Cache**: ElastiCache (Redis)
-- **CI/CD**: Docker → ECR → ECS
+### Backend API (Django)
+- **Framework**: Django REST Framework
+- **Database**: PostgreSQL (primary) + MongoDB (chat, logs via Djongo)
+- **Cache**: Redis
+- **Auth**: JWT (SimpleJWT)
+- **CMS**: Wagtail
 
 ### Firebase
-- **Cloud Functions**: Serverless API management, push notifications
-- **Firestore**: Secondary data store
-- **Storage**: File upload rules
+- **Cloud Messaging**: Push notifications
+- **Storage**: File uploads
 
 ## Project Structure
 
@@ -60,8 +45,8 @@ A service provider marketplace mobile application built for Filipinos. Clients c
 │   ├── main.dart               # App entry point
 │   ├── index.dart              # Page exports
 │   ├── api/                    # REST API client (Dio)
-│   ├── auth/                   # Auth providers (Supabase)
-│   ├── backend/                # Supabase backend integration
+│   ├── auth/                   # Auth providers (JWT)
+│   ├── backend/                # Local SQLite backend integration
 │   ├── components/             # Shared UI widgets
 │   ├── flutter_flow/           # FF-generated utilities
 │   ├── models/                 # Data models
@@ -73,54 +58,16 @@ A service provider marketplace mobile application built for Filipinos. Clients c
 │   ├── services/               # Business logic services
 │   ├── theme/                  # App theme & styling
 │   └── widgets/                # Reusable widgets
-├── backend/                    # Node.js Express backend
-│   ├── src/
-│   │   ├── index.ts            # Server entry point
-│   │   ├── routes/             # API routes (auth, users, chat, services)
-│   │   ├── middleware/         # Auth middleware, error handler
-│   │   ├── services/           # Business logic layer
-│   │   ├── types/              # TypeScript type definitions
-│   │   └── db/                 # TypeORM data source & entities
-│   └── aws/                    # AWS deployment (Dockerfile, CDK, ECS config)
-├── database/                   # SQL migration scripts
 ├── firebase/                   # Firebase config & Cloud Functions
 ├── assets/                     # Images, fonts, animations, PDFs, videos, JSON
 └── test/                       # Flutter tests
 ```
 
-## Database Schema (Supabase)
-
-| Table | Purpose |
-|---|---|
-| `profiles` | User profiles (clients & providers) with verification status |
-| `service_listings` | Services offered by providers |
-| `categories` | Service categories (cleaning, plumbing, electrical, etc.) |
-| `bookings` | Service booking records with status tracking |
-| `reviews` | Ratings & reviews for services |
-| `messages` | Chat messages between users |
-| `notifications` | Push/in-app notifications |
-| `favorites` | Saved/bookmarked services |
-| `addresses` | Saved user addresses |
-
-Built-in RLS policies protect data per user.
-
-## API Endpoints (Express Backend)
-
-| Method | Path | Auth | Description |
-|---|---|---|---|
-| `GET` | `/health` | No | Health check |
-| `POST` | `/api/auth/*` | No | Authentication routes |
-| `GET/POST/PUT` | `/api/users/*` | JWT | User profile management |
-| `GET/POST` | `/api/chat/*` | JWT | Chat & messaging |
-| `GET/POST/PUT` | `/api/services/*` | JWT | Service listings & management |
-
 ## Getting Started
 
 ### Prerequisites
 - Flutter 3.x SDK
-- Node.js 18+
-- PostgreSQL / Supabase project
-- Firebase project (optional, for push notifications)
+- Django backend running (see `shph-api/` in the main repo)
 
 ### Running the Flutter App
 
@@ -136,36 +83,16 @@ flutter pub get
 flutter run
 ```
 
-### Running the Backend
-
-```bash
-cd backend
-
-# Install dependencies
-npm install
-
-# Configure environment
-cp .env.example .env
-# Edit .env with your DATABASE_URL, JWT_SECRET, REDIS_URL
-
-# Start development server
-npm run dev
-```
-
 ### Environment Variables
 
 ```
-# Backend (.env)
-DATABASE_URL=postgresql://user:password@host:5432/shphdb
-JWT_SECRET=your-jwt-secret
-REDIS_URL=redis://host:6379
-PORT=4000
+# Flutter (.env)
+API_BASE_URL=https://api.serbisyohubph.com
+FIREBASE_API_KEY=...
+FIREBASE_PROJECT_ID=...
 ```
 
 ## Deployment
-
-### Backend (AWS)
-See [backend/aws/README.md](backend/aws/README.md) for ECS Fargate deployment instructions.
 
 ### Flutter App
 ```bash
@@ -182,7 +109,7 @@ flutter build web --release
 ## App Features
 
 - **Onboarding**: Three-screen intro with animated illustrations
-- **Authentication**: Email/password, Google Sign-In, Apple Sign-In
+- **Authentication**: Email/password, biometric login
 - **Home**: Service discovery, featured listings, search
 - **Categories**: 10 service categories with sub-listings
 - **Booking**: Full booking flow with date/time selection, address management

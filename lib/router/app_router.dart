@@ -870,6 +870,41 @@ class AppRouter {
             name: HelpAssistantPage.routeName,
             builder: (context, state) => const HelpAssistantPage(),
           ),
+          // Feature Gap — New Routes
+          GoRoute(
+            path: WriteReviewPage.routePath,
+            name: WriteReviewPage.routeName,
+            builder: (context, state) => WriteReviewPage(
+              bookingId: state.pathParameters['bookingId'] ?? '',
+              serviceName: state.uri.queryParameters['serviceName'],
+              serviceListingId: int.tryParse(
+                state.uri.queryParameters['serviceListingId'] ?? '',
+              ),
+            ),
+          ),
+          GoRoute(
+            path: AdminKycDetailPage.routePath,
+            name: AdminKycDetailPage.routeName,
+            builder: (context, state) => AdminKycDetailPage(
+              submissionId:
+                  int.tryParse(state.pathParameters['id'] ?? '') ?? 0,
+            ),
+          ),
+          GoRoute(
+            path: LocationPermissionPage.routePath,
+            name: LocationPermissionPage.routeName,
+            builder: (context, state) => const LocationPermissionPage(),
+          ),
+          GoRoute(
+            path: ExplorePage.routePath,
+            name: ExplorePage.routeName,
+            builder: (context, state) => const ExplorePage(),
+          ),
+          GoRoute(
+            path: ThemeSettingsPage.routePath,
+            name: ThemeSettingsPage.routeName,
+            builder: (context, state) => const ThemeSettingsPage(),
+          ),
         ],
       );
 }

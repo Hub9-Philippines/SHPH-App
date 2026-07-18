@@ -82,30 +82,35 @@ export 'pages/admin/admin_audit_logs_page.dart' show AdminAuditLogsPage;
 // Admin Suite
 export 'pages/admin/admin_dashboard_page.dart' show AdminDashboardPage;
 export 'pages/admin/admin_disputes_page.dart' show AdminDisputesPage;
+// Feature Gap — New Pages
+export 'pages/admin/admin_kyc_detail_page.dart' show AdminKycDetailPage;
 export 'pages/admin/admin_kyc_queue_page.dart' show AdminKycQueuePage;
 export 'pages/admin/admin_payouts_page.dart' show AdminPayoutsPage;
 export 'pages/admin/admin_users_page.dart' show AdminUsersPage;
-export 'pages/booking_funnel/booking_flow_screen.dart' show BookingFlowScreen;
-export 'pages/disputes/disputes_page.dart' show DisputesPage;
-export 'pages/earnings/earnings_page.dart' show EarningsPage;
-export 'pages/my_reviews_page/my_reviews_page.dart' show MyReviewsPage;
 // Client Gaps
 export 'pages/biometric_setup/biometric_setup_page.dart'
     show BiometricSetupPage;
+export 'pages/booking_funnel/booking_flow_screen.dart' show BookingFlowScreen;
 export 'pages/category_detail/category_detail_page.dart'
     show CategoryDetailPage;
+export 'pages/disputes/disputes_page.dart' show DisputesPage;
+export 'pages/earnings/earnings_page.dart' show EarningsPage;
 export 'pages/eta_tracking/eta_tracking_page.dart' show EtaTrackingPage;
+export 'pages/explore/explore_page.dart' show ExplorePage;
 export 'pages/help_assistant/help_assistant_page.dart' show HelpAssistantPage;
+export 'pages/location_permission/location_permission_page.dart'
+    show LocationPermissionPage;
+export 'pages/my_reviews_page/my_reviews_page.dart' show MyReviewsPage;
+// Provider Suite
+export 'pages/my_services/my_services_page.dart' show MyServicesPage;
 export 'pages/notification_preferences/notification_preferences_page.dart'
     show NotificationPreferencesPage;
 export 'pages/on_demand_jobs/on_demand_jobs_page.dart' show OnDemandJobsPage;
+export 'pages/post_service/post_service_page.dart' show PostServicePage;
 // Projects (SHPH-134)
 export 'pages/projects/project_create_page.dart' show ProjectCreatePage;
 export 'pages/projects/project_detail_page.dart' show ProjectDetailPage;
 export 'pages/projects/project_list_page.dart' show ProjectListPage;
-// Provider Suite
-export 'pages/my_services/my_services_page.dart' show MyServicesPage;
-export 'pages/post_service/post_service_page.dart' show PostServicePage;
 export 'pages/provider_analytics/provider_analytics_page.dart'
     show ProviderAnalyticsPage;
 export 'pages/provider_availability/provider_availability_page.dart'
@@ -116,6 +121,8 @@ export 'pages/provider_dashboard/provider_dashboard_page.dart'
 export 'pages/provider_home/provider_home_page.dart' show ProviderHomePage;
 export 'pages/provider_profile/provider_profile_page.dart'
     show ProviderProfilePage;
+export 'pages/recommendations/recommendations_page.dart'
+    show RecommendationsPage;
 export 'pages/review_scan/review_scan_page.dart' show ReviewScanPage;
 // Rooms (SHPH-133)
 export 'pages/rooms/room_create_page.dart' show RoomCreatePage;
@@ -126,8 +133,7 @@ export 'pages/rooms/room_list_page.dart' show RoomListPage;
 export 'pages/sessions/sessions_page.dart' show SessionsPage;
 // Discovery & Support
 export 'pages/subcategory/subcategory_page.dart' show SubcategoryPage;
-export 'pages/recommendations/recommendations_page.dart'
-    show RecommendationsPage;
+export 'pages/theme_settings/theme_settings_page.dart' show ThemeSettingsPage;
 export 'pages/tm_flow/tm_active_job_screen.dart' show TMActiveJobScreen;
 export 'pages/tm_flow/tm_broadcast_screen.dart' show TMBroadcastScreen;
 export 'pages/tm_flow/tm_estimate_screen.dart' show TMEstimateScreen;
@@ -137,3 +143,4 @@ export 'pages/tm_flow/tm_rating_screen.dart' show TMRatingScreen;
 export 'pages/tm_flow/tm_sub_category_screen.dart' show TMSubCategoryScreen;
 // Wallet & Payments
 export 'pages/wallet/wallet_page.dart' show WalletPage;
+export 'pages/write_review/write_review_page.dart' show WriteReviewPage;
