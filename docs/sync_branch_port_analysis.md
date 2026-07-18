@@ -10,6 +10,42 @@ The source branch should not be merged directly into `develop`. Git reports 97 m
 
 The safest approach is to manually port selected features in small, testable batches while retaining the newer API and authentication work already present on `develop`.
 
+## Implementation tracker
+
+Working branch: `feature/safe-sync-port`
+
+| Batch | Status | Commit | Validation |
+| --- | --- | --- | --- |
+| Analysis and porting guide | Complete | `68e4e0a` | Branch comparison documented |
+| Safe standalone utilities | Complete | `57bb0d2` | 10 focused tests passed; scoped analysis has no errors or warnings |
+| Runtime safety guardrails | Complete | `a7db350` | 8 focused tests passed; scoped analysis reports no issues |
+| App-level guardrail integration | Pending | - | Requires lifecycle, UX, and logout policy decisions |
+| Realtime communication | Pending | - | Requires deployed WebSocket and ICE/TURN verification |
+| Projects | Pending | - | Requires deployed API contract verification |
+| Rooms | Pending | - | Requires deployed API contract verification |
+| Supabase and Node cleanup | Pending | - | Requires runtime/deployment usage audit |
+
+### Completed: safe standalone utilities
+
+- Added shared numeric and API parsing formatters.
+- Added system-sound feedback with an enable/disable control.
+- Added external and WebView PDF preview support.
+- Added a proper 404 page and router fallback.
+- Added formatter and sound-service tests.
+
+### Completed: runtime safety guardrails
+
+- Added SHPH-host reachability monitoring instead of probing a third-party host.
+- Added idempotent network monitoring with observable online/offline changes.
+- Added inactivity warning and timeout events with activity reset and cancellation.
+- Added biometric/device step-up verification that fails closed.
+- Deliberately excluded the source branch's unverified password fallback.
+- Kept logout and navigation outside the timer service to avoid unexpected auth mutations without a valid widget context.
+
+### Known baseline issue
+
+Full-project `flutter analyze` is currently blocked by pre-existing errors in `integration_test/feature_smoke_test.dart`, including a stale `package:serbisyo_ph/main.dart` import and incomplete syntax. New batches must continue to pass scoped analysis and must not add errors to the baseline.
+
 ## Recommended implementation order
 
 ### 1. Realtime calls and WebSocket support
@@ -106,9 +142,20 @@ The local Node backend and deployment assets should only be removed after confir
 
 ### Batch A: Utilities
 
-- Add numeric formatters and tests.
-- Add `NotFoundPage`, sound, and PDF preview utilities where needed.
-- Run focused tests and `flutter analyze`.
+- [x] Add numeric formatters and tests.
+- [x] Add `NotFoundPage`, sound, and PDF preview utilities where needed.
+- [x] Run focused tests and scoped `flutter analyze`.
+
+### Batch A2: Runtime guardrails
+
+- [x] Add SHPH API host reachability monitoring.
+- [x] Add inactivity warning and timeout primitives.
+- [x] Add fail-closed biometric/device step-up verification.
+- [x] Add focused tests and run scoped analysis.
+- [ ] Integrate network state with user-facing offline messaging.
+- [ ] Integrate inactivity tracking with authenticated app lifecycle.
+- [ ] Define and implement timeout warning and logout navigation UX.
+- [ ] Apply step-up verification to selected sensitive actions.
 
 ### Batch B: Realtime communication
 
