@@ -16,6 +16,7 @@ import 'index.dart';
 import 'l10n/app_localizations.dart';
 import 'services/error_handler.dart';
 import 'services/logging_service.dart';
+import 'widgets/app_guardrail_scope.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -68,6 +69,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   ThemeMode _themeMode = AppTheme.themeMode;
+  bool _isAuthenticated = loggedIn;
 
   late AppStateNotifier _appStateNotifier;
   late GoRouter _router;
@@ -92,6 +94,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
 
+    ErrorHandler.scaffoldMessengerKey ??= GlobalKey<ScaffoldMessengerState>();
     _appStateNotifier = AppStateNotifier.instance;
     _router =
         AppRouter.createRouter(_appStateNotifier, appState: widget.appState);
@@ -100,6 +103,9 @@ class _MyAppState extends State<MyApp> {
     userStream = serbisyoHubPHShphUserStream()
       ..listen((user) {
         _appStateNotifier.update(user);
+        if (mounted && _isAuthenticated != user.loggedIn) {
+          setState(() => _isAuthenticated = user.loggedIn);
+        }
       });
 
     // Start automatic token refresh monitoring
@@ -137,6 +143,20 @@ class _MyAppState extends State<MyApp> {
         _themeMode = mode;
         AppTheme.saveThemeMode(mode);
       });
+
+  Future<void> _handleSessionTimeout() async {
+    await authManager.signOut();
+    final signedOutUser = currentUser;
+    if (signedOutUser != null) {
+      _appStateNotifier.update(signedOutUser);
+    }
+    if (!mounted) {
+      return;
+    }
+    setState(() => _isAuthenticated = false);
+    ErrorHandler.showInfo('Your session expired. Please sign in again.');
+    _router.go(SignOptionsWidget.routePath);
+  }
 
   List<Locale> get _supportedLocales => const [
         Locale('en', ''),
@@ -177,6 +197,11 @@ class _MyAppState extends State<MyApp> {
           themeMode: _themeMode,
           routerConfig: _router,
           scaffoldMessengerKey: ErrorHandler.scaffoldMessengerKey,
+          builder: (context, child) => AppGuardrailScope(
+            authenticated: _isAuthenticated,
+            onSessionTimeout: _handleSessionTimeout,
+            child: child ?? const SizedBox.shrink(),
+          ),
         ),
       );
 }
