@@ -184,6 +184,37 @@ Result: the mobile signaling model and REST paths are client-contract verified,
 but live transport remains gated until the Django backend/deployment and TURN
 service are inspected or tested directly.
 
+#### Production WebSocket verification
+
+Production value supplied on 2026-07-18:
+
+```text
+VITE_WS_URL=wss://serbisyohubph.com/ws
+```
+
+Mobile configuration now uses the equivalent default:
+
+```text
+SHPH_WS_URL=wss://serbisyohubph.com/ws
+```
+
+Verification results:
+
+- DNS resolves and TCP/TLS port 443 is reachable.
+- Caddy proxies the host to Daphne.
+- An HTTP/1.1 WebSocket upgrade request to `/ws/chat/` with the expected
+  `shph-auth` subprotocol and an intentionally invalid token receives
+  `403 Forbidden`.
+- The controlled rejection confirms that the production WebSocket path and
+  authentication boundary are reachable without using or exposing a real JWT.
+
+Still required before enabling live calls:
+
+- Successful `101 Switching Protocols` with a valid test-user JWT.
+- Two authorized users exchanging a `call_signal` message.
+- Unauthorized thread/target tests proving server-side access control.
+- TURN relay verification on separate restrictive networks.
+
 ### Known baseline issue
 
 Full-project `flutter analyze` is currently blocked by pre-existing errors in `integration_test/feature_smoke_test.dart`, including a stale `package:serbisyo_ph/main.dart` import and incomplete syntax. New batches must continue to pass scoped analysis and must not add errors to the baseline.
@@ -304,7 +335,8 @@ The local Node backend and deployment assets should only be removed after confir
 - [x] Add validated signaling message models and envelope adapter.
 - [x] Add configurable ICE/STUN/TURN foundation.
 - [x] Add a transport-independent peer abstraction.
-- [ ] Verify WebSocket and TURN deployment contracts.
+- [ ] Complete WebSocket authorization and TURN deployment verification
+  (route and invalid-auth rejection are confirmed).
 - [ ] Add WebSocket transport and lifecycle handling.
 - [ ] Add the WebRTC controller and concrete peer adapter.
 - [ ] Integrate incoming/outgoing calls with chat.
