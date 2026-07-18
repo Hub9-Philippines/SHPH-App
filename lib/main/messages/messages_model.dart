@@ -75,12 +75,24 @@ class MessagesModel extends FlutterFlowModel<MessagesWidget> {
         ChatService.instance.threadUpdateStream.listen(
       (_) => _refreshChatRooms(),
     );
+
+    // Load chat rooms and call history in parallel.
+    await Future.wait([
+      _loadThreads(),
+      _loadCallHistory(),
+    ]);
+
+    isLoading = false;
+    onStateChanged?.call();
+  }
+
+  Future<void> _loadThreads() async {
     try {
       final rooms = await ChatService.instance.getChatRooms();
       if (rooms.isEmpty) {
         await Future.delayed(const Duration(milliseconds: 1500));
-        isLoading = false;
-        onStateChanged?.call();
+        chatRooms = const [];
+        _syncUnreadCount();
         return;
       }
 
@@ -125,9 +137,41 @@ class MessagesModel extends FlutterFlowModel<MessagesWidget> {
     } catch (e) {
       chatRooms = const [];
       _syncUnreadCount();
-    } finally {
-      isLoading = false;
-      onStateChanged?.call();
+    }
+  }
+
+  Future<void> _loadCallHistory() async {
+    try {
+      final calls = await ChatService.instance.getCallHistory();
+      callHistory = calls.map((c) {
+        final id = c['id']?.toString() ?? '';
+        final participant = c['other_participant'] as Map? ?? {};
+        final providerName =
+            participant['display_name']?.toString() ?? 'Unknown';
+        final providerPhoto = participant['photo_url']?.toString() ?? '';
+        final callType = c['call_type']?.toString() ?? 'video';
+        final callStatus = c['status']?.toString() ?? 'completed';
+        final durationSeconds =
+            (c['duration_seconds'] ?? c['duration'] ?? 0) as int? ?? 0;
+
+        DateTime? createdAt;
+        final ca = c['created_at'];
+        if (ca is String) {
+          createdAt = DateTime.tryParse(ca);
+        }
+
+        return CallHistory(
+          id: id,
+          providerName: providerName,
+          providerPhoto: providerPhoto,
+          callType: callType,
+          callStatus: callStatus,
+          durationSeconds: durationSeconds,
+          createdAt: createdAt,
+        );
+      }).toList();
+    } catch (_) {
+      callHistory = const [];
     }
   }
 

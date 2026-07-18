@@ -179,4 +179,18 @@ class ChatService {
       return null;
     }
   }
+
+  /// Fetch call history from the SHPH API.
+  Future<List<Map<String, dynamic>>> getCallHistory() async {
+    try {
+      final resp = await _chatApi.listCalls();
+      final results = resp['results'];
+      if (results is List) {
+        return List<Map<String, dynamic>>.from(results);
+      }
+    } catch (e) {
+      LoggingService.error('getCallHistory failed: $e', tag: 'ChatService');
+    }
+    return [];
+  }
 }

@@ -71,6 +71,7 @@ class CallController extends ChangeNotifier {
   bool get isCameraOff => _isCameraOff;
   CallPeer? get peer => _peer;
   bool get isBusy => _status != CallStatus.idle && _status != CallStatus.ended;
+  DateTime? get connectedAt => _connectedAt;
 
   // ---- Caller ----
   Future<void> initiateCall({

@@ -1,11 +1,46 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '/services/call/call_controller.dart';
 import '/services/call/call_peer.dart';
 
-class CallPage extends StatelessWidget {
+class CallPage extends StatefulWidget {
   const CallPage({super.key});
+
+  @override
+  State<CallPage> createState() => _CallPageState();
+}
+
+class _CallPageState extends State<CallPage> {
+  Timer? _durationTimer;
+  Duration _elapsed = Duration.zero;
+
+  @override
+  void dispose() {
+    _durationTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startTimer(DateTime connectedAt) {
+    _durationTimer?.cancel();
+    _elapsed = DateTime.now().difference(connectedAt);
+    _durationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        setState(() {
+          _elapsed = DateTime.now().difference(connectedAt);
+        });
+      }
+    });
+  }
+
+  String _formatDuration(Duration d) {
+    final h = d.inHours;
+    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return h > 0 ? '$h:$m:$s' : '$m:$s';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,6 +50,7 @@ class CallPage extends StatelessWidget {
     // Auto-close when the call is over.
     if (controller.status == CallStatus.idle ||
         controller.status == CallStatus.ended) {
+      _durationTimer?.cancel();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (Navigator.of(context).canPop()) {
           Navigator.of(context).maybePop();
@@ -22,12 +58,25 @@ class CallPage extends StatelessWidget {
       });
     }
 
+    // Start/stop duration timer based on connection state.
+    if (controller.status == CallStatus.connected &&
+        controller.connectedAt != null &&
+        _durationTimer == null) {
+      _startTimer(controller.connectedAt!);
+    } else if (controller.status != CallStatus.connected) {
+      _durationTimer?.cancel();
+      _durationTimer = null;
+      _elapsed = Duration.zero;
+    }
+
     final statusLabel = switch (controller.status) {
       CallStatus.outgoing => 'Calling…',
       CallStatus.connecting => 'Connecting…',
-      CallStatus.connected => 'Connected',
+      CallStatus.connected => _formatDuration(_elapsed),
       _ => '',
     };
+
+    final photoUrl = controller.participant?.photoUrl;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -52,6 +101,18 @@ class CallPage extends StatelessWidget {
             right: 0,
             child: Column(
               children: [
+                if (photoUrl != null && photoUrl.isNotEmpty)
+                  CircleAvatar(
+                    radius: 32,
+                    backgroundImage: NetworkImage(photoUrl),
+                  )
+                else
+                  const CircleAvatar(
+                    radius: 32,
+                    backgroundColor: Colors.white24,
+                    child: Icon(Icons.person, color: Colors.white, size: 32),
+                  ),
+                const SizedBox(height: 12),
                 Text(controller.participant?.name ?? '',
                     style: const TextStyle(color: Colors.white, fontSize: 20)),
                 Text(statusLabel,
