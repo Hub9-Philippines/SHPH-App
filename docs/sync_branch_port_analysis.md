@@ -23,7 +23,7 @@ Working branch: `feature/safe-sync-port`
 | Sensitive-action step-up | Complete | `6b63260` | Guardrail tests pass; payout and session operations fail closed |
 | Privacy-safe crash boundary | Complete | `e019296` | 15 guardrail tests passed; focused crash analysis reports no issues |
 | Token and OTP protection | Complete | `8a952dc` | 22 combined guardrail tests passed; scoped analysis reports no issues |
-| Realtime communication | In progress | `efe612b` | Protocol foundation: 9 tests passed; transport remains gated |
+| Realtime communication | In progress | `efe612b`, `05509ff` | Protocol and guarded transport: 15 focused tests passed |
 | Projects | Pending | - | Requires deployed API contract verification |
 | Rooms | Pending | - | Requires deployed API contract verification |
 | Supabase and Node cleanup | Pending | - | Requires runtime/deployment usage audit |
@@ -128,6 +128,14 @@ Completed foundation work:
 - Made STUN and TURN URLs configurable with build-time values.
 - Requires both a TURN username and credential before TURN is enabled.
 - Removed the source branch's hardcoded TURN host assumption.
+- Added the source-referenced `web_socket_channel` dependency.
+- Added an injectable WebSocket transport using `/ws/chat/` and
+  `['shph-auth', token]` authentication.
+- Rejects missing and expired access tokens before opening a socket.
+- Sends heartbeat pings and forces reconnect after prolonged silence.
+- Uses bounded exponential reconnect and stops after an explicit disconnect.
+- Discards malformed inbound JSON without terminating the message stream.
+- Avoids logging JWTs and signaling payload contents.
 
 Remaining gates before live calls can be enabled:
 
@@ -337,7 +345,7 @@ The local Node backend and deployment assets should only be removed after confir
 - [x] Add a transport-independent peer abstraction.
 - [ ] Complete WebSocket authorization and TURN deployment verification
   (route and invalid-auth rejection are confirmed).
-- [ ] Add WebSocket transport and lifecycle handling.
+- [x] Add WebSocket transport and lifecycle handling.
 - [ ] Add the WebRTC controller and concrete peer adapter.
 - [ ] Integrate incoming/outgoing calls with chat.
 - [ ] Add controller and call widget tests.
