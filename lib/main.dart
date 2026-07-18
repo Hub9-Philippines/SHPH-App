@@ -15,11 +15,13 @@ import 'flutter_flow/flutter_flow_util.dart';
 import 'index.dart';
 import 'l10n/app_localizations.dart';
 import 'services/error_handler.dart';
+import 'services/crash_reporting_service.dart';
 import 'services/logging_service.dart';
 import 'widgets/app_guardrail_scope.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await CrashReportingService.initialize();
   GoRouter.optionURLReflectsImperativeAPIs = true;
   usePathUrlStrategy();
 
