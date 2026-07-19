@@ -24,7 +24,7 @@ Working branch: `feature/safe-sync-port`
 | Privacy-safe crash boundary | Complete | `e019296` | 15 guardrail tests passed; focused crash analysis reports no issues |
 | Token and OTP protection | Complete | `8a952dc` | 22 combined guardrail tests passed; scoped analysis reports no issues |
 | Realtime communication | In progress | `efe612b`, `05509ff`, `9aebee8`, `9533e9b`, `0bd121f`, `54b1e48` | Core: 33 focused tests passed; call page: 3 widget tests passed |
-| Projects | In progress | `fdbb94a` | Models and guarded API resource: 8 focused tests passed |
+| Projects | In progress | `fdbb94a`, `61c2b90` | Models, API, and application controller: 15 focused tests passed |
 | Rooms | Pending | - | Requires deployed API contract verification |
 | Supabase and Node cleanup | Pending | - | Requires runtime/deployment usage audit |
 
@@ -261,6 +261,7 @@ The Batch C foundation is adapted from these source-branch files:
 
 - `lib/api/models/project.dart`
 - `lib/api/resources/projects_api.dart`
+- `lib/services/projects_controller.dart`
 
 Contract evidence:
 
@@ -283,11 +284,21 @@ Completed foundation work:
   limits, actions, and agreed prices before network access.
 - Eight focused model and API contract tests pass; scoped analysis reports no
   issues.
+- Added non-UI loading, detail, creation, quote, matching, prospect-action,
+  and cancellation state management.
+- Serializes project operations to prevent duplicate mutations and preserves
+  cached project lists when a request fails.
+- Refreshes server-authoritative project detail after matching and prospect
+  actions.
+- Corrected the source resource contract: matching returns a role line and a
+  prospect action returns a prospect, consistent with `shph-web`.
+- Fifteen combined Projects tests pass; scoped analysis reports no issues.
 
 Remaining Projects work:
 
-- Add project list, create, and detail application boundaries.
-- Add authenticated routes and quote/matching action tests.
+- Add authenticated routes and route-level quote/matching action tests.
+- Add minimal project list/create/detail route surfaces when navigation is
+  ready to consume the controller.
 - Verify representative responses with an authorized deployed test account.
 
 ### Known baseline issue
@@ -425,7 +436,8 @@ The local Node backend and deployment assets should only be removed after confir
 
 - [x] Verify the contract against the production web client.
 - [x] Add guarded models and API resource.
-- [ ] Add list, create, detail, quote, and matching application interfaces.
+- [x] Add non-UI list, create, detail, quote, match, prospect, and cancellation
+  application interfaces.
 - [x] Add focused model and API resource tests.
 - [ ] Add authenticated routes and action tests.
 - [ ] Validate with an authorized deployed test account.
