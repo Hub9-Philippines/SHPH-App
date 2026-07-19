@@ -386,7 +386,9 @@ The following models exist but are missing fields defined in the YAML schema:
 
 ## 7. Backend Entity Gaps (Flutter models vs Supabase schema)
 
-The backend (`backend/`) uses Supabase-generated entities. These need alignment with the YAML schema:
+Historical note: the retired Node backend used Supabase-generated entities. It
+has been removed; current schema alignment must target the deployed SHPH API and
+the YAML contract:
 
 | Entity | Missing YAML Fields | Has Supabase Table? | Has Flutter Model? |
 |--------|---------------------|-------------------|-------------------|

@@ -442,12 +442,11 @@ Removal criteria:
 4. Build Android release and debug artifacts.
 5. Test login, signup, OTP, token refresh, uploads, bookings, chat, and payments against a deployed API environment.
 
-The Flutter application contains no reference to the local `backend/src` or
+The Flutter application contained no reference to the retired `backend/src` or
 `backend/dist` server. The chatbot calls `ShphSupportApi`, so OpenRouter
 credentials are not embedded in or called directly by the app. The standalone
-Node tree still includes historical OpenRouter and AWS deployment artifacts;
-because repository/deployment ownership cannot be proven from mobile runtime
-code, it is retained and flagged for archive/repository-owner confirmation.
+Node tree and its AWS deployment workflow were removed after the repository
+owner confirmed AWS is no longer used.
 The Firebase functions directory does not currently implement the chatbot.
 
 ## Proposed delivery batches
@@ -510,15 +509,15 @@ The Firebase functions directory does not currently implement the chatbot.
 - [x] Remove redundant direct Supabase client dependency declarations.
 - [x] Confirm the Flutter runtime does not reference the standalone Node server.
 - [x] Confirm OpenRouter traffic is routed through `ShphSupportApi`.
-- [x] Record the Node backend as an archive/ownership decision; retain it until
-  deployment ownership is confirmed.
+- [x] Remove the retired standalone Node backend and AWS deployment workflow
+  after deployment ownership was confirmed.
 - [x] Re-run combined scoped analysis and focused tests (30 tests pass; no
   analysis issues).
 - [x] Build an Android debug APK after dependency cleanup.
 - [ ] Re-run the release APK build before production distribution.
 
 Local delivery-batch implementation is complete. Remaining unchecked items are
-deployed-environment, physical-device, repository-ownership, or release-candidate
+deployed-environment, physical-device, or release-candidate
 verification gates; they do not require additional source porting from
 `feature/sync-from-shph-main`.
 

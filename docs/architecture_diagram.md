@@ -1,5 +1,9 @@
 # SerbisyoHub PH — Architecture Diagrams
 
+> Historical snapshot: references to the repository-local Express/AWS backend
+> describe retired infrastructure removed in July 2026. The mobile runtime now
+> uses the deployed SHPH API.
+
 > Generated from codebase exploration. The app currently runs in **Supabase-primary mode**; the SHPH REST API layer is wired but disabled via `ApiConfig.preferShphApi = false`.
 
 ---

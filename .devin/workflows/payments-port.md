@@ -142,9 +142,9 @@ Pages to create:
 - `lib/pages/payment_modal/payment_modal_widget.dart` — Pay-now modal (amount, voucher input, payment method selector)
 - `lib/pages/tip_modal/tip_modal_widget.dart` — Add tip after service completion
 
-### 4. Backend Routes (Express)
+### 4. SHPH API Contract
 
-Add to `backend/src/routes/`:
+Verify or request these routes in the deployed SHPH API:
 - `POST /api/payments/create-intent` — Create PayMongo intent
 - `POST /api/payments/confirm` — Confirm payment
 - `GET /api/payments/booking/:bookingId` — Get payment status
@@ -155,8 +155,7 @@ Add to `backend/src/routes/`:
 
 ### 5. PayMongo Integration
 
-- Use `paymongo` npm package in backend
-- Environment variables: `PAYMONGO_SECRET_KEY`, `PAYMONGO_WEBHOOK_SECRET`, `PAYMONGO_CURRENCY` (PHP)
+- Keep PayMongo SDK usage and secrets in the deployed SHPH API
 - Amount in centavos (×100)
 - Payment methods allowed: card, gcash, paymaya, grab_pay
 - 3D Secure: `request_three_d_secure: "any"` for cards
