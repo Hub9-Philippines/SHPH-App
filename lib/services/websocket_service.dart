@@ -62,6 +62,7 @@ class ShphWebSocketService {
   StreamSubscription<dynamic>? _subscription;
   Timer? _heartbeatTimer;
   Timer? _reconnectTimer;
+  Future<bool>? _connectFuture;
   ShphConnectionState _state = ShphConnectionState.disconnected;
   DateTime? _lastInboundAt;
   bool _manualDisconnect = false;
@@ -79,10 +80,23 @@ class ShphWebSocketService {
     return '$normalized/chat/';
   }
 
-  Future<bool> connect() async {
+  Future<bool> connect() {
+    if (isConnected) {
+      return Future<bool>.value(true);
+    }
+    final pending = _connectFuture;
+    if (pending != null) {
+      return pending;
+    }
     _manualDisconnect = false;
     _reconnectAttempts = 0;
-    return _connect(resetBudget: true);
+    final connection = _connect(resetBudget: true);
+    _connectFuture = connection;
+    return connection.whenComplete(() {
+      if (identical(_connectFuture, connection)) {
+        _connectFuture = null;
+      }
+    });
   }
 
   Future<bool> _connect({required bool resetBudget}) async {
@@ -127,6 +141,10 @@ class ShphWebSocketService {
       );
       await socket.ready;
       if (_socket != socket || _manualDisconnect) {
+        if (_socket == socket) {
+          await _closeSocket();
+          _setState(ShphConnectionState.disconnected);
+        }
         return false;
       }
       _lastInboundAt = DateTime.now();

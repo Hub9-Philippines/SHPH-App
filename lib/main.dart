@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
@@ -5,7 +7,12 @@ import 'package:provider/provider.dart';
 
 import '/api/shph_api.dart';
 import '/flutter_flow/token_refresh_manager.dart';
+import '/pages/call/call_page.dart';
+import '/pages/call/incoming_call_overlay.dart';
 import '/router/app_router.dart';
+import '/services/call/call_controller.dart';
+import '/services/call/call_controller_factory.dart';
+import '/services/websocket_service.dart';
 import '/theme/app_theme.dart';
 // Authentication imports - Using SHPH API for auth
 import 'auth/auth_manager_factory.dart';
@@ -74,7 +81,10 @@ class _MyAppState extends State<MyApp> {
   bool _isAuthenticated = loggedIn;
 
   late AppStateNotifier _appStateNotifier;
+  late CallController _callController;
   late GoRouter _router;
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  bool _callPageOpen = false;
   Locale _locale = const Locale('en', '');
 
   String getRoute([RouteMatch? routeMatch]) {
@@ -98,8 +108,12 @@ class _MyAppState extends State<MyApp> {
 
     ErrorHandler.scaffoldMessengerKey ??= GlobalKey<ScaffoldMessengerState>();
     _appStateNotifier = AppStateNotifier.instance;
-    _router =
-        AppRouter.createRouter(_appStateNotifier, appState: widget.appState);
+    _callController = buildProductionCallController();
+    _router = AppRouter.createRouter(
+      _appStateNotifier,
+      appState: widget.appState,
+      navigatorKey: _navigatorKey,
+    );
 
     // Use SHPH user stream for auth state management
     userStream = serbisyoHubPHShphUserStream()
@@ -108,7 +122,16 @@ class _MyAppState extends State<MyApp> {
         if (mounted && _isAuthenticated != user.loggedIn) {
           setState(() => _isAuthenticated = user.loggedIn);
         }
+        if (user.loggedIn) {
+          unawaited(ShphWebSocketService.instance.connect());
+        } else {
+          unawaited(_disconnectCalls());
+        }
       });
+
+    if (_isAuthenticated) {
+      unawaited(ShphWebSocketService.instance.connect());
+    }
 
     // Start automatic token refresh monitoring
     TokenRefreshManager().startTokenRefreshMonitoring();
@@ -138,7 +161,31 @@ class _MyAppState extends State<MyApp> {
   @override
   void dispose() {
     widget.appState.removeListener(_onAppStateChanged);
+    _callController.dispose();
+    unawaited(ShphWebSocketService.instance.disconnect());
     super.dispose();
+  }
+
+  Future<void> _disconnectCalls() async {
+    if (_callController.isBusy) {
+      await _callController.endCall(reason: 'session_ended');
+    }
+    await ShphWebSocketService.instance.disconnect();
+  }
+
+  Future<void> _openCallPage() async {
+    final navigator = _navigatorKey.currentState;
+    if (navigator == null || _callPageOpen) {
+      return;
+    }
+    _callPageOpen = true;
+    try {
+      await navigator.push<void>(
+        MaterialPageRoute<void>(builder: (_) => const CallPage()),
+      );
+    } finally {
+      _callPageOpen = false;
+    }
   }
 
   void setThemeMode(ThemeMode mode) => safeSetState(() {
@@ -147,6 +194,7 @@ class _MyAppState extends State<MyApp> {
       });
 
   Future<void> _handleSessionTimeout() async {
+    await _disconnectCalls();
     await authManager.signOut();
     final signedOutUser = currentUser;
     if (signedOutUser != null) {
@@ -175,34 +223,42 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) =>
-      ChangeNotifierProvider<FFAppState>.value(
-        value: widget.appState,
-        child: MaterialApp.router(
-          debugShowCheckedModeBanner: false,
-          title: 'SerbisyoHub PH',
-          locale: _locale,
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-            AppLocalizations.delegate,
-          ],
-          supportedLocales: _supportedLocales,
-          theme: ThemeData(
-            brightness: Brightness.light,
-            useMaterial3: false,
-          ),
-          darkTheme: ThemeData(
-            brightness: Brightness.dark,
-            useMaterial3: false,
-          ),
-          themeMode: _themeMode,
-          routerConfig: _router,
-          scaffoldMessengerKey: ErrorHandler.scaffoldMessengerKey,
-          builder: (context, child) => AppGuardrailScope(
-            authenticated: _isAuthenticated,
-            onSessionTimeout: _handleSessionTimeout,
-            child: child ?? const SizedBox.shrink(),
+      ChangeNotifierProvider<CallController>.value(
+        value: _callController,
+        child: ChangeNotifierProvider<FFAppState>.value(
+          value: widget.appState,
+          child: MaterialApp.router(
+            debugShowCheckedModeBanner: false,
+            title: 'SerbisyoHub PH',
+            locale: _locale,
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+              AppLocalizations.delegate,
+            ],
+            supportedLocales: _supportedLocales,
+            theme: ThemeData(
+              brightness: Brightness.light,
+              useMaterial3: false,
+            ),
+            darkTheme: ThemeData(
+              brightness: Brightness.dark,
+              useMaterial3: false,
+            ),
+            themeMode: _themeMode,
+            routerConfig: _router,
+            scaffoldMessengerKey: ErrorHandler.scaffoldMessengerKey,
+            builder: (context, child) => AppGuardrailScope(
+              authenticated: _isAuthenticated,
+              onSessionTimeout: _handleSessionTimeout,
+              child: Stack(
+                children: [
+                  child ?? const SizedBox.shrink(),
+                  IncomingCallOverlay(onAccepted: _openCallPage),
+                ],
+              ),
+            ),
           ),
         ),
       );

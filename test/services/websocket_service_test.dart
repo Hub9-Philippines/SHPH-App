@@ -43,6 +43,28 @@ void main() {
     expect(connectorCalls, 0);
   });
 
+  test('shares an in-flight connection handshake', () async {
+    final token = Completer<String?>();
+    var connectorCalls = 0;
+    final service = ShphWebSocketService(
+      connector: (_, __) {
+        connectorCalls++;
+        return FakeSocket();
+      },
+      tokenProvider: () => token.future,
+      urlProvider: () => 'wss://serbisyohubph.com/ws',
+      heartbeatInterval: const Duration(hours: 1),
+    );
+    addTearDown(service.dispose);
+
+    final first = service.connect();
+    final second = service.connect();
+    token.complete('test-token');
+
+    expect(await Future.wait([first, second]), [isTrue, isTrue]);
+    expect(connectorCalls, 1);
+  });
+
   test('publishes valid JSON and discards malformed messages', () async {
     final socket = FakeSocket();
     final service = ShphWebSocketService(

@@ -106,8 +106,13 @@ class AppRouter {
   // Private constructor to prevent instantiation
   AppRouter._();
 
-  static GoRouter createRouter(dynamic appStateNotifier, {dynamic appState}) =>
+  static GoRouter createRouter(
+    dynamic appStateNotifier, {
+    dynamic appState,
+    GlobalKey<NavigatorState>? navigatorKey,
+  }) =>
       GoRouter(
+        navigatorKey: navigatorKey,
         initialLocation: '/',
         debugLogDiagnostics: true,
         refreshListenable: appStateNotifier,
@@ -491,8 +496,7 @@ class AppRouter {
           GoRoute(
             path: NotificationPreferencesWidget.routePath,
             name: NotificationPreferencesWidget.routeName,
-            builder: (context, state) =>
-                const NotificationPreferencesWidget(),
+            builder: (context, state) => const NotificationPreferencesWidget(),
           ),
           GoRoute(
             path: ProEditProfileWidget.routePath,
