@@ -86,8 +86,8 @@ class ShphProjectsApi {
     );
   }
 
-  Future<ShphProject> match(int id, {required int roleLineId}) async =>
-      ShphProject.fromJson(
+  Future<ShphProjectRoleLine> match(int id, {required int roleLineId}) async =>
+      ShphProjectRoleLine.fromJson(
         await _transport.post(
           '/api/projects/${_validId(id)}/match/',
           data: {'role_line_id': _validId(roleLineId)},
@@ -98,11 +98,11 @@ class ShphProjectsApi {
         await _transport.post('/api/projects/${_validId(id)}/cancel/'),
       );
 
-  Future<Map<String, dynamic>> prospectAction({
+  Future<ShphProjectProspect> prospectAction({
     required int prospectId,
     required String action,
     double? agreedPrice,
-  }) {
+  }) async {
     final normalizedAction = action.trim();
     if (normalizedAction.isEmpty) {
       throw const FormatException('Project prospect action is required');
@@ -110,13 +110,15 @@ class ShphProjectsApi {
     if (agreedPrice != null && (!agreedPrice.isFinite || agreedPrice < 0)) {
       throw const FormatException('Agreed price must be a non-negative number');
     }
-    return _transport.post(
-      '/api/projects/prospects/action/',
-      data: {
-        'prospect_id': _validId(prospectId),
-        'action': normalizedAction,
-        if (agreedPrice != null) 'agreed_price': agreedPrice,
-      },
+    return ShphProjectProspect.fromJson(
+      await _transport.post(
+        '/api/projects/prospects/action/',
+        data: {
+          'prospect_id': _validId(prospectId),
+          'action': normalizedAction,
+          if (agreedPrice != null) 'agreed_price': agreedPrice,
+        },
+      ),
     );
   }
 

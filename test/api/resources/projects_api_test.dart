@@ -56,9 +56,13 @@ void main() {
       'context_hint': 'urgent',
       'max_role_lines': 3,
     });
-    await api.match(7, roleLineId: 8);
+    transport.response = {'id': 8, 'role_label': 'Electrician', 'headcount': 2};
+    final roleLine = await api.match(7, roleLineId: 8);
     expect(transport.last.path, '/api/projects/7/match/');
     expect(transport.last.data, {'role_line_id': 8});
+    expect(roleLine.id, 8);
+    expect(roleLine.roleLabel, 'Electrician');
+    transport.response = {'id': 7, 'title': 'Project', 'description': 'Work'};
     await api.cancel(7);
     expect(transport.last.path, '/api/projects/7/cancel/');
   });
@@ -72,7 +76,7 @@ void main() {
       agreedPrice: 1500,
     );
 
-    expect(result['status'], 'accepted');
+    expect(result.status, 'accepted');
     expect(transport.last.path, '/api/projects/prospects/action/');
     expect(transport.last.data, {
       'prospect_id': 3,
