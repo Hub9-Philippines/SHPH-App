@@ -156,6 +156,30 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                             _buildQuickActions(),
                             const SizedBox(height: 22),
                             _ProfileSection(
+                              title: 'Plan & collaborate',
+                              children: [
+                                _ProfileMenuTile(
+                                  icon: Icons.assignment_rounded,
+                                  iconTint: const Color(0xFF7C5CFC),
+                                  title: 'Projects',
+                                  subtitle:
+                                      'Plan larger jobs, quotes, and provider teams',
+                                  onTap: () => context
+                                      .pushNamed(ProjectListPage.routeName),
+                                ),
+                                _ProfileMenuTile(
+                                  icon: Icons.groups_rounded,
+                                  iconTint: const Color(0xFF0F8A6C),
+                                  title: 'Service rooms',
+                                  subtitle:
+                                      'Create, join, and manage group services',
+                                  onTap: () =>
+                                      context.pushNamed(RoomListPage.routeName),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 18),
+                            _ProfileSection(
                               title: 'Account',
                               children: [
                                 _ProfileMenuTile(

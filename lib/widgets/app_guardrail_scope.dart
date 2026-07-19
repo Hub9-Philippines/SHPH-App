@@ -139,20 +139,36 @@ class _AppGuardrailScopeState extends State<AppGuardrailScope>
         children: [
           widget.child,
           if (!_online)
-            const Positioned(
+            Positioned(
               top: 0,
               left: 0,
               right: 0,
               child: SafeArea(
                 bottom: false,
                 child: Material(
-                  color: Color(0xFFD84315),
+                  color: const Color(0xFFD84315),
                   child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-                    child: Text(
-                      'No connection to SerbisyoHub. Some actions are unavailable.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white, fontSize: 12),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
+                    child: Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'No connection to SerbisyoHub. Some actions are unavailable.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.white, fontSize: 12),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () =>
+                              unawaited(_network.checkConnection()),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          child: const Text('Retry'),
+                        ),
+                      ],
                     ),
                   ),
                 ),

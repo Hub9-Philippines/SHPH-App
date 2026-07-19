@@ -244,6 +244,28 @@ class AppRouter {
             builder: (context, state) => const PhoneVerifyUserWidget(),
           ),
           GoRoute(
+            path: PhoneRegistrationPage.routePath,
+            name: PhoneRegistrationPage.routeName,
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return PhoneRegistrationPage(
+                initialPhone: extra?['phone'] as String? ?? '',
+              );
+            },
+          ),
+          GoRoute(
+            path: RegistrationOtpPage.routePath,
+            name: RegistrationOtpPage.routeName,
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return RegistrationOtpPage(
+                phone: extra?['phone'] as String? ?? '',
+                email: extra?['email'] as String? ?? '',
+                deliveryMethod: extra?['delivery_method'] as String? ?? 'sms',
+              );
+            },
+          ),
+          GoRoute(
             path: EmailVerifyRegisterWidget.routePath,
             name: EmailVerifyRegisterWidget.routeName,
             builder: (context, state) {

@@ -535,6 +535,23 @@ verification gates; they do not require additional source porting from
   requires authentication, while `/api/auth/register/initiate/` requires the
   complete registration payload.
 
+### UI backlog delivery
+
+- Added a production-compatible full registration form and dedicated OTP
+  verification/resend surface using the server-cached registration contract.
+- Added discoverable Projects and Rooms entries to the Profile Hub.
+- Upgraded Projects with filtered status cards, quote configuration and result
+  presentation, expanded role estimates, prospect details, and prospect actions.
+- Upgraded Rooms with category selection, date/time pickers, expanded event
+  fields, filters, room cards, permission-aware controls, confirmations, and
+  join-token copy/paste UX.
+- Added an explicit call connection/media failure surface and offline retry
+  action without inventing unsupported native audio-routing behavior.
+- Full UI acceptance criteria and remaining device-led polish are tracked in
+  `docs/ui_implementation_backlog.md`.
+- Thirty-eight focused tests pass and the Android debug APK builds with the
+  completed UI integration.
+
 ## Validation gates
 
 Each batch should meet the following requirements before merging:

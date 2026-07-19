@@ -33,6 +33,10 @@ export '/pages/onboarding/onboarding_widget.dart' show OnboardingWidget;
 export '/pages/not_found/not_found_page.dart' show NotFoundPage;
 export '/pages/phone_verify_user/phone_verify_user_widget.dart'
     show PhoneVerifyUserWidget;
+export '/pages/registration/phone_registration_page.dart'
+    show PhoneRegistrationPage;
+export '/pages/registration/registration_otp_page.dart'
+    show RegistrationOtpPage;
 export '/pages/pin_location/pin_location_widget.dart' show PinLocationWidget;
 export '/pages/privacy_policy/privacy_policy_widget.dart'
     show PrivacyPolicyWidget;

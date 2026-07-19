@@ -59,6 +59,8 @@ void main() {
     await _flush(tester);
 
     await tester.tap(find.byKey(const Key('project_quote_btn')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Generate'));
     await _flush(tester);
 
     expect(harness.calls, contains('quote:1'));
@@ -74,7 +76,7 @@ void main() {
     await _flush(tester);
     harness.calls.clear();
 
-    await tester.tap(find.text('Match'));
+    await tester.tap(find.text('Find matches'));
     await _flush(tester);
 
     expect(harness.calls, ['match:1:9', 'detail:1']);

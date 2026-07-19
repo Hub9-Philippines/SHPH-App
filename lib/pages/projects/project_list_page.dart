@@ -20,6 +20,7 @@ class ProjectListPage extends StatefulWidget {
 }
 
 class _ProjectListPageState extends State<ProjectListPage> {
+  String? _status;
   @override
   void initState() {
     super.initState();
@@ -37,6 +38,11 @@ class _ProjectListPageState extends State<ProjectListPage> {
     }
   }
 
+  Future<void> _filter(String? status) async {
+    setState(() => _status = status);
+    await context.read<ProjectsController>().load(status: status);
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<ProjectsController>();
@@ -48,42 +54,92 @@ class _ProjectListPageState extends State<ProjectListPage> {
         icon: const Icon(Icons.add),
         label: const Text('New project'),
       ),
-      body: switch (controller.state) {
-        ProjectsState.loading when controller.projects.isEmpty =>
-          const Center(child: CircularProgressIndicator()),
-        ProjectsState.error when controller.projects.isEmpty => _MessageView(
-            message: controller.errorMessage ?? 'Unable to load projects.',
-            actionLabel: 'Retry',
-            onAction: controller.load,
-          ),
-        _ when controller.projects.isEmpty => _MessageView(
-            message: 'No projects yet.',
-            actionLabel: 'Create project',
-            onAction: _openCreate,
-          ),
-        _ => RefreshIndicator(
-            onRefresh: () async => controller.load(),
-            child: ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-              itemCount: controller.projects.length,
-              separatorBuilder: (_, __) => const Divider(),
-              itemBuilder: (context, index) {
-                final project = controller.projects[index];
-                return ListTile(
-                  key: Key('project_${project.id}'),
-                  title: Text(project.title),
-                  subtitle: Text(
-                    '${project.status} · ${project.estimatedHeadcount} people',
+      body: Column(
+        children: [
+          SizedBox(
+            height: 58,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              children: [
+                for (final entry in const <String?, String>{
+                  null: 'All',
+                  'draft': 'Drafts',
+                  'quoted': 'Quoted',
+                  'matching': 'Matching',
+                  'committed': 'Committed',
+                  'cancelled': 'Cancelled',
+                }.entries)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      label: Text(entry.value),
+                      selected: _status == entry.key,
+                      onSelected: controller.isBusy
+                          ? null
+                          : (_) => unawaited(_filter(entry.key)),
+                    ),
                   ),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push<bool>(
-                    '/projects/detail/${project.id}',
-                  ),
-                );
-              },
+              ],
             ),
           ),
-      },
+          Expanded(
+            child: switch (controller.state) {
+              ProjectsState.loading when controller.projects.isEmpty =>
+                const Center(child: CircularProgressIndicator()),
+              ProjectsState.error when controller.projects.isEmpty =>
+                _MessageView(
+                  message:
+                      controller.errorMessage ?? 'Unable to load projects.',
+                  actionLabel: 'Retry',
+                  onAction: () => _filter(_status),
+                ),
+              _ when controller.projects.isEmpty => _MessageView(
+                  message: 'No projects yet.',
+                  actionLabel: 'Create project',
+                  onAction: _openCreate,
+                ),
+              _ => RefreshIndicator(
+                  onRefresh: () async => controller.load(status: _status),
+                  child: ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+                    itemCount: controller.projects.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemBuilder: (context, index) {
+                      final project = controller.projects[index];
+                      final budget = project.estimatedBudgetMin == null
+                          ? 'Awaiting quote'
+                          : '₱${project.estimatedBudgetMin!.toStringAsFixed(0)}–'
+                              '₱${(project.estimatedBudgetMax ?? project.estimatedBudgetMin!).toStringAsFixed(0)}';
+                      return Card(
+                        child: ListTile(
+                          key: Key('project_${project.id}'),
+                          contentPadding: const EdgeInsets.all(16),
+                          leading: const CircleAvatar(
+                            child: Icon(Icons.assignment_outlined),
+                          ),
+                          title: Text(project.title),
+                          subtitle: Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(
+                              '${project.categoryName ?? 'Project'}\n'
+                              '$budget · ${project.estimatedHeadcount} people',
+                            ),
+                          ),
+                          isThreeLine: true,
+                          trailing: Chip(label: Text(project.status)),
+                          onTap: () => context.push<bool>(
+                            '/projects/detail/${project.id}',
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+            },
+          ),
+        ],
+      ),
     );
   }
 }

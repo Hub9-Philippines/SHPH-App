@@ -347,31 +347,15 @@ class _SignupWidgetState extends State<SignupWidget>
                       );
                       return;
                     }
-                    try {
-                      if (!context.mounted) return;
-                      FFAppState().phoneLoginMode = false;
-                      await beginPhoneAuth(
-                        context: context,
-                        phoneNumber: phoneNumberVal,
-                        onCodeSent: (context) {
-                          if (!context.mounted) return;
-                          context.replaceNamed(
-                            PhoneVerifyUserWidget.routeName,
-                          );
-                        },
-                      );
-                      _model.isLoading = false;
-                      safeSetState(() {});
-                    } catch (e) {
-                      _model.isLoading = false;
-                      _model.errorMessage =
-                          'An error occurred. Please try again.';
-                      safeSetState(() {});
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error: ${e.toString()}')),
-                      );
-                    }
+                    FFAppState().phoneLoginMode = false;
+                    FFAppState().phone = phoneNumberVal;
+                    _model.isLoading = false;
+                    safeSetState(() {});
+                    if (!context.mounted) return;
+                    await context.pushNamed(
+                      PhoneRegistrationPage.routeName,
+                      extra: {'phone': phoneNumberVal},
+                    );
                   } else {
                     _model.isLoading = false;
                     _model.errorMessage =

@@ -66,7 +66,8 @@ class _CallPageState extends State<CallPage> {
     }
 
     if (controller.status == CallStatus.idle ||
-        controller.status == CallStatus.ended) {
+        (controller.status == CallStatus.ended &&
+            controller.lastError == null)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && Navigator.of(context).canPop()) {
           Navigator.of(context).pop();
@@ -84,6 +85,48 @@ class _CallPageState extends State<CallPage> {
     };
     final participant = controller.participant;
     final photoUrl = participant?.photoUrl;
+
+    if (controller.status == CallStatus.ended && controller.lastError != null) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.call_end_rounded,
+                      color: Colors.white, size: 64),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Call could not be connected',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Check microphone and camera permissions, then try again from the conversation.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                  const SizedBox(height: 24),
+                  FilledButton.icon(
+                    onPressed: () => Navigator.of(context).maybePop(),
+                    icon: const Icon(Icons.chat_bubble_outline),
+                    label: const Text('Return to conversation'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return PopScope(
       canPop: controller.status == CallStatus.idle ||

@@ -101,6 +101,7 @@ class ShphRoom {
   bool get isSettled => status == 'settled';
   bool get isCancelled => status == 'cancelled';
   bool get isExpired => status == 'expired';
+  bool get isActive => !isCancelled && !isExpired && !isSettled;
   bool get canJoin => isOpen && !isFull && seatsRemaining > 0;
 }
 

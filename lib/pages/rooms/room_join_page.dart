@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '/services/rooms_controller.dart';
@@ -34,8 +35,28 @@ class _RoomJoinPageState extends State<RoomJoinPage> {
         children: [
           TextField(
             controller: _token,
-            decoration: const InputDecoration(labelText: 'Join token'),
+            textInputAction: TextInputAction.search,
+            decoration: InputDecoration(
+              labelText: 'Join token',
+              hintText: 'Paste a token shared by the organizer',
+              prefixIcon: const Icon(Icons.key_outlined),
+              suffixIcon: IconButton(
+                tooltip: 'Paste token',
+                onPressed: rooms.isBusy
+                    ? null
+                    : () async {
+                        final data = await Clipboard.getData('text/plain');
+                        if (data?.text != null)
+                          _token.text = data!.text!.trim();
+                      },
+                icon: const Icon(Icons.content_paste_outlined),
+              ),
+            ),
+            onSubmitted: rooms.isBusy
+                ? null
+                : (_) => unawaited(rooms.lookup(_token.text)),
           ),
+          const SizedBox(height: 12),
           FilledButton(
             onPressed: rooms.isBusy
                 ? null
@@ -47,8 +68,29 @@ class _RoomJoinPageState extends State<RoomJoinPage> {
                 style: const TextStyle(color: Colors.red)),
           if (preview != null) ...[
             const SizedBox(height: 16),
-            Text(preview.title),
-            Text('${preview.seatsRemaining} seats remaining'),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(preview.title,
+                        style: Theme.of(context).textTheme.titleLarge),
+                    const SizedBox(height: 8),
+                    Text(preview.categoryName ?? 'Service room'),
+                    Text('${preview.eventDate} at ${preview.eventTime}'),
+                    Text('${preview.seatsRemaining} seats remaining'),
+                    Text(
+                        '₱${preview.pricePerHead.toStringAsFixed(2)} per person'),
+                    if (!preview.canJoin)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 8),
+                        child: Text('This room is not accepting participants.'),
+                      ),
+                  ],
+                ),
+              ),
+            ),
             FilledButton(
               onPressed: rooms.isBusy || !preview.canJoin
                   ? null

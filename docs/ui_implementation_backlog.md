@@ -13,6 +13,31 @@ Additional UI is still needed before Projects, Rooms, and phone registration
 are product-ready. The work below is separate from the remaining live API,
 physical-device, TURN, and release-build verification.
 
+## Implementation tracker
+
+| Area | Status | Delivered |
+| --- | --- | --- |
+| Production phone registration | Implemented locally | Complete registration form, server-cached initiate flow, dedicated OTP verification/resend screen, validation, safe password handoff |
+| Projects and Rooms navigation | Implemented locally | Discoverable Profile Hub entries using protected named routes |
+| Projects product UI | Implemented locally | Filtered cards, quote options/results, role estimates, provider prospect details and actions, confirmations and feedback |
+| Rooms product UI | Implemented locally | Category selector, date/time pickers, expanded fields, filters/cards, permission-aware actions, confirmations, join-token copy/paste |
+| Call UI polish | Implemented where contract-supported | Explicit media/connection failure recovery; native audio routing and device behavior remain gated by physical-device findings |
+| Guardrail UI polish | Implemented locally | Offline retry action; existing session warning and step-up messaging retained |
+
+Local implementation was completed on `feature/safe-sync-port`. Items below
+describe the original audit and remain useful as acceptance criteria. Any
+device-dependent optional work is intentionally retained as a verification-led
+follow-up rather than being invented without native behavior evidence.
+
+Validation:
+
+- 38 focused registration, configuration, Projects, and Rooms tests pass.
+- Scoped analysis reports no errors; remaining findings are style-level infos
+  in existing/generated files.
+- Android debug APK builds successfully after the UI integration.
+- The Projects action widget runner still stalls during Flutter test bootstrap
+  before emitting test output; its assertions were updated for the quote dialog.
+
 ## P0: Required for usable flows
 
 ### 1. Complete phone signup
@@ -175,4 +200,3 @@ The following remaining gates should not be tracked as UI implementation:
 3. Finish Rooms creation, permissions, and join/share UX.
 4. Finish Projects quote, role-line, and prospect UX.
 5. Polish call and guardrail states based on live-device findings.
-
