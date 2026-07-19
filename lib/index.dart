@@ -34,8 +34,10 @@ export '/pages/not_found/not_found_page.dart' show NotFoundPage;
 export '/pages/phone_verify_user/phone_verify_user_widget.dart'
     show PhoneVerifyUserWidget;
 export '/pages/pin_location/pin_location_widget.dart' show PinLocationWidget;
-export '/pages/privacy_policy/privacy_policy_widget.dart' show PrivacyPolicyWidget;
-export '/pages/terms_of_service/terms_of_service_widget.dart' show TermsOfServiceWidget;
+export '/pages/privacy_policy/privacy_policy_widget.dart'
+    show PrivacyPolicyWidget;
+export '/pages/terms_of_service/terms_of_service_widget.dart'
+    show TermsOfServiceWidget;
 export '/pages/pro_verification/document_scan_widget.dart'
     show DocumentScanWidget;
 export '/pages/pro_verification/face_verification_screen.dart'
@@ -96,3 +98,6 @@ export 'pages/help/help_page.dart' show HelpPage;
 export 'pages/help/chatbot_page.dart' show ChatbotPage;
 export 'pages/availability_calendar/availability_calendar_widget.dart'
     show AvailabilityCalendarWidget;
+export 'pages/projects/project_create_page.dart' show ProjectCreatePage;
+export 'pages/projects/project_detail_page.dart' show ProjectDetailPage;
+export 'pages/projects/project_list_page.dart' show ProjectListPage;
