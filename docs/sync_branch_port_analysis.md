@@ -24,7 +24,7 @@ Working branch: `feature/safe-sync-port`
 | Privacy-safe crash boundary | Complete | `e019296` | 15 guardrail tests passed; focused crash analysis reports no issues |
 | Token and OTP protection | Complete | `8a952dc` | 22 combined guardrail tests passed; scoped analysis reports no issues |
 | Realtime communication | In progress | `efe612b`, `05509ff`, `9aebee8`, `9533e9b`, `0bd121f`, `54b1e48` | Core: 33 focused tests passed; call page: 3 widget tests passed |
-| Projects | Pending | - | Requires deployed API contract verification |
+| Projects | In progress | `fdbb94a` | Models and guarded API resource: 8 focused tests passed |
 | Rooms | Pending | - | Requires deployed API contract verification |
 | Supabase and Node cleanup | Pending | - | Requires runtime/deployment usage audit |
 
@@ -255,6 +255,41 @@ Still required before enabling live calls:
 - Unauthorized thread/target tests proving server-side access control.
 - TURN relay verification on separate restrictive networks.
 
+### In progress: Projects
+
+The Batch C foundation is adapted from these source-branch files:
+
+- `lib/api/models/project.dart`
+- `lib/api/resources/projects_api.dart`
+
+Contract evidence:
+
+- Audited `C:\Users\Administrator\dev\shph-web` project store, API service,
+  create flow, and list/detail routes.
+- Confirmed POST-over-GET list/detail endpoints under `/api/projects/*`.
+- Confirmed create, quote, role-line match, prospect action, and cancellation
+  request shapes.
+- Confirmed nested project, role-line, and prospect response fields, including
+  numeric values serialized as strings.
+
+Completed foundation work:
+
+- Added resilient typed models for projects, role lines, and prospects.
+- Added testable API transport boundaries without mutating the global Dio
+  client in tests.
+- Added create, list, detail, quote, match, cancellation, and prospect-action
+  operations.
+- Rejects invalid identifiers, pagination, required create fields, quote
+  limits, actions, and agreed prices before network access.
+- Eight focused model and API contract tests pass; scoped analysis reports no
+  issues.
+
+Remaining Projects work:
+
+- Add project list, create, and detail application boundaries.
+- Add authenticated routes and quote/matching action tests.
+- Verify representative responses with an authorized deployed test account.
+
 ### Known baseline issue
 
 Full-project `flutter analyze` is currently blocked by pre-existing errors in `integration_test/feature_smoke_test.dart`, including a stale `package:serbisyo_ph/main.dart` import and incomplete syntax. New batches must continue to pass scoped analysis and must not add errors to the baseline.
@@ -388,10 +423,12 @@ The local Node backend and deployment assets should only be removed after confir
 
 ### Batch C: Projects
 
-- Verify API contract.
-- Add models and API resource.
-- Add list, create, detail, quote, and matching interfaces.
-- Add route and API tests.
+- [x] Verify the contract against the production web client.
+- [x] Add guarded models and API resource.
+- [ ] Add list, create, detail, quote, and matching application interfaces.
+- [x] Add focused model and API resource tests.
+- [ ] Add authenticated routes and action tests.
+- [ ] Validate with an authorized deployed test account.
 
 ### Batch D: Rooms
 
