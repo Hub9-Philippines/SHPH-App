@@ -23,7 +23,7 @@ Working branch: `feature/safe-sync-port`
 | Sensitive-action step-up | Complete | `6b63260` | Guardrail tests pass; payout and session operations fail closed |
 | Privacy-safe crash boundary | Complete | `e019296` | 15 guardrail tests passed; focused crash analysis reports no issues |
 | Token and OTP protection | Complete | `8a952dc` | 22 combined guardrail tests passed; scoped analysis reports no issues |
-| Realtime communication | In progress | `efe612b`, `05509ff`, `9aebee8`, `9533e9b`, `0bd121f` | Core: 28 focused tests passed; call page: 3 widget tests passed |
+| Realtime communication | In progress | `efe612b`, `05509ff`, `9aebee8`, `9533e9b`, `0bd121f`, `54b1e48` | Core: 33 focused tests passed; call page: 3 widget tests passed |
 | Projects | Pending | - | Requires deployed API contract verification |
 | Rooms | Pending | - | Requires deployed API contract verification |
 | Supabase and Node cleanup | Pending | - | Requires runtime/deployment usage audit |
@@ -121,6 +121,8 @@ The Batch B protocol foundation is adapted from these source-branch files:
 - `lib/services/call/flutter_webrtc_call_peer.dart`
 - `lib/pages/call/call_page.dart`
 - `lib/pages/call/incoming_call_overlay.dart`
+- `lib/main.dart`
+- `lib/pages/chat_page/chat_page_widget.dart`
 
 Completed foundation work:
 
@@ -158,14 +160,23 @@ Completed foundation work:
   with back navigation, and exposes accessible call controls.
 - Serializes incoming accept/reject actions to prevent duplicate lifecycle API
   requests and exposes a guarded post-accept navigation callback.
+- Mounted one production call controller and incoming overlay at the app root.
+- Connects the authenticated lifecycle to the guarded WebSocket and ends active
+  calls before session teardown.
+- Replaced direct chat call-record requests with controller-driven audio/video
+  calls and opens the active-call interface only after initiation succeeds.
+- Matched the audited `shph-web` REST contract using `thread_id` and numeric
+  `callee_id`; media type remains in the signaling envelope.
+- Shares concurrent WebSocket connection attempts so auth startup and a call
+  action cannot race into a false connection failure.
 
 Remaining gates before live calls can be enabled:
 
 - Verify a successful `shph-auth` upgrade using a valid deployed JWT.
 - Provision and test approved TURN servers and credentials.
 - Validate native microphone, camera, and peer negotiation on physical devices.
-- Complete the incoming-overlay test rerun after the slow Flutter test-cache
-  rebuild, then port root navigation and chat integration.
+- Complete the incoming-overlay test rerun after the slow Flutter widget-test
+  bootstrap.
 
 #### Contract audit against `shph-web`
 
@@ -370,7 +381,7 @@ The local Node backend and deployment assets should only be removed after confir
 - [x] Add and test the WebRTC call controller.
 - [x] Add and validate the concrete `flutter_webrtc` peer adapter.
 - [x] Add the active-call page and incoming-call overlay.
-- [ ] Integrate incoming/outgoing calls with chat.
+- [x] Integrate incoming/outgoing calls with authenticated app and chat flows.
 - [x] Add call widget tests (call-page suite passes; incoming-overlay rerun is
   pending after its async timing correction).
 - [ ] Validate with two authenticated devices against the deployed API.
