@@ -2,6 +2,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:serbisyohubph/api/api_config.dart';
 
 void main() {
+  test('production REST base uses the deployed SHPH host', () {
+    expect(ApiConfig.baseUrl, 'https://serbisyohubph.com');
+    expect(ApiConfig.isConfigured, isTrue);
+  });
+
   test('production WebSocket base is configured without the chat suffix', () {
     expect(ApiConfig.wsUrl, 'wss://serbisyohubph.com/ws');
     expect(ApiConfig.isWebSocketConfigured, isTrue);

@@ -521,6 +521,20 @@ deployed-environment, physical-device, or release-candidate
 verification gates; they do not require additional source porting from
 `feature/sync-from-shph-main`.
 
+### Production REST and test-phone verification
+
+- Corrected the Flutter REST default to `https://serbisyohubph.com`, matching
+  the production web deployment's `https://serbisyohubph.com/api` base.
+- Added opt-in phone-login presets for client `+639123456789` and provider
+  `+639222222222` behind `ENABLE_TEST_PHONE_NUMBERS=true`.
+- Maps the mobile `pro` role to the API's `provider` value.
+- Both designated phone numbers returned HTTP 200 from the deployed
+  `/api/auth/phone-login/send/` endpoint.
+- Test-number presets do not bypass OTP verification and are hidden by default.
+- Phone-only signup remains a separate API-contract gap: `/api/auth/otp/send-pin/`
+  requires authentication, while `/api/auth/register/initiate/` requires the
+  complete registration payload.
+
 ## Validation gates
 
 Each batch should meet the following requirements before merging:

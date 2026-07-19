@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '/api/shph_api.dart';
+import '/auth/test_phone_accounts.dart';
 import '../../app_state.dart';
 import '../../flutter_flow/auth_logger.dart';
 import '../../flutter_flow/otp_rate_limiter.dart';
@@ -152,9 +153,10 @@ class ShphAuthManager extends AuthManager
     String password,
   ) async {
     try {
-      final role = FFAppState().tempsignuprole.isNotEmpty
+      final selectedRole = FFAppState().tempsignuprole.isNotEmpty
           ? FFAppState().tempsignuprole
           : 'client';
+      final role = TestPhoneAccounts.apiRole(selectedRole);
       await ShphAuthApi.instance.registerInitiate(payload: {
         'email': email,
         'password': password,
@@ -254,9 +256,7 @@ class ShphAuthManager extends AuthManager
         await ShphAuthApi.instance.sendOtpPin(
           payload: {
             'phone_number': formattedPhone,
-            'role': FFAppState().tempsignuprole.isEmpty
-                ? 'client'
-                : FFAppState().tempsignuprole,
+            'role': TestPhoneAccounts.apiRole(FFAppState().tempsignuprole),
           },
         );
       }
@@ -297,9 +297,9 @@ class ShphAuthManager extends AuthManager
               payload: {
                 'phone_number': formattedPhone,
                 'pin': smsCode,
-                'role': FFAppState().tempsignuprole.isEmpty
-                    ? 'client'
-                    : FFAppState().tempsignuprole,
+                'role': TestPhoneAccounts.apiRole(
+                  FFAppState().tempsignuprole,
+                ),
               },
             );
 

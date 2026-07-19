@@ -1,7 +1,6 @@
 /// Backend data-source configuration for the SHPH REST API integration.
 ///
-/// The app uses the SHPH API as the primary backend and falls back
-/// to Supabase when the API is unreachable.
+/// The app uses the deployed SHPH API as its backend.
 ///
 /// Override via --dart-define:
 ///   flutter run --dart-define=USE_SHPH_API=false
@@ -11,7 +10,7 @@ class ApiConfig {
 
   static const String _baseUrlFromEnv = String.fromEnvironment(
     'SHPH_API_BASE_URL',
-    defaultValue: 'https://api.serbisyohub.ph',
+    defaultValue: 'https://serbisyohubph.com',
   );
 
   static const bool useShphApi = bool.fromEnvironment(
@@ -31,7 +30,7 @@ class ApiConfig {
   static String get baseUrl {
     final url = _baseUrlFromEnv.trim();
     if (url.isEmpty) {
-      return 'https://api.serbisyohub.ph';
+      return 'https://serbisyohubph.com';
     }
     return url.endsWith('/') ? url.substring(0, url.length - 1) : url;
   }
@@ -79,6 +78,6 @@ class ApiConfig {
         .toString();
   }
 
-  /// Prefer SHPH API over Supabase. All callers fall back to Supabase on error.
+  /// Retained for callers that gate SHPH API access through configuration.
   static bool get preferShphApi => useShphApi && isConfigured;
 }

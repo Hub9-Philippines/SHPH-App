@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '/auth/post_auth_navigation_flow.dart';
 import '/auth/supabase_auth/auth_util.dart';
+import '/auth/test_phone_accounts.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/custom_functions.dart' as functions;
 import '/flutter_flow/flutter_flow_util.dart';
@@ -31,6 +32,13 @@ class _SigninWidgetState extends State<SigninWidget>
   late SigninModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  void _useTestPhone(String phone) {
+    _model.phoneFieldTextController.text = phone;
+    _model.isPhoneValid = true;
+    FFAppState().phone = phone;
+    safeSetState(() {});
+  }
 
   @override
   void initState() {
@@ -303,9 +311,7 @@ class _SigninWidgetState extends State<SigninWidget>
           maxLength: 13,
           maxLengthEnforcement: MaxLengthEnforcement.enforced,
           buildCounter: (context,
-                  {required currentLength,
-                  required isFocused,
-                  maxLength}) =>
+                  {required currentLength, required isFocused, maxLength}) =>
               null,
           keyboardType: TextInputType.phone,
           cursorColor: theme.primaryText,
@@ -314,6 +320,24 @@ class _SigninWidgetState extends State<SigninWidget>
               _model.phoneFieldTextControllerValidator.asValidator(context),
           inputFormatters: [_model.phoneFieldMask],
         ),
+        if (TestPhoneAccounts.enabled) ...[
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: [
+              ActionChip(
+                avatar: const Icon(Icons.science_outlined, size: 18),
+                label: const Text('Test client'),
+                onPressed: () => _useTestPhone(TestPhoneAccounts.client),
+              ),
+              ActionChip(
+                avatar: const Icon(Icons.engineering_outlined, size: 18),
+                label: const Text('Test pro'),
+                onPressed: () => _useTestPhone(TestPhoneAccounts.provider),
+              ),
+            ],
+          ),
+        ],
         if (_model.errorMessage != null && _model.tabBarCurrentIndex == 0)
           Padding(
             padding: const EdgeInsets.only(top: 8),
@@ -334,8 +358,7 @@ class _SigninWidgetState extends State<SigninWidget>
                       if (phone.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                              content:
-                                  Text('Please enter your phone number')),
+                              content: Text('Please enter your phone number')),
                         );
                         return;
                       }
@@ -358,12 +381,9 @@ class _SigninWidgetState extends State<SigninWidget>
                         }
                       } catch (e) {
                         if (!mounted) return;
-                        setState(
-                            () => _model.isPhoneLoginLoading = false);
+                        setState(() => _model.isPhoneLoginLoading = false);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content: Text(
-                                  'Phone login failed: $e')),
+                          SnackBar(content: Text('Phone login failed: $e')),
                         );
                       }
                     },
@@ -403,61 +423,61 @@ class _SigninWidgetState extends State<SigninWidget>
           icon: Icons.apple_rounded,
           label: 'Continue with Apple',
           onTap: () async {
-              final user = await authManager.signInWithApple(context);
-              if (user != null && context.mounted) {
-                await PostAuthNavigationFlow().handlePostAuthNavigation(
-                  context: context,
-                  userId: user.uid!,
-                );
-              }
-            },
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              GestureDetector(
-                onTap: () => context.goNamed(ForgotPasswordWidget.routeName),
-                child: Text(
-                  'Forgot password',
-                  style: theme.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: theme.primary,
-                  ),
+            final user = await authManager.signInWithApple(context);
+            if (user != null && context.mounted) {
+              await PostAuthNavigationFlow().handlePostAuthNavigation(
+                context: context,
+                userId: user.uid!,
+              );
+            }
+          },
+        ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            GestureDetector(
+              onTap: () => context.goNamed(ForgotPasswordWidget.routeName),
+              child: Text(
+                'Forgot password',
+                style: theme.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.primary,
                 ),
               ),
-            ],
-          ),
-          const Spacer(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                "Don't have an account yet? ",
-                style: theme.bodyMedium.copyWith(color: theme.secondaryText),
-              ),
-              GestureDetector(
-                onTap: () => context.goNamed(SignupWidget.routeName),
-                child: Text(
-                  'Sign Up',
-                  style: theme.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: theme.primary,
-                  ),
+            ),
+          ],
+        ),
+        const Spacer(),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              "Don't have an account yet? ",
+              style: theme.bodyMedium.copyWith(color: theme.secondaryText),
+            ),
+            GestureDetector(
+              onTap: () => context.goNamed(SignupWidget.routeName),
+              child: Text(
+                'Sign Up',
+                style: theme.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.primary,
                 ),
               ),
-            ],
-          ),
-        ],
-      );
-    }
- 
-    Widget _buildEmailTab(AppThemeData theme) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Email',
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmailTab(AppThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Email',
           style: theme.bodyMedium.copyWith(
             fontWeight: FontWeight.w500,
             color: theme.primaryText,
@@ -471,8 +491,8 @@ class _SigninWidgetState extends State<SigninWidget>
             '_model.emailTextFieldTextController',
             Duration.zero,
             () {
-              _model.isEmailvalid = functions.checkEmailRegex(
-                  _model.emailTextFieldTextController.text);
+              _model.isEmailvalid = functions
+                  .checkEmailRegex(_model.emailTextFieldTextController.text);
               safeSetState(() {});
             },
           ),
@@ -486,16 +506,14 @@ class _SigninWidgetState extends State<SigninWidget>
             hintStyle: theme.bodyLarge.copyWith(color: theme.secondaryText),
             enabledBorder: OutlineInputBorder(
               borderSide: BorderSide(
-                color:
-                    !_model.isEmailvalid ? theme.error : theme.alternate,
+                color: !_model.isEmailvalid ? theme.error : theme.alternate,
                 width: 1,
               ),
               borderRadius: BorderRadius.circular(12),
             ),
             focusedBorder: OutlineInputBorder(
               borderSide: BorderSide(
-                color:
-                    !_model.isEmailvalid ? theme.error : theme.alternate,
+                color: !_model.isEmailvalid ? theme.error : theme.alternate,
                 width: 1.5,
               ),
               borderRadius: BorderRadius.circular(12),
@@ -552,13 +570,11 @@ class _SigninWidgetState extends State<SigninWidget>
             hintText: '••••••••',
             hintStyle: theme.bodyLarge.copyWith(color: theme.secondaryText),
             enabledBorder: OutlineInputBorder(
-              borderSide:
-                  BorderSide(color: theme.alternate, width: 1),
+              borderSide: BorderSide(color: theme.alternate, width: 1),
               borderRadius: BorderRadius.circular(12),
             ),
             focusedBorder: OutlineInputBorder(
-              borderSide:
-                  BorderSide(color: theme.alternate, width: 1.5),
+              borderSide: BorderSide(color: theme.alternate, width: 1.5),
               borderRadius: BorderRadius.circular(12),
             ),
             errorBorder: OutlineInputBorder(
@@ -574,8 +590,9 @@ class _SigninWidgetState extends State<SigninWidget>
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
             suffixIcon: InkWell(
-              onTap: () => safeSetState(
-                  () => _model.passwordTextFieldVisibility = !_model.passwordTextFieldVisibility),
+              onTap: () => safeSetState(() =>
+                  _model.passwordTextFieldVisibility =
+                      !_model.passwordTextFieldVisibility),
               focusNode: FocusNode(skipTraversal: true),
               child: Icon(
                 _model.passwordTextFieldVisibility
@@ -625,8 +642,7 @@ class _SigninWidgetState extends State<SigninWidget>
                           return;
                         }
                         if (!context.mounted) return;
-                        await PostAuthNavigationFlow()
-                            .handlePostAuthNavigation(
+                        await PostAuthNavigationFlow().handlePostAuthNavigation(
                           context: context,
                           userId: user.uid!,
                         );

@@ -120,8 +120,10 @@ flutter run
 
 ```
 # Flutter build-time configuration
-SHPH_API_BASE_URL=https://api.serbisyohub.ph
+SHPH_API_BASE_URL=https://serbisyohubph.com
 SHPH_WS_URL=wss://serbisyohubph.com/ws
+# Development/testing only: show client/pro phone-login presets
+ENABLE_TEST_PHONE_NUMBERS=true
 ```
 
 ## Deployment
