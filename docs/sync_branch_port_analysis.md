@@ -24,7 +24,7 @@ Working branch: `feature/safe-sync-port`
 | Privacy-safe crash boundary | Complete | `e019296` | 15 guardrail tests passed; focused crash analysis reports no issues |
 | Token and OTP protection | Complete | `8a952dc` | 22 combined guardrail tests passed; scoped analysis reports no issues |
 | Realtime communication | In progress | `efe612b`, `05509ff`, `9aebee8`, `9533e9b`, `0bd121f`, `54b1e48` | Core: 33 focused tests passed; call page: 3 widget tests passed |
-| Projects | In progress | `fdbb94a`, `61c2b90` | Models, API, and application controller: 15 focused tests passed |
+| Projects | In progress | `fdbb94a`, `61c2b90`, `bb4872c` | Foundation, controller, and protected routes: 18 focused tests passed |
 | Rooms | Pending | - | Requires deployed API contract verification |
 | Supabase and Node cleanup | Pending | - | Requires runtime/deployment usage audit |
 
@@ -262,6 +262,9 @@ The Batch C foundation is adapted from these source-branch files:
 - `lib/api/models/project.dart`
 - `lib/api/resources/projects_api.dart`
 - `lib/services/projects_controller.dart`
+- `lib/pages/projects/project_list_page.dart`
+- `lib/pages/projects/project_create_page.dart`
+- `lib/pages/projects/project_detail_page.dart`
 
 Contract evidence:
 
@@ -293,12 +296,19 @@ Completed foundation work:
 - Corrected the source resource contract: matching returns a role line and a
   prospect action returns a prospect, consistent with `shph-web`.
 - Fifteen combined Projects tests pass; scoped analysis reports no issues.
+- Mounted the production Projects controller once at the application root.
+- Added explicit signed-out redirects for every `/projects` route.
+- Added guarded positive project-ID parsing and safe invalid-ID behavior.
+- Added minimal functional list, create, and detail surfaces that consume the
+  controller without introducing a visual redesign.
+- Exposes quote, role matching, cancellation, refresh, and validated creation
+  through the application state boundary.
+- Eighteen combined Projects tests pass; scoped analysis adds no errors or
+  warnings.
 
 Remaining Projects work:
 
-- Add authenticated routes and route-level quote/matching action tests.
-- Add minimal project list/create/detail route surfaces when navigation is
-  ready to consume the controller.
+- Add route-level quote, matching, and cancellation widget tests.
 - Verify representative responses with an authorized deployed test account.
 
 ### Known baseline issue
@@ -439,7 +449,8 @@ The local Node backend and deployment assets should only be removed after confir
 - [x] Add non-UI list, create, detail, quote, match, prospect, and cancellation
   application interfaces.
 - [x] Add focused model and API resource tests.
-- [ ] Add authenticated routes and action tests.
+- [x] Add authenticated routes and minimal functional route surfaces.
+- [ ] Add route-level action widget tests.
 - [ ] Validate with an authorized deployed test account.
 
 ### Batch D: Rooms
