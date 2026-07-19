@@ -101,3 +101,7 @@ export 'pages/availability_calendar/availability_calendar_widget.dart'
 export 'pages/projects/project_create_page.dart' show ProjectCreatePage;
 export 'pages/projects/project_detail_page.dart' show ProjectDetailPage;
 export 'pages/projects/project_list_page.dart' show ProjectListPage;
+export 'pages/rooms/room_create_page.dart' show RoomCreatePage;
+export 'pages/rooms/room_detail_page.dart' show RoomDetailPage;
+export 'pages/rooms/room_join_page.dart' show RoomJoinPage;
+export 'pages/rooms/room_list_page.dart' show RoomListPage;

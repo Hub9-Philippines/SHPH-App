@@ -13,6 +13,7 @@ import '/router/app_router.dart';
 import '/services/call/call_controller.dart';
 import '/services/call/call_controller_factory.dart';
 import '/services/projects_controller.dart';
+import '/services/rooms_controller.dart';
 import '/services/websocket_service.dart';
 import '/theme/app_theme.dart';
 // Authentication imports - Using SHPH API for auth
@@ -84,6 +85,7 @@ class _MyAppState extends State<MyApp> {
   late AppStateNotifier _appStateNotifier;
   late CallController _callController;
   late ProjectsController _projectsController;
+  late RoomsController _roomsController;
   late GoRouter _router;
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   bool _callPageOpen = false;
@@ -112,6 +114,7 @@ class _MyAppState extends State<MyApp> {
     _appStateNotifier = AppStateNotifier.instance;
     _callController = buildProductionCallController();
     _projectsController = ProjectsController.production();
+    _roomsController = RoomsController.production();
     _router = AppRouter.createRouter(
       _appStateNotifier,
       appState: widget.appState,
@@ -166,6 +169,7 @@ class _MyAppState extends State<MyApp> {
     widget.appState.removeListener(_onAppStateChanged);
     _callController.dispose();
     _projectsController.dispose();
+    _roomsController.dispose();
     unawaited(ShphWebSocketService.instance.disconnect());
     super.dispose();
   }
@@ -231,38 +235,41 @@ class _MyAppState extends State<MyApp> {
         value: _callController,
         child: ChangeNotifierProvider<ProjectsController>.value(
           value: _projectsController,
-          child: ChangeNotifierProvider<FFAppState>.value(
-            value: widget.appState,
-            child: MaterialApp.router(
-              debugShowCheckedModeBanner: false,
-              title: 'SerbisyoHub PH',
-              locale: _locale,
-              localizationsDelegates: const [
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-                GlobalCupertinoLocalizations.delegate,
-                AppLocalizations.delegate,
-              ],
-              supportedLocales: _supportedLocales,
-              theme: ThemeData(
-                brightness: Brightness.light,
-                useMaterial3: false,
-              ),
-              darkTheme: ThemeData(
-                brightness: Brightness.dark,
-                useMaterial3: false,
-              ),
-              themeMode: _themeMode,
-              routerConfig: _router,
-              scaffoldMessengerKey: ErrorHandler.scaffoldMessengerKey,
-              builder: (context, child) => AppGuardrailScope(
-                authenticated: _isAuthenticated,
-                onSessionTimeout: _handleSessionTimeout,
-                child: Stack(
-                  children: [
-                    child ?? const SizedBox.shrink(),
-                    IncomingCallOverlay(onAccepted: _openCallPage),
-                  ],
+          child: ChangeNotifierProvider<RoomsController>.value(
+            value: _roomsController,
+            child: ChangeNotifierProvider<FFAppState>.value(
+              value: widget.appState,
+              child: MaterialApp.router(
+                debugShowCheckedModeBanner: false,
+                title: 'SerbisyoHub PH',
+                locale: _locale,
+                localizationsDelegates: const [
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                  AppLocalizations.delegate,
+                ],
+                supportedLocales: _supportedLocales,
+                theme: ThemeData(
+                  brightness: Brightness.light,
+                  useMaterial3: false,
+                ),
+                darkTheme: ThemeData(
+                  brightness: Brightness.dark,
+                  useMaterial3: false,
+                ),
+                themeMode: _themeMode,
+                routerConfig: _router,
+                scaffoldMessengerKey: ErrorHandler.scaffoldMessengerKey,
+                builder: (context, child) => AppGuardrailScope(
+                  authenticated: _isAuthenticated,
+                  onSessionTimeout: _handleSessionTimeout,
+                  child: Stack(
+                    children: [
+                      child ?? const SizedBox.shrink(),
+                      IncomingCallOverlay(onAccepted: _openCallPage),
+                    ],
+                  ),
                 ),
               ),
             ),

@@ -14,6 +14,7 @@ import '/pages/geographic_selection/geographic_selection_widget.dart';
 import '/services/profiles_service.dart';
 
 import 'project_routes.dart';
+import 'room_routes.dart';
 
 // Helper function to fetch user profile for role-based routing
 Future<Map<String, dynamic>?> _fetchUserProfile(String userId) async {
@@ -754,6 +755,28 @@ class AppRouter {
               ),
             ),
           ),
+          GoRoute(
+            path: RoomListPage.routePath,
+            name: RoomListPage.routeName,
+            builder: (context, state) => const RoomListPage(),
+          ),
+          GoRoute(
+            path: RoomCreatePage.routePath,
+            name: RoomCreatePage.routeName,
+            builder: (context, state) => const RoomCreatePage(),
+          ),
+          GoRoute(
+            path: RoomJoinPage.routePath,
+            name: RoomJoinPage.routeName,
+            builder: (context, state) => const RoomJoinPage(),
+          ),
+          GoRoute(
+            path: RoomDetailPage.routePath,
+            name: RoomDetailPage.routeName,
+            builder: (context, state) => RoomDetailPage(
+              roomId: parseRoomRouteId(state.pathParameters['roomId']),
+            ),
+          ),
         ],
       );
 }
@@ -768,7 +791,9 @@ class RoleBasedRedirectGuard {
     dynamic appStateNotifier,
     GoRouterState state,
   ) async {
-    if (!appStateNotifier.loggedIn && isProtectedProjectPath(state.uri.path)) {
+    if (!appStateNotifier.loggedIn &&
+        (isProtectedProjectPath(state.uri.path) ||
+            isProtectedRoomPath(state.uri.path))) {
       return SignOptionsWidget.routePath;
     }
     if (appStateNotifier.shouldRedirect) {
