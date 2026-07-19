@@ -7,8 +7,12 @@ import '/api/models/category.dart';
 import '/api/resources/services_api.dart';
 import '/services/projects_controller.dart';
 
+typedef ProjectCategoryLoader = Future<List<ShphCategory>> Function();
+
 class ProjectCreatePage extends StatefulWidget {
-  const ProjectCreatePage({super.key});
+  const ProjectCreatePage({super.key, this.categoryLoader});
+
+  final ProjectCategoryLoader? categoryLoader;
 
   static const routeName = 'ProjectCreate';
   static const routePath = '/projects/new';
@@ -42,10 +46,12 @@ class _ProjectCreatePageState extends State<ProjectCreatePage> {
 
   Future<void> _loadCategories() async {
     try {
-      final response = await ShphServicesApi.instance.listCategories();
+      final categories = widget.categoryLoader == null
+          ? (await ShphServicesApi.instance.listCategories()).results
+          : await widget.categoryLoader!();
       if (mounted) {
         setState(() {
-          _categories = response.results.where((item) => item.id > 0).toList();
+          _categories = categories.where((item) => item.id > 0).toList();
           _loadingCategories = false;
           _categoryError = null;
         });

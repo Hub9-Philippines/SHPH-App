@@ -57,7 +57,9 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<ProjectsController>();
-    final project = controller.currentProject;
+    final currentProject = controller.currentProject;
+    final project =
+        currentProject?.id == widget.projectId ? currentProject : null;
     if (widget.projectId <= 0) {
       return const Scaffold(body: Center(child: Text('Invalid project id.')));
     }
