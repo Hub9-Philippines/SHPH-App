@@ -24,9 +24,9 @@ Working branch: `feature/safe-sync-port`
 | Privacy-safe crash boundary | Complete | `e019296` | 15 guardrail tests passed; focused crash analysis reports no issues |
 | Token and OTP protection | Complete | `8a952dc` | 22 combined guardrail tests passed; scoped analysis reports no issues |
 | Realtime communication | In progress | `efe612b`, `05509ff`, `9aebee8`, `9533e9b`, `0bd121f`, `54b1e48` | Core: 33 focused tests passed; call page: 3 widget tests passed |
-| Projects | In progress | `fdbb94a`, `61c2b90`, `bb4872c` | Foundation, controller, and protected routes: 18 focused tests passed |
-| Rooms | Pending | - | Requires deployed API contract verification |
-| Supabase and Node cleanup | Pending | - | Requires runtime/deployment usage audit |
+| Projects | Complete locally | `fdbb94a`, `61c2b90`, `bb4872c`, `2341ad1` | 18 focused tests pass; 5 route-action widget tests added, with execution rerun pending after Flutter bootstrap timeout |
+| Rooms | Complete locally | `35c9706`, `e6c19e9` | 12 focused model, resource, controller, and route tests passed |
+| Supabase and Node cleanup | Complete locally | Current batch | No live Supabase calls or app-to-local-Node references; redundant direct client dependencies removed; debug APK builds |
 
 ### Completed: safe standalone utilities
 
@@ -255,7 +255,7 @@ Still required before enabling live calls:
 - Unauthorized thread/target tests proving server-side access control.
 - TURN relay verification on separate restrictive networks.
 
-### In progress: Projects
+### Completed locally: Projects
 
 The Batch C foundation is adapted from these source-branch files:
 
@@ -306,10 +306,36 @@ Completed foundation work:
 - Eighteen combined Projects tests pass; scoped analysis adds no errors or
   warnings.
 
-Remaining Projects work:
+- Added route-level creation, quote, matching, cancellation-confirmation, and
+  stale-route-ID widget coverage.
+- The five new widget tests pass static analysis but their execution rerun is
+  still pending because the local Flutter test bootstrap timed out before
+  emitting test output.
+- Representative authorized deployed-API validation remains an operational
+  gate rather than a local implementation task.
 
-- Add route-level quote, matching, and cancellation widget tests.
-- Verify representative responses with an authorized deployed test account.
+### Completed locally: Rooms
+
+The Batch D implementation is adapted from the source branch's room model,
+resource, controller, pages, and routes, with request and response shapes
+checked against `C:\Users\Administrator\dev\shph-web`.
+
+- Added guarded room, participant, and paginated-list models.
+- Added list, detail, create, public-token preview, join, leave, lock, and cancel
+  resource operations.
+- Validates Mongo-style 24-character hexadecimal room IDs before transport.
+- Keeps participant booking identifiers as strings, matching the web contract.
+- Trims and safely path-encodes public join tokens.
+- Rejects malformed server room identifiers before accepting controller state.
+- Serializes mutations and preserves safe error state in the controller.
+- Mounted the controller once at the app root.
+- Added authenticated list, create, join, and detail routes with minimal
+  functional surfaces and signed-out redirects.
+- Twelve focused model, API, controller, and route tests pass; scoped analysis
+  reports no issues.
+
+Authorized deployed-API validation remains required for room creation and
+membership mutations.
 
 ### Known baseline issue
 
@@ -395,7 +421,18 @@ AI requests should ultimately pass through the SHPH API. Provider credentials an
 
 ## Supabase and Node cleanup
 
-`develop` still contains the `supabase_flutter` dependency and compatibility files under `lib/backend/supabase`. These should be audited separately.
+The audit found no runtime use of `Supabase.instance`, Supabase auth, direct
+database queries, Storage, or Supabase Realtime. Runtime operations use SHPH API
+resources. The `lib/backend/supabase` directory now acts as a fail-closed
+compatibility model layer: its mutation/query methods throw
+`UnsupportedError`, while generated screens still consume its row classes and
+PostgREST type signatures.
+
+The redundant direct `functions_client`, `gotrue`, `postgrest`,
+`realtime_client`, `storage_client`, and `supabase` declarations were removed.
+They remain transitive while `supabase_flutter` supplies compatibility types.
+Removing `supabase_flutter` itself requires replacing those generated type
+signatures and is intentionally deferred to a dedicated mechanical migration.
 
 Removal criteria:
 
@@ -405,7 +442,13 @@ Removal criteria:
 4. Build Android release and debug artifacts.
 5. Test login, signup, OTP, token refresh, uploads, bookings, chat, and payments against a deployed API environment.
 
-The local Node backend and deployment assets should only be removed after confirming they are not used by development, CI, deployment, OpenRouter proxying, or operational tooling.
+The Flutter application contains no reference to the local `backend/src` or
+`backend/dist` server. The chatbot calls `ShphSupportApi`, so OpenRouter
+credentials are not embedded in or called directly by the app. The standalone
+Node tree still includes historical OpenRouter and AWS deployment artifacts;
+because repository/deployment ownership cannot be proven from mobile runtime
+code, it is retained and flagged for archive/repository-owner confirmation.
+The Firebase functions directory does not currently implement the chatbot.
 
 ## Proposed delivery batches
 
@@ -450,20 +493,34 @@ The local Node backend and deployment assets should only be removed after confir
   application interfaces.
 - [x] Add focused model and API resource tests.
 - [x] Add authenticated routes and minimal functional route surfaces.
-- [ ] Add route-level action widget tests.
+- [x] Add route-level action widget tests (execution rerun pending after local
+  Flutter bootstrap timeout; static analysis passes).
 - [ ] Validate with an authorized deployed test account.
 
 ### Batch D: Rooms
 
-- Verify API contract and identifier types.
-- Add models, resource, pages, and routes.
-- Test public join-token lookup and authenticated room actions.
+- [x] Verify API contract and identifier types against `shph-web`.
+- [x] Add guarded models, resource, controller, pages, and routes.
+- [x] Test public join-token lookup and authenticated room actions.
+- [ ] Validate mutations with an authorized deployed test account.
 
 ### Batch E: Cleanup
 
-- Audit and remove unused Supabase compatibility code.
-- Decide whether Node/backend assets belong in another repository or should be archived.
-- Re-run analysis, tests, and release builds.
+- [x] Audit Supabase compatibility code and prove direct access is fail-closed.
+- [x] Remove redundant direct Supabase client dependency declarations.
+- [x] Confirm the Flutter runtime does not reference the standalone Node server.
+- [x] Confirm OpenRouter traffic is routed through `ShphSupportApi`.
+- [x] Record the Node backend as an archive/ownership decision; retain it until
+  deployment ownership is confirmed.
+- [x] Re-run combined scoped analysis and focused tests (30 tests pass; no
+  analysis issues).
+- [x] Build an Android debug APK after dependency cleanup.
+- [ ] Re-run the release APK build before production distribution.
+
+Local delivery-batch implementation is complete. Remaining unchecked items are
+deployed-environment, physical-device, repository-ownership, or release-candidate
+verification gates; they do not require additional source porting from
+`feature/sync-from-shph-main`.
 
 ## Validation gates
 
