@@ -3,10 +3,10 @@ import 'dart:convert';
 import 'dart:math' as math;
 
 import '/app_state.dart';
-import '/backend/supabase/supabase.dart';
 import '/models/service_listing.dart';
 import '/services/bookings_service.dart';
 import '/services/logging_service.dart';
+import '/services/providers_service.dart';
 import '/utils/geo_utils.dart';
 
 import 'tm_models.dart';
@@ -445,42 +445,12 @@ class PersistentMockTMRepository implements TMRepository {
   }
 
   @override
-  Stream<TMBookingSnapshot?> watchBookingSnapshot(String requestId) =>
-      Supabase.instance.client
-          .from('bookings')
-          .stream(primaryKey: ['id'])
-          .eq('id', requestId)
-          .map((rows) {
-            if (rows.isEmpty) {
-              return null;
-            }
-
-            final booking = BookingsRow(rows.first);
-            final metadata = _extractMetadata(booking.notes);
-            final providerMap = metadata['provider'] as Map<String, dynamic>?;
-            final hardwareMap =
-                metadata['hardware_request'] as Map<String, dynamic>?;
-
-            return TMBookingSnapshot(
-              requestId: booking.id,
-              status: booking.status,
-              stage: metadata['stage'] as String?,
-              dispatchMode: metadata['dispatch_mode'] as String?,
-              paymentStatus: booking.paymentStatus,
-              totalPrice: booking.totalPrice,
-              provider: _providerFromMap(providerMap),
-              hardwareRequest: hardwareMap == null
-                  ? null
-                  : TMHardwareRequest(
-                      id: hardwareMap['id']?.toString() ?? 'hardware',
-                      title: hardwareMap['title']?.toString() ??
-                          'Hardware Parts Required',
-                      description: hardwareMap['description']?.toString() ?? '',
-                      additionalCost:
-                          _toDouble(hardwareMap['additional_cost']) ?? 0,
-                    ),
-            );
-          });
+  Stream<TMBookingSnapshot?> watchBookingSnapshot(String requestId) async* {
+    while (true) {
+      yield await fetchBookingSnapshot(requestId);
+      await Future<void>.delayed(const Duration(seconds: 4));
+    }
+  }
 
   Future<bool> _persistMetadata(
     String requestId, {
@@ -558,13 +528,10 @@ class PersistentMockTMRepository implements TMRepository {
           ? clientLng!
           : GeoUtils.fallbackLng;
 
-      final profiles = await Supabase.instance.client
-          .from('profiles')
-          .select(
-            'id, display_name, first_name, skill_profession, latitude, longitude, is_verified',
-          )
-          .eq('role', 'provider')
-          .limit(attempt == 1 ? 25 : 50);
+      final profiles = await ProvidersService.instance.listProviders(
+        category: service.categoryName,
+        page: attempt,
+      );
 
       final candidates = List<Map<String, dynamic>>.from(profiles)
           .where(_isEligibleProvider)

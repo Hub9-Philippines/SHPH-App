@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/backend/supabase/database/tables/profiles.dart';
+import '/api/resources/providers_api.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
@@ -82,24 +82,23 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
     }
 
     try {
-      final rows = await ProfilesTable().querySingleRow(
-        queryFn: (q) => q.eq('id', providerId),
-      );
-      if (!mounted || rows.isEmpty) {
+      final numericId = int.tryParse(providerId);
+      if (numericId == null) return;
+      final profile =
+          await ShphProvidersApi.instance.getProviderProfile(numericId);
+      if (!mounted || profile.isEmpty) {
         return;
       }
-
-      final profile = rows.first;
       setState(() {
         _providerPhone = _providerPhone?.trim().isNotEmpty == true
             ? _providerPhone
-            : profile.phoneNumber;
+            : profile['phone_number']?.toString();
         _providerPhotoUrl = _providerPhotoUrl?.trim().isNotEmpty == true
             ? _providerPhotoUrl
-            : profile.photoUrl;
+            : (profile['photo_url'] ?? profile['photo'])?.toString();
         _providerDisplayName =
-            (profile.displayName ?? '').trim().isNotEmpty == true
-                ? profile.displayName!.trim()
+            (profile['display_name']?.toString() ?? '').trim().isNotEmpty
+                ? profile['display_name'].toString().trim()
                 : _providerDisplayName;
       });
     } catch (e, stackTrace) {
@@ -128,8 +127,6 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
     try {
       final thread = await ChatService.instance.getOrCreateDirectThread(
         providerId: providerId,
-        providerName: _providerDisplayName ?? widget.providerName,
-        providerPhoto: _providerPhotoUrl ?? widget.providerPhoto,
       );
       if (thread == null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -427,10 +424,11 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
                                 const SizedBox(height: 8),
                                 Text(
                                   'This sends your message straight into the existing in-app chat thread.',
-                                  style: AppTheme.of(context).bodySmall.override(
-                                        font: GoogleFonts.poppins(),
-                                        color: const Color(0xFF64748B),
-                                      ),
+                                  style:
+                                      AppTheme.of(context).bodySmall.override(
+                                            font: GoogleFonts.poppins(),
+                                            color: const Color(0xFF64748B),
+                                          ),
                                 ),
                                 const SizedBox(height: 16),
                                 TextFormField(
@@ -474,7 +472,9 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
                                 const SizedBox(height: 20),
                                 FFButtonWidget(
                                   onPressed: _isSending ? null : _sendMessage,
-                                  text: _isSending ? 'Sending...' : 'Send Message',
+                                  text: _isSending
+                                      ? 'Sending...'
+                                      : 'Send Message',
                                   options: FFButtonOptions(
                                     width: double.infinity,
                                     height: 54,

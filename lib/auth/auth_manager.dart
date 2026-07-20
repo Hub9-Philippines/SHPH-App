@@ -9,32 +9,44 @@ abstract class AuthManager {
   Future resetPassword({required String email, required BuildContext context});
   Future sendEmailVerification() async => currentUser?.sendEmailVerification();
   Future refreshUser() async => currentUser?.refreshUser();
-}
 
-mixin EmailSignInManager on AuthManager {
+  // Sign-in methods (implemented by all auth managers)
   Future<BaseAuthUser?> signInWithEmail(
     BuildContext context,
     String email,
     String password,
   );
-
   Future<BaseAuthUser?> createAccountWithEmail(
     BuildContext context,
     String email,
     String password,
   );
+  Future<BaseAuthUser?> signInAnonymously(BuildContext context);
+  Future<BaseAuthUser?> signInWithGoogle(BuildContext context);
+  Future<BaseAuthUser?> signInWithApple(BuildContext context);
+  Future<BaseAuthUser?> signInWithGithub(BuildContext context);
+  Future beginPhoneAuth({
+    required BuildContext context,
+    required String phoneNumber,
+    required void Function(BuildContext) onCodeSent,
+  });
+  Future verifySmsCode({
+    required BuildContext context,
+    required String smsCode,
+    String? phoneNumber,
+  });
+}
+
+mixin EmailSignInManager on AuthManager {
 }
 
 mixin AnonymousSignInManager on AuthManager {
-  Future<BaseAuthUser?> signInAnonymously(BuildContext context);
 }
 
 mixin AppleSignInManager on AuthManager {
-  Future<BaseAuthUser?> signInWithApple(BuildContext context);
 }
 
 mixin GoogleSignInManager on AuthManager {
-  Future<BaseAuthUser?> signInWithGoogle(BuildContext context);
 }
 
 mixin JwtSignInManager on AuthManager {
@@ -45,16 +57,6 @@ mixin JwtSignInManager on AuthManager {
 }
 
 mixin PhoneSignInManager on AuthManager {
-  Future beginPhoneAuth({
-    required BuildContext context,
-    required String phoneNumber,
-    required void Function(BuildContext) onCodeSent,
-  });
-
-  Future verifySmsCode({
-    required BuildContext context,
-    required String smsCode,
-  });
 }
 
 mixin FacebookSignInManager on AuthManager {
@@ -70,5 +72,4 @@ mixin MicrosoftSignInManager on AuthManager {
 }
 
 mixin GithubSignInManager on AuthManager {
-  Future<BaseAuthUser?> signInWithGithub(BuildContext context);
 }

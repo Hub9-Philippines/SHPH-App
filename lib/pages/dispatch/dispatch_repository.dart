@@ -2,13 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
-import '/app_state.dart';
-import '/backend/supabase/supabase.dart';
 import '/models/service_listing.dart';
 import '/pages/tm_flow/tm_models.dart';
 import '/pages/tm_flow/tm_repository.dart';
 import '/services/bookings_service.dart';
 import '/services/logging_service.dart';
+import '/services/providers_service.dart';
 import '/utils/geo_utils.dart';
 
 /// A [TMRepository] implementation that uses the server-authoritative
@@ -93,9 +92,6 @@ class DispatchTMRepository implements TMRepository {
     //    The DB trigger `trg_job_request_match` will automatically call
     //    match_best_provider so matching starts server-side immediately.
     try {
-      final supabase = Supabase.instance.client;
-      final userId = supabase.auth.currentUser?.id;
-
       if (_clientLatitude == null || _clientLongitude == null) {
         LoggingService.warning(
           'Client coordinates not provided for dispatch — '
@@ -104,15 +100,12 @@ class DispatchTMRepository implements TMRepository {
         );
       }
 
-      await supabase.from('job_requests').insert({
-        'client_id': userId,
-        'service_type': subCategory.title.toLowerCase(),
-        'location_lat': _clientLatitude ?? 14.5995,
-        'location_lng': _clientLongitude ?? 120.9842,
-        'requested_time': DateTime.now().toIso8601String(),
-        'status': 'searching',
-        'booking_id': booking.id,
-      });
+      await _persistMetadata(
+        booking.id,
+        service: service,
+        subCategory: subCategory,
+        metadata: {'flow': 'tm', 'dispatch_mode': 'api'},
+      );
     } catch (e) {
       _dispatchJobAvailable = false;
       LoggingService.error(
@@ -197,37 +190,15 @@ class DispatchTMRepository implements TMRepository {
     }
 
     // Poll the job_request until server matches or times out.
-    final supabase = Supabase.instance.client;
     final timeoutAt = DateTime.now().add(matchTimeout);
-    var missingJobRequestCount = 0;
 
     while (DateTime.now().isBefore(timeoutAt)) {
       await Future<void>.delayed(matchPollInterval);
 
-      // Look up the job_request linked to this booking
-      final jobResp = await supabase
-          .from('job_requests')
-          .select('status, assigned_provider_id')
-          .eq('booking_id', requestId)
-          .maybeSingle();
-
-      if (jobResp == null) {
-        missingJobRequestCount++;
-        if (missingJobRequestCount >= 2) {
-          _dispatchJobAvailable = false;
-          return _matchProviderFallback(
-            requestId: requestId,
-            service: service,
-            subCategory: subCategory,
-            searchRadiusKm: searchRadiusKm,
-            attempt: attempt,
-          );
-        }
-        continue;
-      }
-
-      final status = jobResp['status'] as String?;
-      final providerId = jobResp['assigned_provider_id'] as String?;
+      final current = await _bookingsService.getBookingById(requestId);
+      if (current == null) continue;
+      final status = current.status;
+      final providerId = current.providerId;
 
       if (status == 'timed_out' || status == 'cancelled') {
         await _persistMetadata(
@@ -382,20 +353,6 @@ class DispatchTMRepository implements TMRepository {
       extraData: {'completed_at': DateTime.now().toIso8601String()},
     );
 
-    // Also mark job_request as completed
-    try {
-      final supabase = Supabase.instance.client;
-      await supabase.from('job_requests').update({
-        'status': 'completed',
-        'completed_at': DateTime.now().toIso8601String(),
-      }).eq('booking_id', requestId);
-    } catch (e) {
-      LoggingService.error(
-        'Failed to mark job_request completed: $e',
-        tag: 'DispatchTMRepository',
-      );
-    }
-
     return bookingUpdated;
   }
 
@@ -406,19 +363,6 @@ class DispatchTMRepository implements TMRepository {
     required TMSubCategoryOption subCategory,
     required String reason,
   }) async {
-    // Cancel the job_request first (which triggers server-side cleanup)
-    try {
-      final supabase = Supabase.instance.client;
-      await supabase
-          .from('job_requests')
-          .update({'status': 'cancelled'}).eq('booking_id', requestId);
-    } catch (e) {
-      LoggingService.error(
-        'Failed to cancel job_request: $e',
-        tag: 'DispatchTMRepository',
-      );
-    }
-
     return _persistMetadata(
       requestId,
       service: service,
@@ -538,42 +482,12 @@ class DispatchTMRepository implements TMRepository {
   }
 
   @override
-  Stream<TMBookingSnapshot?> watchBookingSnapshot(String requestId) =>
-      Supabase.instance.client
-          .from('bookings')
-          .stream(primaryKey: ['id'])
-          .eq('id', requestId)
-          .map((rows) {
-            if (rows.isEmpty) {
-              return null;
-            }
-
-            final booking = BookingsRow(rows.first);
-            final metadata = _extractMetadata(booking.notes);
-            final providerMap = metadata['provider'] as Map<String, dynamic>?;
-            final hardwareMap =
-                metadata['hardware_request'] as Map<String, dynamic>?;
-
-            return TMBookingSnapshot(
-              requestId: booking.id,
-              status: booking.status,
-              stage: metadata['stage'] as String?,
-              dispatchMode: metadata['dispatch_mode'] as String?,
-              paymentStatus: booking.paymentStatus,
-              totalPrice: booking.totalPrice,
-              provider: _providerFromMap(providerMap),
-              hardwareRequest: hardwareMap == null
-                  ? null
-                  : TMHardwareRequest(
-                      id: hardwareMap['id']?.toString() ?? 'hardware',
-                      title: hardwareMap['title']?.toString() ??
-                          'Hardware Parts Required',
-                      description: hardwareMap['description']?.toString() ?? '',
-                      additionalCost:
-                          _toDouble(hardwareMap['additional_cost']) ?? 0,
-                    ),
-            );
-          });
+  Stream<TMBookingSnapshot?> watchBookingSnapshot(String requestId) async* {
+    while (true) {
+      yield await fetchBookingSnapshot(requestId);
+      await Future<void>.delayed(matchPollInterval);
+    }
+  }
 
   // ---------------------------------------------------------------
   //  Private helpers
@@ -584,17 +498,11 @@ class DispatchTMRepository implements TMRepository {
     int searchRadiusKm,
   ) async {
     try {
-      final supabase = Supabase.instance.client;
-      final profile = await supabase
-          .from('profiles')
-          .select(
-            'id, display_name, first_name, skill_profession, is_verified, '
-            'location, latitude, longitude',
-          )
-          .eq('id', providerId)
-          .maybeSingle();
-
-      if (profile == null) {
+      final numericId = int.tryParse(providerId);
+      if (numericId == null) return null;
+      final profile =
+          await ProvidersService.instance.getProviderProfile(numericId);
+      if (profile.isEmpty) {
         return null;
       }
 
@@ -742,13 +650,10 @@ class DispatchTMRepository implements TMRepository {
       final originLat = _clientLatitude ?? GeoUtils.fallbackLat;
       final originLng = _clientLongitude ?? GeoUtils.fallbackLng;
 
-      final profiles = await Supabase.instance.client
-          .from('profiles')
-          .select(
-            'id, display_name, first_name, skill_profession, latitude, longitude, is_verified',
-          )
-          .eq('role', 'provider')
-          .limit(attempt == 1 ? 25 : 50);
+      final profiles = await ProvidersService.instance.listProviders(
+        category: service.categoryName,
+        page: attempt,
+      );
 
       final candidates = List<Map<String, dynamic>>.from(profiles)
           .where(_isEligibleProvider)

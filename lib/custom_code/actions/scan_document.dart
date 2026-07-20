@@ -1,5 +1,4 @@
 // Automatic FlutterFlow imports
-import '/backend/supabase/supabase.dart';
 import '/theme/app_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom actions

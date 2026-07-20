@@ -18,20 +18,38 @@ export '/pages/create_profile/create_profile_widget.dart'
     show CreateProfileWidget;
 export '/pages/e_k_y_c_begin/e_k_y_c_begin_widget.dart' show EKYCBeginWidget;
 export '/pages/edit_profile/edit_profile_widget.dart' show EditProfileWidget;
+export '/pages/email_verify_register/email_verify_register_widget.dart'
+    show EmailVerifyRegisterWidget;
 export '/pages/favorites/favorites_widget.dart' show FavoritesWidget;
 export '/pages/forgot_password/forgot_password_widget.dart'
     show ForgotPasswordWidget;
 export '/pages/language_settings/language_settings_widget.dart'
     show LanguageSettingsWidget;
+export '/pages/leave_review/leave_review_widget.dart' show LeaveReviewWidget;
 export '/pages/my_notifications/my_notifications_widget.dart'
     show MyNotificationsWidget;
 export '/pages/my_reviews/my_reviews_widget.dart' show MyReviewsWidget;
 export '/pages/onboarding/onboarding_widget.dart' show OnboardingWidget;
+export '/pages/not_found/not_found_page.dart' show NotFoundPage;
+export '/pages/on_demand/client_on_demand_jobs_screen.dart'
+    show ClientOnDemandJobsScreen;
+export '/pages/on_demand/on_demand_booking_screen.dart'
+    show OnDemandBookingScreen;
+export '/pages/on_demand/provider_on_demand_bids_screen.dart'
+    show ProviderOnDemandBidsScreen;
+export '/pages/eta_tracking/eta_tracking_screen.dart'
+    show EtaTrackingScreen;
 export '/pages/phone_verify_user/phone_verify_user_widget.dart'
     show PhoneVerifyUserWidget;
+export '/pages/registration/phone_registration_page.dart'
+    show PhoneRegistrationPage;
+export '/pages/registration/registration_otp_page.dart'
+    show RegistrationOtpPage;
 export '/pages/pin_location/pin_location_widget.dart' show PinLocationWidget;
-export '/pages/privacy_policy/privacy_policy_widget.dart' show PrivacyPolicyWidget;
-export '/pages/terms_of_service/terms_of_service_widget.dart' show TermsOfServiceWidget;
+export '/pages/privacy_policy/privacy_policy_widget.dart'
+    show PrivacyPolicyWidget;
+export '/pages/terms_of_service/terms_of_service_widget.dart'
+    show TermsOfServiceWidget;
 export '/pages/pro_verification/document_scan_widget.dart'
     show DocumentScanWidget;
 export '/pages/pro_verification/face_verification_screen.dart'
@@ -62,7 +80,15 @@ export 'main/payment_methods/add_ewallet_payment_widget.dart'
 export 'main/payment_methods/payment_methods_widget.dart'
     show PaymentMethodsWidget;
 export 'main/pro_dashboard/about_widget.dart' show AboutWidget;
+export 'main/pro_dashboard/pro_analytics_widget.dart' show ProAnalyticsWidget;
+export 'main/pro_dashboard/provider_bids_widget.dart' show ProviderBidsWidget;
+export 'pages/wallet/wallet_widget.dart' show WalletWidget;
+export 'pages/disputes/disputes_widget.dart' show DisputesWidget;
+export 'pages/notification_preferences/notification_preferences_widget.dart'
+    show NotificationPreferencesWidget;
 export 'main/pro_dashboard/create_service_widget.dart' show CreateServiceWidget;
+export 'main/pro_dashboard/my_services_widget.dart' show MyServicesWidget;
+export 'main/admin/admin_dashboard_widget.dart' show AdminDashboardWidget;
 export 'main/pro_dashboard/edit_profile_widget.dart' show ProEditProfileWidget;
 export 'main/pro_dashboard/help_support_widget.dart' show HelpSupportWidget;
 export 'main/pro_dashboard/pro_dashboard_widget.dart' show ProDashboardWidget;
@@ -82,3 +108,12 @@ export 'pages/tm_flow/tm_rating_screen.dart' show TMRatingScreen;
 export 'pages/tm_flow/tm_sub_category_screen.dart' show TMSubCategoryScreen;
 export 'pages/help/help_page.dart' show HelpPage;
 export 'pages/help/chatbot_page.dart' show ChatbotPage;
+export 'pages/availability_calendar/availability_calendar_widget.dart'
+    show AvailabilityCalendarWidget;
+export 'pages/projects/project_create_page.dart' show ProjectCreatePage;
+export 'pages/projects/project_detail_page.dart' show ProjectDetailPage;
+export 'pages/projects/project_list_page.dart' show ProjectListPage;
+export 'pages/rooms/room_create_page.dart' show RoomCreatePage;
+export 'pages/rooms/room_detail_page.dart' show RoomDetailPage;
+export 'pages/rooms/room_join_page.dart' show RoomJoinPage;
+export 'pages/rooms/room_list_page.dart' show RoomListPage;

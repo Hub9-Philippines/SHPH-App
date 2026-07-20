@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import '/api/shph_api_client.dart';
 
 /// Chat endpoints from SHPH API.yaml (`/api/chat/*`).
@@ -49,5 +50,111 @@ class ShphChatApi {
       '/api/chat/threads/booking/$bookingId/',
     );
     return response.data ?? {};
+  }
+
+  /// POST /api/chat/threads/direct/ - create or get direct thread
+  Future<Map<String, dynamic>> createDirectThread({
+    required String participantId,
+    String? bookingId,
+  }) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/api/chat/threads/direct/',
+      data: {
+        'participant_id': participantId,
+        if (bookingId != null) 'booking_id': bookingId,
+      },
+    );
+    return response.data ?? {};
+  }
+
+  /// POST /api/chat/threads/{threadId}/typing/ - send typing indicator
+  Future<void> sendTypingIndicator(String threadId) async {
+    await _client.post('/api/chat/threads/$threadId/typing/');
+  }
+
+  /// POST /api/chat/threads/{threadId}/upload/ - upload file to thread
+  Future<Map<String, dynamic>> uploadFile(
+    String threadId, {
+    required List<int> fileBytes,
+    required String fileName,
+  }) async {
+    final formData = FormData.fromMap({
+      'file': MultipartFile.fromBytes(fileBytes, filename: fileName),
+    });
+    final response = await _client.post<Map<String, dynamic>>(
+      '/api/chat/threads/$threadId/upload/',
+      data: formData,
+    );
+    return response.data ?? {};
+  }
+
+  /// PATCH /api/chat/threads/{threadId}/messages/{messageId}/edit/ - edit message
+  Future<Map<String, dynamic>> editMessage(
+    String threadId,
+    String messageId, {
+    required String content,
+  }) async {
+    final response = await _client.patch<Map<String, dynamic>>(
+      '/api/chat/threads/$threadId/messages/$messageId/edit/',
+      data: {'content': content},
+    );
+    return response.data ?? {};
+  }
+
+  /// DELETE /api/chat/threads/{threadId}/messages/{messageId}/delete/ - delete message
+  Future<void> deleteMessage(String threadId, String messageId) async {
+    await _client.delete(
+      '/api/chat/threads/$threadId/messages/$messageId/delete/',
+    );
+  }
+
+  /// POST /api/chat/calls/initiate/ - initiate a call
+  Future<Map<String, dynamic>> initiateCall({
+    required String threadId,
+    required int calleeId,
+  }) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/api/chat/calls/initiate/',
+      data: {'thread_id': threadId, 'callee_id': calleeId},
+    );
+    return response.data ?? {};
+  }
+
+  /// POST /api/chat/calls/{callId}/accept/ - accept an incoming call
+  Future<void> acceptCall(String callId) async {
+    await _client.post('/api/chat/calls/$callId/accept/');
+  }
+
+  /// POST /api/chat/calls/{callId}/reject/ - reject an incoming call
+  Future<void> rejectCall(String callId, {String? reason}) async {
+    await _client.post(
+      '/api/chat/calls/$callId/reject/',
+      data: {if (reason != null) 'reason': reason},
+    );
+  }
+
+  /// POST /api/chat/calls/{callId}/end/ - end a call
+  Future<void> endCall(
+    String callId, {
+    String? reason,
+    int? durationSeconds,
+  }) async {
+    await _client.post(
+      '/api/chat/calls/$callId/end/',
+      data: {
+        if (reason != null) 'reason': reason,
+        if (durationSeconds != null) 'duration': durationSeconds,
+      },
+    );
+  }
+
+  /// GET /api/chat/calls/ - list calls
+  Future<List<Map<String, dynamic>>> listCalls({int? page}) async {
+    final response = await _client.get<List<dynamic>>(
+      '/api/chat/calls/',
+      queryParameters: {if (page != null) 'page': page},
+    );
+    final data = response.data ?? [];
+    return data.whereType<Map<String, dynamic>>().toList();
   }
 }

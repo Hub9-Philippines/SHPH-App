@@ -80,45 +80,45 @@ class _SplashWidgetState extends State<SplashWidget> {
 
   @override
   Widget build(BuildContext context) => GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-        FocusManager.instance.primaryFocus?.unfocus();
-      },
-      child: Scaffold(
-        key: scaffoldKey,
-        backgroundColor: AppTheme.of(context).primary,
-        body: SafeArea(
-          top: true,
-          child: Column(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Flexible(
-                child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Lottie.network(
-                      'https://lottie.host/602e7112-9c2a-44bc-b6c5-4701c93ed1ca/QNoV3E7bwP.json',
-                      width: 200,
-                      height: 200,
-                      fit: BoxFit.contain,
-                      animate: true,
-                    ),
-                  ],
+        onTap: () {
+          FocusScope.of(context).unfocus();
+          FocusManager.instance.primaryFocus?.unfocus();
+        },
+        child: Scaffold(
+          key: scaffoldKey,
+          backgroundColor: AppTheme.of(context).primary,
+          body: SafeArea(
+            top: true,
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Flexible(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Lottie.network(
+                        'https://lottie.host/602e7112-9c2a-44bc-b6c5-4701c93ed1ca/QNoV3E7bwP.json',
+                        width: 200,
+                        height: 200,
+                        fit: BoxFit.contain,
+                        animate: true,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              Lottie.network(
-                'https://lottie.host/b5fab63a-5e7f-44c8-81ba-c0ed419a96d5/xrUd8E401V.json',
-                width: 200,
-                height: 200,
-                fit: BoxFit.contain,
-                animate: true,
-              ),
-            ],
+                Lottie.network(
+                  'https://lottie.host/b5fab63a-5e7f-44c8-81ba-c0ed419a96d5/xrUd8E401V.json',
+                  width: 200,
+                  height: 200,
+                  fit: BoxFit.contain,
+                  animate: true,
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-    );
+      );
 }

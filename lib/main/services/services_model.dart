@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '/backend/supabase/database/tables/service_listings.dart';
+import '/api/resources/services_api.dart';
+import '/api/resources/recommendations_api.dart';
+import '/api/models/service_listing.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/logging_service.dart';
 import '/services/nearby_pro_mock_data.dart';
@@ -63,10 +65,32 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
 
   Future<void> _loadServicesFromDatabase() async {
     try {
-      final services = await ServiceListingsTable().queryRows(
-        queryFn: (q) =>
-            q.eq('is_available', 'true').order('rating', ascending: false),
-      );
+      final page = await ShphServicesApi.instance.listListings();
+      var services = page.results;
+      try {
+        final recommendations = await Future.wait([
+          ShphRecommendationsApi.instance.listRecommendedServices(),
+          ShphRecommendationsApi.instance.listRecommendedProviders(),
+          ShphRecommendationsApi.instance.listRecommendedCategories(),
+        ]);
+        final raw = recommendations.first['results'] ??
+            recommendations.first['recommendations'];
+        if (raw is List) {
+          final recommended = raw
+              .whereType<Map<String, dynamic>>()
+              .map(ShphServiceListing.fromJson)
+              .where((item) => item.id != 0)
+              .toList();
+          final byId = {for (final item in services) item.id: item};
+          for (final item in recommended) {
+            byId[item.id] = item;
+          }
+          services = byId.values.toList();
+        }
+      } catch (e) {
+        LoggingService.warning('Recommendations unavailable: $e',
+            tag: 'ServicesModel');
+      }
 
       allServices = services.map((service) {
         final nearByPros = NearbyProMockData.instance.generateNearbyPros(
@@ -94,7 +118,7 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
               nearest?['providerName'] ?? service.providerName ?? 'Provider',
           'providerPhoto':
               nearest?['providerPhoto'] ?? service.providerPhoto ?? '',
-          'isTimeMaterial': service.isTimeMaterial ?? false,
+          'isTimeMaterial': service.isTimeMaterial,
           'distanceKm': nearest?['distanceKm'] ?? 99.0,
           'distanceText': nearest?['distanceText'] ?? 'Unknown',
           'providerLatitude': nearest?['providerLatitude'],

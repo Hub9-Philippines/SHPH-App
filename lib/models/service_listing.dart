@@ -16,6 +16,7 @@ class ServiceListing {
     this.thumbnail,
     this.reviewCount,
     this.isTimeMaterial = false,
+    this.galleryUrls = const [],
   });
 
   factory ServiceListing.fromJson(Map<String, dynamic> json) => ServiceListing(
@@ -35,6 +36,7 @@ class ServiceListing {
         thumbnail: json['thumbnail'] as String?,
         reviewCount: json['review_count'] as int?,
         isTimeMaterial: json['is_time_material'] as bool? ?? false,
+        galleryUrls: (json['images'] as List?)?.map((e) => e as String).toList() ?? [],
       );
 
   final int id;
@@ -53,6 +55,14 @@ class ServiceListing {
   final String? thumbnail;
   final int? reviewCount;
   final bool isTimeMaterial;
+  final List<String> galleryUrls;
+
+  List<String> get allImages {
+    final images = <String>[];
+    if (thumbnail != null && thumbnail!.isNotEmpty) images.add(thumbnail!);
+    images.addAll(galleryUrls.where((u) => u != thumbnail));
+    return images;
+  }
 
   double? get ratingValue {
     if (rating == null) {

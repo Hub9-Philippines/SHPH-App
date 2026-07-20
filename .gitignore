@@ -88,6 +88,8 @@ temp_*.txt
 .agents/
 .windsurf/
 
-# npm modules
-/backend/node_modules/
-/backend/aws/cdk/node_modules/
+# Per-developer local paths (machine-specific, never commit)
+.devin/local/
+
+# Retired Node backend artifacts that may remain in an existing checkout
+/backend/

@@ -366,8 +366,9 @@ class _BookingsWidgetState extends State<BookingsWidget> {
                         bookingStatus: booking.status,
                         bookingDate:
                             booking.scheduledExecutionDate ?? DateTime.now(),
-                        providerName: 'Assigned provider',
+                        providerName: booking.title,
                         serviceTitle: booking.title,
+                        bookingReference: booking.id,
                       ),
                     ),
                   );

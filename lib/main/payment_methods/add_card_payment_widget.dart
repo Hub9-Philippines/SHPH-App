@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '/api/resources/users_api.dart';
 
 import '/backend/supabase/database/tables/payment_methods.dart';
 import '/components/back_button/back_button_widget.dart';
@@ -61,26 +61,9 @@ class _AddCardPaymentWidgetState extends State<AddCardPaymentWidget> {
       return;
     }
 
-    final userId = Supabase.instance.client.auth.currentUser?.id;
-    if (userId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User not authenticated')),
-      );
-      return;
-    }
-
     try {
-      final existingMethods = await PaymentMethodsTable().queryRows(
-        queryFn: (q) => q.eq('user_id', userId),
-      );
+      final existingMethods = await ShphUsersApi.instance.listPaymentMethods();
       final shouldBeDefault = _model.isDefault || existingMethods.isEmpty;
-
-      if (shouldBeDefault) {
-        await PaymentMethodsTable().update(
-          data: {'is_default': false},
-          matchingRows: (f) => f.eq('user_id', userId),
-        );
-      }
 
       final cardNumber = _model.cardNumberController.text.replaceAll(' ', '');
       final lastFour = cardNumber.length >= 4
@@ -88,27 +71,22 @@ class _AddCardPaymentWidgetState extends State<AddCardPaymentWidget> {
           : cardNumber;
 
       if (widget.paymentMethod != null) {
-        // Update existing
-        await PaymentMethodsTable().update(
-          data: {
-            'provider': _model.selectedProvider,
-            'expiry_month': _model.expiryMonthController.text,
-            'expiry_year': _model.expiryYearController.text,
-            'is_default': shouldBeDefault,
-          },
-          matchingRows: (f) => f.eq('id', widget.paymentMethod!.id),
-        );
-      } else {
-        // Insert new
-        await PaymentMethodsTable().insert({
-          'user_id': userId,
+        await ShphUsersApi.instance
+            .deletePaymentMethod(widget.paymentMethod!.id);
+      }
+      final created = await ShphUsersApi.instance.addPaymentMethod(
+        {
           'type': 'card',
           'provider': _model.selectedProvider,
           'last_four': lastFour,
           'expiry_month': _model.expiryMonthController.text,
           'expiry_year': _model.expiryYearController.text,
           'is_default': shouldBeDefault,
-        });
+        },
+      );
+      if (shouldBeDefault && created['id'] != null) {
+        await ShphUsersApi.instance
+            .setDefaultPaymentMethod(created['id'].toString());
       }
 
       if (mounted) {

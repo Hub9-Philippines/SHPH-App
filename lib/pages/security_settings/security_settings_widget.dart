@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/backend/supabase/supabase.dart';
+import '/api/shph_api.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/services/biometric_service.dart';
 import '/services/logging_service.dart';
+import '/services/step_up_auth_service.dart';
 import '/theme/app_theme.dart';
 import 'security_settings_model.dart';
 
@@ -29,12 +31,15 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
   final _mfaCodeController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  List<UserIdentity> _sessions = [];
+  List<Map<String, dynamic>> _sessions = [];
   bool _isLoadingSessions = true;
   bool _isChangingPassword = false;
   bool _isProcessingMfa = false;
   String? _mfaQRCode;
   String? _mfaFactorId;
+  bool _biometricAvailable = false;
+  bool _biometricEnabled = false;
+  List<Map<String, dynamic>> _biometricCredentials = [];
 
   @override
   void initState() {
@@ -42,6 +47,8 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
     _model = createModel(context, SecuritySettingsModel.new);
     _loadSessions();
     _checkMFAStatus();
+    _loadBiometricStatus();
+    _loadBiometricCredentials();
   }
 
   @override
@@ -55,17 +62,16 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
   }
 
   Future<void> _changePassword() async {
-    if (!_formKey.currentState!.validate() || _isChangingPassword) {
-      return;
-    }
-
+    if (!_formKey.currentState!.validate() || _isChangingPassword) return;
     setState(() => _isChangingPassword = true);
     try {
-      final response = await SupaFlow.client.auth.updateUser(
-        UserAttributes(password: _newPasswordController.text.trim()),
+      await ShphAuthApi.instance.confirmPasswordReset(
+        payload: {
+          'password': _newPasswordController.text.trim(),
+          'confirm_password': _newPasswordController.text.trim(),
+        },
       );
-
-      if (response.user != null && mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Password changed successfully')),
         );
@@ -74,66 +80,112 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
         _confirmPasswordController.clear();
       }
     } catch (e, stackTrace) {
-      LoggingService.error(
-        'Error changing password',
-        tag: 'SecuritySettings',
-        error: e,
-        stackTrace: stackTrace,
-      );
+      LoggingService.error('Error changing password',
+          tag: 'SecuritySettings', error: e, stackTrace: stackTrace);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error changing password: $e')),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isChangingPassword = false);
-      }
+      if (mounted) setState(() => _isChangingPassword = false);
     }
   }
 
   Future<void> _loadSessions() async {
     try {
-      final response = await SupaFlow.client.auth.getUser();
-      if (!mounted) {
-        return;
-      }
-
+      final sessions = await ShphAuthApi.instance.listSessions();
+      if (!mounted) return;
       setState(() {
-        _sessions = response.user?.identities ?? [];
+        _sessions = sessions;
         _isLoadingSessions = false;
       });
     } catch (e, stackTrace) {
-      LoggingService.error(
-        'Error loading sessions',
-        tag: 'SecuritySettings',
-        error: e,
-        stackTrace: stackTrace,
+      LoggingService.error('Error loading sessions',
+          tag: 'SecuritySettings', error: e, stackTrace: stackTrace);
+      if (mounted) setState(() => _isLoadingSessions = false);
+    }
+  }
+
+  Future<void> _revokeSession(String sessionId) async {
+    final verified = await StepUpAuthService.instance.requireVerification(
+      reason: 'Confirm your identity to revoke this session',
+    );
+    if (!mounted) return;
+    if (!verified) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Identity verification is required.'),
+        ),
       );
+      return;
+    }
+    try {
+      await ShphAuthApi.instance.revokeSession(sessionId);
       if (mounted) {
-        setState(() => _isLoadingSessions = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Session revoked')),
+        );
+        _loadSessions();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to revoke session: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _revokeAllSessions() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Revoke All Sessions'),
+        content: const Text(
+            'This will sign you out of all other devices. Continue?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Revoke All')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    final verified = await StepUpAuthService.instance.requireVerification(
+      reason: 'Confirm your identity to revoke all other sessions',
+    );
+    if (!mounted) return;
+    if (!verified) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Identity verification is required.'),
+        ),
+      );
+      return;
+    }
+    try {
+      await ShphAuthApi.instance.revokeAllSessions();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('All other sessions revoked')),
+        );
+        _loadSessions();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to revoke sessions: $e')),
+        );
       }
     }
   }
 
   Future<void> _checkMFAStatus() async {
-    try {
-      final response = await SupaFlow.client.auth.mfa.listFactors();
-      final hasTotpFactor = response.all.any((f) => f.factorType == 'totp');
-      if (mounted) {
-        setState(() => _model.twoFactorEnabled = hasTotpFactor);
-      }
-    } catch (e, stackTrace) {
-      LoggingService.error(
-        'Error checking MFA status',
-        tag: 'SecuritySettings',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      if (mounted) {
-        setState(() => _model.twoFactorEnabled = false);
-      }
-    }
+    if (mounted) setState(() => _model.twoFactorEnabled = false);
   }
 
   Future<void> _enrollMFA() async {
@@ -143,29 +195,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
 
     setState(() => _isProcessingMfa = true);
     try {
-      final user = SupaFlow.client.auth.currentUser;
-      if (user == null) {
-        throw Exception('User not authenticated');
-      }
-
-      final response = await SupaFlow.client.auth.mfa.enroll(
-        factorType: FactorType.totp,
-        issuer: 'SerbisyoHubPH',
-      );
-
-      if (response.totp?.qrCode == null) {
-        throw Exception('Unable to generate QR code for 2FA setup');
-      }
-
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        _mfaQRCode = response.totp?.qrCode;
-        _mfaFactorId = response.id;
-      });
-      _showMFAEnrollmentDialog();
+      throw UnsupportedError('TOTP 2FA is not supported by the SHPH API');
     } catch (e, stackTrace) {
       LoggingService.error(
         'Error enrolling MFA',
@@ -201,15 +231,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
 
     setState(() => _isProcessingMfa = true);
     try {
-      final challenge = await SupaFlow.client.auth.mfa.challenge(
-        factorId: factorId,
-      );
-
-      await SupaFlow.client.auth.mfa.verify(
-        factorId: factorId,
-        challengeId: challenge.id,
-        code: code,
-      );
+      throw UnsupportedError('TOTP 2FA is not supported by the SHPH API');
 
       if (!mounted) {
         return;
@@ -251,13 +273,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
 
     setState(() => _isProcessingMfa = true);
     try {
-      final response = await SupaFlow.client.auth.mfa.listFactors();
-      final totpFactor = response.all.firstWhere(
-        (f) => f.factorType == 'totp',
-        orElse: () => throw Exception('No TOTP factor found'),
-      );
-
-      await SupaFlow.client.auth.mfa.unenroll(totpFactor.id);
+      throw UnsupportedError('TOTP 2FA is not supported by the SHPH API');
 
       if (mounted) {
         setState(() => _model.twoFactorEnabled = false);
@@ -289,6 +305,72 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
       await _enrollMFA();
     } else {
       await _disableMFA();
+    }
+  }
+
+  Future<void> _loadBiometricStatus() async {
+    final available = await BiometricService.instance.isAvailable();
+    final enabled = await BiometricService.instance.isEnabled();
+    if (mounted) {
+      setState(() {
+        _biometricAvailable = available;
+        _biometricEnabled = enabled;
+      });
+    }
+  }
+
+  Future<void> _loadBiometricCredentials() async {
+    try {
+      final credentials = await ShphAuthApi.instance.biometricListCredentials();
+      if (mounted) setState(() => _biometricCredentials = credentials);
+    } catch (e) {
+      LoggingService.error('Credential list failed: $e',
+          tag: 'SecuritySettings');
+    }
+  }
+
+  Future<void> _deleteBiometricCredential(String id) async {
+    try {
+      await ShphAuthApi.instance.biometricDeleteCredential(id);
+      await _loadBiometricCredentials();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Biometric credential removed.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not remove credential: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _toggleBiometric(bool value) async {
+    if (value && !_biometricAvailable) return;
+    if (value) {
+      final authed = await BiometricService.instance.authenticate(
+        reason: 'Enable biometric login for your account',
+      );
+      if (!authed) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Authentication failed')),
+          );
+        }
+        return;
+      }
+    }
+    await BiometricService.instance.setEnabled(value);
+    if (mounted) {
+      setState(() => _biometricEnabled = value);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              value ? 'Biometric login enabled' : 'Biometric login disabled'),
+        ),
+      );
     }
   }
 
@@ -591,6 +673,109 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                 ),
                 const SizedBox(height: 18),
                 _buildSection(
+                  title: 'Biometric Login',
+                  child: Column(
+                    children: [
+                      _buildInfoRow(
+                        icon: Icons.fingerprint_rounded,
+                        title: 'Fingerprint / Face ID',
+                        subtitle: _biometricAvailable
+                            ? 'Use biometric authentication to sign in quickly.'
+                            : 'Biometric authentication is not available on this device.',
+                        trailing: Switch.adaptive(
+                          value: _biometricEnabled,
+                          onChanged:
+                              _biometricAvailable ? _toggleBiometric : null,
+                          activeThumbColor: AppTheme.of(context).primary,
+                        ),
+                      ),
+                      if (_biometricCredentials.isNotEmpty) ...[
+                        const Divider(height: 28),
+                        ..._biometricCredentials.map((credential) {
+                          final id = credential['id']?.toString();
+                          return ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: const Icon(Icons.key_rounded),
+                            title: Text(
+                              (credential['name'] ??
+                                      credential['device_name'] ??
+                                      'Passkey')
+                                  .toString(),
+                            ),
+                            subtitle: Text(
+                              (credential['created_at'] ??
+                                      'Registered credential')
+                                  .toString(),
+                            ),
+                            trailing: id == null
+                                ? null
+                                : IconButton(
+                                    tooltip: 'Remove credential',
+                                    onPressed: () =>
+                                        _deleteBiometricCredential(id),
+                                    icon: const Icon(
+                                        Icons.delete_outline_rounded),
+                                  ),
+                          );
+                        }),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
+                _buildSection(
+                  title: 'Video Calls',
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF7ED),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFFFED7AA)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color:
+                                const Color(0xFFFED7AA).withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Icon(Icons.videocam_off_outlined,
+                              color: Color(0xFFC2410C), size: 22),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Coming Soon',
+                                style: AppTheme.of(context).titleSmall.override(
+                                      font: GoogleFonts.poppins(
+                                          fontWeight: FontWeight.w700),
+                                      color: const Color(0xFFC2410C),
+                                    ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'WebRTC video calls are in development and will be available in a future update.',
+                                style: AppTheme.of(context).bodySmall.override(
+                                      font: GoogleFonts.poppins(),
+                                      color: const Color(0xFF9A3412),
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                _buildSection(
                   title: 'Login Activity',
                   child: _isLoadingSessions
                       ? const Padding(
@@ -600,18 +785,41 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                       : _sessions.isEmpty
                           ? _buildEmptySessions()
                           : Column(
-                              children: _sessions.asMap().entries.map((entry) {
-                                return Padding(
-                                  padding: EdgeInsets.only(
-                                    bottom:
-                                        entry.key == _sessions.length - 1 ? 0 : 12,
+                              children: [
+                                ..._sessions.asMap().entries.map((entry) {
+                                  return Padding(
+                                    padding: EdgeInsets.only(
+                                      bottom: entry.key == _sessions.length - 1
+                                          ? 0
+                                          : 12,
+                                    ),
+                                    child: _buildSessionCard(
+                                      session: entry.value,
+                                      isCurrent: entry.key == 0,
+                                    ),
+                                  );
+                                }).toList(),
+                                const SizedBox(height: 12),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: OutlinedButton.icon(
+                                    onPressed: _revokeAllSessions,
+                                    icon: const Icon(Icons.logout_rounded,
+                                        size: 18),
+                                    label:
+                                        const Text('Revoke All Other Sessions'),
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: Colors.red,
+                                      side: const BorderSide(color: Colors.red),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 14),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(16)),
+                                    ),
                                   ),
-                                  child: _buildSessionCard(
-                                    session: entry.value,
-                                    isCurrent: entry.key == 0,
-                                  ),
-                                );
-                              }).toList(),
+                                ),
+                              ],
                             ),
                 ),
               ],
@@ -660,7 +868,8 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                   Text(
                     'Keep your account protected',
                     style: AppTheme.of(context).titleMedium.override(
-                          font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                          font:
+                              GoogleFonts.poppins(fontWeight: FontWeight.w700),
                           color: Colors.white,
                         ),
                   ),
@@ -826,7 +1035,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
       );
 
   Widget _buildSessionCard({
-    required UserIdentity session,
+    required Map<String, dynamic> session,
     required bool isCurrent,
   }) =>
       Container(
@@ -895,20 +1104,31 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                                 ),
                           ),
                         ),
+                      if (!isCurrent)
+                        IconButton(
+                          icon: const Icon(Icons.logout_rounded,
+                              size: 20, color: Colors.red),
+                          onPressed: () =>
+                              _revokeSession(session['id']?.toString() ?? ''),
+                          tooltip: 'Revoke session',
+                        ),
                     ],
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    session.provider,
+                    session['provider'] ?? '',
                     style: AppTheme.of(context).bodyMedium.override(
                           font: GoogleFonts.poppins(),
                           color: const Color(0xFF334155),
                         ),
                   ),
-                  if ((session.createdAt ?? '').isNotEmpty) ...[
+                  if ((session['created_at']?.toString() ??
+                          session['last_active']?.toString() ??
+                          '')
+                      .isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(
-                      'Last active ${_formatDate(session.createdAt!)}',
+                      'Last active ${_formatDate(session['created_at']?.toString() ?? session['last_active']?.toString() ?? '')}',
                       style: AppTheme.of(context).bodySmall.override(
                             font: GoogleFonts.poppins(),
                             color: const Color(0xFF64748B),

@@ -3,12 +3,15 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import '/api/shph_api.dart';
+import '/api/bridges/api_row_mapper.dart';
 import '/auth/supabase_auth/auth_util.dart';
-import '/backend/supabase/supabase.dart';
+import '/backend/supabase/database/tables/profiles.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/upload_data.dart';
 import '/index.dart';
+import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
 import 'profile_model.dart';
 
@@ -50,11 +53,11 @@ class _ProfileWidgetState extends State<ProfileWidget> {
       future: FFAppState().checkIfAccountExists(
         uniqueQueryKey:
             '$currentUserUid${dateTimeFormat("M/d h:mm a", getCurrentTimestamp)}',
-        requestFn: () => ProfilesTable().querySingleRow(
-          queryFn: (q) => q.or(
-            'phone_number.eq.${FFAppState().phone}, email.eq.${FFAppState().email}, id.eq.$currentUserUid',
-          ),
-        ),
+        requestFn: () async => [
+          ApiRowMapper.profileToRow(
+            await ShphUsersApi.instance.getMe(),
+          )
+        ],
       ),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
@@ -69,6 +72,13 @@ class _ProfileWidgetState extends State<ProfileWidget> {
               ),
               centerTitle: true,
               elevation: 0,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  tooltip: 'Refresh Profile',
+                  onPressed: _refreshProfile,
+                ),
+              ],
             ),
             body: const SingleChildScrollView(
               child: Column(
@@ -99,6 +109,13 @@ class _ProfileWidgetState extends State<ProfileWidget> {
               ),
               centerTitle: true,
               elevation: 0,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  tooltip: 'Refresh Profile',
+                  onPressed: _refreshProfile,
+                ),
+              ],
             ),
             body: Center(
               child: Text(
@@ -139,6 +156,30 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                             _buildQuickActions(),
                             const SizedBox(height: 22),
                             _ProfileSection(
+                              title: 'Plan & collaborate',
+                              children: [
+                                _ProfileMenuTile(
+                                  icon: Icons.assignment_rounded,
+                                  iconTint: const Color(0xFF7C5CFC),
+                                  title: 'Projects',
+                                  subtitle:
+                                      'Plan larger jobs, quotes, and provider teams',
+                                  onTap: () => context
+                                      .pushNamed(ProjectListPage.routeName),
+                                ),
+                                _ProfileMenuTile(
+                                  icon: Icons.groups_rounded,
+                                  iconTint: const Color(0xFF0F8A6C),
+                                  title: 'Service rooms',
+                                  subtitle:
+                                      'Create, join, and manage group services',
+                                  onTap: () =>
+                                      context.pushNamed(RoomListPage.routeName),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 18),
+                            _ProfileSection(
                               title: 'Account',
                               children: [
                                 _ProfileMenuTile(
@@ -158,6 +199,41 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                       'Add cards and manage checkout options',
                                   onTap: () => context.pushNamed(
                                       PaymentMethodsWidget.routeName),
+                                ),
+                                _ProfileMenuTile(
+                                  icon: Icons.swap_horiz_rounded,
+                                  iconTint: const Color(0xFF0F8A6C),
+                                  title: 'Become a Provider',
+                                  subtitle:
+                                      'Switch to pro account and offer services',
+                                  onTap: () async {
+                                    try {
+                                      await ShphUsersApi.instance
+                                          .applyProvider({'role': 'pro'});
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: Text(
+                                                  'Provider application submitted!')),
+                                        );
+                                        context.pushReplacementNamed(
+                                            EKYCBeginWidget.routeName);
+                                      }
+                                    } catch (e) {
+                                      LoggingService.error(
+                                          'Apply provider failed: $e',
+                                          tag: 'Profile');
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                              content: Text(
+                                                  'Error: ${e.toString()}')),
+                                        );
+                                      }
+                                    }
+                                  },
                                 ),
                               ],
                             ),
@@ -255,8 +331,8 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                   title: 'Help',
                                   subtitle:
                                       'FAQs and chat with our support team',
-                                  onTap: () => context
-                                      .pushNamed(HelpPage.routeName),
+                                  onTap: () =>
+                                      context.pushNamed(HelpPage.routeName),
                                 ),
                               ],
                             ),
@@ -625,10 +701,13 @@ class _ProfileWidgetState extends State<ProfileWidget> {
           )
           .toList();
 
-      downloadUrls = await uploadSupabaseStorageFiles(
-        bucketName: 'SHPH',
-        selectedFiles: selectedMedia,
+      final upload = selectedUploadedFiles.first;
+      final response = await ShphUsersApi.instance.uploadPhoto(
+        upload.bytes ?? const [],
+        upload.name ?? 'profile.jpg',
       );
+      final url = (response['photo_url'] ?? response['url'])?.toString();
+      downloadUrls = url == null ? [] : [url];
     } finally {
       if (mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -653,10 +732,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
       _model.uploadedFileUrl_uploadData2mv = downloadUrls.first;
     });
 
-    await ProfilesTable().update(
-      data: {'face_scan_url': downloadUrls.first},
-      matchingRows: (rows) => rows.eq('id', currentUserUid),
-    );
+    await ShphUsersApi.instance.updateMe({'face_scan_url': downloadUrls.first});
 
     if (mounted) {
       showUploadMessage(context, 'Success!');
@@ -701,6 +777,29 @@ class _ProfileWidgetState extends State<ProfileWidget> {
     GoRouter.of(context).clearRedirectLocation();
 
     context.goNamedAuth(SplashWidget.routeName, context.mounted);
+  }
+
+  Future<void> _refreshProfile() async {
+    try {
+      final userData = await ShphAuthApi.instance.getCurrentUser();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'Profile refreshed: ${userData['email'] ?? userData['username'] ?? 'OK'}'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        setState(() {});
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Refresh failed: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 }
 
