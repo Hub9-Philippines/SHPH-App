@@ -14,6 +14,7 @@ import '/services/logging_service.dart';
 import '/services/payouts_service.dart';
 import '/services/pro_bookings_service.dart';
 import '/services/providers_service.dart';
+import '/services/step_up_auth_service.dart';
 import '/theme/app_theme.dart';
 
 // Profile pages
@@ -1427,6 +1428,21 @@ class _ProEarningsWidgetState extends State<ProEarningsWidget> {
 
       final result = await _showPayoutRequestSheet(ewallets);
       if (result == null || !mounted) return;
+
+      final verified = await StepUpAuthService.instance.requireVerification(
+        reason: 'Confirm your identity to request a payout',
+      );
+      if (!mounted) return;
+      if (!verified) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Identity verification is required to request a payout.',
+            ),
+          ),
+        );
+        return;
+      }
 
       final success = await PayoutsService.instance.requestPayout(
         amount: result['amount'] as double,

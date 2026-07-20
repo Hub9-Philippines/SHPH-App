@@ -57,7 +57,9 @@
 			<dict/>
 		</dict>
 
-		<!-- Camera and Photo Library permissions for image picker and camera capture -->
+		<!-- Camera, microphone, and photo permissions for capture and calls -->
+		<key>NSMicrophoneUsageDescription</key>
+		<string>SerbisyoHub needs microphone access for voice and video calls.</string>
 		<key>NSCameraUsageDescription</key>
 		<string>This app needs camera access to capture your ID document and face selfie for provider verification.</string>
 		<key>NSPhotoLibraryUsageDescription</key>

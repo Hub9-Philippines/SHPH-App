@@ -9,7 +9,7 @@ This workflow guides porting a feature from the **SHPH web version** (`C:\Users\
 ## Context
 
 - **Web app**: Vue 3 + Ionic + Capacitor frontend, Django + DRF backend
-- **Mobile app**: Flutter frontend, Supabase + Node.js Express backend
+- **Mobile app**: Flutter frontend using the deployed SHPH API
 - **Reference doc**: `docs/web_to_mobile_migration.md` in this repo
 
 ## Steps
@@ -28,17 +28,16 @@ This workflow guides porting a feature from the **SHPH web version** (`C:\Users\
 
 ### 2. Map the Data Model
 
-- Compare the Django model to the Supabase table schema
+- Compare the Django model to the Flutter API model
 - Check `docs/api_gaps.md` for known missing fields and entities
-- Note any fields that exist in Django but not in the Supabase table
-- If new columns are needed, create a SQL migration in `database/`
+- Note any fields that are not represented by the Flutter model
 
 ### 3. Check API Coverage
 
-- Check if the Express backend (`backend/src/routes/`) has the endpoint
 - Check if the Flutter API client (`lib/api/resources/`) has the method
-- Decide: use the Express API or query Supabase directly (current pattern)
-- If using Supabase directly, follow patterns in existing services (e.g., `lib/services/bookings_service.dart`)
+- Verify the endpoint against `SHPH API.yaml` and the production web client
+- Add or extend the corresponding SHPH API resource; do not add direct
+  Supabase or provider-specific network calls
 
 ### 4. Implement the Flutter UI
 

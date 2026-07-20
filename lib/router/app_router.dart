@@ -13,6 +13,9 @@ import '/pages/booking_funnel/booking_models.dart';
 import '/pages/geographic_selection/geographic_selection_widget.dart';
 import '/services/profiles_service.dart';
 
+import 'project_routes.dart';
+import 'room_routes.dart';
+
 // Helper function to fetch user profile for role-based routing
 Future<Map<String, dynamic>?> _fetchUserProfile(String userId) async {
   try {
@@ -106,18 +109,19 @@ class AppRouter {
   // Private constructor to prevent instantiation
   AppRouter._();
 
-  static GoRouter createRouter(dynamic appStateNotifier, {dynamic appState}) =>
+  static GoRouter createRouter(
+    dynamic appStateNotifier, {
+    dynamic appState,
+    GlobalKey<NavigatorState>? navigatorKey,
+  }) =>
       GoRouter(
+        navigatorKey: navigatorKey,
         initialLocation: '/',
         debugLogDiagnostics: true,
         refreshListenable: appStateNotifier,
         redirect: (context, state) =>
             RoleBasedRedirectGuard.checkRedirect(appStateNotifier, state),
-        errorBuilder: (context, state) {
-          final isLoggedIn = appStateNotifier?.loggedIn ?? false;
-          final page = isLoggedIn ? const NavBarPage() : const SplashWidget();
-          return page;
-        },
+        errorBuilder: (context, state) => const NotFoundPage(),
         routes: [
           GoRoute(
             path: '/',
@@ -238,6 +242,28 @@ class AppRouter {
             path: PhoneVerifyUserWidget.routePath,
             name: PhoneVerifyUserWidget.routeName,
             builder: (context, state) => const PhoneVerifyUserWidget(),
+          ),
+          GoRoute(
+            path: PhoneRegistrationPage.routePath,
+            name: PhoneRegistrationPage.routeName,
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return PhoneRegistrationPage(
+                initialPhone: extra?['phone'] as String? ?? '',
+              );
+            },
+          ),
+          GoRoute(
+            path: RegistrationOtpPage.routePath,
+            name: RegistrationOtpPage.routeName,
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return RegistrationOtpPage(
+                phone: extra?['phone'] as String? ?? '',
+                email: extra?['email'] as String? ?? '',
+                deliveryMethod: extra?['delivery_method'] as String? ?? 'sms',
+              );
+            },
           ),
           GoRoute(
             path: EmailVerifyRegisterWidget.routePath,
@@ -495,8 +521,7 @@ class AppRouter {
           GoRoute(
             path: NotificationPreferencesWidget.routePath,
             name: NotificationPreferencesWidget.routeName,
-            builder: (context, state) =>
-                const NotificationPreferencesWidget(),
+            builder: (context, state) => const NotificationPreferencesWidget(),
           ),
           GoRoute(
             path: ProEditProfileWidget.routePath,
@@ -733,6 +758,47 @@ class AppRouter {
               );
             },
           ),
+          GoRoute(
+            path: ProjectListPage.routePath,
+            name: ProjectListPage.routeName,
+            builder: (context, state) => const ProjectListPage(),
+          ),
+          GoRoute(
+            path: ProjectCreatePage.routePath,
+            name: ProjectCreatePage.routeName,
+            builder: (context, state) => const ProjectCreatePage(),
+          ),
+          GoRoute(
+            path: ProjectDetailPage.routePath,
+            name: ProjectDetailPage.routeName,
+            builder: (context, state) => ProjectDetailPage(
+              projectId: parseProjectRouteId(
+                state.pathParameters['projectId'],
+              ),
+            ),
+          ),
+          GoRoute(
+            path: RoomListPage.routePath,
+            name: RoomListPage.routeName,
+            builder: (context, state) => const RoomListPage(),
+          ),
+          GoRoute(
+            path: RoomCreatePage.routePath,
+            name: RoomCreatePage.routeName,
+            builder: (context, state) => const RoomCreatePage(),
+          ),
+          GoRoute(
+            path: RoomJoinPage.routePath,
+            name: RoomJoinPage.routeName,
+            builder: (context, state) => const RoomJoinPage(),
+          ),
+          GoRoute(
+            path: RoomDetailPage.routePath,
+            name: RoomDetailPage.routeName,
+            builder: (context, state) => RoomDetailPage(
+              roomId: parseRoomRouteId(state.pathParameters['roomId']),
+            ),
+          ),
         ],
       );
 }
@@ -747,6 +813,11 @@ class RoleBasedRedirectGuard {
     dynamic appStateNotifier,
     GoRouterState state,
   ) async {
+    if (!appStateNotifier.loggedIn &&
+        (isProtectedProjectPath(state.uri.path) ||
+            isProtectedRoomPath(state.uri.path))) {
+      return SignOptionsWidget.routePath;
+    }
     if (appStateNotifier.shouldRedirect) {
       final redirectLocation = appStateNotifier.getRedirectLocation();
       appStateNotifier.clearRedirectLocation();

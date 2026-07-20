@@ -92,7 +92,8 @@ Legend: ✅ exists in Flutter · 🟡 partial · ❌ missing
 
 ### 2.2 Backend/data implications
 
-- Flutter Node backend (`backend/src/routes/`) only has **auth, chat, services, users**. Most data goes **direct to Supabase**.
+- The retired repository-local Node backend only covered **auth, chat, services,
+  users** and has been removed. New mobile work must use the deployed SHPH API.
 - Existing Supabase tables (`database/*.sql`): addresses, chat, notifications, payment_methods, service_listings, provider verification, **dispatch** (on-demand matching), spatial match.
 - **No Supabase schema yet for:** disputes, earnings/payouts, wallet + wallet_transactions, provider availability slots, notification_preferences, recommendations, admin/audit logs, on-demand bids table (dispatch exists but bids-management may need its own).
 

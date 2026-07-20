@@ -3,7 +3,6 @@ import 'auth_logger.dart';
 /// Manages rate limiting for OTP requests
 /// Prevents brute force attacks and excessive API usage
 class OtpRateLimiter {
-
   factory OtpRateLimiter() => _instance;
 
   OtpRateLimiter._internal();
@@ -66,7 +65,7 @@ class OtpRateLimiter {
     // Check daily limit first
     if (isExceededDailyLimit(normalizedPhone)) {
       AuthLogger.debug(
-        'OTP request exceeded daily limit for $normalizedPhone',
+        'OTP request exceeded daily limit',
         tag: 'RateLimit',
       );
       return 'Too many verification attempts. Please try again tomorrow.';
@@ -77,8 +76,7 @@ class OtpRateLimiter {
     if (timeUntilNext != null) {
       final secondsRemaining = timeUntilNext.inSeconds;
       AuthLogger.debug(
-        'OTP request rate limited for $normalizedPhone. '
-        'Try again in $secondsRemaining seconds',
+        'OTP request rate limited; retry in $secondsRemaining seconds',
         tag: 'RateLimit',
       );
       return 'Please wait ${secondsRemaining}s before requesting another code.';
@@ -106,7 +104,7 @@ class OtpRateLimiter {
     _cleanupOldAttempts(normalizedPhone);
 
     AuthLogger.debug(
-      'OTP request recorded for $normalizedPhone',
+      'OTP request recorded',
       tag: 'RateLimit',
     );
   }
@@ -137,14 +135,15 @@ class OtpRateLimiter {
     _attemptHistory.remove(normalizedPhone);
 
     AuthLogger.debug(
-      'Cleared rate limit data for $normalizedPhone',
+      'Cleared OTP rate limit data',
       tag: 'RateLimit',
     );
   }
 
   /// Normalize phone number for consistent tracking
   /// Removes spaces, dashes, and other formatting
-  String _normalizePhoneNumber(String phoneNumber) => phoneNumber.replaceAll(RegExp('[^0-9+]'), '');
+  String _normalizePhoneNumber(String phoneNumber) =>
+      phoneNumber.replaceAll(RegExp('[^0-9+]'), '');
 
   /// Reset all rate limit data (for testing or config changes)
   void reset() {

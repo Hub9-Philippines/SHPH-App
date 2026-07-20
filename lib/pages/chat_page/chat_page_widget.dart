@@ -1,10 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 import '/api/shph_api.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/pages/call/call_page.dart';
+import '/services/call/call_controller.dart';
+import '/services/call/call_controller_factory.dart';
+import '/services/call/call_peer.dart';
 import '/theme/app_theme.dart';
 import 'chat_page_model.dart';
 
@@ -72,22 +79,49 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
     _scrollToBottom(animated: true);
   }
 
-  Future<void> _initiateCall(String callType) async {
-    if (widget.roomId == null) return;
+  Future<void> _initiateCall(CallMediaType mediaType) async {
+    final threadId = widget.roomId;
+    if (threadId == null || threadId.isEmpty) {
+      return;
+    }
+    final controller = context.read<CallController>();
+    if (controller.isBusy) {
+      _showCallMessage('Another call is already active.');
+      return;
+    }
     try {
-      await ShphChatApi.instance
-          .initiateCall(threadId: widget.roomId!, callType: callType);
+      final participant = await resolveThreadParticipant(
+        threadId,
+        fallbackUserId: '',
+        fallbackName: widget.providerName ?? 'Contact',
+        loadThread: ShphChatApi.instance.getThreadDetails,
+      );
+      if (participant.userId.isEmpty) {
+        throw StateError('The chat participant could not be resolved');
+      }
+      final started = await controller.initiateCall(
+        threadId: threadId,
+        participant: participant,
+        mediaType: mediaType,
+      );
+      if (!started) {
+        throw StateError('The call could not be started');
+      }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$callType call initiated...')),
+        await Navigator.of(context).push<void>(
+          MaterialPageRoute<void>(builder: (_) => const CallPage()),
         );
       }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Call failed: $e')),
-        );
-      }
+    } catch (_) {
+      _showCallMessage("Couldn't start the call. Please try again.");
+    }
+  }
+
+  void _showCallMessage(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
     }
   }
 
@@ -439,31 +473,25 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                 ),
               ),
               const SizedBox(width: 8),
-              InkWell(
-                onTap: () => _initiateCall('audio'),
-                borderRadius: BorderRadius.circular(999),
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEAF6F2),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Icon(Icons.phone_rounded,
-                      size: 18, color: AppTheme.of(context).primary),
+              IconButton.filled(
+                key: const Key('chat_audio_call_btn'),
+                tooltip: 'Start audio call',
+                onPressed: () => unawaited(_initiateCall(CallMediaType.audio)),
+                icon: const Icon(Icons.phone_rounded, size: 18),
+                color: AppTheme.of(context).primary,
+                style: IconButton.styleFrom(
+                  backgroundColor: const Color(0xFFEAF6F2),
                 ),
               ),
               const SizedBox(width: 8),
-              InkWell(
-                onTap: () => _initiateCall('video'),
-                borderRadius: BorderRadius.circular(999),
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEAF6F2),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Icon(Icons.videocam_rounded,
-                      size: 18, color: AppTheme.of(context).primary),
+              IconButton.filled(
+                key: const Key('chat_video_call_btn'),
+                tooltip: 'Start video call',
+                onPressed: () => unawaited(_initiateCall(CallMediaType.video)),
+                icon: const Icon(Icons.videocam_rounded, size: 18),
+                color: AppTheme.of(context).primary,
+                style: IconButton.styleFrom(
+                  backgroundColor: const Color(0xFFEAF6F2),
                 ),
               ),
               const SizedBox(width: 8),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '/services/admin_service.dart';
+import '/services/step_up_auth_service.dart';
 
 class AdminPayoutsTab extends StatefulWidget {
   const AdminPayoutsTab({super.key});
@@ -235,13 +236,26 @@ class _AdminPayoutsTabState extends State<AdminPayoutsTab> {
   }
 
   Future<void> _updateStatus(String payoutId, String status) async {
+    final verified = await StepUpAuthService.instance.requireVerification(
+      reason: 'Confirm your identity to mark this payout as $status',
+    );
+    if (!mounted) return;
+    if (!verified) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Identity verification is required.'),
+        ),
+      );
+      return;
+    }
     final success =
         await AdminService.instance.updatePayoutStatus(payoutId, status);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(success ? 'Payout updated' : 'Failed to update payout'),
-          backgroundColor: success ? const Color(0xFF059669) : const Color(0xFFDC2626),
+          backgroundColor:
+              success ? const Color(0xFF059669) : const Color(0xFFDC2626),
         ),
       );
       if (success) _load();

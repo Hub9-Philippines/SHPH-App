@@ -30,11 +30,18 @@ export '/pages/my_notifications/my_notifications_widget.dart'
     show MyNotificationsWidget;
 export '/pages/my_reviews/my_reviews_widget.dart' show MyReviewsWidget;
 export '/pages/onboarding/onboarding_widget.dart' show OnboardingWidget;
+export '/pages/not_found/not_found_page.dart' show NotFoundPage;
 export '/pages/phone_verify_user/phone_verify_user_widget.dart'
     show PhoneVerifyUserWidget;
+export '/pages/registration/phone_registration_page.dart'
+    show PhoneRegistrationPage;
+export '/pages/registration/registration_otp_page.dart'
+    show RegistrationOtpPage;
 export '/pages/pin_location/pin_location_widget.dart' show PinLocationWidget;
-export '/pages/privacy_policy/privacy_policy_widget.dart' show PrivacyPolicyWidget;
-export '/pages/terms_of_service/terms_of_service_widget.dart' show TermsOfServiceWidget;
+export '/pages/privacy_policy/privacy_policy_widget.dart'
+    show PrivacyPolicyWidget;
+export '/pages/terms_of_service/terms_of_service_widget.dart'
+    show TermsOfServiceWidget;
 export '/pages/pro_verification/document_scan_widget.dart'
     show DocumentScanWidget;
 export '/pages/pro_verification/face_verification_screen.dart'
@@ -95,3 +102,10 @@ export 'pages/help/help_page.dart' show HelpPage;
 export 'pages/help/chatbot_page.dart' show ChatbotPage;
 export 'pages/availability_calendar/availability_calendar_widget.dart'
     show AvailabilityCalendarWidget;
+export 'pages/projects/project_create_page.dart' show ProjectCreatePage;
+export 'pages/projects/project_detail_page.dart' show ProjectDetailPage;
+export 'pages/projects/project_list_page.dart' show ProjectListPage;
+export 'pages/rooms/room_create_page.dart' show RoomCreatePage;
+export 'pages/rooms/room_detail_page.dart' show RoomDetailPage;
+export 'pages/rooms/room_join_page.dart' show RoomJoinPage;
+export 'pages/rooms/room_list_page.dart' show RoomListPage;

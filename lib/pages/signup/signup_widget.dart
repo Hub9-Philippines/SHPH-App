@@ -304,9 +304,7 @@ class _SignupWidgetState extends State<SignupWidget>
           maxLength: 13,
           maxLengthEnforcement: MaxLengthEnforcement.enforced,
           buildCounter: (context,
-                  {required currentLength,
-                  required isFocused,
-                  maxLength}) =>
+                  {required currentLength, required isFocused, maxLength}) =>
               null,
           keyboardType: TextInputType.phone,
           cursorColor: theme.primaryText,
@@ -333,8 +331,7 @@ class _SignupWidgetState extends State<SignupWidget>
                   safeSetState(() {});
 
                   if (_model.phoneFieldTextController.text != '') {
-                    final phoneNumberVal =
-                        _model.phoneFieldTextController.text;
+                    final phoneNumberVal = _model.phoneFieldTextController.text;
                     if (phoneNumberVal.isEmpty ||
                         !phoneNumberVal.startsWith('+')) {
                       _model.isLoading = false;
@@ -350,31 +347,15 @@ class _SignupWidgetState extends State<SignupWidget>
                       );
                       return;
                     }
-                    try {
-                      if (!context.mounted) return;
-                      FFAppState().phoneLoginMode = false;
-                      await beginPhoneAuth(
-                        context: context,
-                        phoneNumber: phoneNumberVal,
-                        onCodeSent: (context) {
-                          if (!context.mounted) return;
-                          context.replaceNamed(
-                            PhoneVerifyUserWidget.routeName,
-                          );
-                        },
-                      );
-                      _model.isLoading = false;
-                      safeSetState(() {});
-                    } catch (e) {
-                      _model.isLoading = false;
-                      _model.errorMessage =
-                          'An error occurred. Please try again.';
-                      safeSetState(() {});
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error: ${e.toString()}')),
-                      );
-                    }
+                    FFAppState().phoneLoginMode = false;
+                    FFAppState().phone = phoneNumberVal;
+                    _model.isLoading = false;
+                    safeSetState(() {});
+                    if (!context.mounted) return;
+                    await context.pushNamed(
+                      PhoneRegistrationPage.routeName,
+                      extra: {'phone': phoneNumberVal},
+                    );
                   } else {
                     _model.isLoading = false;
                     _model.errorMessage =
@@ -455,8 +436,8 @@ class _SignupWidgetState extends State<SignupWidget>
             '_model.emailTextFieldTextController',
             Duration.zero,
             () {
-              _model.isEmailValid = functions.checkEmailRegex(
-                  _model.emailTextFieldTextController.text);
+              _model.isEmailValid = functions
+                  .checkEmailRegex(_model.emailTextFieldTextController.text);
               safeSetState(() {});
             },
           ),
@@ -554,8 +535,9 @@ class _SignupWidgetState extends State<SignupWidget>
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
             suffixIcon: InkWell(
-              onTap: () => safeSetState(
-                  () => _model.passwordTextFieldVisibility = !_model.passwordTextFieldVisibility),
+              onTap: () => safeSetState(() =>
+                  _model.passwordTextFieldVisibility =
+                      !_model.passwordTextFieldVisibility),
               focusNode: FocusNode(skipTraversal: true),
               child: Icon(
                 _model.passwordTextFieldVisibility
@@ -620,8 +602,7 @@ class _SignupWidgetState extends State<SignupWidget>
                         if (_skipEmailVerification) {
                           GoRouter.of(context).prepareAuthEvent();
                           await ShphAuthApi.instance.register(payload: {
-                            'email':
-                                _model.emailTextFieldTextController.text,
+                            'email': _model.emailTextFieldTextController.text,
                             'password':
                                 _model.passwordTextFieldTextController.text,
                             'role': 'client',
@@ -641,8 +622,7 @@ class _SignupWidgetState extends State<SignupWidget>
                           context.pushReplacementNamed(
                             EmailVerifyRegisterWidget.routeName,
                             extra: {
-                              'email':
-                                  _model.emailTextFieldTextController.text,
+                              'email': _model.emailTextFieldTextController.text,
                               'password':
                                   _model.passwordTextFieldTextController.text,
                             },

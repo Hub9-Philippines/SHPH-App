@@ -111,11 +111,11 @@ class ShphChatApi {
   /// POST /api/chat/calls/initiate/ - initiate a call
   Future<Map<String, dynamic>> initiateCall({
     required String threadId,
-    required String callType,
+    required int calleeId,
   }) async {
     final response = await _client.post<Map<String, dynamic>>(
       '/api/chat/calls/initiate/',
-      data: {'thread_id': threadId, 'call_type': callType},
+      data: {'thread_id': threadId, 'callee_id': calleeId},
     );
     return response.data ?? {};
   }
@@ -126,13 +126,26 @@ class ShphChatApi {
   }
 
   /// POST /api/chat/calls/{callId}/reject/ - reject an incoming call
-  Future<void> rejectCall(String callId) async {
-    await _client.post('/api/chat/calls/$callId/reject/');
+  Future<void> rejectCall(String callId, {String? reason}) async {
+    await _client.post(
+      '/api/chat/calls/$callId/reject/',
+      data: {if (reason != null) 'reason': reason},
+    );
   }
 
   /// POST /api/chat/calls/{callId}/end/ - end a call
-  Future<void> endCall(String callId) async {
-    await _client.post('/api/chat/calls/$callId/end/');
+  Future<void> endCall(
+    String callId, {
+    String? reason,
+    int? durationSeconds,
+  }) async {
+    await _client.post(
+      '/api/chat/calls/$callId/end/',
+      data: {
+        if (reason != null) 'reason': reason,
+        if (durationSeconds != null) 'duration': durationSeconds,
+      },
+    );
   }
 
   /// GET /api/chat/calls/ - list calls

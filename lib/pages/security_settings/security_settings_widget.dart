@@ -6,6 +6,7 @@ import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/biometric_service.dart';
 import '/services/logging_service.dart';
+import '/services/step_up_auth_service.dart';
 import '/theme/app_theme.dart';
 import 'security_settings_model.dart';
 
@@ -107,6 +108,18 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
   }
 
   Future<void> _revokeSession(String sessionId) async {
+    final verified = await StepUpAuthService.instance.requireVerification(
+      reason: 'Confirm your identity to revoke this session',
+    );
+    if (!mounted) return;
+    if (!verified) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Identity verification is required.'),
+        ),
+      );
+      return;
+    }
     try {
       await ShphAuthApi.instance.revokeSession(sessionId);
       if (mounted) {
@@ -142,6 +155,18 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
       ),
     );
     if (confirmed != true) return;
+    final verified = await StepUpAuthService.instance.requireVerification(
+      reason: 'Confirm your identity to revoke all other sessions',
+    );
+    if (!mounted) return;
+    if (!verified) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Identity verification is required.'),
+        ),
+      );
+      return;
+    }
     try {
       await ShphAuthApi.instance.revokeAllSessions();
       if (mounted) {

@@ -174,7 +174,11 @@ firebase/                   — Firebase Cloud Functions & FCM
 
 ### Key Backend Difference
 
-The web app has a **complete Django backend** with ~200 API endpoints covering all features. The mobile app has a **Node.js Express backend with only ~22 routes** implemented, and the Flutter app primarily talks to **Supabase directly** (62+ direct queries). The SHPH REST API layer exists in the Flutter app but is disabled.
+At the time of this historical assessment, the web app had a **complete Django
+backend** with ~200 API endpoints, while the mobile repository still contained
+a limited Node.js Express backend and direct Supabase calls. That Node backend
+has since been retired and removed; the mobile runtime now uses the deployed
+SHPH API.
 
 ---
 
