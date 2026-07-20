@@ -7,7 +7,7 @@ const double _kDefaultMapVisibleFraction = 0.42;
 const double _kDefaultSheetMaxFraction = 0.64;
 const double _kMinimumMapHeight = 220;
 
-class BookingStatusScaffold extends StatefulWidget {
+class BookingStatusScaffold extends StatelessWidget {
   const BookingStatusScaffold({
     required this.location,
     required this.bottomSheet,
@@ -16,14 +16,12 @@ class BookingStatusScaffold extends StatefulWidget {
     this.showMap = true,
     this.markerHue = BitmapDescriptor.hueRed,
     this.markers,
-    this.polylines,
     this.isDraggable = false,
     this.mapVisibleFraction = _kDefaultMapVisibleFraction,
     this.sheetMaxFraction = _kDefaultSheetMaxFraction,
     this.sheetInitialFraction = 0.35,
     this.sheetMinFraction = 0.12,
     this.sheetMaxDraggableFraction = 0.75,
-    this.onMapCreated,
     super.key,
   });
 
@@ -34,40 +32,12 @@ class BookingStatusScaffold extends StatefulWidget {
   final bool showMap;
   final double markerHue;
   final Set<Marker>? markers;
-  final Set<Polyline>? polylines;
   final bool isDraggable;
   final double mapVisibleFraction;
   final double sheetMaxFraction;
   final double sheetInitialFraction;
   final double sheetMinFraction;
   final double sheetMaxDraggableFraction;
-  final void Function(GoogleMapController)? onMapCreated;
-
-  @override
-  State<BookingStatusScaffold> createState() => _BookingStatusScaffoldState();
-}
-
-class _BookingStatusScaffoldState extends State<BookingStatusScaffold> {
-  Set<Marker>? _markers;
-  Set<Polyline>? _polylines;
-
-  @override
-  void initState() {
-    super.initState();
-    _markers = widget.markers;
-    _polylines = widget.polylines;
-  }
-
-  @override
-  void didUpdateWidget(covariant BookingStatusScaffold oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.markers != oldWidget.markers) {
-      _markers = widget.markers;
-    }
-    if (widget.polylines != oldWidget.polylines) {
-      _polylines = widget.polylines;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,9 +48,9 @@ class _BookingStatusScaffoldState extends State<BookingStatusScaffold> {
       backgroundColor: theme.primaryBackground,
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final mapHeight = (constraints.maxHeight * widget.mapVisibleFraction)
+          final mapHeight = (constraints.maxHeight * mapVisibleFraction)
               .clamp(_kMinimumMapHeight, constraints.maxHeight);
-          final sheetMaxHeight = constraints.maxHeight * widget.sheetMaxFraction;
+          final sheetMaxHeight = constraints.maxHeight * sheetMaxFraction;
 
           return Stack(
             children: [
@@ -103,11 +73,11 @@ class _BookingStatusScaffoldState extends State<BookingStatusScaffold> {
                 left: 0,
                 right: 0,
                 height: mapHeight,
-                child: widget.showMap
+                child: showMap
                     ? ClipRect(
                         child: GoogleMap(
                           initialCameraPosition: CameraPosition(
-                            target: widget.location,
+                            target: location,
                             zoom: 16,
                           ),
                           zoomControlsEnabled: false,
@@ -119,45 +89,43 @@ class _BookingStatusScaffoldState extends State<BookingStatusScaffold> {
                           scrollGesturesEnabled: false,
                           zoomGesturesEnabled: false,
                           padding: EdgeInsets.only(bottom: 48 + bottomInset),
-                          markers: widget.markers ??
+                          markers: markers ??
                             {
                               Marker(
                                 markerId: const MarkerId('booking_location'),
-                                position: widget.location,
+                                position: location,
                                 anchor: const Offset(0.5, 1),
                                 icon: BitmapDescriptor.defaultMarkerWithHue(
-                                  widget.markerHue,
+                                  markerHue,
                                 ),
                               ),
                             },
-                          polylines: widget.polylines ?? const {},
-                          onMapCreated: widget.onMapCreated,
                         ),
                       )
                     : const SizedBox.shrink(),
               ),
-              if (widget.center != null) Center(child: widget.center!),
-              if (widget.isDraggable)
+              if (center != null) Center(child: center!),
+              if (isDraggable)
                 _DraggableBottomSheet(
-                  child: widget.bottomSheet,
-                  initialFraction: widget.sheetInitialFraction,
-                  minFraction: widget.sheetMinFraction,
-                  maxFraction: widget.sheetMaxDraggableFraction,
+                  child: bottomSheet,
+                  initialFraction: sheetInitialFraction,
+                  minFraction: sheetMinFraction,
+                  maxFraction: sheetMaxDraggableFraction,
                 )
               else
                 Align(
                   alignment: Alignment.bottomCenter,
                   child: ConstrainedBox(
                     constraints: BoxConstraints(maxHeight: sheetMaxHeight),
-                    child: widget.bottomSheet,
+                    child: bottomSheet,
                   ),
                 ),
-              if (widget.topCard != null)
+              if (topCard != null)
                 Positioned(
                   top: 0,
                   left: 0,
                   right: 0,
-                  child: widget.topCard!,
+                  child: topCard!,
                 ),
             ],
           );

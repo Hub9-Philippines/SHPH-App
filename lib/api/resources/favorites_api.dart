@@ -31,20 +31,6 @@ class ShphFavoritesApi {
         .map(ShphServiceListing.fromJson)
         .toList();
   }
-
-  @Deprecated('Use listFavorites() instead. GET /api/favorites/ returns all favorites.')
-  Future<List<ShphServiceListing>> getAllFavorites({int? page}) async {
-    final response = await _client.get<Map<String, dynamic>>(
-      '/api/favorites/',
-      queryParameters: {if (page != null) 'page': page},
-    );
-    final data = response.data ?? {};
-    final results = data['results'] as List<dynamic>? ?? [];
-    return results
-        .whereType<Map<String, dynamic>>()
-        .map(ShphServiceListing.fromJson)
-        .toList();
-  }
 }
 
 /// Reviews endpoints from SHPH API.yaml (`/api/services/listings/{id}/reviews/`).

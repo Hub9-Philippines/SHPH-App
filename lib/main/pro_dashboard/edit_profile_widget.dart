@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '/api/shph_api.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import '/services/logging_service.dart';
@@ -172,99 +172,6 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
     }
   }
 
-  Future<void> _changePhone() async {
-    final phoneController = TextEditingController();
-    final newPhone = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Change Phone'),
-        content: TextField(
-          controller: phoneController,
-          keyboardType: TextInputType.phone,
-          decoration: InputDecoration(
-            hintText: 'Enter new phone number',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          FilledButton(
-              onPressed: () => Navigator.pop(ctx, phoneController.text.trim()),
-              child: const Text('Send OTP')),
-        ],
-      ),
-    );
-    if (newPhone == null || newPhone.isEmpty || !mounted) return;
-    String sessionId;
-    try {
-      sessionId =
-          await ShphUsersApi.instance.initiatePhoneChange(newPhone: newPhone);
-      if (sessionId.isEmpty) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Failed to initiate phone change'),
-                backgroundColor: Colors.red),
-          );
-        }
-        return;
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('Failed to initiate phone change: $e'),
-              backgroundColor: Colors.red),
-        );
-      }
-      return;
-    }
-    final codeController = TextEditingController();
-    final code = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Verify Phone'),
-        content: TextField(
-          controller: codeController,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            hintText: 'Enter verification code',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          FilledButton(
-              onPressed: () => Navigator.pop(ctx, codeController.text.trim()),
-              child: const Text('Verify')),
-        ],
-      ),
-    );
-    if (code == null || code.isEmpty || !mounted) return;
-    try {
-      await ShphUsersApi.instance
-          .verifyPhoneChange(code: code, sessionId: sessionId);
-      _phoneController.text = newPhone;
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Phone number updated successfully'),
-              backgroundColor: Colors.green),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('Failed to verify code: $e'),
-              backgroundColor: Colors.red),
-        );
-      }
-    }
-  }
-
   Future<String?> _uploadPhoto(String userId) async {
     if (_selectedImage == null) {
       return _currentPhotoUrl;
@@ -286,13 +193,15 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
 
     setState(() => isSaving = true);
     try {
-      final me = await ShphUsersApi.instance.getMe();
-      final userId = me['id']?.toString() ?? 'profile';
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) {
+        throw Exception('User not authenticated');
+      }
 
       // Upload photo if selected
       final photoUrl = await _uploadPhoto(userId);
 
-      // Update the authenticated JWT profile through the REST API.
+      // Update profile via ProfilesService (REST-first, else Supabase)
       final updates = <String, dynamic>{
         'first_name': _firstNameController.text.trim(),
         'last_name': _lastNameController.text.trim(),
@@ -407,22 +316,6 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
                                 label: 'Phone Number',
                                 hint: 'Your contact number',
                                 keyboardType: TextInputType.phone,
-                              ),
-                              const SizedBox(height: 12),
-                              SizedBox(
-                                width: double.infinity,
-                                height: 48,
-                                child: OutlinedButton.icon(
-                                  onPressed: _changePhone,
-                                  icon:
-                                      const Icon(Icons.phone_rounded, size: 18),
-                                  label: const Text('Change Phone'),
-                                  style: OutlinedButton.styleFrom(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                  ),
-                                ),
                               ),
                             ],
                           ),

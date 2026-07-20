@@ -20,10 +20,6 @@ class FFAppState extends ChangeNotifier {
       _phone = prefs.getString('ff_phone') ?? _phone;
     });
     _safeInit(() {
-      _phoneLoginMode =
-          prefs.getBool('ff_phoneLoginMode') ?? _phoneLoginMode;
-    });
-    _safeInit(() {
       _isDarkMode = prefs.getBool('ff_isDarkMode') ?? _isDarkMode;
     });
     _safeInit(() {
@@ -82,15 +78,6 @@ class FFAppState extends ChangeNotifier {
   int pincode = 0;
 
   String tempsignuprole = '';
-
-  /// Selects the API OTP endpoint used by the shared phone verification page.
-  /// False registers a new phone account; true logs in an existing account.
-  bool _phoneLoginMode = false;
-  bool get phoneLoginMode => _phoneLoginMode;
-  set phoneLoginMode(bool value) {
-    _phoneLoginMode = value;
-    prefs.setBool('ff_phoneLoginMode', value);
-  }
 
   bool _isDarkMode = false;
   bool get isDarkMode => _isDarkMode;

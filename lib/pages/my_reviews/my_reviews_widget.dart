@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/api/shph_api.dart';
+import '/auth/supabase_auth/auth_util.dart';
+import '/backend/supabase/database/tables/reviews.dart';
+import '/backend/supabase/database/tables/service_listings.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/logging_service.dart';
@@ -39,14 +41,43 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
   }
 
   Future<List<_UserReviewItem>> _fetchReviews() async {
+    if (currentUserUid.isEmpty) {
+      return [];
+    }
+
     try {
-      final reviews = await ShphServicesApi.instance.listMyReviews();
-      return reviews.map((review) {
-        final listing = review['service_listing'] as Map<String, dynamic>?;
-        return _UserReviewItem(review: review, service: listing);
-      }).toList();
+      final reviews = await ReviewsTable().queryRows(
+        queryFn: (q) => q
+            .eq('user_id', currentUserUid)
+            .order('created_at', ascending: false),
+      );
+      if (reviews.isEmpty) {
+        return [];
+      }
+
+      final serviceIds = reviews.map((review) => review.serviceListingId).toSet();
+      final services = await ServiceListingsTable().queryRows(
+        queryFn: (q) => q.inFilter('id', serviceIds.toList()),
+      );
+      final serviceById = {
+        for (final service in services) service.id: service,
+      };
+
+      return reviews
+          .map(
+            (review) => _UserReviewItem(
+              review: review,
+              service: serviceById[review.serviceListingId],
+            ),
+          )
+          .toList();
     } catch (e, stackTrace) {
-      LoggingService.error('Failed to load user reviews', tag: 'MyReviews', error: e, stackTrace: stackTrace);
+      LoggingService.error(
+        'Failed to load user reviews',
+        tag: 'MyReviews',
+        error: e,
+        stackTrace: stackTrace,
+      );
       rethrow;
     }
   }
@@ -385,14 +416,11 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
       );
 
   Widget _buildReviewCard(_UserReviewItem item) {
+    final service = item.service;
     final review = item.review;
-    final createdAt = review['created_at'] as String? ?? '';
-    final date = DateTime.tryParse(createdAt) ?? DateTime.now();
-    final rating = (review['rating'] as num?)?.toInt() ?? 0;
-
-    final serviceTitle = item.service?['title'] as String? ?? 'Service #${review['service_listing_id']}';
-    final category = item.service?['category_name'] as String? ?? 'Service';
-    final providerName = item.service?['provider_name'] as String? ?? 'Service Provider';
+    final serviceTitle = service?.title ?? 'Service #${review.serviceListingId}';
+    final category = service?.categoryName ?? 'Service';
+    final providerName = service?.providerName ?? 'Service Provider';
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -451,7 +479,7 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
                 ),
               ),
               Text(
-                _formatDate(date),
+                _formatDate(review.createdAt),
                 style: AppTheme.of(context).labelSmall.override(
                       font: GoogleFonts.poppins(),
                       color: const Color(0xFF94A3B8),
@@ -467,7 +495,7 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
                 (index) => Padding(
                   padding: const EdgeInsets.only(right: 4),
                   child: FaIcon(
-                    index < rating
+                    index < review.rating
                         ? FontAwesomeIcons.solidStar
                         : FontAwesomeIcons.star,
                     color: const Color(0xFFFFB703),
@@ -477,7 +505,7 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
               ),
               const SizedBox(width: 8),
               Text(
-                '$rating/5',
+                '${review.rating}/5',
                 style: AppTheme.of(context).labelLarge.override(
                       font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
                       color: const Color(0xFF14213D),
@@ -485,10 +513,10 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
               ),
             ],
           ),
-          if ((review['comment'] as String? ?? review['review'] as String? ?? '').trim().isNotEmpty) ...[
+          if ((review.comment ?? '').trim().isNotEmpty) ...[
             const SizedBox(height: 12),
             Text(
-              (review['comment'] as String? ?? review['review'] as String? ?? '').trim(),
+              review.comment!.trim(),
               style: AppTheme.of(context).bodyMedium.override(
                     font: GoogleFonts.poppins(),
                     color: const Color(0xFF475569),
@@ -546,8 +574,8 @@ class _UserReviewItem {
     required this.service,
   });
 
-  final Map<String, dynamic> review;
-  final Map<String, dynamic>? service;
+  final ReviewsRow review;
+  final ServiceListingsRow? service;
 }
 
 class _ReviewStats {
@@ -561,10 +589,10 @@ class _ReviewStats {
     final count = reviews.length;
     final total = reviews.fold<int>(
       0,
-      (sum, item) => sum + ((item.review['rating'] as num?)?.toInt() ?? 0),
+      (sum, item) => sum + item.review.rating,
     );
     final fiveStarCount =
-        reviews.where((item) => (item.review['rating'] as num?)?.toInt() == 5).length;
+        reviews.where((item) => item.review.rating == 5).length;
 
     return _ReviewStats(
       count: count,

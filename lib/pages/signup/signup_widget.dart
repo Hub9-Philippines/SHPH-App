@@ -4,10 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
 
-import '/api/shph_api.dart';
 import '/auth/supabase_auth/auth_util.dart';
+import '/backend/supabase/supabase.dart';
 import '/components/back_button/back_button_widget.dart';
-import '/flutter_flow/custom_functions.dart' as functions;
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
@@ -26,11 +25,8 @@ class SignupWidget extends StatefulWidget {
   State<SignupWidget> createState() => _SignupWidgetState();
 }
 
-class _SignupWidgetState extends State<SignupWidget>
-    with TickerProviderStateMixin {
+class _SignupWidgetState extends State<SignupWidget> {
   late SignupModel _model;
-
-  bool _skipEmailVerification = false;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -39,21 +35,10 @@ class _SignupWidgetState extends State<SignupWidget>
     super.initState();
     _model = createModel(context, SignupModel.new);
 
-    _model.tabBarController = TabController(
-      vsync: this,
-      length: 2,
-      initialIndex: 0,
-    )..addListener(() => safeSetState(() {}));
-
     _model.phoneFieldTextController ??= TextEditingController();
     _model.phoneFieldFocusNode ??= FocusNode();
     _model.phoneFieldMask = MaskTextInputFormatter(mask: '+63##########');
     handlePhoneAuthStateChanges(context);
-    _model.emailTextFieldTextController ??= TextEditingController();
-    _model.emailTextFieldFocusNode ??= FocusNode();
-    _model.passwordTextFieldTextController ??= TextEditingController();
-    _model.passwordTextFieldFocusNode ??= FocusNode();
-    _model.passwordTextFieldFocusNode!.addListener(() => safeSetState(() {}));
   }
 
   @override
@@ -100,19 +85,8 @@ class _SignupWidgetState extends State<SignupWidget>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildHeader(theme),
-                    const SizedBox(height: 32),
-                    _buildTabBar(theme),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      height: 440,
-                      child: TabBarView(
-                        controller: _model.tabBarController,
-                        children: [
-                          _buildPhoneTab(theme),
-                          _buildEmailTab(theme),
-                        ],
-                      ),
-                    ),
+                    const SizedBox(height: 40),
+                    _buildForm(theme),
                   ],
                 ),
               ),
@@ -153,91 +127,7 @@ class _SignupWidgetState extends State<SignupWidget>
     );
   }
 
-  Widget _buildTabBar(AppThemeData theme) {
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.alternate,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      padding: const EdgeInsets.all(4),
-      child: Row(
-        children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: () => _model.tabBarController!.animateTo(0),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  color: _model.tabBarCurrentIndex == 0
-                      ? theme.secondaryBackground
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: _model.tabBarCurrentIndex == 0
-                      ? [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ]
-                      : null,
-                ),
-                child: Text(
-                  'Phone',
-                  textAlign: TextAlign.center,
-                  style: theme.bodyMedium.copyWith(
-                    fontWeight: _model.tabBarCurrentIndex == 0
-                        ? FontWeight.w600
-                        : FontWeight.normal,
-                    color: _model.tabBarCurrentIndex == 0
-                        ? theme.primaryText
-                        : theme.secondaryText,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: GestureDetector(
-              onTap: () => _model.tabBarController!.animateTo(1),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  color: _model.tabBarCurrentIndex == 1
-                      ? theme.secondaryBackground
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: _model.tabBarCurrentIndex == 1
-                      ? [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ]
-                      : null,
-                ),
-                child: Text(
-                  'Email',
-                  textAlign: TextAlign.center,
-                  style: theme.bodyMedium.copyWith(
-                    fontWeight: _model.tabBarCurrentIndex == 1
-                        ? FontWeight.w600
-                        : FontWeight.normal,
-                    color: _model.tabBarCurrentIndex == 1
-                        ? theme.primaryText
-                        : theme.secondaryText,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPhoneTab(AppThemeData theme) {
+  Widget _buildForm(AppThemeData theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -304,7 +194,9 @@ class _SignupWidgetState extends State<SignupWidget>
           maxLength: 13,
           maxLengthEnforcement: MaxLengthEnforcement.enforced,
           buildCounter: (context,
-                  {required currentLength, required isFocused, maxLength}) =>
+                  {required currentLength,
+                  required isFocused,
+                  maxLength}) =>
               null,
           keyboardType: TextInputType.phone,
           cursorColor: theme.primaryText,
@@ -313,7 +205,7 @@ class _SignupWidgetState extends State<SignupWidget>
               _model.phoneFieldTextControllerValidator.asValidator(context),
           inputFormatters: [_model.phoneFieldMask],
         ),
-        if (_model.errorMessage != null && _model.tabBarCurrentIndex == 0)
+        if (_model.errorMessage != null)
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: Text(
@@ -331,31 +223,78 @@ class _SignupWidgetState extends State<SignupWidget>
                   safeSetState(() {});
 
                   if (_model.phoneFieldTextController.text != '') {
-                    final phoneNumberVal = _model.phoneFieldTextController.text;
-                    if (phoneNumberVal.isEmpty ||
-                        !phoneNumberVal.startsWith('+')) {
+                    try {
+                      _model.isPhoneExists =
+                          await ProfilesTable().queryRows(
+                        queryFn: (q) => q.eqOrNull(
+                          'phone_number',
+                          FFAppState().phone,
+                        ),
+                      );
+                      if (_model.isPhoneExists?.firstOrNull?.phoneNumber ==
+                          FFAppState().phone) {
+                        _model.isLoading = false;
+                        _model.errorMessage =
+                            'This phone number is already associated with an account. Please login instead.';
+                        safeSetState(() {});
+                        if (!context.mounted) return;
+                        await showDialog(
+                          context: context,
+                          builder: (alertDialogContext) => AlertDialog(
+                            title: const Text('Account Already Exists'),
+                            content: const Text(
+                                'This phone number is already associated with an account. Please login instead.'),
+                            actions: [
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.pop(alertDialogContext),
+                                child: const Text('Ok'),
+                              ),
+                            ],
+                          ),
+                        );
+                      } else {
+                        final phoneNumberVal =
+                            _model.phoneFieldTextController.text;
+                        if (phoneNumberVal.isEmpty ||
+                            !phoneNumberVal.startsWith('+')) {
+                          _model.isLoading = false;
+                          _model.errorMessage =
+                              'Phone Number is required and has to start with +.';
+                          safeSetState(() {});
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                  'Phone Number is required and has to start with +.'),
+                            ),
+                          );
+                          return;
+                        }
+                        if (!context.mounted) return;
+                        await beginPhoneAuth(
+                          context: context,
+                          phoneNumber: phoneNumberVal,
+                          onCodeSent: (context) async {
+                            if (!context.mounted) return;
+                            await context.pushNamed(
+                              PhoneVerifyUserWidget.routeName,
+                            );
+                          },
+                        );
+                        _model.isLoading = false;
+                        safeSetState(() {});
+                      }
+                    } catch (e) {
                       _model.isLoading = false;
                       _model.errorMessage =
-                          'Phone Number is required and has to start with +.';
+                          'An error occurred. Please try again.';
                       safeSetState(() {});
                       if (!context.mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                              'Phone Number is required and has to start with +.'),
-                        ),
+                        SnackBar(content: Text('Error: ${e.toString()}')),
                       );
-                      return;
                     }
-                    FFAppState().phoneLoginMode = false;
-                    FFAppState().phone = phoneNumberVal;
-                    _model.isLoading = false;
-                    safeSetState(() {});
-                    if (!context.mounted) return;
-                    await context.pushNamed(
-                      PhoneRegistrationPage.routeName,
-                      extra: {'phone': phoneNumberVal},
-                    );
                   } else {
                     _model.isLoading = false;
                     _model.errorMessage =
@@ -380,266 +319,6 @@ class _SignupWidgetState extends State<SignupWidget>
                   safeSetState(() {});
                 },
           text: _model.isLoading ? 'Signing Up...' : 'Sign Up',
-          options: FFButtonOptions(
-            width: double.infinity,
-            height: 52,
-            color: _model.isLoading ? theme.alternate : theme.primary,
-            textStyle: theme.titleMedium.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
-            elevation: 0,
-            borderRadius: BorderRadius.circular(12),
-            disabledColor: theme.alternate,
-          ),
-        ),
-        const SizedBox(height: 24),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Already have an account? ',
-              style: theme.bodyMedium.copyWith(color: theme.secondaryText),
-            ),
-            GestureDetector(
-              onTap: () => context.pushNamed(SigninWidget.routeName),
-              child: Text(
-                'Sign In',
-                style: theme.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: theme.primary,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEmailTab(AppThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Email',
-          style: theme.bodyMedium.copyWith(
-            fontWeight: FontWeight.w500,
-            color: theme.primaryText,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: _model.emailTextFieldTextController,
-          focusNode: _model.emailTextFieldFocusNode,
-          onChanged: (_) => EasyDebounce.debounce(
-            '_model.emailTextFieldTextController',
-            Duration.zero,
-            () {
-              _model.isEmailValid = functions
-                  .checkEmailRegex(_model.emailTextFieldTextController.text);
-              safeSetState(() {});
-            },
-          ),
-          autofocus: false,
-          textInputAction: TextInputAction.next,
-          obscureText: false,
-          decoration: InputDecoration(
-            labelText: 'Email address',
-            labelStyle: theme.bodyLarge.copyWith(color: theme.secondaryText),
-            hintText: 'you@example.com',
-            hintStyle: theme.bodyLarge.copyWith(color: theme.secondaryText),
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(
-                color: !_model.isEmailValid ? theme.error : theme.alternate,
-                width: 1,
-              ),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(
-                color: !_model.isEmailValid ? theme.error : theme.alternate,
-                width: 1.5,
-              ),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: theme.error, width: 1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: theme.error, width: 1.5),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            filled: true,
-            fillColor: theme.primaryBackground,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-          ),
-          style: theme.bodyLarge,
-          cursorColor: theme.primaryText,
-          validator:
-              _model.emailTextFieldTextControllerValidator.asValidator(context),
-        ),
-        if (!_model.isEmailValid)
-          Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Text(
-              'Invalid email',
-              style: theme.bodySmall.copyWith(color: theme.error),
-            ),
-          ),
-        const SizedBox(height: 16),
-        Text(
-          'Password',
-          style: theme.bodyMedium.copyWith(
-            fontWeight: FontWeight.w500,
-            color: theme.primaryText,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: _model.passwordTextFieldTextController,
-          focusNode: _model.passwordTextFieldFocusNode,
-          onChanged: (_) => EasyDebounce.debounce(
-            '_model.passwordTextFieldTextController',
-            Duration.zero,
-            () => safeSetState(() {}),
-          ),
-          autofocus: false,
-          textInputAction: TextInputAction.done,
-          obscureText: !_model.passwordTextFieldVisibility,
-          decoration: InputDecoration(
-            labelText: 'Create a password',
-            labelStyle: theme.bodyLarge.copyWith(color: theme.secondaryText),
-            hintText: '••••••••',
-            hintStyle: theme.bodyLarge.copyWith(color: theme.secondaryText),
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: theme.alternate, width: 1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: theme.alternate, width: 1.5),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: theme.error, width: 1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: theme.error, width: 1.5),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            filled: true,
-            fillColor: theme.primaryBackground,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-            suffixIcon: InkWell(
-              onTap: () => safeSetState(() =>
-                  _model.passwordTextFieldVisibility =
-                      !_model.passwordTextFieldVisibility),
-              focusNode: FocusNode(skipTraversal: true),
-              child: Icon(
-                _model.passwordTextFieldVisibility
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined,
-                color: theme.secondaryText,
-                size: 24,
-              ),
-            ),
-          ),
-          style: theme.bodyLarge,
-          cursorColor: theme.primaryText,
-          validator: _model.passwordTextFieldTextControllerValidator
-              .asValidator(context),
-        ),
-        if (_model.errorMessage != null && _model.tabBarCurrentIndex == 1)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              _model.errorMessage!,
-              style: theme.bodySmall.copyWith(color: theme.error),
-            ),
-          ),
-        const SizedBox(height: 12),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Row(
-            children: [
-              SizedBox(
-                height: 24,
-                width: 24,
-                child: Checkbox(
-                  value: _skipEmailVerification,
-                  onChanged: (v) =>
-                      setState(() => _skipEmailVerification = v ?? false),
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Text(
-                  'Skip email verification',
-                  style: TextStyle(fontSize: 13),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        FFButtonWidget(
-          onPressed: _model.isLoading
-              ? null
-              : (_model.emailTextFieldTextController.text == '' ||
-                      _model.passwordTextFieldTextController.text == '' ||
-                      !_model.isEmailValid)
-                  ? null
-                  : () async {
-                      _model.errorMessage = null;
-                      _model.isLoading = true;
-                      safeSetState(() {});
-
-                      try {
-                        if (_skipEmailVerification) {
-                          GoRouter.of(context).prepareAuthEvent();
-                          await ShphAuthApi.instance.register(payload: {
-                            'email': _model.emailTextFieldTextController.text,
-                            'password':
-                                _model.passwordTextFieldTextController.text,
-                            'role': 'client',
-                          });
-                          if (!context.mounted) return;
-                          context.goNamed(HomeWidget.routeName);
-                        } else {
-                          GoRouter.of(context).prepareAuthEvent();
-                          await authManager.createAccountWithEmail(
-                            context,
-                            _model.emailTextFieldTextController.text,
-                            _model.passwordTextFieldTextController.text,
-                          );
-
-                          if (!context.mounted) return;
-
-                          context.pushReplacementNamed(
-                            EmailVerifyRegisterWidget.routeName,
-                            extra: {
-                              'email': _model.emailTextFieldTextController.text,
-                              'password':
-                                  _model.passwordTextFieldTextController.text,
-                            },
-                          );
-                        }
-                      } catch (e) {
-                        _model.isLoading = false;
-                        _model.errorMessage =
-                            'An error occurred. Please try again.';
-                        safeSetState(() {});
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error: ${e.toString()}')),
-                        );
-                      }
-                    },
-          text: _model.isLoading ? 'Signing Up...' : 'Create Account',
           options: FFButtonOptions(
             width: double.infinity,
             height: 52,

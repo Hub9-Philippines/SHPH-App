@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/api/shph_api.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -452,32 +451,6 @@ class _EKYCBeginWidgetState extends State<EKYCBeginWidget> {
                           color: Colors.transparent,
                         ),
                         borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(0, 8, 0, 0),
-                    child: TextButton(
-                      onPressed: () async {
-                        try {
-                          await ShphAuthApi.instance.skipKyc();
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('KYC skipped. You can verify later.')),
-                            );
-                            context.goNamed(HomeWidget.routeName);
-                          }
-                        } catch (e) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Error: ${e.toString()}')),
-                            );
-                          }
-                        }
-                      },
-                      child: Text(
-                        'Skip for now',
-                        style: TextStyle(color: AppTheme.of(context).secondaryText),
                       ),
                     ),
                   ),

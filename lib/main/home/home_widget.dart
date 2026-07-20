@@ -8,7 +8,6 @@ import 'package:provider/provider.dart';
 
 import '/auth/supabase_auth/auth_util.dart';
 import '/backend/supabase/supabase.dart' hide LatLng;
-import '/services/addresses_service.dart';
 import '/flutter_flow/flutter_flow_util.dart' hide LatLng;
 import '/index.dart';
 import '/models/service_listing.dart';
@@ -196,7 +195,16 @@ class _HomeWidgetState extends State<HomeWidget> {
       _addressFuture = Future.value(<AddressesRow>[]);
       return;
     }
-    _addressFuture = _loadAddressFromService().catchError((error) {
+    _addressFuture = FFAppState()
+        .getAddress(
+      uniqueQueryKey: 'address_$currentUserUid',
+      requestFn: () => AddressesTable().queryRows(
+        queryFn: (q) => q
+            .eqOrNull('user_id', currentUserUid)
+            .order('is_default', ascending: false),
+      ),
+    )
+        .catchError((error) {
       LoggingService.error(
         'Failed to load address: $error',
         tag: 'Home',
@@ -238,11 +246,6 @@ class _HomeWidgetState extends State<HomeWidget> {
       }
       return rows;
     });
-  }
-
-  Future<List<AddressesRow>> _loadAddressFromService() async {
-    final rows = await AddressesService.instance.listAddresses();
-    return rows.map((data) => AddressesRow(data)).toList();
   }
 
   List<_ActiveBookingShortcutData> _buildActiveBookingShortcuts() {
@@ -548,11 +551,6 @@ class _HomeWidgetState extends State<HomeWidget> {
                           ),
                         },
                       ),
-                    ),
-                    _buildCategoryChip(
-                      icon: Icons.bolt_rounded,
-                      label: 'On-Demand',
-                      onTap: () => context.push('/on-demand/booking'),
                     ),
                   ],
                 ),

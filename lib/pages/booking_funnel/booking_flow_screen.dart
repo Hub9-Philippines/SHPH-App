@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '/app_state.dart';
 import '/backend/supabase/database/tables/addresses.dart';
@@ -11,8 +12,6 @@ import '/components/edit_address/edit_address_widget.dart';
 import '/flutter_flow/lat_lng.dart' as ff_latlng;
 import '/models/service_listing.dart';
 import '/pages/pin_location/pin_location_widget.dart';
-import '/services/bookings_service.dart';
-import '/services/addresses_service.dart';
 import '/theme/app_theme.dart';
 import 'booking_controller.dart';
 import 'booking_models.dart';
@@ -312,70 +311,34 @@ class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
 
   Future<void> _pickScheduledSlot(BuildContext context) async {
     final controller = context.read<BookingFlowController>();
-    final listingId = controller.draft.serviceListingId;
     final date = await showDatePicker(
       context: context,
       initialDate: DateTime.now().add(const Duration(days: 1)),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 180)),
     );
-    if (date == null || !context.mounted) {
+    if (date == null) {
       return;
     }
 
-    final dateStr =
-        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-
-    if (listingId == null) {
-      final time = await showTimePicker(
-        context: context,
-        initialTime: const TimeOfDay(hour: 9, minute: 0),
-      );
-      if (time == null || !context.mounted) return;
-      controller.setSchedule(
-        date: date,
-        time: time,
-        urgency: BookingUrgency.scheduled,
-      );
+    if (!context.mounted) {
       return;
     }
-
-    List<Map<String, dynamic>> slots;
-    try {
-      slots = await BookingsService.instance.getAvailableTimeSlots(
-        listingId: listingId,
-        date: dateStr,
-      );
-    } catch (_) {
-      slots = [];
-    }
-
-    if (!context.mounted) return;
-
-    if (slots.isEmpty) {
-      final time = await showTimePicker(
-        context: context,
-        initialTime: const TimeOfDay(hour: 9, minute: 0),
-      );
-      if (time == null || !context.mounted) return;
-      controller.setSchedule(
-        date: date,
-        time: time,
-        urgency: BookingUrgency.scheduled,
-      );
-      return;
-    }
-
-    final selected = await showModalBottomSheet<TimeOfDay>(
+    final time = await showTimePicker(
       context: context,
-      builder: (sheetContext) => _TimeSlotPicker(slots: slots),
+      initialTime: const TimeOfDay(hour: 9, minute: 0),
     );
+    if (time == null) {
+      return;
+    }
 
-    if (selected == null || !context.mounted) return;
+    if (!context.mounted) {
+      return; // Safe check before calling updates
+    }
 
     controller.setSchedule(
       date: date,
-      time: selected,
+      time: time,
       urgency: BookingUrgency.scheduled,
     );
   }
@@ -492,12 +455,11 @@ class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
         : controller.draft.address.city;
 
     if (appState.selectedAddressId != null) {
-      await AddressesService.instance
-          .updateAddress(appState.selectedAddressId!, {
+      await Supabase.instance.client.from('addresses').update({
         'latitude': latitude,
         'longitude': longitude,
         'address_line1': updatedLine1,
-      });
+      }).eq('id', appState.selectedAddressId!);
     }
 
     appState.setSelectedAddress(
@@ -775,111 +737,6 @@ class _AddressBanner extends StatelessWidget {
               Icon(Icons.edit_rounded, color: theme.secondaryText, size: 18),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _TimeSlotPicker extends StatelessWidget {
-  const _TimeSlotPicker({required this.slots});
-
-  final List<Map<String, dynamic>> slots;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-      decoration: BoxDecoration(
-        color: theme.primaryBackground,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 42,
-            height: 5,
-            decoration: BoxDecoration(
-              color: theme.alternate,
-              borderRadius: BorderRadius.circular(999),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Available time slots',
-            style: theme.titleMedium.override(
-              font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Choose a time for your booking',
-            style: theme.bodySmall.override(color: theme.secondaryText),
-          ),
-          const SizedBox(height: 16),
-          Flexible(
-            child: ListView.separated(
-              shrinkWrap: true,
-              itemCount: slots.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final slot = slots[index];
-                final timeStr = slot['time'] as String? ?? '';
-                final displayTime = slot['display'] as String? ?? timeStr;
-                final parts = timeStr.split(':');
-                final hour =
-                    int.tryParse(parts.isNotEmpty ? parts[0] : '9') ?? 9;
-                final minute =
-                    int.tryParse(parts.length > 1 ? parts[1] : '0') ?? 0;
-                return _TimeSlotChip(
-                  label: displayTime,
-                  onTap: () => Navigator.pop(
-                    context,
-                    TimeOfDay(hour: hour, minute: minute),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TimeSlotChip extends StatelessWidget {
-  const _TimeSlotChip({required this.label, required this.onTap});
-
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        decoration: BoxDecoration(
-          color: theme.secondaryBackground,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: theme.alternate),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.schedule_rounded, size: 20, color: theme.primary),
-            const SizedBox(width: 12),
-            Text(
-              label,
-              style: theme.bodyLarge.override(fontWeight: FontWeight.w600),
-            ),
-            const Spacer(),
-            Icon(Icons.chevron_right_rounded, color: theme.secondaryText),
-          ],
         ),
       ),
     );

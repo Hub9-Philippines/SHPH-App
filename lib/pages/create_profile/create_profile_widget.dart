@@ -6,6 +6,7 @@ import 'package:percent_indicator/percent_indicator.dart';
 import 'package:provider/provider.dart';
 
 import '/auth/supabase_auth/auth_util.dart';
+import '/backend/supabase/supabase.dart';
 import '/components/password_validation_item/password_validation_item_widget.dart';
 import '/custom_code/actions/index.dart' as actions;
 import '/flutter_flow/custom_functions.dart' as functions;
@@ -15,7 +16,6 @@ import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
 import '/services/error_handler.dart';
 import '/services/logging_service.dart';
-import '/services/profiles_service.dart';
 import '/theme/app_theme.dart';
 import 'create_profile_model.dart';
 
@@ -108,6 +108,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
     }
   }
 
+  /// Load existing profile data from Supabase and pre-populate fields
   Future<void> _loadExistingProfileData() async {
     try {
       final userId = currentUserUid;
@@ -124,9 +125,13 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
         tag: 'CreateProfile',
       );
 
-      final profile = await ProfilesService.instance.getProfile();
+      final response = await Supabase.instance.client
+          .from('profiles')
+          .select('first_name, last_name, email, phone_number')
+          .eq('id', userId)
+          .maybeSingle();
 
-      if (profile == null) {
+      if (response == null) {
         LoggingService.debug(
           'No existing profile found, showing empty form',
           tag: 'CreateProfile',
@@ -135,7 +140,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
       }
 
       LoggingService.info(
-        'Profile data loaded: ${profile.firstName}, ${profile.lastName}',
+        'Profile data loaded: $response',
         tag: 'CreateProfile',
       );
 
@@ -143,28 +148,28 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
       if (mounted) {
         setState(() {
           // First name
-          final firstName = profile.firstName;
+          final firstName = response['first_name'] as String?;
           if (firstName != null && firstName.isNotEmpty) {
             _model.firstNameTextFieldTextController?.text = firstName;
             _model.firsthasValue = true;
           }
 
           // Last name
-          final lastName = profile.lastName;
+          final lastName = response['last_name'] as String?;
           if (lastName != null && lastName.isNotEmpty) {
             _model.lastNameTextFieldTextController?.text = lastName;
             _model.lasthasValue = true;
           }
 
           // Email
-          final email = profile.email;
+          final email = response['email'] as String?;
           if (email != null && email.isNotEmpty) {
             _model.emailTextFieldTextController?.text = email;
             _model.isEmailvalid = functions.checkEmailRegex(email);
           }
 
-          // Phone
-          final phone = profile.phoneNumber;
+          // Phone (from FFAppState or Supabase)
+          final phone = response['phone_number'] as String?;
           if (phone != null && phone.isNotEmpty) {
             FFAppState().phone = phone;
           }

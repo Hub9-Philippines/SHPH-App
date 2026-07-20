@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/auth/supabase_auth/auth_util.dart';
-import '/backend/supabase/database/tables/addresses.dart';
+import '/backend/supabase/supabase.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
-import '/services/addresses_service.dart';
 import '/theme/app_theme.dart';
 import 'edit_address_model.dart';
 
@@ -41,7 +40,11 @@ class _EditAddressWidgetState extends State<EditAddressWidget> {
       _addressesFuture = Future.value([]);
       return;
     }
-    _addressesFuture = AddressesService.instance.listAddressRows();
+    _addressesFuture = AddressesTable().queryRows(
+      queryFn: (q) => q
+          .eq('user_id', currentUserUid)
+          .order('is_default', ascending: false),
+    );
   }
 
   @override
@@ -174,7 +177,8 @@ class _EditAddressWidgetState extends State<EditAddressWidget> {
                     width: double.infinity,
                     height: 56,
                     padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 0),
-                    iconPadding: EdgeInsetsDirectional.zero,
+                    iconPadding:
+                        EdgeInsetsDirectional.zero,
                     color: AppTheme.of(context).primary,
                     textStyle: AppTheme.of(context).titleMedium.override(
                           color: Colors.white,

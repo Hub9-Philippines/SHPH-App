@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/api/shph_api.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/services/bookings_service.dart';
-import '/services/payment_controller.dart';
 import '/theme/app_theme.dart';
 import 'booking_payment_model.dart';
 
@@ -46,7 +43,6 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
   late BookingPaymentModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
   String? _selectedPaymentMethod;
-  final _voucherController = TextEditingController();
 
   @override
   void initState() {
@@ -57,7 +53,6 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
   @override
   void dispose() {
     _model.dispose();
-    _voucherController.dispose();
     super.dispose();
   }
 
@@ -75,113 +70,6 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
     setState(() => _model.isLoading = true);
 
     try {
-      final price = _parsePrice(widget.price);
-      final amountInCents = price != null ? (price * 100).round() : 0;
-
-      if (_selectedPaymentMethod == 'wallet') {
-        final walletData = await BookingsService.instance.getWallet();
-        final balance = (walletData['balance'] as num?)?.toDouble() ?? 0.0;
-
-        if (price != null && balance < price) {
-          if (mounted) {
-            setState(() {
-              _model.isLoading = false;
-              _model.errorMessage =
-                  'Insufficient wallet balance (PHP ${balance.toStringAsFixed(2)}). '
-                  'Please top up or choose another method.';
-            });
-          }
-          return;
-        }
-
-        final booking = await BookingsService.instance.createBooking(
-          serviceListingId: widget.serviceId!,
-          bookingDate: DateTime.parse(widget.bookingDate!),
-          bookingTime: widget.bookingTime!,
-          notes: widget.notes,
-          totalPrice: price,
-          paymentStatus: 'wallet',
-        );
-
-        if (!mounted) return;
-
-        if (booking == null) {
-          setState(() {
-            _model.isLoading = false;
-            _model.errorMessage = 'Failed to create booking. Please try again.';
-          });
-          return;
-        }
-
-        final paid = await BookingsService.instance.payWithWallet(booking.id);
-        if (!mounted) return;
-
-        if (paid) {
-          context.go('/booking-success');
-        } else {
-          setState(() {
-            _model.isLoading = false;
-            _model.errorMessage = 'Wallet payment failed. Please try again.';
-          });
-        }
-        return;
-      }
-
-      if (_selectedPaymentMethod == 'card') {
-        final intent = await BookingsService.instance.createPaymentIntent(
-          amount: amountInCents,
-          currency: 'PHP',
-        );
-
-        final clientSecret = intent['client_secret'] as String?;
-        if (clientSecret == null) {
-          if (mounted) {
-            setState(() {
-              _model.isLoading = false;
-              _model.errorMessage = 'Failed to initialize payment.';
-            });
-          }
-          return;
-        }
-
-        await Stripe.instance.initPaymentSheet(
-          paymentSheetParameters: SetupPaymentSheetParameters(
-            paymentIntentClientSecret: clientSecret,
-            merchantDisplayName: 'SerbisyoHub',
-          ),
-        );
-
-        await Stripe.instance.presentPaymentSheet();
-
-        final paymentIntentId = clientSecret.split('_secret_').first;
-
-        await BookingsService.instance.confirmPayment(
-          paymentIntentId: paymentIntentId,
-          paymentDetails: {},
-        );
-
-        final booking = await BookingsService.instance.createBooking(
-          serviceListingId: widget.serviceId!,
-          bookingDate: DateTime.parse(widget.bookingDate!),
-          bookingTime: widget.bookingTime!,
-          notes: widget.notes,
-          totalPrice: price,
-          paymentStatus: 'authorized_escrow',
-        );
-
-        if (!mounted) return;
-
-        if (booking != null) {
-          context.go('/booking-success');
-        } else {
-          setState(() {
-            _model.isLoading = false;
-            _model.errorMessage = 'Booking created but confirmation pending.';
-          });
-        }
-        return;
-      }
-
       final paymentStatus = _selectedPaymentMethod == 'cash'
           ? 'pay_on_completion'
           : 'authorized_escrow';
@@ -191,11 +79,13 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
         bookingDate: DateTime.parse(widget.bookingDate!),
         bookingTime: widget.bookingTime!,
         notes: widget.notes,
-        totalPrice: price,
+        totalPrice: _parsePrice(widget.price),
         paymentStatus: paymentStatus,
       );
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       if (booking != null) {
         context.go('/booking-success');
@@ -309,55 +199,6 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                               color: const Color(0xFF64748B),
                             ),
                       ),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _voucherController,
-                        decoration: InputDecoration(
-                          hintText: 'Enter promo code',
-                          prefixIcon: const Icon(Icons.discount_rounded),
-                          suffixIcon: TextButton(
-                            onPressed: () async {
-                              final code = _voucherController.text.trim();
-                              if (code.isEmpty) return;
-                              try {
-                                final result = await ShphPaymentsApi
-                                    .instance
-                                    .validateVoucher(code);
-                                if (!mounted) return;
-                                final valid = result['valid'] == true;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      valid
-                                          ? 'Promo applied! ${(result['discount'] as num?)?.toStringAsFixed(0) ?? ''} off'
-                                          : (result['error'] as String?) ??
-                                              'Invalid promo code',
-                                    ),
-                                    backgroundColor:
-                                        valid ? Color(0xFF059669) : null,
-                                  ),
-                                );
-                              } catch (_) {
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Error validating promo'),
-                                    ),
-                                  );
-                                }
-                              }
-                            },
-                            child: const Text('Apply'),
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 14,
-                          ),
-                        ),
-                      ),
                       const SizedBox(height: 16),
                       _buildPaymentOption(
                         value: 'card',
@@ -373,14 +214,6 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                         label: 'E-Wallets',
                         sublabel: 'GCash, Maya',
                         tint: const Color(0xFF0F8A6C),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildPaymentOption(
-                        value: 'wallet',
-                        icon: Icons.account_balance_wallet_rounded,
-                        label: 'SHPH Wallet',
-                        sublabel: 'Pay with your wallet balance',
-                        tint: const Color(0xFF2563EB),
                       ),
                       const SizedBox(height: 12),
                       _buildPaymentOption(

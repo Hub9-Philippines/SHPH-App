@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 
-import '/api/shph_api.dart';
+import '/services/psgc_service.dart';
 
 class GeographicSelectionModel extends ChangeNotifier {
   GeographicSelectionModel();
 
   bool isLoading = false;
-  Map<String, List<Map<String, dynamic>>> groupedItems = {};
-  List<Map<String, dynamic>> allItems = [];
+  Map<String, List<dynamic>> groupedItems = {};
+  List<dynamic> allItems = [];
 
   void loadData(
     GeographicSelectionType type,
@@ -16,54 +16,75 @@ class GeographicSelectionModel extends ChangeNotifier {
   }) async {
     isLoading = true;
     notifyListeners();
+
     try {
-      List<Map<String, dynamic>> items;
+      List<dynamic> items;
       switch (type) {
         case GeographicSelectionType.region:
-          items = await ShphLocationsApi.instance.listProvinces();
+          items = await PSGCService.getRegions();
           break;
         case GeographicSelectionType.province:
           if (parentCode != null) {
-            items = await ShphLocationsApi.instance.listCities(parentCode);
+            items = await PSGCService.getProvincesByRegion(parentCode);
           } else {
             items = [];
           }
           break;
         case GeographicSelectionType.cityMunicipality:
           if (parentCode != null) {
-            items = await ShphLocationsApi.instance.listBarangays(parentCode);
+            if (isRegionFallback) {
+              items =
+                  await PSGCService.getCitiesMunicipalitiesByRegion(parentCode);
+            } else {
+              items = await PSGCService.getCitiesMunicipalitiesByProvince(
+                  parentCode);
+            }
           } else {
             items = [];
           }
           break;
         case GeographicSelectionType.barangay:
-          items = [];
+          if (parentCode != null) {
+            items =
+                await PSGCService.getBarangaysByCityMunicipality(parentCode);
+          } else {
+            items = [];
+          }
           break;
       }
+
       allItems = items;
       _groupItems(items);
     } catch (e) {
-      if (kDebugMode) print('Error loading geographic data: $e');
+      if (kDebugMode) {
+        print('Error loading geographic data: $e');
+      }
     } finally {
       isLoading = false;
       notifyListeners();
     }
   }
 
-  void _groupItems(List<Map<String, dynamic>> items) {
+  void _groupItems(List<dynamic> items) {
     groupedItems = {};
     for (final item in items) {
-      final name = item['name'] as String? ?? '';
+      final name = item.name;
       if (name.isNotEmpty) {
         final firstLetter = name[0].toUpperCase();
-        groupedItems.putIfAbsent(firstLetter, () => []);
+        if (!groupedItems.containsKey(firstLetter)) {
+          groupedItems[firstLetter] = [];
+        }
         groupedItems[firstLetter]!.add(item);
       }
     }
+
+    // Sort alphabetically
     final sortedKeys = groupedItems.keys.toList()..sort();
     groupedItems = {for (final key in sortedKeys) key: groupedItems[key]!};
+
+    // Sort items within each group
     for (final key in groupedItems.keys) {
-      groupedItems[key]!.sort((a, b) => (a['name'] as String).compareTo(b['name'] as String));
+      groupedItems[key]!.sort((a, b) => a.name.compareTo(b.name));
     }
   }
 
@@ -72,7 +93,8 @@ class GeographicSelectionModel extends ChangeNotifier {
       _groupItems(allItems);
     } else {
       final filtered = allItems
-          .where((item) => (item['name'] as String? ?? '').toLowerCase().contains(query.toLowerCase()))
+          .where(
+              (item) => item.name.toLowerCase().contains(query.toLowerCase()))
           .toList();
       _groupItems(filtered);
     }

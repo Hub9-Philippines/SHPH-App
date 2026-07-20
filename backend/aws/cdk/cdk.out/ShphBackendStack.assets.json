@@ -1,0 +1,21 @@
+{
+  "version": "54.0.0",
+  "files": {
+    "37f0a27ed927a3490948b5ab9b21bed53a6a106fe070882406e405531c31c2c7": {
+      "displayName": "ShphBackendStack Template",
+      "source": {
+        "path": "ShphBackendStack.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "888577050475-ap-southeast-2-716bd3f2": {
+          "bucketName": "cdk-hnb659fds-assets-888577050475-ap-southeast-2",
+          "objectKey": "37f0a27ed927a3490948b5ab9b21bed53a6a106fe070882406e405531c31c2c7.json",
+          "region": "ap-southeast-2",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::888577050475:role/cdk-hnb659fds-file-publishing-role-888577050475-ap-southeast-2"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

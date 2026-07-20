@@ -1,11 +1,8 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/api/shph_api.dart';
 import '/auth/supabase_auth/auth_util.dart';
-import '/backend/supabase/database/tables/notifications.dart';
+import '/backend/supabase/supabase.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
@@ -28,7 +25,7 @@ class MyNotificationsWidget extends StatefulWidget {
 class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
   late MyNotificationsModel _model;
   late Future<List<NotificationsRow>> _notificationsFuture;
-  Timer? _refreshTimer;
+  RealtimeChannel? _realtimeChannel;
   bool _isMarkingAllRead = false;
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -37,14 +34,60 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
     super.initState();
     _model = createModel(context, MyNotificationsModel.new);
     _loadNotifications();
-    _refreshTimer = Timer.periodic(
-      const Duration(seconds: 15),
-      (_) => _reloadFromApi(),
-    );
+    _subscribeRealtime();
   }
 
-  void _reloadFromApi() {
-    if (!mounted) return;
+  void _subscribeRealtime() {
+    final userId = currentUserUid;
+    if (userId.isEmpty) {
+      return;
+    }
+
+    _realtimeChannel = SupaFlow.client
+        .channel('notifications:$userId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'notifications',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'user_id',
+            value: userId,
+          ),
+          callback: (_) {
+            _reloadFromRealtime();
+          },
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.update,
+          schema: 'public',
+          table: 'notifications',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'user_id',
+            value: userId,
+          ),
+          callback: (_) {
+            _reloadFromRealtime();
+          },
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.delete,
+          schema: 'public',
+          table: 'notifications',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'user_id',
+            value: userId,
+          ),
+          callback: (_) {
+            _reloadFromRealtime();
+          },
+        )
+        .subscribe();
+  }
+
+  void _reloadFromRealtime() {
     _loadNotifications();
     safeSetState(() {});
   }
@@ -67,13 +110,11 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
     }
 
     try {
-      final resp = await ShphNotificationsApi.instance.listNotifications();
-      final items = resp['results'];
-      final list = items is List ? items : <dynamic>[];
-      return list
-          .cast<Map<String, dynamic>>()
-          .map((e) => NotificationsRow(_normalizeNotificationData(e)))
-          .toList();
+      return await NotificationsTable().queryRows(
+        queryFn: (q) => q
+            .eq('user_id', currentUserUid)
+            .order('created_at', ascending: false),
+      );
     } catch (e, stackTrace) {
       LoggingService.error(
         'Failed to load notifications',
@@ -85,30 +126,18 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
     }
   }
 
-  Map<String, dynamic> _normalizeNotificationData(Map<String, dynamic> data) {
-    return {
-      'id': data['id']?.toString() ?? '',
-      'user_id': data['user_id']?.toString() ?? currentUserUid,
-      'title': data['title'] ?? '',
-      'body': data['body'] ?? data['message'],
-      'type': data['type'] ?? 'system',
-      'is_read': data['is_read'] ?? data['isRead'] ?? false,
-      'image_url': data['image_url'] ?? data['image'],
-      'action_url': data['action_url'] ?? data['actionUrl'],
-      'metadata': data['metadata'] ?? data['meta'] ?? {},
-      'created_at': data['created_at'] ??
-          data['createdAt'] ??
-          DateTime.now().toIso8601String(),
-      'read_at': data['read_at'] ?? data['readAt'],
-    };
-  }
-
   Future<void> _markAsRead(
     String notificationId, {
     bool refresh = true,
   }) async {
     try {
-      await ShphNotificationsApi.instance.markRead(notificationId);
+      await NotificationsTable().update(
+        data: {
+          'is_read': true,
+          'read_at': DateTime.now().toIso8601String(),
+        },
+        matchingRows: (rows) => rows.eq('id', notificationId),
+      );
       if (refresh) {
         _loadNotifications();
         safeSetState(() {});
@@ -129,7 +158,15 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
 
     safeSetState(() => _isMarkingAllRead = true);
     try {
-      await ShphNotificationsApi.instance.markAllRead();
+      await NotificationsTable().update(
+        data: {
+          'is_read': true,
+          'read_at': DateTime.now().toIso8601String(),
+        },
+        matchingRows: (rows) => rows
+            .eq('user_id', currentUserUid)
+            .eq('is_read', false),
+      );
       await _refreshNotifications();
     } catch (e, stackTrace) {
       LoggingService.error(
@@ -287,7 +324,9 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
 
   @override
   void dispose() {
-    _refreshTimer?.cancel();
+    if (_realtimeChannel != null) {
+      SupaFlow.client.removeChannel(_realtimeChannel!);
+    }
     _model.dispose();
     super.dispose();
   }
@@ -474,9 +513,8 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton(
-                onPressed: unreadCount == 0 || _isMarkingAllRead
-                    ? null
-                    : _markAllAsRead,
+                onPressed:
+                    unreadCount == 0 || _isMarkingAllRead ? null : _markAllAsRead,
                 style: OutlinedButton.styleFrom(
                   side: BorderSide(
                     color: Colors.white.withValues(alpha: 0.34),
@@ -534,8 +572,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                     color: AppTheme.of(context).primary.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child:
-                      Icon(icon, size: 30, color: AppTheme.of(context).primary),
+                  child: Icon(icon, size: 30, color: AppTheme.of(context).primary),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -561,8 +598,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
         ),
       );
 
-  Widget _buildNotificationCard(NotificationsRow notification) =>
-      GestureDetector(
+  Widget _buildNotificationCard(NotificationsRow notification) => GestureDetector(
         onTap: () => _handleNotificationTap(notification),
         child: Container(
           padding: const EdgeInsets.all(16),

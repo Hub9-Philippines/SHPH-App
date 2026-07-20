@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '/backend/supabase/database/tables/addresses.dart';
 import '/backend/supabase/database/tables/service_listings.dart';
-import '/api/bridges/api_row_mapper.dart';
-import '/api/resources/services_api.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/bookings_service.dart';
-import '/services/addresses_service.dart';
 import '/services/logging_service.dart';
 import 'bookings_widget.dart' show BookingsWidget;
 
@@ -21,9 +17,6 @@ class BookingItem {
     required this.scheduledExecutionDate,
     required this.price,
     required this.imageUrl,
-    this.addressLabel,
-    this.clientLatitude,
-    this.clientLongitude,
   });
   final String id;
   final String status;
@@ -33,9 +26,6 @@ class BookingItem {
   final DateTime? scheduledExecutionDate;
   final double price;
   final String imageUrl;
-  final String? addressLabel;
-  final double? clientLatitude;
-  final double? clientLongitude;
 }
 
 class BookingsModel extends FlutterFlowModel<BookingsWidget> {
@@ -81,10 +71,11 @@ class BookingsModel extends FlutterFlowModel<BookingsWidget> {
           bookings.map((b) => b.serviceListingId).where((id) => id > 0).toSet();
       if (serviceIds.isNotEmpty) {
         try {
-          for (final id in serviceIds) {
-            final service = await ShphServicesApi.instance.getListing(id);
-            _serviceListingsCache[id] =
-                ApiRowMapper.serviceListingToRow(service);
+          final services = await ServiceListingsTable().queryRows(
+            queryFn: (q) => q.inFilter('id', serviceIds.toList()),
+          );
+          for (final service in services) {
+            _serviceListingsCache[service.id] = service;
           }
         } catch (e) {
           LoggingService.error(
@@ -95,31 +86,11 @@ class BookingsModel extends FlutterFlowModel<BookingsWidget> {
         }
       }
 
-      final addressIds = bookings
-          .map((b) => b.addressId)
-          .where((id) => id != null)
-          .map((id) => id!)
-          .toSet();
-      final Map<int, AddressesRow> addressCache = {};
-      if (addressIds.isNotEmpty) {
-        try {
-          final addresses = await AddressesService.instance.listAddressRows();
-          for (final addr in addresses) {
-            addressCache[addr.id] = addr;
-          }
-        } catch (_) {}
-      }
-
       final inProgress = <BookingItem>[];
       final completed = <BookingItem>[];
 
       for (final booking in bookings) {
         final serviceListing = _serviceListingsCache[booking.serviceListingId];
-        final addr =
-            booking.addressId != null ? addressCache[booking.addressId] : null;
-        final addressLabel = addr != null
-            ? '${addr.addressLine1 ?? ''}${addr.city != null && addr.city!.isNotEmpty ? ', ${addr.city}' : ''}'
-            : null;
         final bookingItem = BookingItem(
           id: booking.id,
           status: _formatStatus(booking.status),
@@ -129,7 +100,6 @@ class BookingsModel extends FlutterFlowModel<BookingsWidget> {
           scheduledExecutionDate: booking.bookingDate,
           price: booking.totalPrice ?? 0.0,
           imageUrl: serviceListing?.thumbnail ?? '',
-          addressLabel: addressLabel,
         );
 
         if (booking.status.toLowerCase() == 'completed' ||

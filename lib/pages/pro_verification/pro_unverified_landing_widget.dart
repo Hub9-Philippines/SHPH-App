@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
@@ -38,9 +39,7 @@ class _ProUnverifiedLandingWidgetState
   }
 
   @override
-  Widget build(BuildContext context) => PopScope(
-        canPop: false,
-        child: GestureDetector(
+  Widget build(BuildContext context) => GestureDetector(
         onTap: () {
           FocusScope.of(context).unfocus();
           FocusManager.instance.primaryFocus?.unfocus();
@@ -51,10 +50,10 @@ class _ProUnverifiedLandingWidgetState
           appBar: AppBar(
             backgroundColor: AppTheme.of(context).primaryBackground,
             automaticallyImplyLeading: false,
-            leading: IconButton(
-              icon: const Icon(Icons.home_outlined),
-              tooltip: 'Back to Home',
-              onPressed: () => context.goNamed(HomeWidget.routeName),
+            leading: wrapWithModel(
+              model: _model.backButtonModel,
+              updateCallback: () => safeSetState(() {}),
+              child: const BackButtonWidget(),
             ),
             title: Text(
               'Verification Required',
@@ -210,6 +209,5 @@ class _ProUnverifiedLandingWidgetState
             ),
           ),
         ),
-      ),
-    );
+      );
 }

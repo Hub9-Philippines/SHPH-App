@@ -25,9 +25,8 @@ class CheckoutScreen extends StatelessWidget {
   final bool showLiveMap;
 
   @override
-  Widget build(BuildContext context) => _EstimateLoader(
-        child: Consumer<BookingFlowController>(
-          builder: (context, controller, _) {
+  Widget build(BuildContext context) => Consumer<BookingFlowController>(
+        builder: (context, controller, _) {
           final draft = controller.draft;
           final quote = controller.quote;
           final isScheduled = draft.urgency == BookingUrgency.scheduled;
@@ -105,9 +104,8 @@ class CheckoutScreen extends StatelessWidget {
             ),
           );
         },
-      ),
-    );
- 
+      );
+
   Future<void> _submit(
     BuildContext context,
     BookingFlowController controller,
@@ -290,31 +288,6 @@ class CheckoutScreen extends StatelessWidget {
     }
     return 'Service level';
   }
-}
-
-class _EstimateLoader extends StatefulWidget {
-  const _EstimateLoader({required this.child});
-
-  final Widget child;
-
-  @override
-  State<_EstimateLoader> createState() => _EstimateLoaderState();
-}
-
-class _EstimateLoaderState extends State<_EstimateLoader> {
-  bool _loaded = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_loaded) {
-      _loaded = true;
-      context.read<BookingFlowController>().loadEstimate();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) => widget.child;
 }
 
 class _CheckoutSheet extends StatelessWidget {

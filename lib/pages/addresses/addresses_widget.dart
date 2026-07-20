@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/auth/supabase_auth/auth_util.dart';
-import '/backend/supabase/database/tables/addresses.dart';
+import '/backend/supabase/supabase.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
-import '/services/addresses_service.dart';
 import '/theme/app_theme.dart';
 import 'addresses_model.dart';
 
@@ -51,7 +50,11 @@ class _AddressesWidgetState extends State<AddressesWidget> {
       _addressesFuture = Future.value([]);
       return;
     }
-    _addressesFuture = AddressesService.instance.listAddressRows();
+    _addressesFuture = AddressesTable().queryRows(
+      queryFn: (q) => q
+          .eq('user_id', currentUserUid)
+          .order('is_default', ascending: false),
+    );
   }
 
   @override
@@ -594,7 +597,15 @@ class _AddressesWidgetState extends State<AddressesWidget> {
 
   Future<void> _setDefaultAddress(String addressId) async {
     try {
-      await AddressesService.instance.setDefaultAddress(int.parse(addressId));
+      await AddressesTable().update(
+        data: {'is_default': false},
+        matchingRows: (q) => q.eq('user_id', currentUserUid),
+      );
+
+      await AddressesTable().update(
+        data: {'is_default': true},
+        matchingRows: (q) => q.eq('id', addressId),
+      );
 
       FFAppState().clearGetAddressCache();
       _loadAddresses();
@@ -642,14 +653,18 @@ class _AddressesWidgetState extends State<AddressesWidget> {
     }
 
     try {
-      final deletedSelectedAddress =
-          FFAppState().selectedLocationMode == 'saved' &&
-              FFAppState().selectedAddressId == address.id;
-      await AddressesService.instance.deleteAddress(address.id);
+      final deletedSelectedAddress = FFAppState().selectedLocationMode == 'saved' &&
+          FFAppState().selectedAddressId == address.id;
+      await AddressesTable().delete(
+        matchingRows: (q) => q.eq('id', address.id),
+      );
       FFAppState().clearGetAddressCache();
 
-      final remainingAddresses =
-          await AddressesService.instance.listAddressRows();
+      final remainingAddresses = await AddressesTable().queryRows(
+        queryFn: (q) => q
+            .eq('user_id', currentUserUid)
+            .order('is_default', ascending: false),
+      );
       if (deletedSelectedAddress) {
         final nextAddress =
             FFAppState().syncSelectedSavedAddress(remainingAddresses);
