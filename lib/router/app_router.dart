@@ -195,6 +195,29 @@ class AppRouter {
             },
           ),
           GoRoute(
+            path: OnDemandBookingScreen.routePath,
+            name: OnDemandBookingScreen.routeName,
+            builder: (context, state) => const OnDemandBookingScreen(),
+          ),
+          GoRoute(
+            path: ClientOnDemandJobsScreen.routePath,
+            name: ClientOnDemandJobsScreen.routeName,
+            builder: (context, state) => const ClientOnDemandJobsScreen(),
+          ),
+          GoRoute(
+            path: ProviderOnDemandBidsScreen.routePath,
+            name: ProviderOnDemandBidsScreen.routeName,
+            builder: (context, state) => const ProviderOnDemandBidsScreen(),
+          ),
+          GoRoute(
+            path: EtaTrackingScreen.routePath,
+            name: EtaTrackingScreen.routeName,
+            builder: (context, state) {
+              final token = state.uri.queryParameters['token'] ?? '';
+              return EtaTrackingScreen(token: token);
+            },
+          ),
+          GoRoute(
             path: TMSubCategoryScreen.routePath,
             name: TMSubCategoryScreen.routeName,
             builder: (context, state) {

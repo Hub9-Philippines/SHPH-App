@@ -549,6 +549,11 @@ class _HomeWidgetState extends State<HomeWidget> {
                         },
                       ),
                     ),
+                    _buildCategoryChip(
+                      icon: Icons.bolt_rounded,
+                      label: 'On-Demand',
+                      onTap: () => context.push('/on-demand/booking'),
+                    ),
                   ],
                 ),
               ),

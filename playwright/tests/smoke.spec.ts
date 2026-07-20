@@ -80,3 +80,35 @@ test.describe('Visual Regression — All New Pages', () => {
     expect(failures.length).toBeLessThan(routes.length);
   });
 });
+
+test.describe('On-Demand Booking Port', () => {
+  test('capture screenshots of on-demand routes', async ({ page }) => {
+    const routes = [
+      { path: '/#on-demand/booking', name: 'on-demand-booking' },
+      { path: '/#on-demand/client-jobs', name: 'on-demand-client-jobs' },
+      { path: '/#on-demand/provider-bids', name: 'on-demand-provider-bids' },
+    ];
+
+    const failures: string[] = [];
+
+    for (const route of routes) {
+      try {
+        await page.goto(route.path);
+        await page.waitForTimeout(3000);
+        await page.screenshot({
+          path: `screenshots/route-${route.name}.png`,
+          fullPage: true,
+          timeout: 30_000,
+        });
+      } catch (err) {
+        failures.push(`${route.name}: ${(err as Error).message}`);
+      }
+    }
+
+    if (failures.length) {
+      console.warn('On-demand route failures:\n' + failures.join('\n'));
+    }
+
+    expect(failures.length).toBeLessThan(routes.length);
+  });
+});

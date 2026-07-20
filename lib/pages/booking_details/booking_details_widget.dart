@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:geolocator/geolocator.dart';
 
 import '/api/shph_api.dart';
 
@@ -13,6 +13,7 @@ import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
 import '/pages/booking_funnel/booking_models.dart';
 import '/services/bookings_service.dart';
+import '/services/eta_tracking_service.dart';
 import '/theme/app_theme.dart';
 import 'booking_details_model.dart';
 
@@ -38,7 +39,6 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   int? _sharedEtaMinutes;
   Timer? _etaTimer;
-  Timer? _locationTimer;
 
   @override
   void initState() {
@@ -50,7 +50,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
   @override
   void dispose() {
     _etaTimer?.cancel();
-    _locationTimer?.cancel();
+    EtaTrackingService.instance.stopBroadcasting();
     _model.dispose();
     super.dispose();
   }
@@ -122,26 +122,12 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
   }
 
   Future<void> _startProviderLocationUpdates(String status) async {
-    if (status != 'confirmed' && status != 'in_progress') return;
+    if (status != 'en_route' && status != 'confirmed' && status != 'in_progress') {
+      return;
+    }
     final me = await ShphUsersApi.instance.getMe();
     if (me['role']?.toString() != 'provider') return;
-    _locationTimer?.cancel();
-    Future<void> sendLocation() async {
-      try {
-        final position = await Geolocator.getCurrentPosition();
-        await ShphBookingsApi.instance.updateBookingLocation(
-          widget.bookingId!,
-          latitude: position.latitude,
-          longitude: position.longitude,
-        );
-      } catch (_) {}
-    }
-
-    await sendLocation();
-    _locationTimer = Timer.periodic(
-      const Duration(seconds: 30),
-      (_) => sendLocation(),
-    );
+    await EtaTrackingService.instance.startBroadcasting(widget.bookingId!);
   }
 
   Future<void> _cancelBooking() async {
@@ -432,51 +418,34 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
   }
 
   Future<void> _shareEta() async {
-    final controller = TextEditingController();
-    final minutes = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Share ETA'),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            hintText: 'Estimated minutes until arrival',
-            suffixText: 'min',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          FilledButton(
-              onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-              child: const Text('Share')),
-        ],
-      ),
-    );
-    if (minutes == null || minutes.isEmpty || !mounted) return;
-    final parsed = int.tryParse(minutes);
-    if (parsed == null || parsed < 0) return;
+    setState(() => _model.isLoading = true);
     try {
-      await ShphBookingsApi.instance
-          .shareEta(_model.booking!.id, minutes: parsed);
-      if (mounted) {
-        setState(() => _sharedEtaMinutes = parsed);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('ETA shared with client'),
-              backgroundColor: Colors.green),
-        );
+      final result = await EtaTrackingService.instance
+          .createShareToken(_model.booking!.id);
+      if (result != null && mounted) {
+        final token = result['token'] as String?;
+        if (token != null) {
+          final url = 'https://app.serbisyohub.ph/eta-tracking?token=$token';
+          await Clipboard.setData(ClipboardData(text: url));
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Tracking link copied to clipboard!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('Failed to share ETA: $e'),
-              backgroundColor: Colors.red),
+            content: Text('Failed to share ETA: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
+    } finally {
+      if (mounted) setState(() => _model.isLoading = false);
     }
   }
 

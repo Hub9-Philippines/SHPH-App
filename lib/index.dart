@@ -31,6 +31,14 @@ export '/pages/my_notifications/my_notifications_widget.dart'
 export '/pages/my_reviews/my_reviews_widget.dart' show MyReviewsWidget;
 export '/pages/onboarding/onboarding_widget.dart' show OnboardingWidget;
 export '/pages/not_found/not_found_page.dart' show NotFoundPage;
+export '/pages/on_demand/client_on_demand_jobs_screen.dart'
+    show ClientOnDemandJobsScreen;
+export '/pages/on_demand/on_demand_booking_screen.dart'
+    show OnDemandBookingScreen;
+export '/pages/on_demand/provider_on_demand_bids_screen.dart'
+    show ProviderOnDemandBidsScreen;
+export '/pages/eta_tracking/eta_tracking_screen.dart'
+    show EtaTrackingScreen;
 export '/pages/phone_verify_user/phone_verify_user_widget.dart'
     show PhoneVerifyUserWidget;
 export '/pages/registration/phone_registration_page.dart'

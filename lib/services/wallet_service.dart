@@ -24,13 +24,11 @@ class WalletService {
     if (amount <= 0) return false;
     try {
       final intent = await _walletApi.createTopUpIntent(
-        amount: amount.toInt(),
-        currency: 'PHP',
+        amount: amount,
       );
-      final paymentIntentId = intent['payment_intent_id'] as String? ??
-          (intent['client_secret'] as String?)?.split('_secret_').first;
-      if (paymentIntentId != null) {
-        await _walletApi.confirmTopUp(paymentIntentId: paymentIntentId);
+      final intentId = intent['intent_id'] as String?;
+      if (intentId != null) {
+        await _walletApi.confirmTopUp(intentId: intentId);
       }
       return true;
     } catch (e) {
