@@ -299,6 +299,13 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
         subtitle: 'Review and respond to new customer bookings fast.',
         onRefresh: _loadJobRequests,
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.push('/on-demand/provider-bids'),
+        icon: const Icon(Icons.bolt),
+        label: const Text('On-Demand Bids'),
+        backgroundColor: const Color(0xFF0F766E),
+        foregroundColor: Colors.white,
+      ),
       body: RefreshIndicator(
         onRefresh: _loadJobRequests,
         child: ListView(

@@ -1,6 +1,6 @@
 # SHPH Mobile Port — Progress Log
 
-> **Last updated:** 2026-07-12
+> **Last updated:** 2026-07-20
 > **Branch:** `feature/pol` (merged `origin/main`)
 
 ---
@@ -287,3 +287,113 @@
 5. `database/create_service_listing_images.sql` — creates service_listing_images table for gallery
 6. `database/create_audit_logs.sql` — creates audit_logs table for admin accountability
 7. `database/create_user_sessions.sql` — creates user_sessions table for device session tracking
+
+---
+
+## Session 2026-07-20: Major Feature Ports
+
+### 1. Push Notifications / FCM Integration
+
+#### New Files
+- **`lib/services/push_notification_service.dart`**: Full FCM integration service with:
+  - Firebase Messaging initialization and permission requests
+  - Local notification display via `flutter_local_notifications` (Android channels + iOS)
+  - Device token registration/unregistration with backend (`POST /api/notifications/register/`, `POST /api/notifications/unregister/`)
+  - Token refresh handling with automatic re-registration
+  - Foreground message handling with local notification display
+  - Notification tap routing via GoRouter (booking details, chat, etc.)
+  - Background message handler
+
+#### Updated Files
+- **`pubspec.yaml`**: Added `firebase_core`, `firebase_messaging`, `flutter_local_notifications` dependencies
+- **`lib/main.dart`**: Initialize `PushNotificationService` in `initState()`, pass navigator key, re-register token on login, unregister on logout
+- **`lib/api/resources/notifications_api.dart`**: API resource for notification endpoints (register/unregister device tokens, list notifications, manage preferences)
+
+---
+
+### 2. Real-time Provider Location Tracking / ETA Sharing
+
+#### New Files
+- **`lib/services/eta_tracking_service.dart`**: ETA tracking service with two modes:
+  - **Provider broadcast**: Uses `Geolocator` position stream (10m distance filter) with fallback to 10-second periodic polling. Pushes GPS coords to `PATCH /api/services/bookings/{id}/location/`
+  - **Client polling**: Polls `GET /api/services/eta/{token}/` for public ETA tracking every 10 seconds
+  - Distance calculation (Haversine) and ETA estimation helpers
+- **`lib/pages/eta_tracking/eta_tracking_screen.dart`**: Client ETA tracking screen with:
+  - Google Maps integration showing provider location marker
+  - Provider info card (name, service, status badge)
+  - Auto-refresh every 10 seconds
+  - Error handling for expired/invalid tokens
+  - Distance and estimated arrival time display
+
+#### Updated Files
+- **`lib/api/resources/bookings_api.dart`**:
+  - Fixed `updateBookingLocation` field names (`lat`/`lng` matching backend `BookingLocationUpdateView`)
+  - Fixed `shareEta` to return token from response
+  - Added `getEtaPublic(token)` method for `GET /api/services/eta/{token}/`
+- **`lib/pages/booking_details/booking_details_widget.dart`**:
+  - Integrated `EtaTrackingService` for provider location broadcasting when status is `en_route`, `confirmed`, or `in_progress`
+  - Replaced old share ETA dialog with new share token creation and clipboard copy of tracking link
+  - Stop broadcasting on dispose
+  - Removed unused `geolocator` import, added `flutter/services` for `Clipboard`
+- **`lib/router/app_router.dart`**: Registered GoRoute for `/eta-tracking` with `token` query parameter
+- **`lib/index.dart`**: Exported `EtaTrackingScreen`
+
+#### Backend Endpoints Used
+- `PATCH /api/services/bookings/{id}/location/` — provider updates GPS coordinates
+- `POST /api/services/bookings/{id}/share-eta/` — client creates ETA share token
+- `GET /api/services/eta/{token}/` — public ETA tracking (no auth required)
+
+---
+
+### 3. Wallet Reversal Support
+
+Wallet reversal is server-side only — triggered automatically when a booking paid via wallet is cancelled. The backend `Wallet.reverse_booking()` method credits the client's wallet, debits provider earnings, and creates a `reversal` type `WalletTransaction`. No separate reversal API endpoint exists.
+
+#### New Files
+- **`lib/api/models/wallet_transaction.dart`**: Typed `WalletTransaction` model with:
+  - `WalletTransactionType` enum (topup, payment, reversal, tip)
+  - `fromString()` factory matching backend type strings
+  - `isCredit` getter (topup/reversal/tip are credits)
+  - `signedAmount` getter (+ for credits, - for payments)
+  - `fromJson()` factory parsing API response
+
+#### Updated Files
+- **`lib/api/resources/wallet_api.dart`**:
+  - Fixed `createTopUpIntent` — removed `currency` param (web only expects `amount`), changed type to `double`
+  - Fixed `confirmTopUp` — field name `intent_id` (was `payment_intent_id`)
+  - Added `listWalletTransactions()` — typed method returning `List<WalletTransaction>`
+  - Added `wallet_transaction.dart` import
+- **`lib/services/wallet_service.dart`**: Updated `topUp()` to use new API signatures (`amount` as double, `intent_id` field)
+- **`lib/pages/wallet/wallet_widget.dart`**:
+  - Fixed top-up flow to use `client_key` (was `client_secret`) and `intent_id` from API response
+  - Fixed transaction type labels to match backend: `topup` (was `top_up`), added `tip` type
+  - Removed non-existent types (`payout`, `refund`, `adjustment`) from label/color/icon maps
+  - Added `tip` type with volunteer icon and green credit color
+- **`lib/api/shph_api.dart`**: Added `wallet_transaction.dart` model export
+
+---
+
+### 4. Advanced Projects v2 — Verification
+
+The Projects v2 feature was already fully implemented in the Flutter app. Verified all components match the web backend:
+
+#### Already Present (Verified)
+- **`lib/api/models/project.dart`**: `ShphProject`, `ShphProjectRoleLine`, `ShphProjectProspect` models with all fields matching web serializers
+- **`lib/api/resources/projects_api.dart`**: All 7 endpoints matching web views:
+  - `POST /api/projects/` — create project demand
+  - `POST /api/projects/list/` — list user's projects
+  - `POST /api/projects/{id}/` — retrieve project detail
+  - `POST /api/projects/{id}/quote/` — generate AI quote with role lines
+  - `POST /api/projects/{id}/match/` — find provider prospects for a role
+  - `POST /api/projects/{id}/cancel/` — cancel project
+  - `POST /api/projects/prospects/action/` — shortlist/invite/accept/decline prospect
+- **`lib/services/projects_controller.dart`**: Full state management with `ProjectsState` enum, serialized mutations, error handling
+- **`lib/pages/projects/project_list_page.dart`**: List with status filter chips, FAB to create, pull-to-refresh
+- **`lib/pages/projects/project_detail_page.dart`**: Detail with status badge, budget/headcount, role line expansion tiles, prospect tiles with shortlist/invite/accept/decline actions, quote generation dialog, cancel confirmation
+- **`lib/pages/projects/project_create_page.dart`**: Create form with title, description, category selector, B2B toggle
+- Routes and `ProjectsController` provider registered in `app_router.dart` and `main.dart`
+
+---
+
+### Analyzer Status
+All modified and new files pass `flutter analyze` with **zero errors**. Only style-level `info` warnings remain (control body formatting, expression function body preferences).

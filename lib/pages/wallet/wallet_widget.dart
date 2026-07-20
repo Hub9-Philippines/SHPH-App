@@ -119,12 +119,11 @@ class _WalletWidgetState extends State<WalletWidget> {
 
     try {
       final intent = await ShphWalletApi.instance.createTopUpIntent(
-        amount: (amount * 100).round(),
-        currency: 'PHP',
+        amount: amount,
       );
 
-      final clientSecret = intent['client_secret'] as String?;
-      if (clientSecret == null) {
+      final clientKey = intent['client_key'] as String?;
+      if (clientKey == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Failed to initialize top-up.')),
@@ -135,17 +134,19 @@ class _WalletWidgetState extends State<WalletWidget> {
 
       await Stripe.instance.initPaymentSheet(
         paymentSheetParameters: SetupPaymentSheetParameters(
-          paymentIntentClientSecret: clientSecret,
+          paymentIntentClientSecret: clientKey,
           merchantDisplayName: 'SerbisyoHub',
         ),
       );
 
       await Stripe.instance.presentPaymentSheet();
 
-      final paymentIntentId = clientSecret.split('_secret_').first;
-      await ShphWalletApi.instance.confirmTopUp(
-        paymentIntentId: paymentIntentId,
-      );
+      final intentId = intent['intent_id'] as String?;
+      if (intentId != null) {
+        await ShphWalletApi.instance.confirmTopUp(
+          intentId: intentId,
+        );
+      }
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -166,33 +167,28 @@ class _WalletWidgetState extends State<WalletWidget> {
 
   String _txTypeLabel(String type) {
     return switch (type) {
-      'top_up' => 'Top Up',
+      'topup' => 'Top Up',
       'payment' => 'Payment',
-      'payout' => 'Payout',
-      'refund' => 'Refund',
       'reversal' => 'Reversal',
-      'adjustment' => 'Adjustment',
+      'tip' => 'Tip',
       _ => type,
     };
   }
 
   Color _txTypeColor(String type) {
     return switch (type) {
-      'top_up' || 'refund' || 'reversal' => const Color(0xFF059669),
-      'payment' || 'payout' => const Color(0xFFDC2626),
-      'adjustment' => const Color(0xFFD97706),
+      'topup' || 'reversal' || 'tip' => const Color(0xFF059669),
+      'payment' => const Color(0xFFDC2626),
       _ => const Color(0xFF64748B),
     };
   }
 
   IconData _txTypeIcon(String type) {
     return switch (type) {
-      'top_up' => Icons.add_circle_outline_rounded,
+      'topup' => Icons.add_circle_outline_rounded,
       'payment' => Icons.shopping_bag_outlined,
-      'payout' => Icons.account_balance_wallet_outlined,
-      'refund' => Icons.undo_rounded,
       'reversal' => Icons.undo_rounded,
-      'adjustment' => Icons.tune_rounded,
+      'tip' => Icons.volunteer_activism_outlined,
       _ => Icons.receipt_long_outlined,
     };
   }

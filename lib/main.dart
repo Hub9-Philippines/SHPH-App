@@ -26,6 +26,7 @@ import 'l10n/app_localizations.dart';
 import 'services/error_handler.dart';
 import 'services/crash_reporting_service.dart';
 import 'services/logging_service.dart';
+import 'services/push_notification_service.dart';
 import 'widgets/app_guardrail_scope.dart';
 
 void main() async {
@@ -55,6 +56,13 @@ void main() async {
 
   // Initialize Auth Manager - Using SHPH API for authentication
   AuthManagerFactory.initialize(AuthProvider.shph);
+
+  // Initialize push notifications (non-blocking — degrades gracefully)
+  try {
+    await PushNotificationService.instance.initialize();
+  } catch (e) {
+    LoggingService.debug('Push init skipped: $e', tag: 'main');
+  }
 
   await AppTheme.initialize();
 
@@ -130,6 +138,8 @@ class _MyAppState extends State<MyApp> {
         }
         if (user.loggedIn) {
           unawaited(ShphWebSocketService.instance.connect());
+          unawaited(
+              PushNotificationService.instance.reRegisterToken());
         } else {
           unawaited(_disconnectCalls());
         }

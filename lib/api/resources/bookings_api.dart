@@ -142,12 +142,21 @@ class ShphBookingsApi {
     return response.data ?? {};
   }
 
-  /// POST /api/services/bookings/{id}/share-eta/ - share provider ETA
-  Future<void> shareEta(String id, {required int minutes}) async {
-    await _client.post(
+  /// POST /api/services/bookings/{id}/share-eta/ - create/reuse ETA share token
+  Future<Map<String, dynamic>> shareEta(String id) async {
+    final response = await _client.post<Map<String, dynamic>>(
       '/api/services/bookings/$id/share-eta/',
-      data: {'eta_minutes': minutes},
+      data: {},
     );
+    return response.data ?? {};
+  }
+
+  /// GET /api/services/eta/{token}/ - public ETA tracking (no auth required)
+  Future<Map<String, dynamic>> getEtaPublic(String token) async {
+    final response = await _client.get<Map<String, dynamic>>(
+      '/api/services/eta/$token/',
+    );
+    return response.data ?? {};
   }
 
   /// GET /api/services/bookings/{id}/invoice/ - get booking invoice
@@ -186,15 +195,15 @@ class ShphBookingsApi {
     );
   }
 
-  /// PATCH /api/services/bookings/{id}/location/ - update booking location
+  /// PATCH /api/services/bookings/{id}/location/ - update provider location
   Future<void> updateBookingLocation(
     String id, {
-    required double latitude,
-    required double longitude,
+    required double lat,
+    required double lng,
   }) async {
     await _client.patch(
       '/api/services/bookings/$id/location/',
-      data: {'latitude': latitude, 'longitude': longitude},
+      data: {'lat': lat, 'lng': lng},
     );
   }
 }

@@ -1,3 +1,4 @@
+import '/api/models/wallet_transaction.dart';
 import '/api/shph_api_client.dart';
 
 class ShphWalletApi {
@@ -22,22 +23,21 @@ class ShphWalletApi {
   }
 
   Future<Map<String, dynamic>> createTopUpIntent({
-    required int amount,
-    required String currency,
+    required double amount,
   }) async {
     final response = await _client.post<Map<String, dynamic>>(
       '/api/wallet/topup/create-intent/',
-      data: {'amount': amount, 'currency': currency},
+      data: {'amount': amount},
     );
     return response.data ?? {};
   }
 
   Future<Map<String, dynamic>> confirmTopUp({
-    required String paymentIntentId,
+    required String intentId,
   }) async {
     final response = await _client.post<Map<String, dynamic>>(
       '/api/wallet/topup/confirm/',
-      data: {'payment_intent_id': paymentIntentId},
+      data: {'intent_id': intentId},
     );
     return response.data ?? {};
   }
@@ -48,6 +48,17 @@ class ShphWalletApi {
       queryParameters: {if (page != null) 'page': page},
     );
     return response.data ?? {};
+  }
+
+  /// GET /api/wallet/transactions/ — typed list
+  Future<List<WalletTransaction>> listWalletTransactions() async {
+    final response = await _client.get<List<dynamic>>(
+      '/api/wallet/transactions/',
+    );
+    final data = response.data ?? [];
+    return data
+        .map((e) => WalletTransaction.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<Map<String, dynamic>> payBookingWithWallet(String bookingId) async {
