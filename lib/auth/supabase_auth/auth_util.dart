@@ -1,15 +1,16 @@
-// Authentication Utilities
-// Provides auth helper functions and getters for the app
+// Supabase Authentication Utilities
+// This file provides auth helper functions and getters for the app
 
 import 'package:flutter/material.dart';
 import '../auth_manager.dart';
 import '../auth_manager_factory.dart';
 import '../base_auth_user_provider.dart';
+import 'supabase_auth_manager.dart';
 
 export '../base_auth_user_provider.dart';
-export '../shph_auth/shph_user_provider.dart';
+export 'supabase_user_provider.dart';
 
-/// Get the current auth manager instance
+/// Get the current auth manager instance (Supabase-based)
 AuthManager get authManager => AuthManagerFactory.instance;
 
 /// Get the current logged-in user's UID
@@ -64,8 +65,12 @@ Future<void> verifyCurrentUserEmail(BuildContext context) async {
   }
 }
 
-/// Kept for generated screen compatibility. API phone auth has no listener.
-void handlePhoneAuthStateChanges(BuildContext context) {}
+/// Handle phone auth state changes (Supabase specific)
+void handlePhoneAuthStateChanges(BuildContext context) {
+  if (authManager is SupabaseAuthManager) {
+    (authManager as SupabaseAuthManager).handlePhoneAuthStateChanges(context);
+  }
+}
 
 /// Begin phone authentication
 Future<void> beginPhoneAuth({
@@ -73,8 +78,8 @@ Future<void> beginPhoneAuth({
   required String phoneNumber,
   required void Function(BuildContext) onCodeSent,
 }) async {
-  if (authManager is PhoneSignInManager) {
-    await (authManager as PhoneSignInManager).beginPhoneAuth(
+  if (authManager is SupabaseAuthManager) {
+    await (authManager as SupabaseAuthManager).beginPhoneAuth(
       context: context,
       phoneNumber: phoneNumber,
       onCodeSent: onCodeSent,
@@ -88,8 +93,8 @@ Future<dynamic> verifySmsCode({
   required String smsCode,
   String? phoneNumber,
 }) async {
-  if (authManager is PhoneSignInManager) {
-    return (authManager as PhoneSignInManager).verifySmsCode(
+  if (authManager is SupabaseAuthManager) {
+    return (authManager as SupabaseAuthManager).verifySmsCode(
       context: context,
       smsCode: smsCode,
       phoneNumber: phoneNumber,

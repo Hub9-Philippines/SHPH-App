@@ -172,7 +172,7 @@ class _GeographicSelectionWidgetState extends State<GeographicSelectionWidget> {
                                                     .primaryBackground,
                                               ),
                                               child: Text(
-                                                (item['name'] as String? ?? ''),
+                                                item.name,
                                                 style: AppTheme.of(context)
                                                     .bodyMedium
                                                     .override(

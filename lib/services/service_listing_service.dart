@@ -1,19 +1,18 @@
-import 'dart:io';
-
 import '/api/bridges/api_row_mapper.dart';
 import '/api/models/service_listing.dart';
 import '/api/resources/favorites_api.dart';
 import '/api/resources/services_api.dart';
+import '/backend/supabase/database/tables/service_listings.dart';
 import '/models/service_listing.dart';
 import '/services/logging_service.dart';
 
 class ServiceListingService {
   ServiceListingService._();
-  static final ServiceListingService instance = ServiceListingService._();
-  final _api = ShphServicesApi.instance;
 
-  ServiceListing _map(ShphServiceListing listing) {
-    final row = ApiRowMapper.serviceListingToRow(listing);
+  static final ServiceListingService instance = ServiceListingService._();
+  final _servicesApi = ShphServicesApi.instance;
+
+  ServiceListing _rowToServiceListing(ServiceListingsRow row) {
     return ServiceListing(
       id: row.id,
       category: row.category,
@@ -34,8 +33,43 @@ class ServiceListingService {
     );
   }
 
-  Future<List<ServiceListing>> fetchRecommendedServices({int limit = 10}) =>
-      fetchServiceListings(ordering: '-rating', pageSize: limit);
+  ServiceListing _apiToServiceListing(ShphServiceListing listing) {
+    final row = ApiRowMapper.serviceListingToRow(listing);
+    return _rowToServiceListing(row);
+  }
+
+  Future<List<ServiceListing>> fetchRecommendedServices(
+      {int limit = 10}) async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final page = await _servicesApi.listListings(
+          ordering: '-rating',
+          pageSize: limit,
+        );
+        return page.results.map(_apiToServiceListing).toList();
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API fetchRecommendedServices failed, falling back to Supabase: $e',
+          tag: 'ServiceListingService',
+        );
+      }
+    }
+
+    try {
+      final services = await ServiceListingsTable().queryRows(
+        queryFn: (q) => q
+            .order('rating', ascending: false)
+            .order('review_count', ascending: false)
+            .limit(limit),
+      );
+
+      return services.map(_rowToServiceListing).toList();
+    } catch (e) {
+      LoggingService.error('Error fetching recommended services: $e',
+          tag: 'ServiceListingService');
+      return [];
+    }
+  }
 
   Future<List<ServiceListing>> fetchServiceListings({
     String? search,
@@ -43,168 +77,93 @@ class ServiceListingService {
     int? page,
     int? pageSize,
   }) async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final pageResult = await _servicesApi.listListings(
+          search: search,
+          ordering: ordering,
+          page: page,
+          pageSize: pageSize,
+        );
+        return pageResult.results.map(_apiToServiceListing).toList();
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API fetchServiceListings failed, falling back to Supabase: $e',
+          tag: 'ServiceListingService',
+        );
+      }
+    }
+
     try {
-      final result = await _api.listListings(
-        search: search,
-        ordering: ordering,
-        page: page,
-        pageSize: pageSize,
+      final services = await ServiceListingsTable().queryRows(
+        queryFn: (q) {
+          var query = q as dynamic;
+
+          if (search != null && search.isNotEmpty) {
+            query = query.ilike('title', '%$search%');
+          }
+
+          if (ordering != null) {
+            final isAscending = !ordering.startsWith('-');
+            final field = isAscending ? ordering : ordering.substring(1);
+            query = query.order(field, ascending: isAscending);
+          }
+
+          return query;
+        },
+        limit: pageSize,
       );
-      return result.results.map(_map).toList();
+
+      return services.map(_rowToServiceListing).toList();
     } catch (e) {
-      LoggingService.error('API listing fetch failed: $e',
+      LoggingService.error('Error fetching service listings: $e',
           tag: 'ServiceListingService');
       return [];
     }
   }
 
   Future<ServiceListing?> fetchServiceListingById(int id) async {
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final listing = await _servicesApi.getListing(id);
+        return _apiToServiceListing(listing);
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API fetchServiceListingById failed, falling back to Supabase: $e',
+          tag: 'ServiceListingService',
+        );
+      }
+    }
+
     try {
-      return _map(await _api.getListing(id));
+      final services = await ServiceListingsTable().querySingleRow(
+        queryFn: (q) => q.eq('id', id),
+      );
+
+      if (services.isNotEmpty) {
+        return _rowToServiceListing(services.first);
+      }
+      return null;
     } catch (e) {
-      LoggingService.error('API listing detail failed: $e',
+      LoggingService.error('Error fetching service listing: $e',
           tag: 'ServiceListingService');
       return null;
     }
   }
 
   Future<List<ServiceListing>> fetchFavoriteServices() async {
-    try {
-      return (await ShphFavoritesApi.instance.listFavorites())
-          .map(_map)
-          .toList();
-    } catch (e) {
-      LoggingService.error('API favorites failed: $e',
-          tag: 'ServiceListingService');
-      return [];
+    if (await ApiRowMapper.canUseApi()) {
+      try {
+        final favorites = await ShphFavoritesApi.instance.listFavorites();
+        return favorites.map(_apiToServiceListing).toList();
+      } catch (e) {
+        LoggingService.error(
+          'SHPH API fetchFavoriteServices failed: $e',
+          tag: 'ServiceListingService',
+        );
+      }
     }
+
+    return [];
   }
-
-  Future<List<ServiceListing>> fetchMyListings() async {
-    try {
-      return (await _api.listMyListings()).results.map(_map).toList();
-    } catch (e) {
-      LoggingService.error('API own listings failed: $e',
-          tag: 'ServiceListingService');
-      return [];
-    }
-  }
-
-  Future<ServiceListing?> updateListing({
-    required int id,
-    String? title,
-    int? category,
-    String? description,
-    double? basePrice,
-    bool? isAvailable,
-  }) async {
-    try {
-      final data = <String, dynamic>{
-        if (title != null) 'title': title,
-        if (category != null) 'category': category,
-        if (description != null) 'description': description,
-        if (basePrice != null) 'base_price': basePrice,
-        if (isAvailable != null) 'status': isAvailable ? 'active' : 'draft',
-      };
-      return _map(await _api.updateListing(id, data));
-    } catch (e) {
-      LoggingService.error('API listing update failed: $e',
-          tag: 'ServiceListingService');
-      return null;
-    }
-  }
-
-  Future<bool> deleteListing(int id) async {
-    try {
-      await _api.updateListing(id, {'status': 'deleted'});
-      return true;
-    } catch (e) {
-      LoggingService.error('API listing delete failed: $e',
-          tag: 'ServiceListingService');
-      return false;
-    }
-  }
-
-  Future<ServiceListing?> archiveListing(int id) async {
-    try {
-      await _api.archiveListing(id);
-      return fetchServiceListingById(id);
-    } catch (e) {
-      LoggingService.error('API listing archive failed: $e',
-          tag: 'ServiceListingService');
-      return null;
-    }
-  }
-
-  Future<ServiceListing?> unarchiveListing(int id) async {
-    try {
-      await _api.unarchiveListing(id);
-      return fetchServiceListingById(id);
-    } catch (e) {
-      LoggingService.error('API listing unarchive failed: $e',
-          tag: 'ServiceListingService');
-      return null;
-    }
-  }
-
-  Future<String?> uploadListingImageFile(int listingId, File imageFile) async {
-    try {
-      final result = await uploadListingImage(
-        listingId,
-        fileBytes: await imageFile.readAsBytes(),
-        fileName: imageFile.uri.pathSegments.last,
-      );
-      return (result['image_url'] ?? result['url'] ?? result['image'])
-          ?.toString();
-    } catch (e) {
-      LoggingService.error('API image upload failed: $e',
-          tag: 'ServiceListingService');
-      return null;
-    }
-  }
-
-  Future<List<String>> fetchListingImages(int listingId) async {
-    try {
-      final listing = (await _api.getListing(listingId)).toJson();
-      final images = listing['images'];
-      if (images is! List) return [];
-      return images
-          .map((item) {
-            if (item is Map)
-              return (item['image_url'] ?? item['url'] ?? item['image'])
-                  ?.toString();
-            return item?.toString();
-          })
-          .whereType<String>()
-          .toList();
-    } catch (e) {
-      LoggingService.error('API images fetch failed: $e',
-          tag: 'ServiceListingService');
-      return [];
-    }
-  }
-
-  Future<bool> deleteListingImage(int imageId) async {
-    LoggingService.error('Deleting an image requires its listing ID.',
-        tag: 'ServiceListingService');
-    return false;
-  }
-
-  Future<Map<String, dynamic>> createServiceListing(
-          Map<String, dynamic> payload) async =>
-      (await _api.createListing(payload)).toJson();
-
-  Future<Map<String, dynamic>> uploadListingImage(
-    int listingId, {
-    required List<int> fileBytes,
-    required String fileName,
-  }) =>
-      _api.uploadListingImage(listingId,
-          fileBytes: fileBytes, fileName: fileName);
-
-  Future<void> deleteListingImageById(int listingId, int imageId) =>
-      _api.deleteListingImage(listingId, imageId);
-
-  Future<List<Map<String, dynamic>>> listSubcategories(int categoryId) =>
-      _api.listSubcategories(categoryId);
 }

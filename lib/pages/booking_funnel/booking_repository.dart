@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '/api/bridges/api_row_mapper.dart';
-import '/api/resources/bookings_api.dart';
-import '/backend/supabase/database/tables/bookings.dart';
+import '/backend/supabase/supabase.dart';
 import '/services/logging_service.dart';
 import 'booking_models.dart';
 
@@ -39,6 +37,12 @@ class ShphBookingRepository implements BookingRepository {
     required String notesPrefix,
     required String bookingStatus,
   }) async {
+    final supabase = Supabase.instance.client;
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) {
+      throw StateError('You must be signed in to create a booking.');
+    }
+
     final listingId = await _resolveServiceListingId(draft);
     final scheduledDateTime = _resolveScheduledDateTime(draft);
     final notes = [
@@ -51,17 +55,26 @@ class ShphBookingRepository implements BookingRepository {
     ].join(' | ');
 
     try {
-      final booking = await ShphBookingsApi.instance.createBooking(
-        listingId: listingId,
-        scheduledDate: scheduledDateTime.toIso8601String().split('T').first,
-        scheduledTime:
-            '${scheduledDateTime.hour.toString().padLeft(2, '0')}:${scheduledDateTime.minute.toString().padLeft(2, '0')}:00',
-        notes: notes,
-      );
-      return ApiRowMapper.bookingToRow(booking);
+      final response = await supabase
+          .from('bookings')
+          .insert({
+            'user_id': userId,
+            'service_listing_id': listingId,
+            'booking_date':
+                scheduledDateTime.toIso8601String().split('T').first,
+            'booking_time':
+                '${scheduledDateTime.hour.toString().padLeft(2, '0')}:${scheduledDateTime.minute.toString().padLeft(2, '0')}:00',
+            'notes': notes,
+            'status': bookingStatus,
+            'total_price': _estimateTotal(draft),
+          })
+          .select()
+          .single();
+
+      return BookingsRow(response);
     } catch (e) {
       LoggingService.error(
-        'SHPH API booking creation failed: $e',
+        'Supabase booking insert failed: $e',
         tag: 'BookingRepository',
         error: e,
       );

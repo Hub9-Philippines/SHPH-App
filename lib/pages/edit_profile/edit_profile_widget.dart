@@ -83,7 +83,7 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
 
     try {
       if (_verificationStatus == 'pending') {
-        // Cache the current profile selection locally.
+        // Save locally to SharedPreferences instead of remote Supabase profiles table
         final prefs = await SharedPreferences.getInstance();
         final stagedData = {
           'display_name': _displayNameController.text.trim(),
@@ -101,7 +101,7 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
           context.pop();
         }
       } else {
-        // Save through the authenticated SHPH profile API.
+        // Save via ProfilesService (will use SHPH API if enabled, otherwise Supabase)
         await ProfilesService.instance.updateProfile({
           'display_name': _displayNameController.text.trim(),
           'email': _emailController.text.trim(),

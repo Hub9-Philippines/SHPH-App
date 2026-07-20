@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi';
 
 import 'package:flutter/material.dart';
 import 'package:from_css_color/from_css_color.dart';
@@ -72,7 +73,7 @@ String? serializeParam(
         data = json.encode(param);
 
       case ParamType.dataStruct:
-        data = param.toString();
+        data = param is Struct ? param.toString() : null;
 
       case ParamType.supabaseRow:
         return json.encode((param as SupabaseDataRow).data);

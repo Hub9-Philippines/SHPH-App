@@ -73,6 +73,15 @@ A service provider marketplace mobile application built for Filipinos. Clients c
 │   ├── services/               # Business logic services
 │   ├── theme/                  # App theme & styling
 │   └── widgets/                # Reusable widgets
+├── backend/                    # Node.js Express backend
+│   ├── src/
+│   │   ├── index.ts            # Server entry point
+│   │   ├── routes/             # API routes (auth, users, chat, services)
+│   │   ├── middleware/         # Auth middleware, error handler
+│   │   ├── services/           # Business logic layer
+│   │   ├── types/              # TypeScript type definitions
+│   │   └── db/                 # TypeORM data source & entities
+│   └── aws/                    # AWS deployment (Dockerfile, CDK, ECS config)
 ├── database/                   # SQL migration scripts
 ├── firebase/                   # Firebase config & Cloud Functions
 ├── assets/                     # Images, fonts, animations, PDFs, videos, JSON
@@ -95,11 +104,22 @@ A service provider marketplace mobile application built for Filipinos. Clients c
 
 Built-in RLS policies protect data per user.
 
+## API Endpoints (Express Backend)
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/health` | No | Health check |
+| `POST` | `/api/auth/*` | No | Authentication routes |
+| `GET/POST/PUT` | `/api/users/*` | JWT | User profile management |
+| `GET/POST` | `/api/chat/*` | JWT | Chat & messaging |
+| `GET/POST/PUT` | `/api/services/*` | JWT | Service listings & management |
+
 ## Getting Started
 
 ### Prerequisites
 - Flutter 3.x SDK
-- Access to the deployed SHPH API
+- Node.js 18+
+- PostgreSQL / Supabase project
 - Firebase project (optional, for push notifications)
 
 ### Running the Flutter App
@@ -116,17 +136,36 @@ flutter pub get
 flutter run
 ```
 
+### Running the Backend
+
+```bash
+cd backend
+
+# Install dependencies
+npm install
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your DATABASE_URL, JWT_SECRET, REDIS_URL
+
+# Start development server
+npm run dev
+```
+
 ### Environment Variables
 
 ```
-# Flutter build-time configuration
-SHPH_API_BASE_URL=https://serbisyohubph.com
-SHPH_WS_URL=wss://serbisyohubph.com/ws
-# Development/testing only: show client/pro phone-login presets
-ENABLE_TEST_PHONE_NUMBERS=true
+# Backend (.env)
+DATABASE_URL=postgresql://user:password@host:5432/shphdb
+JWT_SECRET=your-jwt-secret
+REDIS_URL=redis://host:6379
+PORT=4000
 ```
 
 ## Deployment
+
+### Backend (AWS)
+See [backend/aws/README.md](backend/aws/README.md) for ECS Fargate deployment instructions.
 
 ### Flutter App
 ```bash

@@ -1,0 +1,1291 @@
+{
+ "Resources": {
+  "ShphVpc5F05A5BC": {
+   "Type": "AWS::EC2::VPC",
+   "Properties": {
+    "CidrBlock": "10.0.0.0/16",
+    "EnableDnsHostnames": true,
+    "EnableDnsSupport": true,
+    "InstanceTenancy": "default",
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "ShphBackendStack/ShphVpc"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphVpc/Resource"
+   }
+  },
+  "ShphVpcPublicSubnet1Subnet587207D0": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "ap-southeast-2a",
+    "CidrBlock": "10.0.0.0/24",
+    "MapPublicIpOnLaunch": true,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Public"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Public"
+     },
+     {
+      "Key": "Name",
+      "Value": "ShphBackendStack/ShphVpc/PublicSubnet1"
+     }
+    ],
+    "VpcId": {
+     "Ref": "ShphVpc5F05A5BC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphVpc/PublicSubnet1/Subnet"
+   }
+  },
+  "ShphVpcPublicSubnet1RouteTable604F5F74": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "ShphBackendStack/ShphVpc/PublicSubnet1"
+     }
+    ],
+    "VpcId": {
+     "Ref": "ShphVpc5F05A5BC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphVpc/PublicSubnet1/RouteTable"
+   }
+  },
+  "ShphVpcPublicSubnet1RouteTableAssociation1037C4BB": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "ShphVpcPublicSubnet1RouteTable604F5F74"
+    },
+    "SubnetId": {
+     "Ref": "ShphVpcPublicSubnet1Subnet587207D0"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphVpc/PublicSubnet1/RouteTableAssociation"
+   }
+  },
+  "ShphVpcPublicSubnet1DefaultRoute7DFDD2C0": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "GatewayId": {
+     "Ref": "ShphVpcIGW24A1D838"
+    },
+    "RouteTableId": {
+     "Ref": "ShphVpcPublicSubnet1RouteTable604F5F74"
+    }
+   },
+   "DependsOn": [
+    "ShphVpcVPCGW3DB12E74"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphVpc/PublicSubnet1/DefaultRoute"
+   }
+  },
+  "ShphVpcPublicSubnet1EIP18C6D213": {
+   "Type": "AWS::EC2::EIP",
+   "Properties": {
+    "Domain": "vpc",
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "ShphBackendStack/ShphVpc/PublicSubnet1"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphVpc/PublicSubnet1/EIP"
+   }
+  },
+  "ShphVpcPublicSubnet1NATGatewayD58C3D4E": {
+   "Type": "AWS::EC2::NatGateway",
+   "Properties": {
+    "AllocationId": {
+     "Fn::GetAtt": [
+      "ShphVpcPublicSubnet1EIP18C6D213",
+      "AllocationId"
+     ]
+    },
+    "SubnetId": {
+     "Ref": "ShphVpcPublicSubnet1Subnet587207D0"
+    },
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "ShphBackendStack/ShphVpc/PublicSubnet1"
+     }
+    ]
+   },
+   "DependsOn": [
+    "ShphVpcPublicSubnet1DefaultRoute7DFDD2C0",
+    "ShphVpcPublicSubnet1RouteTableAssociation1037C4BB"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphVpc/PublicSubnet1/NATGateway"
+   }
+  },
+  "ShphVpcPublicSubnet2Subnet936B5BDB": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "ap-southeast-2b",
+    "CidrBlock": "10.0.1.0/24",
+    "MapPublicIpOnLaunch": true,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Public"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Public"
+     },
+     {
+      "Key": "Name",
+      "Value": "ShphBackendStack/ShphVpc/PublicSubnet2"
+     }
+    ],
+    "VpcId": {
+     "Ref": "ShphVpc5F05A5BC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphVpc/PublicSubnet2/Subnet"
+   }
+  },
+  "ShphVpcPublicSubnet2RouteTable37DC1BC1": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "ShphBackendStack/ShphVpc/PublicSubnet2"
+     }
+    ],
+    "VpcId": {
+     "Ref": "ShphVpc5F05A5BC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphVpc/PublicSubnet2/RouteTable"
+   }
+  },
+  "ShphVpcPublicSubnet2RouteTableAssociation42365397": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "ShphVpcPublicSubnet2RouteTable37DC1BC1"
+    },
+    "SubnetId": {
+     "Ref": "ShphVpcPublicSubnet2Subnet936B5BDB"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphVpc/PublicSubnet2/RouteTableAssociation"
+   }
+  },
+  "ShphVpcPublicSubnet2DefaultRoute407DCD95": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "GatewayId": {
+     "Ref": "ShphVpcIGW24A1D838"
+    },
+    "RouteTableId": {
+     "Ref": "ShphVpcPublicSubnet2RouteTable37DC1BC1"
+    }
+   },
+   "DependsOn": [
+    "ShphVpcVPCGW3DB12E74"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphVpc/PublicSubnet2/DefaultRoute"
+   }
+  },
+  "ShphVpcPrivateSubnet1Subnet50365461": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "ap-southeast-2a",
+    "CidrBlock": "10.0.2.0/24",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Private"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Private"
+     },
+     {
+      "Key": "Name",
+      "Value": "ShphBackendStack/ShphVpc/PrivateSubnet1"
+     }
+    ],
+    "VpcId": {
+     "Ref": "ShphVpc5F05A5BC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphVpc/PrivateSubnet1/Subnet"
+   }
+  },
+  "ShphVpcPrivateSubnet1RouteTable00C6FE81": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "ShphBackendStack/ShphVpc/PrivateSubnet1"
+     }
+    ],
+    "VpcId": {
+     "Ref": "ShphVpc5F05A5BC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphVpc/PrivateSubnet1/RouteTable"
+   }
+  },
+  "ShphVpcPrivateSubnet1RouteTableAssociationFA36F966": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "ShphVpcPrivateSubnet1RouteTable00C6FE81"
+    },
+    "SubnetId": {
+     "Ref": "ShphVpcPrivateSubnet1Subnet50365461"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphVpc/PrivateSubnet1/RouteTableAssociation"
+   }
+  },
+  "ShphVpcPrivateSubnet1DefaultRoute0D1A658A": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "NatGatewayId": {
+     "Ref": "ShphVpcPublicSubnet1NATGatewayD58C3D4E"
+    },
+    "RouteTableId": {
+     "Ref": "ShphVpcPrivateSubnet1RouteTable00C6FE81"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphVpc/PrivateSubnet1/DefaultRoute"
+   }
+  },
+  "ShphVpcPrivateSubnet2SubnetFC773A0F": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "ap-southeast-2b",
+    "CidrBlock": "10.0.3.0/24",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Private"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Private"
+     },
+     {
+      "Key": "Name",
+      "Value": "ShphBackendStack/ShphVpc/PrivateSubnet2"
+     }
+    ],
+    "VpcId": {
+     "Ref": "ShphVpc5F05A5BC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphVpc/PrivateSubnet2/Subnet"
+   }
+  },
+  "ShphVpcPrivateSubnet2RouteTable6A12182B": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "ShphBackendStack/ShphVpc/PrivateSubnet2"
+     }
+    ],
+    "VpcId": {
+     "Ref": "ShphVpc5F05A5BC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphVpc/PrivateSubnet2/RouteTable"
+   }
+  },
+  "ShphVpcPrivateSubnet2RouteTableAssociationF21AF7F4": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "ShphVpcPrivateSubnet2RouteTable6A12182B"
+    },
+    "SubnetId": {
+     "Ref": "ShphVpcPrivateSubnet2SubnetFC773A0F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphVpc/PrivateSubnet2/RouteTableAssociation"
+   }
+  },
+  "ShphVpcPrivateSubnet2DefaultRoute7321438C": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "NatGatewayId": {
+     "Ref": "ShphVpcPublicSubnet1NATGatewayD58C3D4E"
+    },
+    "RouteTableId": {
+     "Ref": "ShphVpcPrivateSubnet2RouteTable6A12182B"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphVpc/PrivateSubnet2/DefaultRoute"
+   }
+  },
+  "ShphVpcIGW24A1D838": {
+   "Type": "AWS::EC2::InternetGateway",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "ShphBackendStack/ShphVpc"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphVpc/IGW"
+   }
+  },
+  "ShphVpcVPCGW3DB12E74": {
+   "Type": "AWS::EC2::VPCGatewayAttachment",
+   "Properties": {
+    "InternetGatewayId": {
+     "Ref": "ShphVpcIGW24A1D838"
+    },
+    "VpcId": {
+     "Ref": "ShphVpc5F05A5BC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphVpc/VPCGW"
+   }
+  },
+  "DbCredentials798065DE": {
+   "Type": "AWS::SecretsManager::Secret",
+   "Properties": {
+    "GenerateSecretString": {
+     "ExcludePunctuation": true,
+     "GenerateStringKey": "password",
+     "PasswordLength": 32,
+     "SecretStringTemplate": "{\"username\":\"shphadmin\"}"
+    },
+    "Name": "shphBackendDbCredentials"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/DbCredentials/Resource"
+   }
+  },
+  "DbCredentialsAttachmentD2151D4F": {
+   "Type": "AWS::SecretsManager::SecretTargetAttachment",
+   "Properties": {
+    "SecretId": {
+     "Ref": "DbCredentials798065DE"
+    },
+    "TargetId": {
+     "Ref": "ShphPostgresD187D122"
+    },
+    "TargetType": "AWS::RDS::DBInstance"
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/DbCredentials/Attachment/Resource"
+   }
+  },
+  "JwtSecretB8834B39": {
+   "Type": "AWS::SecretsManager::Secret",
+   "Properties": {
+    "GenerateSecretString": {
+     "ExcludePunctuation": true,
+     "GenerateStringKey": "JWT_SECRET",
+     "PasswordLength": 64,
+     "SecretStringTemplate": "{\"username\":\"shph\"}"
+    },
+    "Name": "shphBackendJwtSecret"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/JwtSecret/Resource"
+   }
+  },
+  "DbSecurityGroupE9D701AD": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Allow backend access to PostgreSQL",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "VpcId": {
+     "Ref": "ShphVpc5F05A5BC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/DbSecurityGroup/Resource"
+   }
+  },
+  "DbSecurityGroupfromShphBackendStackEcsSecurityGroupDC3C67D55432C28B24DF": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Allow ECS to connect to RDS",
+    "FromPort": 5432,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "DbSecurityGroupE9D701AD",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "EcsSecurityGroup44008BF1",
+      "GroupId"
+     ]
+    },
+    "ToPort": 5432
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/DbSecurityGroup/from ShphBackendStackEcsSecurityGroupDC3C67D5:5432"
+   }
+  },
+  "RedisSecurityGroupB05951F6": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Allow backend access to Redis",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "VpcId": {
+     "Ref": "ShphVpc5F05A5BC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/RedisSecurityGroup/Resource"
+   }
+  },
+  "RedisSecurityGroupfromShphBackendStackEcsSecurityGroupDC3C67D56379AF49F976": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Allow ECS to connect to Redis",
+    "FromPort": 6379,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "RedisSecurityGroupB05951F6",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "EcsSecurityGroup44008BF1",
+      "GroupId"
+     ]
+    },
+    "ToPort": 6379
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/RedisSecurityGroup/from ShphBackendStackEcsSecurityGroupDC3C67D5:6379"
+   }
+  },
+  "EcsSecurityGroup44008BF1": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Allow ECS tasks to communicate with RDS and Redis",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "VpcId": {
+     "Ref": "ShphVpc5F05A5BC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/EcsSecurityGroup/Resource"
+   }
+  },
+  "EcsSecurityGroupfromShphBackendStackShphAlbServiceLBSecurityGroup255B7CCF4000ED3E5BFB": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Load balancer to target",
+    "FromPort": 4000,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "EcsSecurityGroup44008BF1",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "ShphAlbServiceLBSecurityGroupBC83368D",
+      "GroupId"
+     ]
+    },
+    "ToPort": 4000
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/EcsSecurityGroup/from ShphBackendStackShphAlbServiceLBSecurityGroup255B7CCF:4000"
+   }
+  },
+  "ShphPostgresSubnetGroup6D8DDDB2": {
+   "Type": "AWS::RDS::DBSubnetGroup",
+   "Properties": {
+    "DBSubnetGroupDescription": "Subnet group for ShphPostgres database",
+    "SubnetIds": [
+     {
+      "Ref": "ShphVpcPrivateSubnet1Subnet50365461"
+     },
+     {
+      "Ref": "ShphVpcPrivateSubnet2SubnetFC773A0F"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphPostgres/SubnetGroup/Default"
+   }
+  },
+  "ShphPostgresD187D122": {
+   "Type": "AWS::RDS::DBInstance",
+   "Properties": {
+    "AllocatedStorage": "100",
+    "BackupRetentionPeriod": 0,
+    "CopyTagsToSnapshot": true,
+    "DBInstanceClass": "db.t3.medium",
+    "DBName": "shphdb",
+    "DBSubnetGroupName": {
+     "Ref": "ShphPostgresSubnetGroup6D8DDDB2"
+    },
+    "DeleteAutomatedBackups": true,
+    "DeletionProtection": false,
+    "Engine": "postgres",
+    "EngineVersion": "15",
+    "MasterUserPassword": {
+     "Fn::Join": [
+      "",
+      [
+       "{{resolve:secretsmanager:",
+       {
+        "Ref": "DbCredentials798065DE"
+       },
+       ":SecretString:password::}}"
+      ]
+     ]
+    },
+    "MasterUsername": "username",
+    "MultiAZ": false,
+    "PubliclyAccessible": false,
+    "StorageType": "gp2",
+    "VPCSecurityGroups": [
+     {
+      "Fn::GetAtt": [
+       "DbSecurityGroupE9D701AD",
+       "GroupId"
+      ]
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphPostgres/Resource"
+   }
+  },
+  "RedisSubnetGroup": {
+   "Type": "AWS::ElastiCache::SubnetGroup",
+   "Properties": {
+    "CacheSubnetGroupName": "shph-redis-subnet-group",
+    "Description": "Subnet group for SHPH Redis cluster",
+    "SubnetIds": [
+     {
+      "Ref": "ShphVpcPrivateSubnet1Subnet50365461"
+     },
+     {
+      "Ref": "ShphVpcPrivateSubnet2SubnetFC773A0F"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/RedisSubnetGroup"
+   }
+  },
+  "ShphRedis": {
+   "Type": "AWS::ElastiCache::CacheCluster",
+   "Properties": {
+    "CacheNodeType": "cache.t4g.small",
+    "CacheSubnetGroupName": {
+     "Ref": "RedisSubnetGroup"
+    },
+    "ClusterName": "shph-backend-redis",
+    "Engine": "redis",
+    "NumCacheNodes": 1,
+    "VpcSecurityGroupIds": [
+     {
+      "Fn::GetAtt": [
+       "RedisSecurityGroupB05951F6",
+       "GroupId"
+      ]
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphRedis"
+   }
+  },
+  "DatabaseUrlSecretFA7DE062": {
+   "Type": "AWS::SecretsManager::Secret",
+   "Properties": {
+    "Name": "shphBackendDatabaseUrl",
+    "SecretString": {
+     "Fn::Join": [
+      "",
+      [
+       "postgresql://{{resolve:secretsmanager:",
+       {
+        "Ref": "DbCredentials798065DE"
+       },
+       ":SecretString:username::}}:{{resolve:secretsmanager:",
+       {
+        "Ref": "DbCredentials798065DE"
+       },
+       ":SecretString:password::}}@",
+       {
+        "Fn::GetAtt": [
+         "ShphPostgresD187D122",
+         "Endpoint.Address"
+        ]
+       },
+       ":",
+       {
+        "Fn::GetAtt": [
+         "ShphPostgresD187D122",
+         "Endpoint.Port"
+        ]
+       },
+       "/shphdb"
+      ]
+     ]
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/DatabaseUrlSecret/Resource"
+   }
+  },
+  "RedisUrlSecretD9C54B0D": {
+   "Type": "AWS::SecretsManager::Secret",
+   "Properties": {
+    "Name": "shphBackendRedisUrl",
+    "SecretString": {
+     "Fn::Join": [
+      "",
+      [
+       "redis://",
+       {
+        "Fn::GetAtt": [
+         "ShphRedis",
+         "RedisEndpoint.Address"
+        ]
+       },
+       ":",
+       {
+        "Fn::GetAtt": [
+         "ShphRedis",
+         "RedisEndpoint.Port"
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/RedisUrlSecret/Resource"
+   }
+  },
+  "ShphEcsClusterD1914CCB": {
+   "Type": "AWS::ECS::Cluster",
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphEcsCluster/Resource"
+   }
+  },
+  "ShphTaskRoleE0B007E3": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphTaskRole/Resource"
+   }
+  },
+  "ShphTaskDef87C40450": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Environment": [
+       {
+        "Name": "PORT",
+        "Value": "4000"
+       },
+       {
+        "Name": "DATABASE_URL",
+        "Value": {
+         "Fn::Join": [
+          "",
+          [
+           "postgresql://{{resolve:secretsmanager:",
+           {
+            "Ref": "DbCredentials798065DE"
+           },
+           ":SecretString:username::}}:{{resolve:secretsmanager:",
+           {
+            "Ref": "DbCredentials798065DE"
+           },
+           ":SecretString:password::}}@",
+           {
+            "Fn::GetAtt": [
+             "ShphPostgresD187D122",
+             "Endpoint.Address"
+            ]
+           },
+           ":",
+           {
+            "Fn::GetAtt": [
+             "ShphPostgresD187D122",
+             "Endpoint.Port"
+            ]
+           },
+           "/shphdb"
+          ]
+         ]
+        }
+       },
+       {
+        "Name": "REDIS_URL",
+        "Value": {
+         "Fn::Join": [
+          "",
+          [
+           "redis://",
+           {
+            "Fn::GetAtt": [
+             "ShphRedis",
+             "RedisEndpoint.Address"
+            ]
+           },
+           ":",
+           {
+            "Fn::GetAtt": [
+             "ShphRedis",
+             "RedisEndpoint.Port"
+            ]
+           }
+          ]
+         ]
+        }
+       }
+      ],
+      "Essential": true,
+      "Image": {
+       "Fn::Join": [
+        "",
+        [
+         "888577050475.dkr.ecr.ap-southeast-2.",
+         {
+          "Ref": "AWS::URLSuffix"
+         },
+         "/shph-backend:latest"
+        ]
+       ]
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": {
+         "Ref": "ShphTaskDefShphContainerLogGroup4984F25A"
+        },
+        "awslogs-stream-prefix": "shph-backend",
+        "awslogs-region": "ap-southeast-2"
+       }
+      },
+      "Name": "ShphContainer",
+      "PortMappings": [
+       {
+        "ContainerPort": 4000,
+        "Protocol": "tcp"
+       }
+      ],
+      "Secrets": [
+       {
+        "Name": "JWT_SECRET",
+        "ValueFrom": {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Ref": "JwtSecretB8834B39"
+           },
+           ":JWT_SECRET::"
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    ],
+    "Cpu": "512",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "ShphTaskDefExecutionRole9A14D297",
+      "Arn"
+     ]
+    },
+    "Family": "ShphBackendStackShphTaskDefA4F5549E",
+    "Memory": "1024",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "TaskRoleArn": {
+     "Fn::GetAtt": [
+      "ShphTaskRoleE0B007E3",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphTaskDef/Resource"
+   }
+  },
+  "ShphTaskDefShphContainerLogGroup4984F25A": {
+   "Type": "AWS::Logs::LogGroup",
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphTaskDef/ShphContainer/LogGroup/Resource"
+   }
+  },
+  "ShphTaskDefExecutionRole9A14D297": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphTaskDef/ExecutionRole/Resource"
+   }
+  },
+  "ShphTaskDefExecutionRoleDefaultPolicy17887AF3": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":ecr:ap-southeast-2:888577050475:repository/shph-backend"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": "ecr:GetAuthorizationToken",
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "ShphTaskDefShphContainerLogGroup4984F25A",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "JwtSecretB8834B39"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "ShphTaskDefExecutionRoleDefaultPolicy17887AF3",
+    "Roles": [
+     {
+      "Ref": "ShphTaskDefExecutionRole9A14D297"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphTaskDef/ExecutionRole/DefaultPolicy/Resource"
+   }
+  },
+  "ShphAlbServiceLB1C1E8C09": {
+   "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+   "Properties": {
+    "LoadBalancerAttributes": [
+     {
+      "Key": "deletion_protection.enabled",
+      "Value": "false"
+     }
+    ],
+    "Name": "ShphBackendALB",
+    "Scheme": "internet-facing",
+    "SecurityGroups": [
+     {
+      "Fn::GetAtt": [
+       "ShphAlbServiceLBSecurityGroupBC83368D",
+       "GroupId"
+      ]
+     }
+    ],
+    "Subnets": [
+     {
+      "Ref": "ShphVpcPublicSubnet1Subnet587207D0"
+     },
+     {
+      "Ref": "ShphVpcPublicSubnet2Subnet936B5BDB"
+     }
+    ],
+    "Type": "application"
+   },
+   "DependsOn": [
+    "ShphVpcPublicSubnet1DefaultRoute7DFDD2C0",
+    "ShphVpcPublicSubnet1RouteTableAssociation1037C4BB",
+    "ShphVpcPublicSubnet2DefaultRoute407DCD95",
+    "ShphVpcPublicSubnet2RouteTableAssociation42365397"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphAlbService/LB/Resource"
+   }
+  },
+  "ShphAlbServiceLBSecurityGroupBC83368D": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Automatically created Security Group for ELB ShphBackendStackShphAlbServiceLBE7991C5A",
+    "SecurityGroupIngress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow from anyone on port 80",
+      "FromPort": 80,
+      "IpProtocol": "tcp",
+      "ToPort": 80
+     }
+    ],
+    "VpcId": {
+     "Ref": "ShphVpc5F05A5BC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphAlbService/LB/SecurityGroup/Resource"
+   }
+  },
+  "ShphAlbServiceLBSecurityGrouptoShphBackendStackEcsSecurityGroupDC3C67D540003599441F": {
+   "Type": "AWS::EC2::SecurityGroupEgress",
+   "Properties": {
+    "Description": "Load balancer to target",
+    "DestinationSecurityGroupId": {
+     "Fn::GetAtt": [
+      "EcsSecurityGroup44008BF1",
+      "GroupId"
+     ]
+    },
+    "FromPort": 4000,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "ShphAlbServiceLBSecurityGroupBC83368D",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "ToPort": 4000
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphAlbService/LB/SecurityGroup/to ShphBackendStackEcsSecurityGroupDC3C67D5:4000"
+   }
+  },
+  "ShphAlbServiceLBPublicListenerC889AD9E": {
+   "Type": "AWS::ElasticLoadBalancingV2::Listener",
+   "Properties": {
+    "DefaultActions": [
+     {
+      "TargetGroupArn": {
+       "Ref": "ShphAlbServiceLBPublicListenerECSGroup9EEBFCB1"
+      },
+      "Type": "forward"
+     }
+    ],
+    "LoadBalancerArn": {
+     "Ref": "ShphAlbServiceLB1C1E8C09"
+    },
+    "Port": 80,
+    "Protocol": "HTTP"
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphAlbService/LB/PublicListener/Resource"
+   }
+  },
+  "ShphAlbServiceLBPublicListenerECSGroup9EEBFCB1": {
+   "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+   "Properties": {
+    "HealthCheckPath": "/health",
+    "Port": 80,
+    "Protocol": "HTTP",
+    "TargetGroupAttributes": [
+     {
+      "Key": "stickiness.enabled",
+      "Value": "false"
+     }
+    ],
+    "TargetType": "ip",
+    "VpcId": {
+     "Ref": "ShphVpc5F05A5BC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphAlbService/LB/PublicListener/ECSGroup/Resource"
+   }
+  },
+  "ShphAlbService790B9958": {
+   "Type": "AWS::ECS::Service",
+   "Properties": {
+    "Cluster": {
+     "Ref": "ShphEcsClusterD1914CCB"
+    },
+    "DeploymentConfiguration": {
+     "Alarms": {
+      "AlarmNames": [],
+      "Enable": false,
+      "Rollback": false
+     },
+     "DeploymentCircuitBreaker": {
+      "Enable": true,
+      "Rollback": true
+     },
+     "MaximumPercent": 200,
+     "MinimumHealthyPercent": 100
+    },
+    "DeploymentController": {
+     "Type": "ECS"
+    },
+    "DesiredCount": 1,
+    "EnableECSManagedTags": false,
+    "HealthCheckGracePeriodSeconds": 600,
+    "LaunchType": "FARGATE",
+    "LoadBalancers": [
+     {
+      "ContainerName": "ShphContainer",
+      "ContainerPort": 4000,
+      "TargetGroupArn": {
+       "Ref": "ShphAlbServiceLBPublicListenerECSGroup9EEBFCB1"
+      }
+     }
+    ],
+    "NetworkConfiguration": {
+     "AwsvpcConfiguration": {
+      "AssignPublicIp": "DISABLED",
+      "SecurityGroups": [
+       {
+        "Fn::GetAtt": [
+         "EcsSecurityGroup44008BF1",
+         "GroupId"
+        ]
+       }
+      ],
+      "Subnets": [
+       {
+        "Ref": "ShphVpcPrivateSubnet1Subnet50365461"
+       },
+       {
+        "Ref": "ShphVpcPrivateSubnet2SubnetFC773A0F"
+       }
+      ]
+     }
+    },
+    "ServiceName": "ShphBackendService",
+    "TaskDefinition": {
+     "Ref": "ShphTaskDef87C40450"
+    }
+   },
+   "DependsOn": [
+    "ShphAlbServiceLBPublicListenerECSGroup9EEBFCB1",
+    "ShphAlbServiceLBPublicListenerC889AD9E",
+    "ShphTaskRoleE0B007E3"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/ShphAlbService/Service/Service"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31SXW/bMAz8LX1XtMxY956PrghQrIZd9LWgZdZVo0iGSCUIBP/3wZbjGGmxJx6PJ4nkKZPZ76Vc3sGJFqreL4yuZCwZ1F7Aid4iqkzG11aJzbt9zTciD5XRqgyVRe65KypcYHyByuCVv3IrIqc0sHZ2EvfgYZf34S/wIzCe4Cxyr4/AeL14Zxm9xUmQOhmzFTOojwNaFiWq4DWfH70L7dDDf4mdbTwSfeEfBroThMoj0wEsNOhlLId8lPcohRfwDfKsjUlwW+mEr0nGLTBUQLizxGAVijTp1OR2/YW4SDuBBoi1AvWBMk5rnqSbvrAxgRh9J1B5WWDrSLPz5zUQClQk4ygYDozwD/gGeqtov8V3bfXFqFvGWQZt0c+48WyJ/qhVMj/BTmg4yFi49CWGmDuj1eBhQp0wriEZn1wzTXHB/QT01gL3/pNcta3RavhCTw7qNZh+J/XN8+OGjIO6GhTaNsdMxu9P+/TeLJ/rNDHaUXPBs3oyeGp7lnadKJBc8Gkfz4HbwJ2wrkb5ST+O2S/5814u7z5J64UPlvUBZZHiP4o0vU2SAwAA"
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShphBackendStack/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "ShphAlbServiceLoadBalancerDNS845E772B": {
+   "Value": {
+    "Fn::GetAtt": [
+     "ShphAlbServiceLB1C1E8C09",
+     "DNSName"
+    ]
+   }
+  },
+  "ShphAlbServiceServiceURLAE597CC1": {
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "http://",
+      {
+       "Fn::GetAtt": [
+        "ShphAlbServiceLB1C1E8C09",
+        "DNSName"
+       ]
+      }
+     ]
+    ]
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

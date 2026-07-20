@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '/api/shph_api.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -18,6 +18,8 @@ class ReviewsRatingsWidget extends StatefulWidget {
 }
 
 class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
+  final _supabase = Supabase.instance.client;
+
   List<Map<String, dynamic>> _reviews = const [];
   bool _isLoading = true;
   String? _errorMessage;
@@ -36,7 +38,32 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
     });
 
     try {
-      final reviews = await ShphServicesApi.instance.listMyReviews();
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) {
+        safeSetState(() {
+          _reviews = const [];
+          _stats = const _ReviewStats();
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final response = await _supabase
+          .from('bookings')
+          .select('''
+            *,
+            service_listings(*),
+            profiles!bookings_user_id_fkey(*)
+          ''')
+          .eq('provider_id', userId)
+          .not('rating', 'is', 'null')
+          .order('rating_created_at', ascending: false)
+          .order('completed_at', ascending: false)
+          .order('updated_at', ascending: false);
+
+      final reviews = List<Map<String, dynamic>>.from(response)
+          .where((item) => _readRating(item) > 0)
+          .toList();
 
       safeSetState(() {
         _reviews = reviews;
@@ -50,7 +77,9 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
         error: e,
         stackTrace: stackTrace,
       );
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       safeSetState(() {
         _isLoading = false;
         _errorMessage = 'We could not load your reviews right now.';
@@ -60,42 +89,62 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
 
   int _readRating(Map<String, dynamic> review) {
     final value = review['rating'];
-    if (value is int) return value.clamp(0, 5);
-    if (value is num) return value.round().clamp(0, 5);
+    if (value is int) {
+      return value.clamp(0, 5);
+    }
+    if (value is num) {
+      return value.round().clamp(0, 5);
+    }
     return 0;
   }
 
   String? _reviewText(Map<String, dynamic> review) {
-    final text = (review['review'] ?? review['comment'] ?? review['message'])?.toString().trim();
+    final text = (review['review'] ?? review['comment'])?.toString().trim();
     return text == null || text.isEmpty ? null : text;
   }
 
   DateTime? _reviewDate(Map<String, dynamic> review) {
-    final raw = review['created_at'] ?? review['createdAt'] ?? review['date'];
+    final raw = review['rating_created_at'] ??
+        review['completed_at'] ??
+        review['updated_at'] ??
+        review['created_at'];
     final value = raw?.toString();
-    if (value == null || value.isEmpty) return null;
+    if (value == null || value.isEmpty) {
+      return null;
+    }
     return DateTime.tryParse(value);
   }
 
   String _clientName(Map<String, dynamic> review) {
-    final client = review['client'] as Map<String, dynamic>?;
-    return (client?['display_name'] ?? client?['full_name'] ?? client?['first_name'] ?? 'Client').toString();
+    final profile = review['profiles'] as Map<String, dynamic>?;
+    return (profile?['display_name'] ??
+            profile?['full_name'] ??
+            profile?['first_name'] ??
+            'Client')
+        .toString();
   }
 
   String? _clientPhoto(Map<String, dynamic> review) {
-    final client = review['client'] as Map<String, dynamic>?;
-    final value = (client?['photo_url'] ?? client?['avatar_url'])?.toString().trim();
+    final profile = review['profiles'] as Map<String, dynamic>?;
+    final value = (profile?['photo_url'] ?? profile?['avatar_url'])
+        ?.toString()
+        .trim();
     return value == null || value.isEmpty ? null : value;
   }
 
   String _serviceName(Map<String, dynamic> review) {
-    final listing = review['service_listing'] as Map<String, dynamic>?;
-    return (listing?['title'] ?? listing?['name'] ?? 'Unknown Service').toString();
+    final listing = review['service_listings'] as Map<String, dynamic>?;
+    return (listing?['title'] ?? listing?['name'] ?? 'Unknown Service')
+        .toString();
   }
 
   String _serviceCategory(Map<String, dynamic> review) {
-    final listing = review['service_listing'] as Map<String, dynamic>?;
-    final value = (listing?['category_name'] ?? listing?['category'] ?? listing?['service_category'])?.toString().trim();
+    final listing = review['service_listings'] as Map<String, dynamic>?;
+    final value = (listing?['category_name'] ??
+            listing?['category'] ??
+            listing?['service_category'])
+        ?.toString()
+        .trim();
     return value == null || value.isEmpty ? 'Completed service' : value;
   }
 
@@ -602,135 +651,9 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
                   color: const Color(0xFF94A3B8),
                 ),
           ),
-          ..._buildProviderReplySection(context, review),
         ],
       ),
     );
-  }
-
-  List<Widget> _buildProviderReplySection(
-    BuildContext context,
-    Map<String, dynamic> review,
-  ) {
-    final reviewId = review['id']?.toString();
-    final existingReply = review['provider_reply'] as String?;
-
-    if (existingReply != null && existingReply.isNotEmpty) {
-      return [
-        const SizedBox(height: 12),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: const Color(0xFFEFF6FF),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: const Color(0xFFBFDBFE),
-              width: 1,
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.reply_rounded, size: 16, color: const Color(0xFF2563EB)),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Your Response',
-                    style: AppTheme.of(context).labelMedium.override(
-                          font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                          color: const Color(0xFF2563EB),
-                        ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                existingReply,
-                style: AppTheme.of(context).bodyMedium.override(
-                      font: GoogleFonts.poppins(),
-                      color: const Color(0xFF1E40AF),
-                    ),
-              ),
-            ],
-          ),
-        ),
-      ];
-    }
-
-    if (reviewId == null) return [];
-
-    return [
-      const SizedBox(height: 12),
-      Align(
-        alignment: Alignment.centerRight,
-        child: TextButton.icon(
-          onPressed: () => _showReplyDialog(context, reviewId),
-          icon: const Icon(Icons.reply_rounded, size: 18),
-          label: const Text('Respond'),
-          style: TextButton.styleFrom(
-            foregroundColor: const Color(0xFF2563EB),
-          ),
-        ),
-      ),
-    ];
-  }
-
-  Future<void> _showReplyDialog(BuildContext context, String reviewId) async {
-    final controller = TextEditingController();
-
-    final reply = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Respond to Review'),
-        content: TextField(
-          controller: controller,
-          maxLines: 4,
-          autofocus: true,
-          decoration: InputDecoration(
-            hintText: 'Write a professional response...',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              final text = controller.text.trim();
-              if (text.isNotEmpty) {
-                Navigator.pop(ctx, text);
-              }
-            },
-            child: const Text('Post Reply'),
-          ),
-        ],
-      ),
-    );
-
-    if (reply == null || !mounted) return;
-
-    try {
-      await ShphServicesApi.instance.replyToReview(
-        int.tryParse(reviewId) ?? 0,
-        reply: reply,
-      );
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Reply posted successfully'), backgroundColor: Color(0xFF059669)),
-      );
-      _loadReviews();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to post reply')),
-      );
-    }
   }
 
   Widget _buildMessageState(

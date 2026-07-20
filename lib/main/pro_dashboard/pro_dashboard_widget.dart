@@ -2,19 +2,16 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '/api/shph_api.dart';
-import '/auth/auth_manager_factory.dart';
 import '/backend/supabase/database/tables/payment_methods.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import '/services/chat_service.dart';
 import '/services/dispatch/dispatch_models.dart';
+import '/services/dispatch/dispatch_service.dart';
 import '/services/logging_service.dart';
-import '/services/payouts_service.dart';
 import '/services/pro_bookings_service.dart';
-import '/services/providers_service.dart';
-import '/services/step_up_auth_service.dart';
 import '/theme/app_theme.dart';
 
 // Profile pages
@@ -56,7 +53,6 @@ class _ProDashboardWidgetState extends State<ProDashboardWidget> {
     final tabs = {
       'ProJobs': const ProJobsWidget(),
       'ProSchedule': const ProScheduleWidget(),
-      'ProAnalytics': const ProAnalyticsWidget(),
       'ProEarnings': const ProEarningsWidget(),
       'ProMessages': const ProMessagesWidget(),
       'ProProfile': const ProProfileWidget(),
@@ -117,14 +113,6 @@ class _ProDashboardWidgetState extends State<ProDashboardWidget> {
                   size: 24,
                 ),
                 label: 'Schedule',
-                tooltip: '',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(
-                  Icons.insights_rounded,
-                  size: 24,
-                ),
-                label: 'Analytics',
                 tooltip: '',
               ),
               BottomNavigationBarItem(
@@ -191,8 +179,27 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
   }
 
   void _subscribeDispatchOffers() {
-    dispatchOffers = const [];
-    isLoadingDispatch = false;
+    final stream = DispatchService.instance.watchProviderOffers();
+    _offerSubscription = stream.listen(
+      (offers) {
+        if (!mounted) {
+          return;
+        }
+        setState(() {
+          dispatchOffers = offers;
+          isLoadingDispatch = false;
+        });
+      },
+      onError: (e) {
+        if (!mounted) {
+          return;
+        }
+        setState(() {
+          isLoadingDispatch = false;
+          dispatchLoadError = 'Could not load dispatch offers.';
+        });
+      },
+    );
   }
 
   Future<void> _loadJobRequests() async {
@@ -251,14 +258,12 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
   }
 
   Future<void> _acceptDispatchOffer(String jobId) async {
-    final success = await _bookingsService.acceptJob(jobId);
+    final success = await DispatchService.instance.acceptOffer(jobId);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            success
-                ? 'Offer accepted — job confirmed'
-                : 'Failed to accept offer',
+            success ? 'Offer accepted — job confirmed' : 'Failed to accept offer',
           ),
         ),
       );
@@ -266,7 +271,7 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
   }
 
   Future<void> _rejectDispatchOffer(String jobId) async {
-    final success = await _bookingsService.rejectJob(jobId);
+    final success = await DispatchService.instance.rejectOffer(jobId);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -298,13 +303,6 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
         title: 'Job Requests',
         subtitle: 'Review and respond to new customer bookings fast.',
         onRefresh: _loadJobRequests,
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/on-demand/provider-bids'),
-        icon: const Icon(Icons.bolt),
-        label: const Text('On-Demand Bids'),
-        backgroundColor: const Color(0xFF0F766E),
-        foregroundColor: Colors.white,
       ),
       body: RefreshIndicator(
         onRefresh: _loadJobRequests,
@@ -460,16 +458,14 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
                           Text(
                             'Dispatch match',
                             style: theme.labelMedium.override(
-                              font: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w700),
+                              font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
                               color: Colors.white.withValues(alpha: 0.82),
                             ),
                           ),
                           Text(
                             'New offer available',
                             style: theme.titleSmall.override(
-                              font: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w700),
+                              font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
                               color: Colors.white,
                             ),
                           ),
@@ -488,8 +484,7 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
                       child: Text(
                         '${elapsed.inSeconds ~/ 60}m ago',
                         style: theme.labelSmall.override(
-                          font:
-                              GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                          font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
                           color: Colors.white,
                         ),
                       ),
@@ -499,22 +494,19 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    Icon(Icons.person_outline,
-                        size: 16, color: Colors.white.withValues(alpha: 0.82)),
+                    Icon(Icons.person_outline, size: 16, color: Colors.white.withValues(alpha: 0.82)),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         clientName,
                         style: theme.bodyMedium.override(
-                          font:
-                              GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                          font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
                           color: Colors.white,
                         ),
                       ),
                     ),
                     const SizedBox(width: 16),
-                    Icon(Icons.build_outlined,
-                        size: 16, color: Colors.white.withValues(alpha: 0.82)),
+                    Icon(Icons.build_outlined, size: 16, color: Colors.white.withValues(alpha: 0.82)),
                     const SizedBox(width: 6),
                     Text(
                       serviceType,
@@ -541,8 +533,7 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
                               child: Text(
                                 'Accept',
                                 style: theme.bodyMedium.override(
-                                  font: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.w700),
+                                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
                                   color: const Color(0xFF0F766E),
                                 ),
                               ),
@@ -569,8 +560,7 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
                           child: Text(
                             'Decline',
                             style: theme.bodyMedium.override(
-                              font: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600),
+                              font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
                             ),
                           ),
                         ),
@@ -982,9 +972,9 @@ class _ProScheduleWidgetState extends State<ProScheduleWidget> {
                             final job = scheduledJobs[index];
                             return _buildScheduleCard(context, job);
                           },
-                        ),
-                      ),
-      );
+                    ),
+                  ),
+              );
 
   Widget _buildScheduleCard(BuildContext context, Map<String, dynamic> job) {
     final serviceListing = job['service_listings'] as Map<String, dynamic>?;
@@ -1394,117 +1384,31 @@ class _ProEarningsWidgetState extends State<ProEarningsWidget> {
       [];
 
   Future<void> _handleCashOut() async {
-    if (totalEarnings <= 0) {
-      if (!mounted) return;
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) {
+      if (!mounted) {
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No earnings available to cash out')),
+        const SnackBar(content: Text('User not authenticated')),
       );
       return;
     }
 
     try {
-      final methodsData = await ShphUsersApi.instance.listPaymentMethods();
-      final methods = methodsData.map(PaymentMethodsRow.new).toList();
-      if (!mounted) return;
-
-      final ewallets = methods.where((m) => m.type == 'ewallet').toList();
-      if (ewallets.isEmpty) {
-        final addNow = await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('No Payout Wallet'),
-            content: const Text(
-                'You need to link an e-wallet first to receive payouts.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Later'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Add E-Wallet'),
-              ),
-            ],
-          ),
-        );
-        if (addNow == true && mounted) {
-          await context.pushNamed(AddEwalletPaymentWidget.routeName);
-        }
+      final methods = await PaymentMethodsTable().queryRows(
+        queryFn: (q) => q.eq('user_id', userId),
+      );
+      if (!mounted) {
         return;
       }
 
-      final result = await _showPayoutRequestSheet(ewallets);
-      if (result == null || !mounted) return;
-
-      final verified = await StepUpAuthService.instance.requireVerification(
-        reason: 'Confirm your identity to request a payout',
-      );
-      if (!mounted) return;
-      if (!verified) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Identity verification is required to request a payout.',
-            ),
-          ),
-        );
-        return;
-      }
-
-      final success = await PayoutsService.instance.requestPayout(
-        amount: result['amount'] as double,
-        paymentMethodId: result['paymentMethodId'] as String?,
-        note: result['note'] as String?,
-      );
-
-      if (!mounted) return;
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content:
-                Text('Payout request submitted! Admin will review it shortly.'),
-            backgroundColor: Color(0xFF059669),
-          ),
-        );
-        _loadEarnings();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to submit payout request')),
-        );
-      }
-    } catch (e, stackTrace) {
-      LoggingService.error(
-        'Failed to process cash-out',
-        tag: 'ProEarnings',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not process cash-out')),
-      );
-    }
-  }
-
-  Future<Map<String, dynamic>?> _showPayoutRequestSheet(
-    List<dynamic> ewallets,
-  ) async {
-    final amountController = TextEditingController();
-    final noteController = TextEditingController();
-    String? selectedMethodId;
-
-    return showModalBottomSheet<Map<String, dynamic>>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setSheetState) => Container(
-          padding: EdgeInsets.fromLTRB(
-            20,
-            12,
-            20,
-            24 + MediaQuery.of(context).viewInsets.bottom,
-          ),
+      final hasEwallet = methods.any((method) => method.type == 'ewallet');
+      final action = await showModalBottomSheet<String>(
+        context: context,
+        backgroundColor: Colors.transparent,
+        builder: (context) => Container(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
           decoration: const BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
@@ -1527,123 +1431,71 @@ class _ProEarningsWidgetState extends State<ProEarningsWidget> {
                 ),
                 const SizedBox(height: 18),
                 Text(
-                  'Request Payout',
+                  'Cash Out Setup',
                   style: AppTheme.of(context).titleMedium.override(
                         fontWeight: FontWeight.w700,
                       ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 8),
                 Text(
-                  'Available: PHP ${totalEarnings.toStringAsFixed(2)}',
+                  hasEwallet
+                      ? 'Your payout wallet is ready to review. Automated provider cash-out is not enabled yet, but you can manage the wallet that will be used for payouts.'
+                      : 'Link an e-wallet first so your provider payout destination is ready when cash-out processing is enabled.',
                   style: AppTheme.of(context).bodyMedium.override(
                         color: AppTheme.of(context).secondaryText,
                       ),
                 ),
                 const SizedBox(height: 18),
-                Text(
-                  'Amount (PHP)',
-                  style: AppTheme.of(context).bodySmall.override(
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: amountController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    hintText: '0.00',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    prefixText: 'PHP ',
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Payout Wallet',
-                  style: AppTheme.of(context).bodySmall.override(
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-                const SizedBox(height: 6),
-                DropdownButtonFormField<String>(
-                  value: selectedMethodId,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  hint: const Text('Select e-wallet'),
-                  items: ewallets.map<DropdownMenuItem<String>>((m) {
-                    final method = m;
-                    final label = method.label ??
-                        (method.details?['number'] as String?) ??
-                        'E-Wallet';
-                    return DropdownMenuItem<String>(
-                      value: method.id as String,
-                      child: Text(label),
-                    );
-                  }).toList(),
-                  onChanged: (v) => setSheetState(() => selectedMethodId = v),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Note (optional)',
-                  style: AppTheme.of(context).bodySmall.override(
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: noteController,
-                  maxLines: 2,
-                  decoration: InputDecoration(
-                    hintText: 'Add a note for admin...',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 18),
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton(
-                    onPressed: () {
-                      final amount =
-                          double.tryParse(amountController.text) ?? 0;
-                      if (amount <= 0 || amount > totalEarnings) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text(
-                                  'Enter a valid amount up to your available earnings')),
-                        );
-                        return;
-                      }
-                      Navigator.of(context).pop({
-                        'amount': amount,
-                        'paymentMethodId': selectedMethodId,
-                        'note': noteController.text.trim().isEmpty
-                            ? null
-                            : noteController.text.trim(),
-                      });
-                    },
-                    child: const Text('Submit Request'),
+                    onPressed: () =>
+                        Navigator.of(context).pop(hasEwallet ? 'manage' : 'add'),
+                    child: Text(
+                      hasEwallet ? 'Manage Payout Wallet' : 'Add Payout Wallet',
+                    ),
                   ),
                 ),
                 const SizedBox(height: 10),
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Cancel'),
+                    onPressed: () => Navigator.of(context).pop('later'),
+                    child: const Text('Maybe Later'),
                   ),
                 ),
               ],
             ),
           ),
         ),
-      ),
-    );
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      if (action == 'add') {
+        await context.pushNamed(AddEwalletPaymentWidget.routeName);
+        return;
+      }
+
+      if (action == 'manage') {
+        await context.pushNamed(PaymentMethodsWidget.routeName);
+      }
+    } catch (e, stackTrace) {
+      LoggingService.error(
+        'Failed to open cash-out setup',
+        tag: 'ProEarnings',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open cash-out setup')),
+      );
+    }
   }
 
   double get _weeklyDelta => thisWeek - lastWeek;
@@ -1987,10 +1839,9 @@ class _ProEarningsWidgetState extends State<ProEarningsWidget> {
   ) {
     final isEarning = transaction['type'] == 'earning';
     final amount = (transaction['amount'] as num?)?.toDouble() ?? 0.0;
-    final serviceName = (transaction['serviceName'] ??
-            transaction['description'] ??
-            'Transaction')
-        .toString();
+    final serviceName =
+        (transaction['serviceName'] ?? transaction['description'] ?? 'Transaction')
+            .toString();
     final clientName = (transaction['clientName'] ?? '').toString().trim();
     final date = (transaction['date'] ?? 'Unknown date').toString();
 
@@ -2013,7 +1864,9 @@ class _ProEarningsWidgetState extends State<ProEarningsWidget> {
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(
-              isEarning ? Icons.south_west_rounded : Icons.north_east_rounded,
+              isEarning
+                  ? Icons.south_west_rounded
+                  : Icons.north_east_rounded,
               color: isEarning
                   ? AppTheme.of(context).success
                   : AppTheme.of(context).error,
@@ -2218,7 +2071,7 @@ class ProMessagesWidget extends StatefulWidget {
 class _ProMessagesWidgetState extends State<ProMessagesWidget> {
   List<Map<String, dynamic>> _chatRooms = const [];
   bool _isLoading = true;
-  Timer? _chatRoomsSubscription;
+  StreamSubscription? _chatRoomsSubscription;
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -2243,11 +2096,49 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
   Future<void> _loadChatRooms() async {
     safeSetState(() => _isLoading = true);
     try {
-      final apiRooms = await ChatService.instance.getChatRooms();
-      var rooms = apiRooms
-          .map(_normalizeChatRoom)
-          .whereType<Map<String, dynamic>>()
-          .toList();
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) {
+        safeSetState(() {
+          _chatRooms = const [];
+          _isLoading = false;
+        });
+        return;
+      }
+
+      var rooms = <Map<String, dynamic>>[];
+      try {
+        final apiRooms = await ChatService.instance.getChatRooms();
+        rooms = apiRooms
+            .where(
+              (room) => _stringValue(room['provider_id']) == userId,
+            )
+            .map(_normalizeChatRoom)
+            .whereType<Map<String, dynamic>>()
+            .toList();
+      } catch (_) {
+        rooms = const [];
+      }
+
+      if (rooms.isEmpty) {
+        final chatRoomsResponse = await Supabase.instance.client
+            .from('chat_rooms')
+            .select('''
+              *,
+              profiles!chat_rooms_client_id_fkey(
+                id,
+                display_name,
+                first_name,
+                photo_url
+              )
+            ''')
+            .eq('provider_id', userId)
+            .order('updated_at', ascending: false);
+
+        rooms = List<Map<String, dynamic>>.from(chatRoomsResponse)
+            .map(_normalizeChatRoom)
+            .whereType<Map<String, dynamic>>()
+            .toList();
+      }
 
       rooms.sort(_sortChatRoomsByActivity);
 
@@ -2274,10 +2165,17 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
   }
 
   void _subscribeToChatRooms() {
-    _chatRoomsSubscription = Timer.periodic(
-      const Duration(seconds: 10),
-      (_) => _loadChatRooms(),
-    );
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) {
+      return;
+    }
+
+    // Subscribe to all chat rooms and let _loadChatRooms filter appropriately
+    _chatRoomsSubscription = Supabase.instance.client
+        .from('chat_rooms')
+        .stream(primaryKey: ['id']).listen((data) {
+      _loadChatRooms();
+    });
   }
 
   String _formatTime(DateTime? dateTime) {
@@ -2333,8 +2231,7 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
       return nested.map((key, value) => MapEntry('$key', value));
     }
 
-    final clientId =
-        _stringValue(room['client_id']) ?? _stringValue(room['other_user_id']);
+    final clientId = _stringValue(room['client_id']) ?? _stringValue(room['other_user_id']);
     final displayName = _stringValue(room['client_name']) ??
         _stringValue(room['other_user_name']) ??
         _stringValue(room['customer_name']) ??
@@ -2389,8 +2286,9 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
       };
 
   int _readUnreadCount(Map<String, dynamic> room) {
-    final raw =
-        room['unread_provider_count'] ?? room['unread_count'] ?? room['unread'];
+    final raw = room['unread_provider_count'] ??
+        room['unread_count'] ??
+        room['unread'];
     if (raw is int) {
       return raw;
     }
@@ -2416,13 +2314,11 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
     Map<String, dynamic> b,
   ) {
     final aLast = _parseRoomDate(
-      _stringValue(
-              (a['last_message'] as Map<String, dynamic>?)?['created_at']) ??
+      _stringValue((a['last_message'] as Map<String, dynamic>?)?['created_at']) ??
           _stringValue(a['updated_at']),
     );
     final bLast = _parseRoomDate(
-      _stringValue(
-              (b['last_message'] as Map<String, dynamic>?)?['created_at']) ??
+      _stringValue((b['last_message'] as Map<String, dynamic>?)?['created_at']) ??
           _stringValue(b['updated_at']),
     );
     if (aLast == null && bLast == null) {
@@ -2671,13 +2567,14 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
                             Expanded(
                               child: Text(
                                 'Recent conversations',
-                                style:
-                                    AppTheme.of(context).titleMedium.override(
-                                          font: GoogleFonts.poppins(
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                          color: const Color(0xFF0F172A),
-                                        ),
+                                style: AppTheme.of(context)
+                                    .titleMedium
+                                    .override(
+                                      font: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                      color: const Color(0xFF0F172A),
+                                    ),
                               ),
                             ),
                             Container(
@@ -2845,9 +2742,8 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
     final customerName =
         customer?['display_name'] ?? customer?['first_name'] ?? 'Customer';
     final customerPhoto = customer?['photo_url'];
-    final lastMessageText = lastMessage?['content'] ??
-        chatRoom['last_message_text'] ??
-        'No messages yet';
+    final lastMessageText =
+        lastMessage?['content'] ?? chatRoom['last_message_text'] ?? 'No messages yet';
     final lastMessageTime = lastMessage?['created_at'] != null
         ? DateTime.tryParse(lastMessage!['created_at'].toString())
         : null;
@@ -2970,7 +2866,7 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
                   style: AppTheme.of(context).labelSmall.override(
                         font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
                         color: Colors.white,
-                      ),
+                  ),
                 ),
               ),
             if (unreadCount <= 0)
@@ -3015,10 +2911,28 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
   }
 
   Future<void> _loadProfile() async {
-    if (mounted) setState(() => isLoading = true);
+    if (mounted) {
+      setState(() => isLoading = true);
+    }
     try {
-      final response = await ProvidersService.instance.getMyProviderProfile();
-      if (!mounted) return;
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) {
+        if (mounted) {
+          setState(() => isLoading = false);
+        }
+        return;
+      }
+
+      final response = await Supabase.instance.client
+          .from('profiles')
+          .select()
+          .eq('id', userId)
+          .single();
+
+      if (!mounted) {
+        return;
+      }
+
       setState(() {
         profileData = response;
         isAvailable = response['is_available'] as bool? ?? true;
@@ -3029,30 +2943,46 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
     } catch (e) {
       LoggingService.error('Error loading provider profile: $e',
           tag: 'ProProfile');
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() => isLoading = false);
     }
   }
 
   Future<void> _updateAvailability(bool value) async {
     try {
-      await ProvidersService.instance
-          .updateMyProviderProfile({'is_available': value});
-      if (!mounted) return;
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) {
+        return;
+      }
+
+      await Supabase.instance.client
+          .from('profiles')
+          .update({'is_available': value}).eq('id', userId);
+
+      if (!mounted) {
+        return;
+      }
+
       setState(() => isAvailable = value);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text(value
+          content: Text(
+            value
                 ? 'You are live and visible to customers.'
-                : 'You are paused for new requests.')),
+                : 'You are paused for new requests.',
+          ),
+        ),
       );
     } catch (e) {
       LoggingService.error('Error updating provider availability: $e',
           tag: 'ProProfile');
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Unable to update availability right now')),
+        const SnackBar(content: Text('Unable to update availability right now')),
       );
     }
   }
@@ -3060,17 +2990,30 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
   Future<void> _saveHourlyRate() async {
     final parsedRate = double.tryParse(_rateController.text.trim());
     if (parsedRate == null || parsedRate <= 0) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Enter a valid hourly rate')),
       );
       return;
     }
+
     try {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) {
+        return;
+      }
+
       setState(() => _isSavingRate = true);
-      await ProvidersService.instance
-          .updateMyProviderProfile({'hourly_rate': parsedRate});
-      if (!mounted) return;
+      await Supabase.instance.client
+          .from('profiles')
+          .update({'hourly_rate': parsedRate}).eq('id', userId);
+
+      if (!mounted) {
+        return;
+      }
+
       setState(() {
         hourlyRate = parsedRate;
         _isSavingRate = false;
@@ -3081,7 +3024,9 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
     } catch (e) {
       LoggingService.error('Error updating provider hourly rate: $e',
           tag: 'ProProfile');
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() => _isSavingRate = false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Unable to update hourly rate right now')),
@@ -3097,70 +3042,64 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
           children: [
             Icon(Icons.logout, color: Colors.red),
             SizedBox(width: 8),
-            Text('Log Out')
+            Text('Log Out'),
           ],
         ),
         content: const Text(
-            'Are you sure you want to log out? You will need to sign in again to access your account.'),
+          'Are you sure you want to log out? You will need to sign in again to access your account.',
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel')),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
           TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Log Out')),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: const Text('Log Out'),
+          ),
         ],
       ),
     );
-    if (shouldLogout != true) return;
+
+    if (shouldLogout != true) {
+      return;
+    }
+
     try {
-      final authManager = AuthManagerFactory.instance;
-      await authManager.signOut();
-      if (mounted) context.go('/');
+      await Supabase.instance.client.auth.signOut();
+      if (mounted) {
+        context.go('/');
+      }
     } catch (e) {
       LoggingService.error('Error logging out provider: $e', tag: 'ProProfile');
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Unable to log out right now')),
       );
     }
   }
 
-  Future<void> _enableClientMode() async {
-    try {
-      await ShphUsersApi.instance.enableClient();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Switched to client mode')),
-        );
-        context.go('/');
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to switch: $e')),
-        );
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) => Scaffold(
-      backgroundColor: const Color(0xFFF4F7FB),
-      appBar: _buildDashboardAppBar(
-        context,
-        title: 'Profile',
-        subtitle:
-            'Manage your provider presence, pricing, service area, and trust signals.',
-        onRefresh: _loadProfile,
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadProfile,
-              child: SingleChildScrollView(
-                child: Column(
+        backgroundColor: const Color(0xFFF4F7FB),
+        appBar: _buildDashboardAppBar(
+          context,
+          title: 'Profile',
+          subtitle:
+              'Manage your provider presence, pricing, service area, and trust signals.',
+          onRefresh: _loadProfile,
+        ),
+        body: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : RefreshIndicator(
+                onRefresh: _loadProfile,
+                child: SingleChildScrollView(
+                  child: Column(
                   mainAxisSize: MainAxisSize.max,
                   children: [
                     // Profile Header
@@ -3206,8 +3145,8 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                       bottom: 0,
                                       right: 0,
                                       child: GestureDetector(
-                                        onTap: () => context.pushNamed(
-                                            ProEditProfileWidget.routeName),
+                                        onTap: () => context
+                                            .pushNamed(ProEditProfileWidget.routeName),
                                         child: Container(
                                           width: 34,
                                           height: 34,
@@ -3268,11 +3207,11 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                           vertical: 7,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: (profileData?[
-                                                      'verification_status'] ==
-                                                  'verified')
-                                              ? const Color(0xFFECFDF3)
-                                              : const Color(0xFFFFF7ED),
+                                          color:
+                                              (profileData?['verification_status'] ==
+                                                      'verified')
+                                                  ? const Color(0xFFECFDF3)
+                                                  : const Color(0xFFFFF7ED),
                                           borderRadius:
                                               BorderRadius.circular(999),
                                         ),
@@ -3336,8 +3275,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                 Expanded(
                                   child: _buildProviderHeroStat(
                                     label: 'Rate',
-                                    value:
-                                        'PHP ${hourlyRate.toStringAsFixed(0)}',
+                                    value: 'PHP ${hourlyRate.toStringAsFixed(0)}',
                                   ),
                                 ),
                                 const SizedBox(width: 10),
@@ -3355,25 +3293,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                         ),
                       ),
                     ),
-                    // My Services + Create Service Buttons
-                    Padding(
-                      padding:
-                          const EdgeInsetsDirectional.fromSTEB(24, 0, 24, 8),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton.icon(
-                          onPressed: () => context.pushNamed('MyServices'),
-                          icon: const Icon(Icons.manage_search_rounded),
-                          label: const Text('My Services'),
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size.fromHeight(56),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(18),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                    // Create Service Button
                     Padding(
                       padding:
                           const EdgeInsetsDirectional.fromSTEB(24, 0, 24, 16),
@@ -3496,11 +3416,10 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                 const SizedBox(height: 4),
                                 Text(
                                   'Keep your pricing current so quotes and customer expectations stay aligned.',
-                                  style:
-                                      AppTheme.of(context).bodySmall.override(
-                                            font: GoogleFonts.poppins(),
-                                            color: const Color(0xFF64748B),
-                                          ),
+                                  style: AppTheme.of(context).bodySmall.override(
+                                        font: GoogleFonts.poppins(),
+                                        color: const Color(0xFF64748B),
+                                      ),
                                 ),
                                 const SizedBox(height: 12),
                                 Row(
@@ -3577,8 +3496,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                   child: InkWell(
-                                    onTap:
-                                        _isSavingRate ? null : _saveHourlyRate,
+                                    onTap: _isSavingRate ? null : _saveHourlyRate,
                                     child: Center(
                                       child: Text(
                                         _isSavingRate
@@ -3733,8 +3651,8 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                             context,
                             Icons.description_outlined,
                             'Service History',
-                            () => context
-                                .pushNamed(ServiceHistoryWidget.routeName),
+                            () =>
+                                context.pushNamed(ServiceHistoryWidget.routeName),
                           ),
                           _buildMenuOption(
                             context,
@@ -3755,22 +3673,6 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                             Icons.info_outline,
                             'About',
                             () => context.pushNamed(AboutWidget.routeName),
-                          ),
-                          const SizedBox(height: 16),
-                          // Switch to Client Button
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton.icon(
-                              onPressed: _enableClientMode,
-                              icon: const Icon(Icons.switch_account_rounded),
-                              label: const Text('Switch to Client'),
-                              style: OutlinedButton.styleFrom(
-                                minimumSize: const Size.fromHeight(56),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                ),
-                              ),
-                            ),
                           ),
                           const SizedBox(height: 16),
                           // Logout Button

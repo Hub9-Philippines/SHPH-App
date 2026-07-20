@@ -1,6 +1,9 @@
-import 'package:flutter_stripe/flutter_stripe.dart';
+import 'dart:convert';
 
-import '/api/shph_api_client.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:http/http.dart' as http;
+
+import '/api/api_config.dart';
 import '/services/logging_service.dart';
 
 enum PaymentProvider { stripe, maya }
@@ -23,7 +26,7 @@ class PaymentController {
   PaymentController._();
   static final PaymentController instance = PaymentController._();
 
-  final _api = ShphApiClient.instance;
+  String baseUrl = ApiConfig.baseUrl;
 
   String? _stripePublishableKey;
   String? get stripePublishableKey => _stripePublishableKey;
@@ -68,9 +71,8 @@ class PaymentController {
         transactionId: _extractTransactionId(clientSecret),
       );
     } on StripeException catch (e) {
-      final isCancel =
-          e.error.localizedMessage?.toLowerCase().contains('cancel') == true ||
-              e.error.code == FailureCode.Canceled;
+      final isCancel = e.error.localizedMessage?.toLowerCase().contains('cancel') == true ||
+          e.error.code == FailureCode.Canceled;
       return PaymentResult(
         status: isCancel ? PaymentStatus.cancelled : PaymentStatus.failed,
         errorMessage: e.error.localizedMessage ?? 'Payment failed',
@@ -92,17 +94,27 @@ class PaymentController {
     Map<String, String>? metadata,
   }) async {
     try {
-      final response = await _api.post<Map<String, dynamic>>(
-        '/api/payments/create-intent/',
-        data: {
+      final uri = Uri.parse('$baseUrl/api/payments/stripe/create-intent');
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
           'amount': (amount * 100).round(),
           'currency': currency.toLowerCase(),
-          'payment_method': 'card',
           if (description != null) 'description': description,
           if (metadata != null) 'metadata': metadata,
-        },
+        }),
       );
-      final data = response.data ?? const <String, dynamic>{};
+
+      if (response.statusCode != 200) {
+        LoggingService.error(
+          'Stripe create-intent failed: ${response.statusCode} ${response.body}',
+          tag: 'PaymentController',
+        );
+        return null;
+      }
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
       return data['client_secret'] as String?;
     } catch (e) {
       LoggingService.error('Error fetching Stripe client secret: $e',
@@ -139,7 +151,8 @@ class PaymentController {
         transactionId: checkoutUrl,
       );
     } catch (e) {
-      LoggingService.error('Maya payment error: $e', tag: 'PaymentController');
+      LoggingService.error('Maya payment error: $e',
+          tag: 'PaymentController');
       return PaymentResult(
         status: PaymentStatus.failed,
         errorMessage: e.toString(),
@@ -154,18 +167,26 @@ class PaymentController {
     Map<String, String>? metadata,
   }) async {
     try {
-      final response = await _api.post<Map<String, dynamic>>(
-        '/api/payments/create-intent/',
-        data: {
+      final uri = Uri.parse('$baseUrl/api/payments/maya/create-checkout');
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
           'totalAmount': {'value': amount, 'currency': currency},
-          'amount': (amount * 100).round(),
-          'currency': currency.toLowerCase(),
-          'payment_method': 'paymaya',
           if (description != null) 'description': description,
           if (metadata != null) 'metadata': metadata,
-        },
+        }),
       );
-      final data = response.data ?? const <String, dynamic>{};
+
+      if (response.statusCode != 200) {
+        LoggingService.error(
+          'Maya create-checkout failed: ${response.statusCode} ${response.body}',
+          tag: 'PaymentController',
+        );
+        return null;
+      }
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
       return data['checkout_url'] as String?;
     } catch (e) {
       LoggingService.error('Error fetching Maya checkout URL: $e',

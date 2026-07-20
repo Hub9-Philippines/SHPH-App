@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../backend/supabase/database/database.dart';
 import '../flutter_flow/auth_logger.dart';
 import '../flutter_flow/nav/nav.dart';
 import '../index.dart';
-import '../services/profiles_service.dart';
 
 /// Handles post-authentication navigation based on profile completeness and account type
 ///
@@ -18,6 +18,15 @@ class PostAuthNavigationFlow {
   static final PostAuthNavigationFlow _instance =
       PostAuthNavigationFlow._internal();
 
+  /// Check profile completeness and route to appropriate page
+  ///
+  /// Returns:
+  ///   - Does not return; handles routing internally
+  ///
+  /// Routes to:
+  ///   - CreateProfile: if displayName is not populated
+  ///   - EKYCBegin: if profile complete and account type is pro or both
+  ///   - Home: if profile complete and account type is not pro/both
   Future<void> handlePostAuthNavigation({
     required BuildContext context,
     required String userId,
@@ -28,10 +37,13 @@ class PostAuthNavigationFlow {
         tag: 'PostAuthNavigationFlow',
       );
 
-      // Fetch user profile via ProfilesService (SHPH API with Supabase fallback)
-      final profile = await ProfilesService.instance.getProfile();
+      // Fetch user profile to check completion status
+      final profiles = await ProfilesTable().queryRows(
+        queryFn: (q) => q.eq('id', userId),
+        limit: 1,
+      );
 
-      if (profile == null) {
+      if (profiles.isEmpty) {
         AuthLogger.warning(
           'No profile found for user $userId. Routing to CreateProfile.',
           tag: 'PostAuthNavigationFlow',
@@ -42,6 +54,7 @@ class PostAuthNavigationFlow {
         return;
       }
 
+      final profile = profiles.first;
       final displayName = profile.displayName ?? '';
       final firstName = profile.firstName ?? '';
       final lastName = profile.lastName ?? '';
@@ -66,7 +79,9 @@ class PostAuthNavigationFlow {
         return;
       }
 
+      // Profile name exists, check account type and verification status
       if (accountType == 'pro' || accountType == 'both') {
+        // Check if fully verified - route to ProDashboard
         final isFullyVerified =
             isVerified && isFaceVerified && verificationStatus == 'verified';
 
@@ -84,7 +99,7 @@ class PostAuthNavigationFlow {
             tag: 'PostAuthNavigationFlow',
           );
           if (context.mounted) {
-            context.goNamed(EKYCBeginWidget.routeName);
+            await context.pushNamed(EKYCBeginWidget.routeName);
           }
         }
       } else {
@@ -103,6 +118,7 @@ class PostAuthNavigationFlow {
         error: e,
       );
 
+      // On error, fallback to home
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -115,14 +131,27 @@ class PostAuthNavigationFlow {
     }
   }
 
+  /// Alternative method: Check if profile is complete without routing
+  ///
+  /// Useful if you want to handle routing elsewhere
+  ///
+  /// Returns:
+  ///   - 'needs_profile': User needs to complete profile
+  ///   - 'needs_kyc': User profile is complete but needs KYC (pro/both account)
+  ///   - 'ready_pro_dashboard': User is fully verified pro, ready for dashboard
+  ///   - 'ready_home': User can proceed to home
   Future<String> checkProfileStatus(String userId) async {
     try {
-      final profile = await ProfilesService.instance.getProfile();
+      final profiles = await ProfilesTable().queryRows(
+        queryFn: (q) => q.eq('id', userId),
+        limit: 1,
+      );
 
-      if (profile == null) {
+      if (profiles.isEmpty) {
         return 'needs_profile';
       }
 
+      final profile = profiles.first;
       final displayName = profile.displayName ?? '';
       final firstName = profile.firstName ?? '';
       final lastName = profile.lastName ?? '';
@@ -131,6 +160,7 @@ class PostAuthNavigationFlow {
       final isFaceVerified = profile.isFaceVerified ?? false;
       final verificationStatus = profile.verificationStatus ?? 'unverified';
 
+      // Check if user has any name set
       final hasName = displayName.isNotEmpty ||
           (firstName.isNotEmpty || lastName.isNotEmpty);
 
@@ -139,6 +169,7 @@ class PostAuthNavigationFlow {
       }
 
       if (accountType == 'pro' || accountType == 'both') {
+        // Check if fully verified
         final isFullyVerified =
             isVerified && isFaceVerified && verificationStatus == 'verified';
 
@@ -155,7 +186,7 @@ class PostAuthNavigationFlow {
         tag: 'PostAuthNavigationFlow',
         error: e,
       );
-      return 'ready_home';
+      return 'ready_home'; // Allow to proceed on error
     }
   }
 }

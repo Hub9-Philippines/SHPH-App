@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/backend/supabase/database/tables/payment_methods.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -22,7 +23,7 @@ class PaymentMethodsWidget extends StatefulWidget {
 
 class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
   late PaymentMethodsModel _model;
-  late Future<List<Map<String, dynamic>>> _paymentMethodsFuture;
+  late Future<List<PaymentMethodsRow>> _paymentMethodsFuture;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -53,7 +54,7 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
           key: scaffoldKey,
           backgroundColor: const Color(0xFFF5F7FA),
           body: SafeArea(
-            child: FutureBuilder<List<Map<String, dynamic>>>(
+            child: FutureBuilder<List<PaymentMethodsRow>>(
               future: _paymentMethodsFuture,
               builder: (context, snapshot) => Column(
                 children: [
@@ -152,8 +153,8 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
         ),
       );
 
-  Widget _buildHeader(BuildContext context, List<Map<String, dynamic>> methods) {
-    final defaultCount = methods.where((method) => method['is_default'] == true).length;
+  Widget _buildHeader(BuildContext context, List<PaymentMethodsRow> methods) {
+    final defaultCount = methods.where((method) => method.isDefault).length;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -205,22 +206,22 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
     );
   }
 
-  Widget _buildPaymentCard(BuildContext context, Map<String, dynamic> method) {
+  Widget _buildPaymentCard(BuildContext context, PaymentMethodsRow method) {
     late final String title;
     late final String subtitle;
     late final IconData icon;
     late final Color tint;
 
-    if ((method['type'] as String? ?? '') == 'card') {
+    if (method.type == 'card') {
       title =
-          '${method['provider'] as String? ?? method['provider_name'] as String? ?? 'Card'} ending in ${method['last_four'] as String? ?? method['lastFour'] as String? ?? '****'}';
+          '${method.provider ?? 'Card'} ending in ${method.lastFour ?? '****'}';
       subtitle =
-          'Expires ${method['expiry_month'] as String? ?? '--'}/${method['expiry_year'] as String? ?? '----'}';
+          'Expires ${method.expiryMonth ?? '--'}/${method.expiryYear ?? '----'}';
       icon = Icons.credit_card_rounded;
       tint = const Color(0xFF1B74E4);
     } else {
-      title = method['provider'] as String? ?? method['provider_name'] as String? ?? 'E-Wallet';
-      subtitle = method['phone_number'] as String? ?? '';
+      title = method.provider ?? 'E-Wallet';
+      subtitle = method.phoneNumber ?? 'No phone number';
       icon = Icons.account_balance_wallet_rounded;
       tint = const Color(0xFF0F8A6C);
     }
@@ -232,8 +233,8 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: method['is_default'] == true ? tint : const Color(0xFFE5E9EE),
-          width: method['is_default'] == true ? 1.5 : 1,
+          color: method.isDefault ? tint : const Color(0xFFE5E9EE),
+          width: method.isDefault ? 1.5 : 1,
         ),
         boxShadow: const [
           BoxShadow(
@@ -278,7 +279,7 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
                             ),
                       ),
                     ),
-                    if (method['is_default'] == true)
+                    if (method.isDefault)
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
@@ -434,7 +435,7 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
         ),
       );
 
-  void _showPaymentOptions(BuildContext context, Map<String, dynamic> method) {
+  void _showPaymentOptions(BuildContext context, PaymentMethodsRow method) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -456,13 +457,13 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
               ),
             ),
             const SizedBox(height: 16),
-            if (method['is_default'] != true)
+            if (!method.isDefault)
               ListTile(
                 leading: const Icon(Icons.check_circle_outline_rounded),
                 title: const Text('Set as default'),
                 onTap: () async {
                   Navigator.pop(context);
-                  await _model.setAsDefault(method['id']?.toString() ?? '');
+                  await _model.setAsDefault(method.id);
                   safeSetState(_loadPaymentMethods);
                   if (mounted) {
                     ScaffoldMessenger.of(this.context).showSnackBar(
@@ -478,7 +479,7 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
               title: const Text('Edit'),
               onTap: () async {
                 Navigator.pop(context);
-                if ((method['type'] as String? ?? '') == 'card') {
+                if (method.type == 'card') {
                   await context.pushNamed(
                     AddCardPaymentWidget.routeName,
                     extra: {'paymentMethod': method},
@@ -498,7 +499,7 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
               title: const Text('Remove', style: TextStyle(color: Colors.red)),
               onTap: () async {
                 Navigator.pop(context);
-                await _model.deletePaymentMethod(method['id']?.toString() ?? '');
+                await _model.deletePaymentMethod(method.id);
                 safeSetState(_loadPaymentMethods);
                 if (mounted) {
                   ScaffoldMessenger.of(this.context).showSnackBar(
