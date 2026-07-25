@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '/auth/supabase_auth/auth_util.dart';
 import '/backend/supabase/database/tables/notifications.dart';
 import '/components/categoriesgrid/categoriesgrid_widget.dart';
+import '../../app_state.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import 'home_widget.dart' show HomeWidget;
