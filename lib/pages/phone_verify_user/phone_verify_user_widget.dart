@@ -60,10 +60,9 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
         appBar: AppBar(
           backgroundColor: AppTheme.of(context).primaryBackground,
           automaticallyImplyLeading: false,
-          leading: wrapWithModel(
-            model: _model.backButtonModel,
-            updateCallback: () => safeSetState(() {}),
-            child: const BackButtonWidget(),
+          leading: IconButton(
+            onPressed: () => context.pop(),
+            icon: const Icon(Icons.arrow_back_rounded),
           ),
           title: Text(
             'Phone Verification',

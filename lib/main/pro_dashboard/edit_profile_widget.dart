@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import '/components/screen_header.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
@@ -241,35 +241,22 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        backgroundColor: const Color(0xFFF5F7FA),
-        appBar: AppBar(
-          title: Text(
-            'Edit Profile',
-            style: AppTheme.of(context).titleLarge.override(
-                  font: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-          ),
-          backgroundColor: const Color(0xFFF5F7FA),
-          surfaceTintColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.pop(),
-          ),
-        ),
-        body: isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : SafeArea(
-                top: false,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+        backgroundColor: AppTheme.of(context).primaryBackground,
+        body: SafeArea(
+          top: false,
+          child: Column(
+            children: [
+              ScreenHeader(title: 'Edit Profile'),
+              Expanded(
+                child: isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                         _buildProfileHero(context),
                         const SizedBox(height: 20),
                         _buildSectionCard(
@@ -350,20 +337,20 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
                             onPressed: isSaving ? null : _saveProfile,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppTheme.of(context).primary,
-                              foregroundColor: Colors.white,
+                              foregroundColor: AppTheme.of(context).secondaryBackground,
                               elevation: 0,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),
                               ),
                             ),
                             child: isSaving
-                                ? const SizedBox(
+                                ? SizedBox(
                                     width: 24,
                                     height: 24,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
                                       valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
+                                        AppTheme.of(context).secondaryBackground,
                                       ),
                                     ),
                                   )
@@ -372,15 +359,18 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
                                     style: AppTheme.of(context)
                                         .titleSmall
                                         .override(
-                                          color: Colors.white,
+                                          color: AppTheme.of(context).secondaryBackground,
                                           fontWeight: FontWeight.w700,
                                         ),
                                   ),
                           ),
                         ),
-                      ],
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
       );
@@ -391,7 +381,7 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.of(context).secondaryBackground,
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
@@ -432,9 +422,9 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
                           : null,
                 ),
                 child: !hasPhoto
-                    ? const Icon(
+                    ? Icon(
                         Icons.person_rounded,
-                        color: Colors.white,
+                        color: AppTheme.of(context).secondaryBackground,
                         size: 52,
                       )
                     : null,
@@ -453,11 +443,11 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
                       decoration: BoxDecoration(
                         color: AppTheme.of(context).primary,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
+                        border: Border.all(color: AppTheme.of(context).secondaryBackground, width: 2),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.camera_alt_rounded,
-                        color: Colors.white,
+                        color: AppTheme.of(context).secondaryBackground,
                         size: 18,
                       ),
                     ),
@@ -508,7 +498,7 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.of(context).secondaryBackground,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
@@ -549,7 +539,7 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFFF7F9FC),
+            color: AppTheme.of(context).secondaryBackground,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
               color: hasLocation
@@ -565,7 +555,7 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
                 decoration: BoxDecoration(
                   color: hasLocation
                       ? AppTheme.of(context).primary.withValues(alpha: 0.12)
-                      : const Color(0xFFECEFF4),
+                      : AppTheme.of(context).border,
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
@@ -667,7 +657,7 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
                     color: AppTheme.of(context).secondaryText,
                   ),
               filled: true,
-              fillColor: const Color(0xFFF7F9FC),
+              fillColor: AppTheme.of(context).secondaryBackground,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
                 borderSide: BorderSide(
@@ -691,15 +681,15 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(
-                  color: Color(0xFFD85A63),
+                borderSide: BorderSide(
+                  color: AppTheme.of(context).error,
                   width: 1.2,
                 ),
               ),
               focusedErrorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(
-                  color: Color(0xFFD85A63),
+                borderSide: BorderSide(
+                  color: AppTheme.of(context).error,
                   width: 1.4,
                 ),
               ),

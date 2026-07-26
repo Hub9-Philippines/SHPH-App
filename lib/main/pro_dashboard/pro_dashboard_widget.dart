@@ -3805,7 +3805,6 @@ PreferredSizeWidget _buildDashboardAppBar(
     AppBar(
       backgroundColor: AppTheme.of(context).secondaryBackground,
       elevation: 0,
-      surfaceTintColor: Colors.transparent,
       titleSpacing: 20,
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -83,3 +83,5 @@ export 'pages/tm_flow/tm_rating_screen.dart' show TMRatingScreen;
 export 'pages/tm_flow/tm_sub_category_screen.dart' show TMSubCategoryScreen;
 export 'pages/help/help_page.dart' show HelpPage;
 export 'pages/help/chatbot_page.dart' show ChatbotPage;
+export 'pages/wallet/wallet_widget.dart' show WalletWidget;
+export 'pages/on_demand_booking/on_demand_booking_widget.dart' show OnDemandBookingWidget;

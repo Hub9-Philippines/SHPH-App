@@ -540,6 +540,16 @@ class AppRouter {
             },
           ),
           GoRoute(
+            path: WalletWidget.routePath,
+            name: WalletWidget.routeName,
+            builder: (context, state) => const WalletWidget(),
+          ),
+          GoRoute(
+            path: OnDemandBookingWidget.routePath,
+            name: OnDemandBookingWidget.routeName,
+            builder: (context, state) => const OnDemandBookingWidget(),
+          ),
+          GoRoute(
             path: LanguageSettingsWidget.routePath,
             name: LanguageSettingsWidget.routeName,
             builder: (context, state) => const LanguageSettingsWidget(),

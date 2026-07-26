@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '/components/back_button/back_button_model.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/chat_service.dart';
 import '/services/logging_service.dart';
@@ -11,9 +10,6 @@ import 'chat_page_widget.dart' show ChatPageWidget;
 
 class ChatPageModel extends FlutterFlowModel<ChatPageWidget> {
   ///  State fields for stateful widgets in this page.
-
-  final scaffoldKey = GlobalKey<ScaffoldState>();
-  late BackButtonModel backButtonModel;
 
   // Messages list - populated from Supabase
   List<Map<String, dynamic>> messages = [];
@@ -26,9 +22,7 @@ class ChatPageModel extends FlutterFlowModel<ChatPageWidget> {
   VoidCallback? onStateChanged;
 
   @override
-  void initState(BuildContext context) {
-    backButtonModel = createModel(context, BackButtonModel.new);
-  }
+  void initState(BuildContext context) {}
 
   // Initialize Supabase real-time subscription for chat messages
   Future<void> initializeChatSubscription(String roomId) async {
@@ -180,7 +174,6 @@ class ChatPageModel extends FlutterFlowModel<ChatPageWidget> {
 
   @override
   void dispose() {
-    backButtonModel.dispose();
     // Cancel real-time subscription
     if (_messagesChannel != null) {
       Supabase.instance.client.removeChannel(_messagesChannel!);

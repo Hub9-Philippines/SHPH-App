@@ -120,7 +120,7 @@ class _HelpPageState extends State<HelpPage> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.pushNamed(ChatbotPage.routeName),
         backgroundColor: theme.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: theme.secondaryBackground,
         icon: const Icon(Icons.chat_rounded),
         label: const Text('Chat with us'),
       ),

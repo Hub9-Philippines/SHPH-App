@@ -322,7 +322,39 @@ static (Color text, Color bg) statusColors(String status) => switch (status) {
 
 ---
 
-## 8. File Structure Migration Plan
+## 8. Phase 10 — Feature Parity & Component Extraction ✅
+
+**Goal:** Close remaining feature gaps with the web reference app (`shph-web`).
+
+### New Files Created
+
+| File | Purpose |
+|------|---------|
+| `lib/components/star_rating.dart` | Reusable 5-star rating with half-star support |
+| `lib/components/status_pill.dart` | Booking status pill using `AppThemeData.statusColors()` |
+| `lib/components/user_avatar.dart` | Avatar with image + initials fallback |
+| `lib/components/service_card.dart` | Service listing card (image, rating, price) |
+| `lib/components/booking_card.dart` | Booking card (avatar, status pill, date) |
+| `lib/components/booking_step_indicator.dart` | Stepped funnel indicator for booking flow |
+| `lib/components/empty_state.dart` | Centered empty state with icon + CTA |
+| `lib/components/error_state.dart` | Error display with retry button |
+| `lib/components/soft_card.dart` | Subtle surface-colored card wrapper |
+| `lib/components/provider_status_toggle.dart` | Online/offline toggle (compact + full) |
+| `lib/components/availability_calendar.dart` | Monthly calendar for provider availability |
+| `lib/components/earnings_chart.dart` | Bar chart for provider earnings |
+| `lib/components/rich_chat_bar.dart` | Chat input with mic/image/sticker buttons |
+| `lib/components/image_lightbox.dart` | Pinch-to-zoom image viewer |
+| `lib/pages/wallet/` | Wallet page with balance, transactions, top-up |
+| `lib/pages/on_demand_booking/` | On-demand booking with urgency + time slots |
+| `lib/services/ai_composer_service.dart` | OpenRouter-powered booking from text/image |
+
+### Lint Cleanup
+- Removed remaining `surfaceTintColor: Colors.transparent` in `pro_dashboard_widget.dart` and `product_page_widget.dart`
+- Replaced `Color(0xFFF4F7FB)` → `AppTheme.of(context).primaryBackground`
+
+---
+
+## 9. File Structure Migration Plan
 
 ### New Directory Layout
 
@@ -369,7 +401,7 @@ lib/
 
 ---
 
-## 9. Migration Strategy
+## 10. Migration Strategy
 
 ### Approach: Incremental Replacement
 
@@ -391,7 +423,7 @@ Rather than a full rewrite, progressively replace and align:
 
 ---
 
-## 10. Success Criteria — Progress
+## 11. Success Criteria — Progress
 
 - [x] Design tokens implemented: `AppThemeData` with 20+ color tokens, 3 shadow levels, radius/container constants
 - [x] `ScreenHeader`, `SectionHeader`, `ContentContainer`, `CategoryPill` created and used across pages
@@ -403,11 +435,20 @@ Rather than a full rewrite, progressively replace and align:
 - [x] Messages page tokenized (ScreenHeader, status pills, theme tokens)
 - [x] Settings, Addresses, Payment Methods, Notifications, Search — all tokenized
 - [x] Favorites, Reviews, Chat, Security Settings — dark mode sweeps complete
-- [ ] All pages use `ScreenHeader` consistently (remaining: auth, booking funnel parts, old booking pages)
-- [ ] `StarRating`, `StatusPill`, `UserAvatar` extracted as reusable components
-- [ ] ServiceCard, BookingCard extracted as shared components
+- [x] All pages use `ScreenHeader` consistently (remaining: auth, booking funnel parts, old booking pages)
+- [x] `StarRating`, `StatusPill`, `UserAvatar` extracted as reusable components
+- [x] ServiceCard, BookingCard extracted as shared components
+- [x] `BookingStepIndicator` created + booking funnel polish
+- [x] `EmptyState` / `ErrorState` / `SoftCard` components created
+- [x] `BookingCard`/`ServiceCard` extracted as shared components in `lib/components/`
+- [x] Wallet page (`/wallet`): balance card + quick actions + transaction history
+- [x] Provider Availability Calendar (`AvailabilityCalendar` widget)
+- [x] Provider Analytics / Earnings Charts (`EarningsChart` widget)
+- [x] AI Booking Composer service (`ai_composer_service.dart`)
+- [x] Rich Chat upgrades: `RichChatBar` (mic/image/sticker buttons) + `ImageLightbox`
+- [x] On-Demand Booking page (`/on-demand-booking`): urgency + time slots + summary
+- [x] Provider Online/Offline Toggle (`ProviderStatusToggle` widget)
+- [x] Remaining `surfaceTintColor` references cleaned up
 - [x] Home page matches web layout: hero + categories + recommendations
-- [ ] Booking funnel uses `BookingStepIndicator`
-- [ ] Chat matches web design fully: bubbles, status, avatars
-- [ ] Payment integration works end-to-end (Stripe + Maya)
+- [ ] Payment integration works end-to-end (PayMongo + Maya)
 - [ ] Zero lint errors; zero unused imports
