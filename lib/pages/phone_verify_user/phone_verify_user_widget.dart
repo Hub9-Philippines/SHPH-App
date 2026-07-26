@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -6,7 +7,7 @@ import 'package:provider/provider.dart';
 
 import '/auth/post_auth_navigation_flow.dart';
 import '/auth/supabase_auth/auth_util.dart';
-import '/components/back_button/back_button_widget.dart';
+import '/auth/test_auth_user.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/theme/app_theme.dart';
@@ -147,6 +148,17 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                             ),
                       ),
                     ),
+                    if (kDebugMode)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Text(
+                          'Debug: use 000000 to bypass',
+                          textAlign: TextAlign.center,
+                          style: AppTheme.of(context).bodySmall.override(
+                                color: AppTheme.of(context).textTertiary,
+                              ),
+                        ),
+                      ),
                     Padding(
                       padding:
                           const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 20),
@@ -222,6 +234,22 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                               const SnackBar(
                                 content: Text('Code must be 6 digits.'),
                               ),
+                            );
+                            return;
+                          }
+                          if (kDebugMode && smsCodeVal == '000000') {
+                            final testUser = TestAuthUser(
+                              testUid: 'test-user-id',
+                              testPhone: FFAppState().phone.isNotEmpty
+                                  ? FFAppState().phone
+                                  : '+639000000000',
+                            );
+                            currentUser = testUser;
+                            if (!context.mounted) return;
+                            await PostAuthNavigationFlow()
+                                .handlePostAuthNavigation(
+                              context: context,
+                              userId: testUser.uid!,
                             );
                             return;
                           }
