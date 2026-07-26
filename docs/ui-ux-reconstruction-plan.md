@@ -183,15 +183,19 @@ Standardize on a 4px base unit scale: 4, 8, 12, 16, 20, 24, 32, 40, 48, 56, 64.
 | 5.7 Phone verification | `pages/phone_verify_user/` | OTP screen theming |
 | Total: **14 files** | | |
 
-#### Phase 6 — Home Page Redesign
+#### Phase 6 — Home Page Redesign (Complete)
 
-| Task | Description |
-|------|-------------|
-| 6.1 Hero section | Search bar + quick category chips row (match web home) |
-| 6.2 Service carousel | Horizontal scrolling service cards |
-| 6.3 Category grid | 2xN grid of `CategoryTile` with icons |
-| 6.4 Recommended section | Personalized recommendations row |
-| 6.5 Notifications bell | Consistent badge with dynamic count |
+| Task | Files Affected | Status |
+|------|---------------|--------|
+| 6.1 Hero section redesign | `home_widget.dart` | ✅ Brand "S" logo + "serbisyo" text, notification bell with badge, user avatar, location badge (tappable), greeting ("Good morning, Name!"), headline ("Find a trusted professional instantly"), search bar (tappable to `/search`), category chips row (All, Cleaning, Plumbing, etc.) matching web home layout |
+| 6.2 Map preview card | `home_widget.dart` | ✅ Full-screen Google Map replaced with a compact 180px map preview card with location overlay |
+| 6.3 Active booking banner | `home_widget.dart` | ✅ Inline banner showing current booking with status (Pending/Track) when active booking exists |
+| 6.4 Book a Service CTA | `home_widget.dart` | ✅ Gradient button with "Book a Service" text and handyman icon, tapping opens `ServiceSelectionPanel` |
+| 6.5 Explore Services category grid | `home_widget.dart` | ✅ 3-column grid of `_CategoryTileItem` widgets loading from `CategoriesService`, with `SectionHeader` ("Explore Services") and "See all" link to `/categories` |
+| 6.6 Trending Near You carousel | `home_widget.dart` | ✅ Horizontal scrolling `_ServiceCardItem` cards loading from Supabase `service_listings`, showing image, title, provider, price, rating |
+| 6.7 Pin location card | `home_widget.dart` | ✅ Tokenized card at bottom showing current address, tappable to open location sheet |
+| 6.8 Removed old layout | `home_widget.dart` | ✅ Removed `_buildTopOverlay`, `_buildBottomCard`, `_buildCategoryChip`, `_LiveProgressShortcut` — replaced with scrollable `SingleChildScrollView` layout |
+| Total: **1 file** (`home_widget.dart`) | | |
 
 #### Phase 7 — Provider Verification & KYC
 
