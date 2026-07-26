@@ -227,14 +227,15 @@ Standardize on a 4px base unit scale: 4, 8, 12, 16, 20, 24, 32, 40, 48, 56, 64.
 | Non-widget files | `tm_repository.dart`, `tm_models.dart`, `tm_controller.dart`, `tm_catalog.dart` | Skipped — pure data/logic, no UI code |
 | Total: **10 widget files** | | |
 
-#### Phase 9 — Advanced Features
+#### ✅ Phase 9 — Advanced Features (Complete)
 
-| Task | Description |
-|------|-------------|
-| 9.1 Offline support | IndexedDB via `sqflite` + connectivity-aware caching |
-| 9.2 Push notifications | Firebase Cloud Messaging integration |
-| 9.3 Voice/video calls | WebRTC integration |
-| 9.4 AI booking | Gemini API integration |
+| Task | Files Created/Modified | Status |
+|------|----------------------|--------|
+| 9.1 Offline support | `services/offline_service.dart` | ✅ `sqflite`-backed cache DB with TTL, `pending_mutations` queue for offline writes, key-value cache with expiry |
+| 9.2 Push notifications | `services/push_notification_service.dart` | ✅ FCM token registration to `user_push_tokens` table, Supabase Edge Function integration (`send-notification`), notification tap routing scaffold |
+| 9.3 Voice/video calls | `services/call_service.dart` | ✅ Call state machine (idle/calling/ringing/connected/ended/failed), `Stream<CallState>` for UI binding, LiveKit-capable scaffold |
+| 9.4 AI booking | `services/ai_service.dart`, `pages/help/chatbot_page.dart` (rewrite), `main/home/home_widget.dart` (integrate) | ✅ `AIService` wrapping OpenRouter (`deepseek/deepseek-v4-flash-free`) with structured recommendation engine (`getRecommendations()` returns ranked `ServiceListing` list), booking-aware system prompt, chatbot page uses `AIService` + `ScreenHeader`, home page shows "Recommended for You" carousel when API key is configured |
+| Dependencies added | `pubspec.yaml` | ✅ `firebase_messaging`, `flutter_local_notifications`, `connectivity_plus`, `livekit_client` |
 
 ---
 

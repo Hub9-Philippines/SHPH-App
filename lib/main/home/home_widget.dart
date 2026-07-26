@@ -17,6 +17,7 @@ import '/pages/booking_funnel/booking_models.dart';
 import '/pages/booking_funnel/express_checkout_screen.dart';
 import '/pages/booking_funnel/live_matching/live_matching_screen.dart';
 import '/pages/booking_funnel/status_page.dart';
+import '/services/ai_service.dart';
 import '/services/categories_service.dart';
 import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
@@ -48,6 +49,7 @@ class _HomeWidgetState extends State<HomeWidget> {
   bool _hasLocation = false;
   bool _isUsingDeviceLocation = false;
   late final List<_ActiveBookingShortcutData> _activeBookingShortcuts;
+  List<ServiceListing>? _aiRecommendations;
 
   @override
   void initState() {
@@ -56,6 +58,7 @@ class _HomeWidgetState extends State<HomeWidget> {
     _activeBookingShortcuts = _buildActiveBookingShortcuts();
     _loadAddress();
     _loadDeviceLocation();
+    _loadAiRecommendations();
   }
 
   @override
@@ -133,6 +136,8 @@ class _HomeWidgetState extends State<HomeWidget> {
                       _buildBookServiceCTA(context),
                       _buildExploreServices(context),
                       _buildRecommendedPros(context),
+                      if (AIService.instance.isAvailable)
+                        _buildAiRecommendations(context),
                       _buildPinLocation(context, appState, homeAddressesRowList),
                       const SizedBox(height: 40),
                     ],
@@ -884,6 +889,63 @@ class _HomeWidgetState extends State<HomeWidget> {
           SizedBox(
             height: 200,
             child: _ServiceListingsPreviewGrid(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _loadAiRecommendations() async {
+    if (!AIService.instance.isAvailable) return;
+    final appState = FFAppState();
+    final query = [
+      appState.selectedAddressCity,
+      appState.selectedAddressLabel,
+    ].whereType<String>().where((e) => e.trim().isNotEmpty).join(', ');
+    final recommendations = await AIService.instance.getRecommendations(
+      query: query.isNotEmpty ? query : null,
+      limit: 6,
+    );
+    if (!mounted) return;
+    setState(() => _aiRecommendations = recommendations);
+  }
+
+  Widget _buildAiRecommendations(BuildContext context) {
+    if (_aiRecommendations == null || _aiRecommendations!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionHeader(
+            title: 'Recommended for You',
+            seeAllRoute: '/tabs/explore',
+            padding: const EdgeInsets.only(bottom: 12),
+          ),
+          SizedBox(
+            height: 200,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: EdgeInsets.zero,
+              itemCount: _aiRecommendations!.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (context, index) {
+                final service = _aiRecommendations![index];
+                return _ServiceCardItem(
+                  title: service.title,
+                  providerName: service.providerName ?? 'Provider',
+                  categoryName: service.categoryName ?? '',
+                  price: service.basePrice,
+                  rating: service.rating,
+                  thumbnail: service.thumbnail,
+                  onTap: () {
+                    context.push('/services/detail?id=${service.id}');
+                  },
+                );
+              },
+            ),
           ),
         ],
       ),

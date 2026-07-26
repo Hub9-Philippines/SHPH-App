@@ -1,13 +1,12 @@
-import 'dart:convert';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:http/http.dart' as http;
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '/auth/supabase_auth/auth_util.dart';
+import '/components/screen_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/services/ai_service.dart';
 import '/theme/app_theme.dart';
 
 class ChatbotPage extends StatefulWidget {
@@ -42,8 +41,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
   @override
   void initState() {
     super.initState();
-    _apiConfigured = OpenRouterConfig.apiKey.isNotEmpty &&
-        OpenRouterConfig.apiKey != 'your-openrouter-api-key-here';
+    _apiConfigured = AIService.instance.isAvailable;
     _buildSystemPrompt();
     _messages.add(
       _ChatMessage(
@@ -58,28 +56,17 @@ class _ChatbotPageState extends State<ChatbotPage> {
     );
   }
 
-  void _buildSystemPrompt() {
-    final name = currentUserDisplayName;
+  void _buildSystemPrompt() async {
+    final basePrompt = await AIService.instance.bookingSystemPrompt();
     final email = currentUserEmail;
     final uid = currentUserUid;
 
     _systemPrompt = '''
-You are a helpful customer support assistant for the SHPH (Serbisyo Hub PH) app, a home services booking platform in the Philippines. Answer questions clearly and concisely based on the information below.
+$basePrompt
 
-USER INFORMATION:
-- Name: ${name.isNotEmpty ? name : 'Not set'}
+ADDITIONAL USER INFO:
 - Email: ${email.isNotEmpty ? email : 'Not set'}
 - User ID: ${uid.isNotEmpty ? uid : 'Not available'}
-
-APP FEATURES:
-- Service booking: Users browse categories, select services, choose date/time, and book
-- Live matching: After booking, the app finds nearby providers in real-time
-- Booking statuses: confirmed, en_route, on_site, in_progress, completed, cancelled
-- Payment: credit/debit cards, GCash, Maya, e-wallets (managed in Profile > Payment Methods)
-- Provider tracking: Real-time map with provider location and ETA
-- Cancellation: Available from booking details page; policies may apply
-- User profile: Edit name, photo, contact info from Profile page
-- Notifications: Available in the notifications section
 
 Use the user's name when addressing them. If asked something you don't know, say so honestly. Never make up information. Keep responses friendly and helpful.
 ''';
@@ -116,7 +103,7 @@ Use the user's name when addressing them. If asked something you don't know, say
     _scrollToBottom();
 
     try {
-      final response = await _callOpenRouter(text);
+      final response = await AIService.instance.chat(text, systemPrompt: _systemPrompt);
       if (!mounted) return;
       setState(() {
         _messages.add(_ChatMessage(text: response, isUser: false));
@@ -143,112 +130,30 @@ Use the user's name when addressing them. If asked something you don't know, say
     }
   }
 
-  Future<String> _callOpenRouter(String message) async {
-    final apiKey = OpenRouterConfig.apiKey;
-    if (apiKey.isEmpty || apiKey == 'your-openrouter-api-key-here') {
-      throw Exception('API key not configured');
-    }
-
-    final body = _buildRequestBody(message);
-
-    final httpResponse = await http
-        .post(
-          Uri.parse('https://openrouter.ai/api/v1/chat/completions'),
-          headers: {
-            'Authorization': 'Bearer $apiKey',
-            'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://shph.app',
-            'X-Title': 'SHPH',
-          },
-          body: jsonEncode(body),
-        )
-        .timeout(const Duration(seconds: 30));
-
-    if (httpResponse.statusCode == 200) {
-      final data = jsonDecode(httpResponse.body) as Map<String, dynamic>;
-      final choices = data['choices'] as List;
-      if (choices.isNotEmpty) {
-        final content = choices[0]['message']['content'] as String?;
-        if (content != null && content.trim().isNotEmpty) {
-          return content.trim();
-        }
-      }
-    }
-
-    final errorBody = httpResponse.statusCode != 200
-        ? 'API returned status ${httpResponse.statusCode}'
-        : 'Empty response from API';
-    throw Exception(errorBody);
-  }
-
-  Map<String, dynamic> _buildRequestBody(String newMessage) {
-    final msgs = <Map<String, dynamic>>[
-      {'role': 'system', 'content': _systemPrompt},
-    ];
-    for (final msg in _messages) {
-      msgs.add({
-        'role': msg.isUser ? 'user' : 'assistant',
-        'content': msg.text,
-      });
-    }
-    msgs.add({'role': 'user', 'content': newMessage});
-
-    return {
-      'model': 'deepseek/deepseek-v4-flash-free',
-      'messages': msgs,
-      'temperature': 0.7,
-      'max_tokens': 2048,
-    };
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
-      appBar: AppBar(
-        backgroundColor: theme.primaryBackground,
-        title: Row(
+      body: SafeArea(
+        child: Column(
           children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: theme.primary.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child:
-                  Icon(Icons.smart_toy_rounded, color: theme.primary, size: 22),
-            ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            Row(
               children: [
-                Text(
-                  'Chat Assistant',
-                  style: theme.titleSmall.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                  ),
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  onPressed: () => context.pop(),
                 ),
-                Text(
-                  _isLoading ? 'Typing...' : 'Online',
-                  style: theme.labelSmall.override(
-                    color: _isLoading ? theme.primary : const Color(0xFF16A34A),
-                    fontSize: 11,
+                Expanded(
+                  child: ScreenHeader(
+                    title: 'Chat Assistant',
+                    subtitle: _isLoading ? 'Typing...' : 'Online',
+                    padding: const EdgeInsets.fromLTRB(0, 12, 20, 18),
                   ),
                 ),
               ],
             ),
-          ],
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.pop(),
-        ),
-      ),
-      body: Column(
-        children: [
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
@@ -322,7 +227,7 @@ Use the user's name when addressing them. If asked something you don't know, say
                   icon: const Icon(Icons.send_rounded, size: 20),
                   style: IconButton.styleFrom(
                     backgroundColor: theme.primary,
-                    foregroundColor: Colors.white,
+                    foregroundColor: theme.secondaryBackground,
                     disabledBackgroundColor: theme.alternate,
                   ),
                 ),
@@ -331,6 +236,7 @@ Use the user's name when addressing them. If asked something you don't know, say
           ),
         ],
       ),
+      ),
     );
   }
 
@@ -338,7 +244,7 @@ Use the user's name when addressing them. If asked something you don't know, say
     final align =
         msg.isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start;
     final color = msg.isUser ? theme.primary : theme.secondaryBackground;
-    final textColor = msg.isUser ? Colors.white : theme.primaryText;
+    final textColor = msg.isUser ? theme.secondaryBackground : theme.primaryText;
     final borderRadius = msg.isUser
         ? const BorderRadius.only(
             topLeft: Radius.circular(18),
