@@ -10,6 +10,7 @@ import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
+import '/theme/app_theme.dart';
 import '/pages/geographic_selection/geographic_selection_widget.dart';
 import '/services/psgc_service.dart';
 import '/theme/app_theme.dart';
@@ -1307,7 +1308,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                 );
               }
             },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: Text('Delete', style: TextStyle(color: AppTheme.of(context).error)),
           ),
         ],
       ),

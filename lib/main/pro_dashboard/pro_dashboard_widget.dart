@@ -3038,9 +3038,9 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
     final shouldLogout = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.logout, color: Colors.red),
+            Icon(Icons.logout, color: AppTheme.of(context).error),
             SizedBox(width: 8),
             Text('Log Out'),
           ],
@@ -3056,7 +3056,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
             style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
+              foregroundColor: AppTheme.of(context).error,
             ),
             child: const Text('Log Out'),
           ),

@@ -188,10 +188,10 @@ class _CallHistoryDetailsPageWidgetState extends State<CallHistoryDetailsPageWid
                           'Status',
                           widget.callStatus?.toUpperCase() ?? 'UNKNOWN',
                           statusColor: widget.callStatus == 'missed'
-                              ? Colors.red
+                              ? AppTheme.of(context).error
                               : widget.callStatus == 'incoming'
-                                  ? Colors.green
-                                  : Colors.blue,
+                                  ? AppTheme.of(context).success
+                                  : AppTheme.of(context).primary,
                         ),
                         const SizedBox(height: 12),
                         _buildDetailRow(

@@ -5,6 +5,7 @@ import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/services/bookings_service.dart';
+import '/services/payment_controller.dart';
 import '/theme/app_theme.dart';
 import 'booking_payment_model.dart';
 
@@ -59,48 +60,108 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
   Future<void> _confirmPayment() async {
     if (_selectedPaymentMethod == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a payment method'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Text('Please select a payment method'),
+          backgroundColor: AppTheme.of(context).error,
         ),
       );
+      return;
+    }
+
+    if (widget.serviceId == null) {
       return;
     }
 
     setState(() => _model.isLoading = true);
 
     try {
-      final paymentStatus = _selectedPaymentMethod == 'cash'
-          ? 'pay_on_completion'
-          : 'authorized_escrow';
+      final amount = _parsePrice(widget.price) ?? 0;
 
-      final booking = await BookingsService.instance.createBooking(
-        serviceListingId: widget.serviceId!,
-        bookingDate: DateTime.parse(widget.bookingDate!),
-        bookingTime: widget.bookingTime!,
-        notes: widget.notes,
-        totalPrice: _parsePrice(widget.price),
-        paymentStatus: paymentStatus,
-      );
-
-      if (!mounted) {
+      if (_selectedPaymentMethod == 'cash') {
+        final booking = await BookingsService.instance.createBooking(
+          serviceListingId: widget.serviceId!,
+          bookingDate: DateTime.parse(widget.bookingDate!),
+          bookingTime: widget.bookingTime!,
+          notes: widget.notes,
+          totalPrice: amount,
+          paymentStatus: 'pay_on_completion',
+        );
+        if (mounted) {
+          if (booking != null) {
+            context.go('/booking-success');
+          } else {
+            _model.isLoading = false;
+            _model.errorMessage = 'Failed to create booking.';
+          }
+        }
         return;
       }
 
-      if (booking != null) {
-        context.go('/booking-success');
+      final controller = PaymentController.instance;
+      if (_selectedPaymentMethod == 'card') {
+        await controller.initializeStripe(
+          const String.fromEnvironment('STRIPE_PUBLISHABLE_KEY',
+              defaultValue: 'pk_test_placeholder'),
+        );
+        final result = await controller.processStripePayment(
+          amount: amount,
+          currency: 'PHP',
+          description: widget.serviceName ?? 'Service Booking',
+        );
+        if (result.status != PaymentStatus.success) {
+          if (mounted) {
+            _model.isLoading = false;
+            _model.errorMessage = result.errorMessage ?? 'Payment failed';
+          }
+          return;
+        }
+        await BookingsService.instance.createBooking(
+          serviceListingId: widget.serviceId!,
+          bookingDate: DateTime.parse(widget.bookingDate!),
+          bookingTime: widget.bookingTime!,
+          notes: widget.notes,
+          totalPrice: amount,
+          paymentStatus: 'paid',
+        );
+      } else if (_selectedPaymentMethod == 'ewallet') {
+        final result = await controller.processMayaPayment(
+          amount: amount,
+          currency: 'PHP',
+          description: widget.serviceName ?? 'Service Booking',
+        );
+        if (result.status != PaymentStatus.success) {
+          if (mounted) {
+            _model.isLoading = false;
+            _model.errorMessage = result.errorMessage ?? 'Payment failed';
+          }
+          return;
+        }
+        await BookingsService.instance.createBooking(
+          serviceListingId: widget.serviceId!,
+          bookingDate: DateTime.parse(widget.bookingDate!),
+          bookingTime: widget.bookingTime!,
+          notes: widget.notes,
+          totalPrice: amount,
+          paymentStatus: 'paid',
+        );
       } else {
-        setState(() {
-          _model.isLoading = false;
-          _model.errorMessage = 'Failed to create booking. Please try again.';
-        });
+        await BookingsService.instance.createBooking(
+          serviceListingId: widget.serviceId!,
+          bookingDate: DateTime.parse(widget.bookingDate!),
+          bookingTime: widget.bookingTime!,
+          notes: widget.notes,
+          totalPrice: amount,
+          paymentStatus: 'authorized_escrow',
+        );
+      }
+
+      if (mounted) {
+        context.go('/booking-success');
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _model.isLoading = false;
-          _model.errorMessage = 'Error: ${e.toString()}';
-        });
+        _model.isLoading = false;
+        _model.errorMessage = 'Error: ${e.toString()}';
       }
     }
   }
@@ -205,7 +266,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                         icon: Icons.credit_card_rounded,
                         label: 'Credit / Debit Card',
                         sublabel: 'Visa, Mastercard',
-                        tint: const Color(0xFF1B74E4),
+                        tint: AppTheme.of(context).primary,
                       ),
                       const SizedBox(height: 12),
                       _buildPaymentOption(
@@ -213,7 +274,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                         icon: Icons.account_balance_wallet_rounded,
                         label: 'E-Wallets',
                         sublabel: 'GCash, Maya',
-                        tint: const Color(0xFF0F8A6C),
+                        tint: AppTheme.of(context).success,
                       ),
                       const SizedBox(height: 12),
                       _buildPaymentOption(
@@ -221,7 +282,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                         icon: Icons.qr_code_rounded,
                         label: 'QR Ph Code',
                         sublabel: 'Standard Philippine digital QR',
-                        tint: const Color(0xFF7C5CFC),
+                        tint: AppTheme.of(context).tertiary,
                       ),
                       const SizedBox(height: 12),
                       _buildPaymentOption(
@@ -229,7 +290,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                         icon: Icons.payments_rounded,
                         label: 'Cash on Completion',
                         sublabel: 'Pay the pro directly after the job',
-                        tint: const Color(0xFFEF6C57),
+                        tint: AppTheme.of(context).error,
                       ),
                     ],
                   ),
@@ -245,23 +306,17 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF17212B),
-              Color(0xFF23384D),
-              Color(0xFF2F5368),
+              AppTheme.of(context).primaryText,
+              AppTheme.of(context).primary.withValues(alpha: 0.7),
+              AppTheme.of(context).primary,
             ],
           ),
           borderRadius: BorderRadius.circular(30),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x1A17212B),
-              blurRadius: 24,
-              offset: Offset(0, 14),
-            ),
-          ],
+          boxShadow: AppThemeData.shadowElevated,
         ),
         child: Row(
           children: [

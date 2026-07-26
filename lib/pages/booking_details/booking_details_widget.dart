@@ -126,9 +126,9 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
         Navigator.pop(context, true);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to cancel booking'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('Failed to cancel booking'),
+            backgroundColor: AppTheme.of(context).error,
           ),
         );
       }

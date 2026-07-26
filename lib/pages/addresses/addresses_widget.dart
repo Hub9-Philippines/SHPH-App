@@ -627,9 +627,9 @@ class _AddressesWidgetState extends State<AddressesWidget> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text(
+            child: Text(
               'Delete',
-              style: TextStyle(color: Colors.red),
+              style: TextStyle(color: AppTheme.of(context).error),
             ),
           ),
         ],

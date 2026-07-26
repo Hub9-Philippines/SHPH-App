@@ -434,8 +434,8 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
             ),
             ListTile(
               leading:
-                  const Icon(Icons.delete_outline_rounded, color: Colors.red),
-              title: const Text('Remove', style: TextStyle(color: Colors.red)),
+                  Icon(Icons.delete_outline_rounded, color: AppTheme.of(context).error),
+              title: Text('Remove', style: TextStyle(color: AppTheme.of(context).error)),
               onTap: () async {
                 Navigator.pop(context);
                 await _model.deletePaymentMethod(method.id);
