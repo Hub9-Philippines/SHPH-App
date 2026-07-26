@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/components/back_button/back_button_widget.dart';
+import '/components/screen_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import '/services/logging_service.dart';
@@ -230,102 +230,75 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
           FocusManager.instance.primaryFocus?.unfocus();
         },
         child: Scaffold(
-          backgroundColor: const Color(0xFFF4F7FB),
+          backgroundColor: AppTheme.of(context).primaryBackground,
           body: SafeArea(
-            child: _isLoading
-                ? Center(
-                    child: CircularProgressIndicator(
-                      color: AppTheme.of(context).primary,
-                    ),
-                  )
-                : _errorMessage != null
-                    ? _buildMessageState(
-                        context,
-                        icon: Icons.history_toggle_off_rounded,
-                        title: 'Could not load history',
-                        subtitle: _errorMessage!,
-                        actionLabel: 'Try again',
-                        onPressed: _loadHistory,
-                        accent: AppTheme.of(context).error,
-                      )
-                    : RefreshIndicator(
-                        color: AppTheme.of(context).primary,
-                        onRefresh: _loadHistory,
-                        child: ListView(
-                          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-                          children: [
-                            _buildTopBar(context),
-                            const SizedBox(height: 18),
-                            _buildHeroCard(context),
-                            const SizedBox(height: 18),
-                            _buildStatsGrid(context),
-                            const SizedBox(height: 20),
-                            _buildSectionHeader(context),
-                            const SizedBox(height: 12),
-                            if (_completedJobs.isEmpty)
-                              _buildMessageState(
-                                context,
-                                icon: Icons.assignment_turned_in_outlined,
-                                title: 'No completed jobs yet',
-                                subtitle:
-                                    'Finished visits will appear here once you start closing out bookings.',
-                                actionLabel: 'Refresh',
-                                onPressed: _loadHistory,
-                                accent: AppTheme.of(context).primary,
-                                compact: true,
-                              )
-                            else
-                              ..._completedJobs.map(
-                                (job) => Padding(
-                                  padding: const EdgeInsets.only(bottom: 12),
-                                  child: _buildHistoryCard(context, job),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-          ),
-        ),
-      );
-
-  Widget _buildTopBar(BuildContext context) => Row(
-        children: [
-          Material(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            child: const BackButtonWidget(),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Service History',
-                  style: AppTheme.of(context).titleLarge.override(
-                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                        color: const Color(0xFF14213D),
-                      ),
+                ScreenHeader(
+                  title: 'Service History',
+                  subtitle: 'Review completed jobs, earnings, and client outcomes.',
+                  action: IconButton(
+                    onPressed: _loadHistory,
+                    icon: const Icon(Icons.refresh_rounded),
+                  ),
                 ),
-                Text(
-                  'Review completed jobs, earnings, and client outcomes.',
-                  style: AppTheme.of(context).bodySmall.override(
-                        font: GoogleFonts.poppins(),
-                        color: const Color(0xFF64748B),
-                      ),
+                Expanded(
+                  child: _isLoading
+                      ? Center(
+                          child: CircularProgressIndicator(
+                            color: AppTheme.of(context).primary,
+                          ),
+                        )
+                      : _errorMessage != null
+                          ? _buildMessageState(
+                              context,
+                              icon: Icons.history_toggle_off_rounded,
+                              title: 'Could not load history',
+                              subtitle: _errorMessage!,
+                              actionLabel: 'Try again',
+                              onPressed: _loadHistory,
+                              accent: AppTheme.of(context).error,
+                            )
+                          : RefreshIndicator(
+                              color: AppTheme.of(context).primary,
+                              onRefresh: _loadHistory,
+                              child: ListView(
+                                padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+                                children: [
+                                  const SizedBox(height: 18),
+                                  _buildHeroCard(context),
+                                  const SizedBox(height: 18),
+                                  _buildStatsGrid(context),
+                                  const SizedBox(height: 20),
+                                  _buildSectionHeader(context),
+                                  const SizedBox(height: 12),
+                                  if (_completedJobs.isEmpty)
+                                    _buildMessageState(
+                                      context,
+                                      icon: Icons.assignment_turned_in_outlined,
+                                      title: 'No completed jobs yet',
+                                      subtitle:
+                                          'Finished visits will appear here once you start closing out bookings.',
+                                      actionLabel: 'Refresh',
+                                      onPressed: _loadHistory,
+                                      accent: AppTheme.of(context).primary,
+                                      compact: true,
+                                    )
+                                  else
+                                    ..._completedJobs.map(
+                                      (job) => Padding(
+                                        padding: const EdgeInsets.only(bottom: 12),
+                                        child: _buildHistoryCard(context, job),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
                 ),
               ],
             ),
           ),
-          IconButton.filledTonal(
-            onPressed: _loadHistory,
-            style: IconButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: AppTheme.of(context).primary,
-            ),
-            icon: const Icon(Icons.refresh_rounded),
-          ),
-        ],
+        ),
       );
 
   Widget _buildHeroCard(BuildContext context) => Container(
@@ -357,7 +330,7 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
               _currency(_stats.totalEarnings),
               style: AppTheme.of(context).headlineMedium.override(
                     font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                    color: Colors.white,
+                    color: AppTheme.of(context).secondaryBackground,
                   ),
             ),
             const SizedBox(height: 6),
@@ -365,7 +338,7 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
               '${_stats.totalJobs} completed jobs recorded so far.',
               style: AppTheme.of(context).bodyMedium.override(
                     font: GoogleFonts.poppins(),
-                    color: Colors.white.withValues(alpha: 0.84),
+                    color: AppTheme.of(context).secondaryBackground.withValues(alpha: 0.84),
                   ),
             ),
             const SizedBox(height: 18),
@@ -422,7 +395,7 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
             'Completed Jobs',
             style: AppTheme.of(context).titleMedium.override(
                   font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                  color: const Color(0xFF14213D),
+                  color: AppTheme.of(context).primaryText,
                 ),
           ),
           const Spacer(),
@@ -430,7 +403,7 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
             '${_completedJobs.length} total',
             style: AppTheme.of(context).bodyMedium.override(
                   font: GoogleFonts.poppins(),
-                  color: const Color(0xFF64748B),
+                  color: AppTheme.of(context).secondaryText,
                 ),
           ),
         ],
@@ -448,15 +421,9 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.of(context).secondaryBackground,
         borderRadius: BorderRadius.circular(26),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x12000000),
-            blurRadius: 18,
-            offset: Offset(0, 10),
-          ),
-        ],
+        boxShadow: AppThemeData.shadowCard,
       ),
       child: Material(
         color: Colors.transparent,
@@ -527,7 +494,7 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
                                   font: GoogleFonts.poppins(
                                     fontWeight: FontWeight.w700,
                                   ),
-                                  color: const Color(0xFF14213D),
+                                  color: AppTheme.of(context).primaryText,
                                 ),
                           ),
                           const SizedBox(height: 4),
@@ -535,7 +502,7 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
                             '$clientName • $serviceCategory',
                             style: AppTheme.of(context).bodySmall.override(
                                   font: GoogleFonts.poppins(),
-                                  color: const Color(0xFF64748B),
+                                  color: AppTheme.of(context).secondaryText,
                                 ),
                           ),
                         ],
@@ -559,7 +526,7 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
                           '#${_bookingReference(job)}',
                           style: AppTheme.of(context).labelSmall.override(
                                 font: GoogleFonts.poppins(),
-                                color: const Color(0xFF94A3B8),
+                                color: AppTheme.of(context).textTertiary,
                               ),
                         ),
                       ],
@@ -605,7 +572,7 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
                         'Open this completed booking to review full details.',
                         style: AppTheme.of(context).bodySmall.override(
                               font: GoogleFonts.poppins(),
-                              color: const Color(0xFF64748B),
+                              color: AppTheme.of(context).secondaryText,
                             ),
                       ),
                     ),
@@ -640,15 +607,9 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
           constraints: const BoxConstraints(maxWidth: 420),
           padding: EdgeInsets.all(compact ? 24 : 28),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppTheme.of(context).secondaryBackground,
             borderRadius: BorderRadius.circular(28),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x12000000),
-                blurRadius: 18,
-                offset: Offset(0, 8),
-              ),
-            ],
+            boxShadow: AppThemeData.shadowCard,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -668,7 +629,7 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
                 textAlign: TextAlign.center,
                 style: AppTheme.of(context).titleMedium.override(
                       font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                      color: const Color(0xFF14213D),
+                      color: AppTheme.of(context).primaryText,
                     ),
               ),
               const SizedBox(height: 8),
@@ -677,7 +638,7 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
                 textAlign: TextAlign.center,
                 style: AppTheme.of(context).bodyMedium.override(
                       font: GoogleFonts.poppins(),
-                      color: const Color(0xFF64748B),
+                      color: AppTheme.of(context).secondaryText,
                     ),
               ),
               const SizedBox(height: 16),
@@ -687,7 +648,7 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
                   onPressed: onPressed,
                   style: FilledButton.styleFrom(
                     backgroundColor: accent,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppTheme.of(context).secondaryBackground,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -697,7 +658,7 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
                     actionLabel,
                     style: AppTheme.of(context).labelLarge.override(
                           font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                          color: Colors.white,
+                          color: AppTheme.of(context).secondaryBackground,
                         ),
                   ),
                 ),
@@ -743,7 +704,7 @@ class _HeroMetric extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.12),
+          color: AppTheme.of(context).secondaryBackground.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
@@ -753,7 +714,7 @@ class _HeroMetric extends StatelessWidget {
               label,
               style: AppTheme.of(context).bodySmall.override(
                     font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: AppTheme.of(context).secondaryBackground.withValues(alpha: 0.8),
                   ),
             ),
             const SizedBox(height: 6),
@@ -761,14 +722,14 @@ class _HeroMetric extends StatelessWidget {
               value,
               style: AppTheme.of(context).titleMedium.override(
                     font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                    color: Colors.white,
+                    color: AppTheme.of(context).secondaryBackground,
                   ),
             ),
             const SizedBox(height: 4),
             Text(
               caption,
               style: AppTheme.of(context).labelSmall.override(
-                    color: Colors.white.withValues(alpha: 0.74),
+                    color: AppTheme.of(context).secondaryBackground.withValues(alpha: 0.74),
                   ),
             ),
           ],
@@ -795,15 +756,9 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.of(context).secondaryBackground,
           borderRadius: BorderRadius.circular(24),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x12000000),
-              blurRadius: 18,
-              offset: Offset(0, 10),
-            ),
-          ],
+          boxShadow: AppThemeData.shadowCard,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -822,7 +777,7 @@ class _StatCard extends StatelessWidget {
               title,
               style: AppTheme.of(context).bodySmall.override(
                     font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                    color: const Color(0xFF64748B),
+                    color: AppTheme.of(context).secondaryText,
                   ),
             ),
             const SizedBox(height: 6),
@@ -830,7 +785,7 @@ class _StatCard extends StatelessWidget {
               value,
               style: AppTheme.of(context).titleMedium.override(
                     font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                    color: const Color(0xFF14213D),
+                    color: AppTheme.of(context).primaryText,
                   ),
             ),
             const SizedBox(height: 4),
@@ -838,7 +793,7 @@ class _StatCard extends StatelessWidget {
               subtitle,
               style: AppTheme.of(context).labelSmall.override(
                     font: GoogleFonts.poppins(),
-                    color: const Color(0xFF94A3B8),
+                    color: AppTheme.of(context).textTertiary,
                   ),
             ),
           ],
@@ -894,7 +849,7 @@ class _MetaRow extends StatelessWidget {
               label,
               style: AppTheme.of(context).bodySmall.override(
                     font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                    color: const Color(0xFF64748B),
+                    color: AppTheme.of(context).secondaryText,
                   ),
             ),
           ),
@@ -915,7 +870,7 @@ class _MetaRow extends StatelessWidget {
                           font: GoogleFonts.poppins(
                             fontWeight: FontWeight.w600,
                           ),
-                          color: const Color(0xFF14213D),
+                          color: AppTheme.of(context).primaryText,
                         ),
                   ),
                 ),

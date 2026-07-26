@@ -210,15 +210,22 @@ Standardize on a 4px base unit scale: 4, 8, 12, 16, 20, 24, 32, 40, 48, 56, 64.
 | 7.7 Verification reviewing | `verification_reviewing_widget.dart` | ✅ ScreenHeader, AppTheme tokens, `Colors.white` → `secondaryBackground` |
 | Total: **11 files** | | |
 
-#### Phase 8 — Provider Dashboard Sub-pages & TM Flow
+#### ✅ Phase 8 — Provider Dashboard Sub-pages & TM Flow (Complete)
 
-| Task | Files | Description |
-|------|-------|-------------|
-| 8.1 Create service | `main/pro_dashboard/create_service_widget.dart` | Provider service listing form |
-| 8.2 Service history | `main/pro_dashboard/service_history_widget.dart` | Provider booking history |
-| 8.3 Reviews & ratings | `main/pro_dashboard/reviews_ratings_widget.dart` | Provider review management |
-| 8.4 TM Flow (11 files) | `pages/tm_flow/` | Full task manager: sub-category, estimate, invoice, payment, rating, broadcast, active job |
-| Total: **~15 files** | | |
+| Task | Files Affected | Status |
+|------|---------------|--------|
+| 8.1 Create Service | `create_service_widget.dart` | ✅ ScreenHeader, `AppBar` removed, `Colors.white` → `secondaryBackground`, `Colors.red` → `error` |
+| 8.2 Service History | `service_history_widget.dart` | ✅ ScreenHeader, `BackButtonWidget` removed, `Color(0xFFF4F7FB)` → `primaryBackground`, `Color(0xFF14213D)` → `primaryText`, `Color(0xFF64748B)` → `secondaryText`, `Color(0xFF94A3B8)` → `textTertiary`, `Colors.white` → `secondaryBackground`, `Color(0x12000000)` shadows → `AppThemeData.shadowCard` |
+| 8.3 Reviews & Ratings | `reviews_ratings_widget.dart` | ✅ Same pattern as 8.2 + `Color(0xFF9A6700)` → `warning`, `Color(0xFFEFF3F7)` → `border` |
+| 8.4a TM Sub-category | `tm_sub_category_screen.dart` | ✅ ScreenHeader, `surfaceTintColor` removed, `Color(0xFFF6FBFF)` → `surfaceAlt` |
+| 8.4b TM Estimate | `tm_estimate_screen.dart` | ✅ ScreenHeader, `Color(0xFFF6FBFF)` → `surfaceAlt`, `Colors.white` → `secondaryBackground` |
+| 8.4c TM Invoice | `tm_invoice_screen.dart` | ✅ ScreenHeader, `Colors.white` → `secondaryBackground` |
+| 8.4d TM Payment | `tm_payment_screen.dart` | ✅ ScreenHeader, `Color(0xFFF5F7FA)` → `primaryBackground`, `Colors.white` → `secondaryBackground`, `Color(0xFFE4E8EE)` → `border` |
+| 8.4e TM Rating | `tm_rating_screen.dart` | ✅ ScreenHeader (replaced plain Text title), `Colors.white` → `secondaryBackground` |
+| 8.4f TM Broadcast | `tm_broadcast_screen.dart` | ✅ `Colors.black` shadow → `AppThemeData.shadowCard`, `Color(0xFFF6FBFF)` → `surfaceAlt`, `Colors.white` → `secondaryBackground` (keeps custom top card layout — not an AppBar) |
+| 8.4g TM Active Job | `tm_active_job_screen.dart` | ✅ `surfaceTintColor` removed, `Color(0xFFF6FBFF)` → `surfaceAlt`, `Colors.white` → `secondaryBackground`, `Colors.black` shadow → `AppThemeData.shadowCard` (keeps AppBar + TabBar — TabBar is integral to layout) |
+| Non-widget files | `tm_repository.dart`, `tm_models.dart`, `tm_controller.dart`, `tm_catalog.dart` | Skipped — pure data/logic, no UI code |
+| Total: **10 widget files** | | |
 
 #### Phase 9 — Advanced Features
 

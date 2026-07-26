@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '/components/screen_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
@@ -184,233 +184,228 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Create Service',
-          style: AppTheme.of(context).titleLarge.override(
-                font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-              ),
-        ),
-        backgroundColor: AppTheme.of(context).primaryBackground,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Images Section
-              Text(
-                'Service Images',
-                style: AppTheme.of(context).titleMedium.override(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Add up to 5 photos of your service (optional)',
-                style: AppTheme.of(context).bodySmall.override(
-                      color: AppTheme.of(context).secondaryText,
-                    ),
-              ),
-              const SizedBox(height: 12),
-
-              // Image Grid
-              if (_selectedImages.isNotEmpty)
-                SizedBox(
-                  height: 100,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _selectedImages.length +
-                        (_selectedImages.length < 5 ? 1 : 0),
-                    separatorBuilder: (_, __) => const SizedBox(width: 12),
-                    itemBuilder: (context, index) {
-                      if (index == _selectedImages.length) {
-                        // Add button
-                        return _buildAddImageButton();
-                      }
-                      return _buildImagePreview(index);
-                    },
-                  ),
-                )
-              else
-                _buildAddImageButton(isFullWidth: true),
-
-              const SizedBox(height: 24),
-
-              // Service Name
-              _buildTextField(
-                controller: _nameController,
-                label: 'Service Name *',
-                hint: 'e.g., Deep House Cleaning, Pipe Repair, etc.',
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Service name is required';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Category Dropdown
-              Text(
-                'Category *',
-                style: AppTheme.of(context).bodyMedium.override(
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                decoration: BoxDecoration(
-                  color: AppTheme.of(context).secondaryBackground,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: _selectedCategory == null
-                        ? AppTheme.of(context).error.withValues(alpha: 0.5)
-                        : AppTheme.of(context)
-                            .primaryText
-                            .withValues(alpha: 0.1),
-                  ),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _selectedCategory,
-                    hint: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        'Select a category',
-                        style: AppTheme.of(context).bodyMedium.override(
+      backgroundColor: AppTheme.of(context).primaryBackground,
+      body: SafeArea(
+        child: Column(
+          children: [
+            ScreenHeader(
+              title: 'Create Service',
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Service Images',
+                        style: AppTheme.of(context).titleMedium.override(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Add up to 5 photos of your service (optional)',
+                        style: AppTheme.of(context).bodySmall.override(
                               color: AppTheme.of(context).secondaryText,
                             ),
                       ),
-                    ),
-                    isExpanded: true,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    borderRadius: BorderRadius.circular(12),
-                    items: _categories.map((category) {
-                      return DropdownMenuItem(
-                        value: category,
-                        child: Text(category),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedCategory = value;
-                      });
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Description
-              _buildTextField(
-                controller: _descriptionController,
-                label: 'Description *',
-                hint:
-                    'Describe what your service includes, your experience, etc.',
-                maxLines: 4,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Description is required';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Price and Duration Row
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTextField(
-                      controller: _priceController,
-                      label: 'Base Price (₱) *',
-                      hint: '500',
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Required';
-                        }
-                        if (double.tryParse(value) == null) {
-                          return 'Invalid';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildTextField(
-                      controller: _durationController,
-                      label: 'Duration (mins) *',
-                      hint: '60',
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Required';
-                        }
-                        if (int.tryParse(value) == null) {
-                          return 'Invalid';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Additional Info
-              _buildTextField(
-                controller: _additionalInfoController,
-                label: 'Additional Information',
-                hint: 'Any special requirements, tools needed, etc. (optional)',
-                maxLines: 3,
-              ),
-              const SizedBox(height: 32),
-
-              // Create Button
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: isLoading ? null : _createService,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.of(context).primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: isLoading
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
+                      const SizedBox(height: 12),
+                      if (_selectedImages.isNotEmpty)
+                        SizedBox(
+                          height: 100,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _selectedImages.length +
+                                (_selectedImages.length < 5 ? 1 : 0),
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(width: 12),
+                            itemBuilder: (context, index) {
+                              if (index == _selectedImages.length) {
+                                return _buildAddImageButton();
+                              }
+                              return _buildImagePreview(index);
+                            },
                           ),
                         )
-                      : Text(
-                          'Create Service',
-                          style: AppTheme.of(context).titleSmall.override(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
+                      else
+                        _buildAddImageButton(isFullWidth: true),
+                      const SizedBox(height: 24),
+                      _buildTextField(
+                        controller: _nameController,
+                        label: 'Service Name *',
+                        hint: 'e.g., Deep House Cleaning, Pipe Repair, etc.',
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Service name is required';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Category *',
+                        style: AppTheme.of(context).bodyMedium.override(
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppTheme.of(context).secondaryBackground,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: _selectedCategory == null
+                                ? AppTheme.of(context)
+                                    .error
+                                    .withValues(alpha: 0.5)
+                                : AppTheme.of(context)
+                                    .primaryText
+                                    .withValues(alpha: 0.1),
+                          ),
                         ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _selectedCategory,
+                            hint: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              child: Text(
+                                'Select a category',
+                                style: AppTheme.of(context).bodyMedium.override(
+                                      color:
+                                          AppTheme.of(context).secondaryText,
+                                    ),
+                              ),
+                            ),
+                            isExpanded: true,
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16),
+                            borderRadius: BorderRadius.circular(12),
+                            items: _categories.map((category) {
+                              return DropdownMenuItem(
+                                value: category,
+                                child: Text(category),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedCategory = value;
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        controller: _descriptionController,
+                        label: 'Description *',
+                        hint:
+                            'Describe what your service includes, your experience, etc.',
+                        maxLines: 4,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Description is required';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildTextField(
+                              controller: _priceController,
+                              label: 'Base Price (₱) *',
+                              hint: '500',
+                              keyboardType: TextInputType.number,
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Required';
+                                }
+                                if (double.tryParse(value) == null) {
+                                  return 'Invalid';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildTextField(
+                              controller: _durationController,
+                              label: 'Duration (mins) *',
+                              hint: '60',
+                              keyboardType: TextInputType.number,
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Required';
+                                }
+                                if (int.tryParse(value) == null) {
+                                  return 'Invalid';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        controller: _additionalInfoController,
+                        label: 'Additional Information',
+                        hint:
+                            'Any special requirements, tools needed, etc. (optional)',
+                        maxLines: 3,
+                      ),
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: ElevatedButton(
+                          onPressed: isLoading ? null : _createService,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.of(context).primary,
+                            foregroundColor:
+                                AppTheme.of(context).secondaryBackground,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: isLoading
+                              ? SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      AppTheme.of(context)
+                                          .secondaryBackground,
+                                    ),
+                                  ),
+                                )
+                              : Text(
+                                  'Create Service',
+                                  style: AppTheme.of(context)
+                                      .titleSmall
+                                      .override(
+                                        color: AppTheme.of(context)
+                                            .secondaryBackground,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 32),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -474,13 +469,13 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
             child: Container(
               width: 24,
               height: 24,
-              decoration: const BoxDecoration(
-                color: Colors.red,
+              decoration: BoxDecoration(
+                color: AppTheme.of(context).error,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.close,
-                color: Colors.white,
+                color: AppTheme.of(context).secondaryBackground,
                 size: 16,
               ),
             ),

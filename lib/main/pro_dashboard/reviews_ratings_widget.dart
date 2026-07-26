@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '/components/back_button/back_button_widget.dart';
+import '/components/screen_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
@@ -224,104 +224,83 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
           FocusManager.instance.primaryFocus?.unfocus();
         },
         child: Scaffold(
-          backgroundColor: const Color(0xFFF4F7FB),
+          backgroundColor: AppTheme.of(context).primaryBackground,
           body: SafeArea(
-            child: _isLoading
-                ? Center(
-                    child: CircularProgressIndicator(
-                      color: AppTheme.of(context).primary,
-                    ),
-                  )
-                : _errorMessage != null
-                    ? _buildMessageState(
-                        context,
-                        icon: Icons.rate_review_outlined,
-                        title: 'Could not load reviews',
-                        subtitle: _errorMessage!,
-                        actionLabel: 'Try again',
-                        onPressed: _loadReviews,
-                        accent: AppTheme.of(context).error,
-                      )
-                    : RefreshIndicator(
-                        color: AppTheme.of(context).primary,
-                        onRefresh: _loadReviews,
-                        child: ListView(
-                          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-                          children: [
-                            _buildTopBar(context),
-                            const SizedBox(height: 18),
-                            _buildHeroCard(context),
-                            const SizedBox(height: 18),
-                            _buildHighlights(context),
-                            const SizedBox(height: 18),
-                            _buildDistributionCard(context),
-                            const SizedBox(height: 20),
-                            _buildSectionHeader(context),
-                            const SizedBox(height: 12),
-                            if (_reviews.isEmpty)
-                              _buildMessageState(
-                                context,
-                                icon: Icons.star_outline_rounded,
-                                title: 'No reviews yet',
-                                subtitle:
-                                    'Complete more jobs and invite feedback to start building social proof here.',
-                                actionLabel: 'Refresh',
-                                onPressed: _loadReviews,
-                                accent: AppTheme.of(context).primary,
-                                compact: true,
-                              )
-                            else
-                              ..._reviews.map(
-                                (review) => Padding(
-                                  padding: const EdgeInsets.only(bottom: 12),
-                                  child: _buildReviewCard(context, review),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-          ),
-        ),
-      );
-
-  Widget _buildTopBar(BuildContext context) => Row(
-        children: [
-          Material(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            child: const BackButtonWidget(),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Reviews & Ratings',
-                  style: AppTheme.of(context).titleLarge.override(
-                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                        color: const Color(0xFF14213D),
-                      ),
+                ScreenHeader(
+                  title: 'Reviews & Ratings',
+                  subtitle:
+                      'Track client sentiment and the quality signals behind your profile.',
+                  action: IconButton(
+                    onPressed: _loadReviews,
+                    icon: const Icon(Icons.refresh_rounded),
+                    color: AppTheme.of(context).primary,
+                  ),
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
                 ),
-                Text(
-                  'Track client sentiment and the quality signals behind your profile.',
-                  style: AppTheme.of(context).bodySmall.override(
-                        font: GoogleFonts.poppins(),
-                        color: const Color(0xFF64748B),
-                      ),
+                Expanded(
+                  child: _isLoading
+                      ? Center(
+                          child: CircularProgressIndicator(
+                            color: AppTheme.of(context).primary,
+                          ),
+                        )
+                      : _errorMessage != null
+                          ? _buildMessageState(
+                              context,
+                              icon: Icons.rate_review_outlined,
+                              title: 'Could not load reviews',
+                              subtitle: _errorMessage!,
+                              actionLabel: 'Try again',
+                              onPressed: _loadReviews,
+                              accent: AppTheme.of(context).error,
+                            )
+                          : RefreshIndicator(
+                              color: AppTheme.of(context).primary,
+                              onRefresh: _loadReviews,
+                              child: ListView(
+                                padding:
+                                    const EdgeInsets.fromLTRB(20, 0, 20, 28),
+                                children: [
+                                  const SizedBox(height: 18),
+                                  _buildHeroCard(context),
+                                  const SizedBox(height: 18),
+                                  _buildHighlights(context),
+                                  const SizedBox(height: 18),
+                                  _buildDistributionCard(context),
+                                  const SizedBox(height: 20),
+                                  _buildSectionHeader(context),
+                                  const SizedBox(height: 12),
+                                  if (_reviews.isEmpty)
+                                    _buildMessageState(
+                                      context,
+                                      icon: Icons.star_outline_rounded,
+                                      title: 'No reviews yet',
+                                      subtitle:
+                                          'Complete more jobs and invite feedback to start building social proof here.',
+                                      actionLabel: 'Refresh',
+                                      onPressed: _loadReviews,
+                                      accent: AppTheme.of(context).primary,
+                                      compact: true,
+                                    )
+                                  else
+                                    ..._reviews.map(
+                                      (review) => Padding(
+                                        padding:
+                                            const EdgeInsets.only(bottom: 12),
+                                        child: _buildReviewCard(
+                                            context, review),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
                 ),
               ],
             ),
           ),
-          IconButton.filledTonal(
-            onPressed: _loadReviews,
-            style: IconButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: AppTheme.of(context).primary,
-            ),
-            icon: const Icon(Icons.refresh_rounded),
-          ),
-        ],
+        ),
       );
 
   Widget _buildHeroCard(BuildContext context) => Container(
@@ -353,7 +332,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
               width: 82,
               height: 82,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.14),
+                color: AppTheme.of(context).secondaryBackground.withValues(alpha: 0.14),
                 borderRadius: BorderRadius.circular(24),
               ),
               child: Center(
@@ -361,7 +340,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
                   _stats.average.toStringAsFixed(1),
                   style: AppTheme.of(context).headlineMedium.override(
                         font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                        color: Colors.white,
+                        color: AppTheme.of(context).secondaryBackground,
                       ),
                 ),
               ),
@@ -389,7 +368,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
                     '${_stats.total} total reviews',
                     style: AppTheme.of(context).titleMedium.override(
                           font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                          color: Colors.white,
+                          color: AppTheme.of(context).secondaryBackground,
                         ),
                   ),
                   const SizedBox(height: 4),
@@ -399,7 +378,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
                         : '${_stats.withComment} reviews include written comments.',
                     style: AppTheme.of(context).bodyMedium.override(
                           font: GoogleFonts.poppins(),
-                          color: Colors.white.withValues(alpha: 0.82),
+                          color: AppTheme.of(context).secondaryBackground.withValues(alpha: 0.82),
                         ),
                   ),
                 ],
@@ -437,15 +416,9 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.of(context).secondaryBackground,
           borderRadius: BorderRadius.circular(26),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x12000000),
-              blurRadius: 18,
-              offset: Offset(0, 10),
-            ),
-          ],
+          boxShadow: AppThemeData.shadowCard,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -454,7 +427,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
               'Rating Distribution',
               style: AppTheme.of(context).titleMedium.override(
                     font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                    color: const Color(0xFF14213D),
+                    color: AppTheme.of(context).primaryText,
                   ),
             ),
             const SizedBox(height: 6),
@@ -462,7 +435,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
               'See how client ratings are spread across completed jobs.',
               style: AppTheme.of(context).bodySmall.override(
                     font: GoogleFonts.poppins(),
-                    color: const Color(0xFF64748B),
+                    color: AppTheme.of(context).secondaryText,
                   ),
             ),
             const SizedBox(height: 16),
@@ -510,7 +483,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
             'Recent Reviews',
             style: AppTheme.of(context).titleMedium.override(
                   font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                  color: const Color(0xFF14213D),
+                  color: AppTheme.of(context).primaryText,
                 ),
           ),
           const Spacer(),
@@ -518,7 +491,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
             '${_reviews.length} total',
             style: AppTheme.of(context).bodyMedium.override(
                   font: GoogleFonts.poppins(),
-                  color: const Color(0xFF64748B),
+                  color: AppTheme.of(context).secondaryText,
                 ),
           ),
         ],
@@ -536,15 +509,9 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.of(context).secondaryBackground,
         borderRadius: BorderRadius.circular(26),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x12000000),
-            blurRadius: 18,
-            offset: Offset(0, 10),
-          ),
-        ],
+        boxShadow: AppThemeData.shadowCard,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -581,7 +548,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
                       clientName,
                       style: AppTheme.of(context).titleSmall.override(
                             font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                            color: const Color(0xFF14213D),
+                            color: AppTheme.of(context).primaryText,
                           ),
                     ),
                     const SizedBox(height: 4),
@@ -589,7 +556,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
                       '$serviceName • $serviceCategory',
                       style: AppTheme.of(context).bodySmall.override(
                             font: GoogleFonts.poppins(),
-                            color: const Color(0xFF64748B),
+                            color: AppTheme.of(context).secondaryText,
                           ),
                     ),
                   ],
@@ -617,7 +584,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
                             font: GoogleFonts.poppins(
                               fontWeight: FontWeight.w700,
                             ),
-                            color: const Color(0xFF9A6700),
+                            color: AppTheme.of(context).warning,
                           ),
                     ),
                   ],
@@ -638,7 +605,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
                 text,
                 style: AppTheme.of(context).bodyMedium.override(
                       font: GoogleFonts.poppins(),
-                      color: const Color(0xFF334155),
+                      color: AppTheme.of(context).primaryText,
                     ),
               ),
             ),
@@ -648,7 +615,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
             date == null ? 'Date unavailable' : _dateLabel(date),
             style: AppTheme.of(context).labelSmall.override(
                   font: GoogleFonts.poppins(),
-                  color: const Color(0xFF94A3B8),
+                  color: AppTheme.of(context).textTertiary,
                 ),
           ),
         ],
@@ -672,15 +639,9 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
           constraints: const BoxConstraints(maxWidth: 420),
           padding: EdgeInsets.all(compact ? 24 : 28),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppTheme.of(context).secondaryBackground,
             borderRadius: BorderRadius.circular(28),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x12000000),
-                blurRadius: 18,
-                offset: Offset(0, 8),
-              ),
-            ],
+            boxShadow: AppThemeData.shadowCard,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -700,7 +661,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
                 textAlign: TextAlign.center,
                 style: AppTheme.of(context).titleMedium.override(
                       font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                      color: const Color(0xFF14213D),
+                      color: AppTheme.of(context).primaryText,
                     ),
               ),
               const SizedBox(height: 8),
@@ -709,7 +670,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
                 textAlign: TextAlign.center,
                 style: AppTheme.of(context).bodyMedium.override(
                       font: GoogleFonts.poppins(),
-                      color: const Color(0xFF64748B),
+                      color: AppTheme.of(context).secondaryText,
                     ),
               ),
               const SizedBox(height: 16),
@@ -719,7 +680,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
                   onPressed: onPressed,
                   style: FilledButton.styleFrom(
                     backgroundColor: accent,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppTheme.of(context).secondaryBackground,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -729,7 +690,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
                     actionLabel,
                     style: AppTheme.of(context).labelLarge.override(
                           font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                          color: Colors.white,
+                          color: AppTheme.of(context).secondaryBackground,
                         ),
                   ),
                 ),
@@ -781,15 +742,9 @@ class _HighlightCard extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.of(context).secondaryBackground,
           borderRadius: BorderRadius.circular(24),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x12000000),
-              blurRadius: 18,
-              offset: Offset(0, 10),
-            ),
-          ],
+          boxShadow: AppThemeData.shadowCard,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -808,7 +763,7 @@ class _HighlightCard extends StatelessWidget {
               title,
               style: AppTheme.of(context).bodySmall.override(
                     font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                    color: const Color(0xFF64748B),
+                    color: AppTheme.of(context).secondaryText,
                   ),
             ),
             const SizedBox(height: 6),
@@ -816,7 +771,7 @@ class _HighlightCard extends StatelessWidget {
               value,
               style: AppTheme.of(context).titleMedium.override(
                     font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                    color: const Color(0xFF14213D),
+                    color: AppTheme.of(context).primaryText,
                   ),
             ),
             const SizedBox(height: 4),
@@ -824,7 +779,7 @@ class _HighlightCard extends StatelessWidget {
               subtitle,
               style: AppTheme.of(context).labelSmall.override(
                     font: GoogleFonts.poppins(),
-                    color: const Color(0xFF94A3B8),
+                    color: AppTheme.of(context).textTertiary,
                   ),
             ),
           ],
@@ -856,7 +811,7 @@ class _DistributionRow extends StatelessWidget {
             '$stars stars',
             style: AppTheme.of(context).bodySmall.override(
                   font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                  color: const Color(0xFF64748B),
+                  color: AppTheme.of(context).secondaryText,
                 ),
           ),
         ),
@@ -866,7 +821,7 @@ class _DistributionRow extends StatelessWidget {
             child: LinearProgressIndicator(
               value: ratio,
               minHeight: 10,
-              backgroundColor: const Color(0xFFEFF3F7),
+              backgroundColor: AppTheme.of(context).border,
               valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
           ),
@@ -879,7 +834,7 @@ class _DistributionRow extends StatelessWidget {
             textAlign: TextAlign.right,
             style: AppTheme.of(context).bodySmall.override(
                   font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                  color: const Color(0xFF334155),
+                  color: AppTheme.of(context).primaryText,
                 ),
           ),
         ),

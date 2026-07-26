@@ -243,13 +243,7 @@ class _TMBroadcastTopCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: theme.primaryBackground.withValues(alpha: 0.94),
             borderRadius: BorderRadius.circular(26),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.10),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
+              boxShadow: AppThemeData.shadowCard,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -384,7 +378,7 @@ class _TMBroadcastSheet extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFFF6FBFF),
+              color: theme.surfaceAlt,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: theme.primary.withValues(alpha: 0.16)),
             ),
@@ -703,7 +697,7 @@ class _NoProviderFoundModal extends StatelessWidget {
                   onPressed: onSearchAgain,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: theme.primary,
-                    foregroundColor: Colors.white,
+                    foregroundColor: theme.secondaryBackground,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),

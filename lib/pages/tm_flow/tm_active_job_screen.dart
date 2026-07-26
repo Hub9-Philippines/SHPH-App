@@ -101,7 +101,6 @@ class _TMActiveJobScreenState extends State<TMActiveJobScreen> {
             backgroundColor: theme.primaryBackground,
             appBar: AppBar(
               backgroundColor: theme.primaryBackground,
-              surfaceTintColor: Colors.transparent,
               elevation: 0,
               leading: IconButton(
                 onPressed: () => Navigator.of(context).pop(),
@@ -247,7 +246,7 @@ class HardwareApprovalDialog extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFFF6FBFF),
+              color: theme.surfaceAlt,
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: theme.primary.withValues(alpha: 0.18)),
             ),
@@ -290,15 +289,17 @@ class HardwareApprovalDialog extends StatelessWidget {
                 },
           style: ElevatedButton.styleFrom(
             backgroundColor: theme.primary,
-            foregroundColor: Colors.white,
+            foregroundColor: theme.secondaryBackground,
           ),
           child: controller.isUpdatingHardware
-              ? const SizedBox(
+              ? SizedBox(
                   width: 18,
                   height: 18,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      theme.secondaryBackground,
+                    ),
                   ),
                 )
               : const Text('Approve'),
@@ -417,13 +418,7 @@ class _TMTrackingTab extends StatelessWidget {
               decoration: BoxDecoration(
                 color: theme.primaryBackground.withValues(alpha: 0.96),
                 borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.10),
-                    blurRadius: 18,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
+                boxShadow: AppThemeData.shadowCard,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -456,24 +451,24 @@ class _TMTrackingTab extends StatelessWidget {
                     height: 52,
                     child: ElevatedButton(
                       onPressed: controller.isCompletingJob ? null : onComplete,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.primary,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.primary,
+                          foregroundColor: theme.secondaryBackground,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
-                      ),
-                      child: controller.isCompletingJob
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
+                        child: controller.isCompletingJob
+                            ? SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    theme.secondaryBackground,
+                                  ),
                                 ),
-                              ),
-                            )
+                              )
                           : const Text('Mark Job Complete'),
                     ),
                   ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import '/components/screen_header.dart';
 import '/main.dart';
 import '/theme/app_theme.dart';
 import 'tm_controller.dart';
@@ -29,19 +29,17 @@ class _TMRatingScreenState extends State<TMRatingScreen> {
         return Scaffold(
           backgroundColor: theme.primaryBackground,
           body: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Rate your service',
-                    style: theme.headlineMedium.override(
-                      font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
+            child: Column(
+              children: [
+                const ScreenHeader(title: 'Rate your service'),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 8),
+                        Text(
                     'How was the time-material service experience with ${controller.matchedProvider?.name ?? 'your provider'}?',
                     style: theme.bodyMedium.override(
                       color: theme.secondaryText,
@@ -99,35 +97,38 @@ class _TMRatingScreenState extends State<TMRatingScreen> {
                             },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: theme.primary,
-                        foregroundColor: Colors.white,
+                        foregroundColor: theme.secondaryBackground,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(18),
                         ),
                       ),
                       child: controller.isSubmittingRating
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 24,
                               height: 24,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                                    AlwaysStoppedAnimation<Color>(theme.secondaryBackground),
                               ),
                             )
                           : Text(
                               'Submit Rating',
                               style: theme.titleMedium.override(
-                                color: Colors.white,
+                                color: theme.secondaryBackground,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
                     ),
                   ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        );
+          ],
+        ),
+      ),
+    );
       },
     );
   }
