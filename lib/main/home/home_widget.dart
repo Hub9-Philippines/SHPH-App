@@ -390,15 +390,121 @@ class _HomeWidgetState extends State<HomeWidget> {
 
   Widget _buildTopOverlay() => SafeArea(
         bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Hero(
-                tag: 'searchBarHero',
-                child: Material(
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFFFEECE6),
+                Color(0xFFFFF1E6),
+                Color(0xFFFEF5E9),
+                Color(0xFFFBF6EF),
+                Color(0xFFFFF8F0),
+              ],
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF63CBD6).withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.menu_rounded,
+                            color: Color(0xFF0F172A)),
+                        onPressed: () => scaffoldKey.currentState?.openDrawer(),
+                      ),
+                    ),
+                    const Spacer(),
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        InkWell(
+                          onTap: () => context.pushNamed(
+                            MyNotificationsWidget.routeName,
+                          ),
+                          borderRadius: BorderRadius.circular(18),
+                          child: Container(
+                            width: 46,
+                            height: 46,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: AppThemeData.shadowCard,
+                            ),
+                            child: const Icon(
+                              Icons.notifications_none_rounded,
+                              color: Color(0xFF0F172A),
+                              size: 24,
+                            ),
+                          ),
+                        ),
+                        if (FFAppState().notificationCount > 0)
+                          Positioned(
+                            top: 0,
+                            right: -2,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 5,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppTheme.of(context).error,
+                                borderRadius: BorderRadius.circular(999),
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Text(
+                                FFAppState().notificationCount > 99
+                                    ? '99+'
+                                    : FFAppState()
+                                        .notificationCount
+                                        .toString(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  _greeting(),
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 24,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Let\'s find the perfect\nservice for you.',
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w400,
+                    fontSize: 14,
+                    color: const Color(0xFF64748B),
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Material(
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: _openSearchPage,
@@ -409,156 +515,84 @@ class _HomeWidgetState extends State<HomeWidget> {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(28),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x18000000),
-                            blurRadius: 20,
-                            offset: Offset(0, 10),
-                          ),
-                        ],
+                        boxShadow: AppThemeData.shadowElevated,
                       ),
                       child: Row(
                         children: [
                           const Icon(
                             Icons.search_rounded,
-                            color: Color(0xFF5F6B76),
+                            color: Color(0xFF94A3B8),
                             size: 24,
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
                               'Search services...',
-                              style: AppTheme.of(context).bodyMedium.override(
-                                    font: GoogleFonts.poppins(),
-                                    color: const Color(0xFF6A7681),
-                                    fontSize: 15,
-                                  ),
+                              style: GoogleFonts.poppins(
+                                color: const Color(0xFF94A3B8),
+                                fontSize: 15,
+                              ),
                             ),
                           ),
-                          Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              InkWell(
-                                onTap: () => context.pushNamed(
-                                  MyNotificationsWidget.routeName,
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.my_location_rounded,
+                                  size: 14,
+                                  color: AppTheme.of(context).primaryBrandText,
                                 ),
-                                borderRadius: BorderRadius.circular(18),
-                                child: const Padding(
-                                  padding: EdgeInsets.all(6),
-                                  child: Icon(
-                                    Icons.notifications_none_rounded,
-                                    color: Color(0xFF17212B),
-                                    size: 24,
+                                const SizedBox(width: 4),
+                                Text(
+                                  _locationLabel(),
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 12,
+                                    color:
+                                        AppTheme.of(context).primaryBrandText,
                                   ),
                                 ),
-                              ),
-                              if (FFAppState().notificationCount > 0)
-                                Positioned(
-                                  top: 0,
-                                  right: -2,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 5,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.of(context).error,
-                                      borderRadius: BorderRadius.circular(999),
-                                      border: Border.all(
-                                        color: Colors.white,
-                                        width: 2,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      FFAppState().notificationCount > 99
-                                          ? '99+'
-                                          : FFAppState()
-                                              .notificationCount
-                                              .toString(),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
+                              ],
+                            ),
                           ),
                         ],
                       ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 14),
-              SizedBox(
-                height: 40,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  clipBehavior: Clip.none,
-                  children: [
-                    _buildCategoryChip(
-                      icon: Icons.cleaning_services_rounded,
-                      label: 'Cleaning',
-                      onTap: () => context.pushNamed(
-                        ServicesScreen.routeName,
-                        extra: <String, dynamic>{
-                          'initialCategory': 'Cleaning',
-                        },
-                      ),
-                    ),
-                    _buildCategoryChip(
-                      icon: Icons.plumbing_rounded,
-                      label: 'Plumbing',
-                      onTap: () => context.pushNamed(
-                        ServicesScreen.routeName,
-                        extra: <String, dynamic>{
-                          'initialCategory': 'Plumbing',
-                        },
-                      ),
-                    ),
-                    _buildCategoryChip(
-                      icon: Icons.electrical_services_rounded,
-                      label: 'Electrical',
-                      onTap: () => context.pushNamed(
-                        ServicesScreen.routeName,
-                        extra: <String, dynamic>{
-                          'initialCategory': 'Electrical',
-                        },
-                      ),
-                    ),
-                    _buildCategoryChip(
-                      icon: Icons.format_paint_rounded,
-                      label: 'Painting',
-                      onTap: () => context.pushNamed(
-                        ServicesScreen.routeName,
-                        extra: <String, dynamic>{
-                          'initialCategory': 'Painting & Decorating',
-                        },
-                      ),
-                    ),
-                    _buildCategoryChip(
-                      icon: Icons.grid_view_rounded,
-                      label: 'More',
-                      onTap: () => context.pushNamed(
-                        CategoriesWidget.routeName,
-                        extra: <String, dynamic>{
-                          '__transition_info__': const TransitionInfo(
-                            hasTransition: true,
-                            transitionType: TransitionType.bottomToTop,
-                            duration: Duration(milliseconds: 100),
-                          ),
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       );
+
+  String _greeting() {
+    final hour = DateTime.now().hour;
+    final prefix = hour < 12
+        ? 'Good morning'
+        : hour < 18
+            ? 'Good afternoon'
+            : 'Good evening';
+    final name = currentUserDisplayName.split(' ').firstOrNull ?? 'there';
+    return '$prefix, $name!';
+  }
+
+  String _locationLabel() {
+    final appState = FFAppState();
+    if (appState.selectedAddressLabel.isNotEmpty) {
+      return appState.selectedAddressLabel;
+    }
+    return 'My Location';
+  }
 
   Widget _buildCategoryChip({
     required IconData icon,

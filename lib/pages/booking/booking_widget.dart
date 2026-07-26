@@ -150,7 +150,7 @@ class _BookingWidgetState extends State<BookingWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: const Color(0xFFF4F7FB),
+          backgroundColor: AppTheme.of(context).secondaryBackground,
           body: CustomScrollView(
             physics: const BouncingScrollPhysics(),
             slivers: [
@@ -162,7 +162,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                     child: Row(
                       children: [
                         Material(
-                          color: Colors.white,
+                          color: AppTheme.of(context).primaryBackground,
                           borderRadius: BorderRadius.circular(18),
                           child: wrapWithModel(
                             model: _model.backButtonModel,
@@ -181,14 +181,14 @@ class _BookingWidgetState extends State<BookingWidget> {
                                       font: GoogleFonts.poppins(
                                         fontWeight: FontWeight.w700,
                                       ),
-                                      color: const Color(0xFF14213D),
+                                      color: AppTheme.of(context).primaryText,
                                     ),
-                              ),
-                              Text(
-                                'Choose your schedule and location before payment.',
-                                style: AppTheme.of(context).bodySmall.override(
-                                      font: GoogleFonts.poppins(),
-                                      color: const Color(0xFF64748B),
+                                  ),
+                                  Text(
+                                    'Choose your schedule and location before payment.',
+                                    style: AppTheme.of(context).bodySmall.override(
+                                          font: GoogleFonts.poppins(),
+                                          color: AppTheme.of(context).secondaryText,
                                     ),
                               ),
                             ],
@@ -260,11 +260,11 @@ class _BookingWidgetState extends State<BookingWidget> {
                             hintText: 'Add any special instructions...',
                             hintStyle: AppTheme.of(context).bodySmall.override(
                                   font: GoogleFonts.poppins(),
-                                  color: const Color(0xFF94A3B8),
+                                  color: AppTheme.of(context).textTertiary,
                                 ),
                             enabledBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE2E8F0),
+                              borderSide: BorderSide(
+                                color: AppTheme.of(context).border,
                                 width: 1,
                               ),
                               borderRadius: BorderRadius.circular(18),
@@ -277,7 +277,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                               borderRadius: BorderRadius.circular(18),
                             ),
                             filled: true,
-                            fillColor: const Color(0xFFF8FAFC),
+                            fillColor: AppTheme.of(context).surfaceAlt,
                             contentPadding: const EdgeInsets.all(16),
                           ),
                         ),
@@ -414,15 +414,9 @@ class _BookingWidgetState extends State<BookingWidget> {
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.of(context).primaryBackground,
           borderRadius: BorderRadius.circular(28),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x12000000),
-              blurRadius: 20,
-              offset: Offset(0, 10),
-            ),
-          ],
+          boxShadow: AppThemeData.shadowCard,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -460,7 +454,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                               font: GoogleFonts.poppins(
                                 fontWeight: FontWeight.w700,
                               ),
-                              color: const Color(0xFF14213D),
+                              color: AppTheme.of(context).primaryText,
                             ),
                       ),
                       const SizedBox(height: 4),
@@ -468,7 +462,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                         subtitle,
                         style: AppTheme.of(context).bodySmall.override(
                               font: GoogleFonts.poppins(),
-                              color: const Color(0xFF64748B),
+                              color: AppTheme.of(context).secondaryText,
                             ),
                       ),
                     ],
@@ -498,12 +492,12 @@ class _BookingWidgetState extends State<BookingWidget> {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFFF0FBF7) : const Color(0xFFF8FAFC),
+              color: isSelected ? const Color(0xFFF0FBF7) : AppTheme.of(context).surfaceAlt,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: isSelected
                     ? AppTheme.of(context).primary.withValues(alpha: 0.32)
-                    : const Color(0xFFE2E8F0),
+                    : AppTheme.of(context).border,
                 width: isSelected ? 1.4 : 1,
               ),
             ),
@@ -522,7 +516,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                     icon,
                     color: isSelected
                         ? AppTheme.of(context).primary
-                        : const Color(0xFF64748B),
+                        : AppTheme.of(context).secondaryText,
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -537,8 +531,8 @@ class _BookingWidgetState extends State<BookingWidget> {
                                 fontWeight: FontWeight.w700,
                               ),
                               color: isSelected
-                                  ? const Color(0xFF14213D)
-                                  : const Color(0xFF64748B),
+                                  ? AppTheme.of(context).primaryText
+                                  : AppTheme.of(context).secondaryText,
                             ),
                       ),
                       if (detail != null && detail.trim().isNotEmpty) ...[
@@ -547,7 +541,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                           detail,
                           style: AppTheme.of(context).bodySmall.override(
                                 font: GoogleFonts.poppins(),
-                                color: const Color(0xFF64748B),
+                                color: AppTheme.of(context).secondaryText,
                               ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -561,7 +555,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                   Icons.chevron_right_rounded,
                   color: isSelected
                       ? AppTheme.of(context).primary
-                      : const Color(0xFF94A3B8),
+                      : AppTheme.of(context).textTertiary,
                 ),
               ],
             ),
@@ -572,7 +566,7 @@ class _BookingWidgetState extends State<BookingWidget> {
   Widget _buildBottomBar() => Container(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.of(context).primaryBackground,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.08),
@@ -610,7 +604,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                           'Total',
                           style: AppTheme.of(context).bodySmall.override(
                                 font: GoogleFonts.poppins(),
-                                color: const Color(0xFF64748B),
+                                color: AppTheme.of(context).secondaryText,
                               ),
                         ),
                         const SizedBox(height: 4),

@@ -201,7 +201,7 @@ class _StatusPageState extends State<StatusPage>
       Polyline(
         polylineId: const PolylineId('route'),
         points: _routeWaypoints,
-        color: const Color(0xFF1976D2),
+        color: AppTheme.of(context).primary,
         width: 5,
         jointType: JointType.round,
       ),
@@ -575,8 +575,8 @@ class _BookingStatusChip extends StatelessWidget {
       fg = const Color(0xFF16A34A);
       label = 'Completed';
     } else if (lower == 'en route' || lower == 'booking confirmed') {
-      bg = const Color(0xFF1976D2).withValues(alpha: 0.12);
-      fg = const Color(0xFF1976D2);
+      bg = theme.primary.withValues(alpha: 0.12);
+      fg = theme.primary;
       label = 'En Route';
     } else if (lower == 'on site' || lower == 'arrived') {
       bg = const Color(0xFFE65100).withValues(alpha: 0.12);
@@ -591,8 +591,8 @@ class _BookingStatusChip extends StatelessWidget {
       fg = const Color(0xFFDC2626);
       label = 'Cancelled';
     } else {
-      bg = const Color(0xFF64748B).withValues(alpha: 0.12);
-      fg = const Color(0xFF64748B);
+      bg = theme.secondaryText.withValues(alpha: 0.12);
+      fg = theme.secondaryText;
       label = 'Confirmed';
     }
 
@@ -656,13 +656,7 @@ class _StatusSheetContainer extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.primaryBackground.withValues(alpha: 0.98),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            blurRadius: 24,
-            offset: const Offset(0, -8),
-          ),
-        ],
+        boxShadow: AppThemeData.shadowCard,
       ),
       child: ListView(
         controller: scrollController,

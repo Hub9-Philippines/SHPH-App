@@ -56,7 +56,7 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: const Color(0xFFF4F7FB),
+          backgroundColor: AppTheme.of(context).secondaryBackground,
           body: SafeArea(
             child: Column(
               children: [
@@ -65,7 +65,7 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
                   child: Row(
                     children: [
                       Material(
-                        color: Colors.white,
+                        color: AppTheme.of(context).primaryBackground,
                         borderRadius: BorderRadius.circular(18),
                         child: wrapWithModel(
                           model: _model.backButtonModel,
@@ -84,14 +84,14 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
                                     font: GoogleFonts.poppins(
                                       fontWeight: FontWeight.w700,
                                     ),
-                                    color: const Color(0xFF14213D),
+                                    color: AppTheme.of(context).primaryText,
                                   ),
                             ),
                             Text(
                               'Quick access to the services you want to revisit.',
                               style: AppTheme.of(context).bodySmall.override(
                                     font: GoogleFonts.poppins(),
-                                    color: const Color(0xFF64748B),
+                                    color: AppTheme.of(context).secondaryText,
                                   ),
                             ),
                           ],
@@ -163,15 +163,9 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
             constraints: const BoxConstraints(maxWidth: 420),
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppTheme.of(context).primaryBackground,
               borderRadius: BorderRadius.circular(28),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x12000000),
-                  blurRadius: 18,
-                  offset: Offset(0, 8),
-                ),
-              ],
+              boxShadow: AppThemeData.shadowSoft,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -191,7 +185,7 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
                   textAlign: TextAlign.center,
                   style: AppTheme.of(context).titleMedium.override(
                         font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                        color: const Color(0xFF14213D),
+                        color: AppTheme.of(context).primaryText,
                       ),
                 ),
                 const SizedBox(height: 8),
@@ -200,7 +194,7 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
                   textAlign: TextAlign.center,
                   style: AppTheme.of(context).bodyMedium.override(
                         font: GoogleFonts.poppins(),
-                        color: const Color(0xFF64748B),
+                        color: AppTheme.of(context).secondaryText,
                       ),
                 ),
               ],
@@ -229,15 +223,9 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
         ),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppTheme.of(context).primaryBackground,
             borderRadius: BorderRadius.circular(26),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x12000000),
-                blurRadius: 18,
-                offset: Offset(0, 10),
-              ),
-            ],
+            boxShadow: AppThemeData.shadowCard,
           ),
           child: Padding(
             padding: const EdgeInsets.all(14),
@@ -267,7 +255,7 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
                               font: GoogleFonts.poppins(
                                 fontWeight: FontWeight.w700,
                               ),
-                              color: const Color(0xFF14213D),
+                              color: AppTheme.of(context).primaryText,
                             ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -307,7 +295,7 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
                                   font: GoogleFonts.poppins(
                                     fontWeight: FontWeight.w600,
                                   ),
-                                  color: const Color(0xFF14213D),
+                                  color: AppTheme.of(context).primaryText,
                                 ),
                           ),
                           const SizedBox(width: 8),
@@ -315,7 +303,7 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
                             '(${service.reviewCount ?? 0})',
                             style: AppTheme.of(context).bodySmall.override(
                                   font: GoogleFonts.poppins(),
-                                  color: const Color(0xFF64748B),
+                                  color: AppTheme.of(context).secondaryText,
                                 ),
                           ),
                         ],

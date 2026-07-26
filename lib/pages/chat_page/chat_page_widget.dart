@@ -97,7 +97,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: const Color(0xFFF4F7FB),
+          backgroundColor: AppTheme.of(context).secondaryBackground,
           body: SafeArea(
             child: Column(
               children: [
@@ -139,15 +139,9 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppTheme.of(context).primaryBackground,
             borderRadius: BorderRadius.circular(24),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x12000000),
-                blurRadius: 18,
-                offset: Offset(0, 10),
-              ),
-            ],
+            boxShadow: AppThemeData.shadowCard,
           ),
           child: Row(
             children: [
@@ -169,7 +163,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                             font: GoogleFonts.poppins(
                               fontWeight: FontWeight.w700,
                             ),
-                            color: const Color(0xFF14213D),
+                            color: AppTheme.of(context).primaryText,
                           ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -181,7 +175,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                           : 'Connected to this thread',
                       style: AppTheme.of(context).bodySmall.override(
                             font: GoogleFonts.poppins(),
-                            color: const Color(0xFF64748B),
+                            color: AppTheme.of(context).secondaryText,
                           ),
                     ),
                   ],
@@ -253,15 +247,15 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                 'No messages yet',
                 style: AppTheme.of(context).titleMedium.override(
                       font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                      color: const Color(0xFF14213D),
-                    ),
+                        color: AppTheme.of(context).primaryText,
+                      ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Send the first message to coordinate service details, arrival timing, or updates.',
                 style: AppTheme.of(context).bodyMedium.override(
                       font: GoogleFonts.poppins(),
-                      color: const Color(0xFF64748B),
+                      color: AppTheme.of(context).secondaryText,
                     ),
                 textAlign: TextAlign.center,
               ),
@@ -296,7 +290,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                   Container(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
                     decoration: BoxDecoration(
-                      color: isMe ? AppTheme.of(context).primary : Colors.white,
+                      color: isMe ? AppTheme.of(context).primary : AppTheme.of(context).primaryBackground,
                       borderRadius: BorderRadius.only(
                         topLeft: const Radius.circular(22),
                         topRight: const Radius.circular(22),
@@ -322,7 +316,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                                 font: GoogleFonts.poppins(),
                                 color: isMe
                                     ? Colors.white
-                                    : const Color(0xFF14213D),
+                                    : AppTheme.of(context).primaryText,
                               )
                               .copyWith(height: 1.4),
                         ),
@@ -338,7 +332,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                                     ),
                                     color: isMe
                                         ? Colors.white.withValues(alpha: 0.78)
-                                        : const Color(0xFF94A3B8),
+                                        : AppTheme.of(context).textTertiary,
                                   ),
                             ),
                             if (showStatus) ...[
@@ -352,7 +346,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                                       color: isMe
                                           ? Colors.white
                                               .withValues(alpha: 0.86)
-                                          : const Color(0xFF64748B),
+                                          : AppTheme.of(context).secondaryText,
                                     ),
                               ),
                             ],
@@ -367,11 +361,11 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                       widget.providerName ?? 'Contact',
                       style: AppTheme.of(context).labelSmall.override(
                             font: GoogleFonts.poppins(),
-                            color: const Color(0xFF94A3B8),
+                            color: AppTheme.of(context).textTertiary,
                           ),
                     ),
                   ],
-                ],
+                ),
               ),
             ),
           ),
@@ -391,15 +385,9 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                 child: Container(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppTheme.of(context).primaryBackground,
                     borderRadius: BorderRadius.circular(26),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x14000000),
-                        blurRadius: 22,
-                        offset: Offset(0, 12),
-                      ),
-                    ],
+                    boxShadow: AppThemeData.shadowElevated,
                   ),
                   child: TextField(
                     controller: _messageController,
@@ -411,7 +399,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                       hintText: 'Write a message...',
                       hintStyle: AppTheme.of(context).bodyMedium.override(
                             font: GoogleFonts.poppins(),
-                            color: const Color(0xFF94A3B8),
+                            color: AppTheme.of(context).textTertiary,
                           ),
                       border: InputBorder.none,
                       enabledBorder: InputBorder.none,
@@ -420,9 +408,8 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                     ),
                     style: AppTheme.of(context).bodyMedium.override(
                           font: GoogleFonts.poppins(),
-                          color: const Color(0xFF14213D),
+                          color: AppTheme.of(context).primaryText,
                         ),
-                  ),
                 ),
               ),
               const SizedBox(width: 10),

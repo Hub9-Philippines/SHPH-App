@@ -523,13 +523,7 @@ class _FlowTopCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.primaryBackground.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(26),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.10),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        boxShadow: AppThemeData.shadowCard,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

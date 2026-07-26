@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '/theme/app_theme.dart';
 
 /// Lightweight shimmer overlay that sweeps a subtle slate gradient
 /// across its child.  Disposes the animation controller when unmounted
@@ -113,13 +114,13 @@ class ExpressCheckoutSkeleton extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         // Location section row (icon + text + chevron)
-        _sectionRow(base),
+        _sectionRow(base, AppTheme.of(context).primaryBackground),
         const SizedBox(height: 10),
         // Time section row
-        _sectionRow(base),
+        _sectionRow(base, AppTheme.of(context).primaryBackground),
         const SizedBox(height: 10),
         // Scope section row
-        _sectionRow(base),
+        _sectionRow(base, AppTheme.of(context).primaryBackground),
         const SizedBox(height: 18),
         // Payment method section title
         _shimmerBlock(width: 130, height: 16, borderRadius: 6, color: base),
@@ -156,11 +157,11 @@ class ExpressCheckoutSkeleton extends StatelessWidget {
     );
   }
 
-  Widget _sectionRow(Color base) {
+  Widget _sectionRow(Color base, Color containerBg) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: containerBg,
         borderRadius: BorderRadius.circular(22),
       ),
       child: Row(

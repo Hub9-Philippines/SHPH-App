@@ -121,7 +121,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: const Color(0xFFF4F7FB),
+          backgroundColor: AppTheme.of(context).secondaryBackground,
           body: CustomScrollView(
             physics: const BouncingScrollPhysics(),
             slivers: [
@@ -133,7 +133,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                     child: Row(
                       children: [
                         Material(
-                          color: Colors.white,
+                          color: AppTheme.of(context).primaryBackground,
                           borderRadius: BorderRadius.circular(18),
                           child: wrapWithModel(
                             model: _model.backButtonModel,
@@ -152,14 +152,14 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                                       font: GoogleFonts.poppins(
                                         fontWeight: FontWeight.w700,
                                       ),
-                                      color: const Color(0xFF14213D),
+                                      color: AppTheme.of(context).primaryText,
                                     ),
                               ),
                               Text(
                                 'Review the booking and choose how you want to pay.',
                                 style: AppTheme.of(context).bodySmall.override(
                                       font: GoogleFonts.poppins(),
-                                      color: const Color(0xFF64748B),
+                                      color: AppTheme.of(context).secondaryText,
                                     ),
                               ),
                             ],
@@ -184,19 +184,19 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                       const SizedBox(height: 18),
                       Text(
                         'Choose how you want to pay',
-                        style: AppTheme.of(context).titleMedium.override(
-                              font: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w700,
+                                style: AppTheme.of(context).titleMedium.override(
+                                      font: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                      color: AppTheme.of(context).primaryText,
+                                    ),
                               ),
-                              color: const Color(0xFF14213D),
-                            ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Card, wallet, and QR payments are protected through escrow until the job is completed.',
-                        style: AppTheme.of(context).bodySmall.override(
-                              font: GoogleFonts.poppins(),
-                              color: const Color(0xFF64748B),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Card, wallet, and QR payments are protected through escrow until the job is completed.',
+                                style: AppTheme.of(context).bodySmall.override(
+                                      font: GoogleFonts.poppins(),
+                                      color: AppTheme.of(context).secondaryText,
                             ),
                       ),
                       const SizedBox(height: 16),
@@ -331,15 +331,9 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.of(context).primaryBackground,
           borderRadius: BorderRadius.circular(28),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x12000000),
-              blurRadius: 20,
-              offset: Offset(0, 10),
-            ),
-          ],
+          boxShadow: AppThemeData.shadowCard,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -348,7 +342,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
               'Booking summary',
               style: AppTheme.of(context).titleMedium.override(
                     font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                    color: const Color(0xFF14213D),
+                    color: AppTheme.of(context).primaryText,
                   ),
             ),
             const SizedBox(height: 14),
@@ -387,7 +381,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: const Color(0xFFF3F7FA),
+              color: AppTheme.of(context).surfaceAlt,
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(icon, color: const Color(0xFF334155)),
@@ -401,7 +395,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                   label,
                   style: AppTheme.of(context).bodySmall.override(
                         font: GoogleFonts.poppins(),
-                        color: const Color(0xFF64748B),
+                        color: AppTheme.of(context).secondaryText,
                       ),
                 ),
                 const SizedBox(height: 4),
@@ -411,7 +405,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                         font: GoogleFonts.poppins(
                           fontWeight: FontWeight.w700,
                         ),
-                        color: const Color(0xFF14213D),
+                        color: AppTheme.of(context).primaryText,
                       ),
                 ),
               ],
@@ -478,19 +472,13 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isSelected ? tint.withValues(alpha: 0.08) : Colors.white,
+            color: isSelected ? tint.withValues(alpha: 0.08) : AppTheme.of(context).primaryBackground,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: isSelected ? tint : const Color(0xFFE5E9EE),
               width: isSelected ? 1.6 : 1,
             ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x10000000),
-                blurRadius: 16,
-                offset: Offset(0, 8),
-              ),
-            ],
+            boxShadow: AppThemeData.shadowCard,
           ),
           child: Row(
             children: [
@@ -514,7 +502,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                             font: GoogleFonts.poppins(
                               fontWeight: FontWeight.w700,
                             ),
-                            color: const Color(0xFF14213D),
+                            color: AppTheme.of(context).primaryText,
                           ),
                     ),
                     const SizedBox(height: 4),
@@ -522,7 +510,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                       sublabel,
                       style: AppTheme.of(context).bodySmall.override(
                             font: GoogleFonts.poppins(),
-                            color: const Color(0xFF64748B),
+                            color: AppTheme.of(context).secondaryText,
                           ),
                     ),
                   ],
@@ -536,7 +524,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isSelected ? tint : const Color(0xFFCBD5E1),
+                    color: isSelected ? tint : AppTheme.of(context).border,
                     width: 2,
                   ),
                 ),
@@ -573,9 +561,9 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
 
   Widget _buildBottomBar() => Container(
         padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        decoration: BoxDecoration(
+          color: AppTheme.of(context).primaryBackground,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           boxShadow: [
             BoxShadow(
               color: Color(0x12000000),
@@ -599,7 +587,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                           'Total',
                           style: AppTheme.of(context).bodySmall.override(
                                 font: GoogleFonts.poppins(),
-                                color: const Color(0xFF64748B),
+                                color: AppTheme.of(context).secondaryText,
                               ),
                         ),
                         const SizedBox(height: 4),

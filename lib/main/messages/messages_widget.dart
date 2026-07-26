@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/components/content_container.dart';
+import '/components/screen_header.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/custom_code/widgets/index.dart' as custom_widgets;
 import '/flutter_flow/flutter_flow_util.dart';
@@ -87,7 +89,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: const Color(0xFFF4F7FB),
+          backgroundColor: AppTheme.of(context).secondaryBackground,
           body: SafeArea(
             top: true,
             child: RefreshIndicator(
@@ -99,29 +101,31 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                 ),
                 slivers: [
                   SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 14, 20, 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildHeader(),
-                          const SizedBox(height: 18),
-                          _buildSearchField(),
-                          const SizedBox(height: 16),
-                          Container(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const ScreenHeader(
+                          title: 'Messages',
+                          subtitle: 'Stay close to providers, updates, and support.',
+                          action: Icon(
+                            Icons.tune_rounded,
+                            color: Color(0xFF368EFF),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                          child: _buildSearchField(),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Container(
                             width: double.infinity,
                             height: 68,
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: AppTheme.of(context).primaryBackground,
                               borderRadius: BorderRadius.circular(24),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x12000000),
-                                  blurRadius: 18,
-                                  offset: Offset(0, 10),
-                                ),
-                              ],
+                              boxShadow: AppThemeData.shadowCard,
                             ),
                             child:
                                 custom_widgets.CupertinoSlidingWidgetMessages(
@@ -139,11 +143,14 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                               },
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          _buildSectionLabel(),
-                          const SizedBox(height: 12),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 16),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: _buildSectionLabel(),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
                     ),
                   ),
                   SliverFillRemaining(
@@ -179,73 +186,21 @@ class _MessagesWidgetState extends State<MessagesWidget> {
         ),
       );
 
-  Widget _buildHeader() => Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Messages',
-                  style: AppTheme.of(context).headlineSmall.override(
-                        font: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w700,
-                        ),
-                        color: const Color(0xFF14213D),
-                      ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Stay close to providers, updates, and support.',
-                  style: AppTheme.of(context).bodySmall.override(
-                        font: GoogleFonts.poppins(),
-                        color: const Color(0xFF64748B),
-                      ),
-                ),
-              ],
-            ),
-          ),
-          IconButton.filledTonal(
-            onPressed: () => context.pushNamed(
-              MyNotificationsWidget.routeName,
-            ),
-            style: IconButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: AppTheme.of(context).primary,
-            ),
-            icon: const Icon(Icons.tune_rounded),
-          ),
-          const SizedBox(width: 8),
-          IconButton.filledTonal(
-            onPressed: _model.reload,
-            style: IconButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: AppTheme.of(context).primary,
-            ),
-            icon: const Icon(Icons.refresh_rounded),
-          ),
-        ],
-      );
-
-  Widget _buildSearchField() => Container(
+  Widget _buildSearchField() {
+    final theme = AppTheme.of(context);
+    return Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.primaryBackground,
           borderRadius: BorderRadius.circular(22),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x0F000000),
-              blurRadius: 18,
-              offset: Offset(0, 10),
-            ),
-          ],
+          boxShadow: AppThemeData.shadowSoft,
         ),
         child: TextFormField(
           controller: _searchController,
           decoration: InputDecoration(
             hintText: 'Search conversations or calls',
-            hintStyle: AppTheme.of(context).bodyMedium.override(
+            hintStyle: theme.bodyMedium.override(
                   font: GoogleFonts.poppins(),
-                  color: const Color(0xFF94A3B8),
+                  color: theme.textTertiary,
                 ),
             prefixIcon: const Icon(Icons.search_rounded),
             suffixIcon: _searchController.text.isEmpty
@@ -265,12 +220,12 @@ class _MessagesWidgetState extends State<MessagesWidget> {
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(22),
               borderSide: BorderSide(
-                color: AppTheme.of(context).primary.withValues(alpha: 0.22),
+                color: theme.primary.withValues(alpha: 0.22),
                 width: 1.4,
               ),
             ),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: theme.primaryBackground,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 18,
               vertical: 16,
@@ -278,8 +233,10 @@ class _MessagesWidgetState extends State<MessagesWidget> {
           ),
         ),
       );
+  }
 
   Widget _buildSectionLabel() {
+    final theme = AppTheme.of(context);
     final itemCount = _model.selectedTabIndex == 0
         ? _filteredChatRooms.length
         : _filteredCallHistory.length;
@@ -291,23 +248,23 @@ class _MessagesWidgetState extends State<MessagesWidget> {
         Expanded(
           child: Text(
             title,
-            style: AppTheme.of(context).titleMedium.override(
+            style: theme.titleMedium.override(
                   font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                  color: const Color(0xFF14213D),
+                  color: theme.primaryText,
                 ),
           ),
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
-            color: const Color(0xFFE8F7F2),
+            color: theme.primaryLight,
             borderRadius: BorderRadius.circular(999),
           ),
           child: Text(
             '$itemCount items',
-            style: AppTheme.of(context).labelSmall.override(
+            style: theme.labelSmall.override(
                   font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                  color: const Color(0xFF0F8A6C),
+                  color: theme.primaryBrandText,
                 ),
           ),
         ),
@@ -383,23 +340,18 @@ class _MessagesWidgetState extends State<MessagesWidget> {
     required IconData icon,
     required String title,
     required String description,
-  }) =>
-      Center(
+  }) {
+    final theme = AppTheme.of(context);
+    return Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 28),
           child: Container(
             width: double.infinity,
             padding: const EdgeInsets.all(28),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: theme.primaryBackground,
               borderRadius: BorderRadius.circular(28),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x12000000),
-                  blurRadius: 18,
-                  offset: Offset(0, 10),
-                ),
-              ],
+              border: Border.all(color: theme.border),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -408,30 +360,30 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                   width: 68,
                   height: 68,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEAF6F2),
+                    color: theme.primaryLight,
                     borderRadius: BorderRadius.circular(22),
                   ),
                   child: Icon(
                     icon,
                     size: 32,
-                    color: AppTheme.of(context).primary,
+                    color: theme.primaryDark,
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   title,
-                  style: AppTheme.of(context).titleMedium.override(
+                  style: theme.titleMedium.override(
                         font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                        color: const Color(0xFF14213D),
+                        color: theme.primaryText,
                       ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   description,
-                  style: AppTheme.of(context).bodyMedium.override(
+                  style: theme.bodyMedium.override(
                         font: GoogleFonts.poppins(),
-                        color: const Color(0xFF64748B),
+                        color: theme.secondaryText,
                       ),
                   textAlign: TextAlign.center,
                 ),
@@ -440,9 +392,11 @@ class _MessagesWidgetState extends State<MessagesWidget> {
           ),
         ),
       );
+  }
 
-  Widget _buildChatRoomCard(BuildContext context, ChatRoom chatRoom) =>
-      GestureDetector(
+  Widget _buildChatRoomCard(BuildContext context, ChatRoom chatRoom) {
+    final theme = AppTheme.of(context);
+    return GestureDetector(
         onTap: () => context.pushNamed(
           ChatPageWidget.routeName,
           pathParameters: {'roomId': chatRoom.id},
@@ -455,15 +409,9 @@ class _MessagesWidgetState extends State<MessagesWidget> {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: theme.primaryBackground,
             borderRadius: BorderRadius.circular(24),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x12000000),
-                blurRadius: 18,
-                offset: Offset(0, 10),
-              ),
-            ],
+            border: Border.all(color: theme.border),
           ),
           child: Row(
             children: [
@@ -478,11 +426,11 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                         Expanded(
                           child: Text(
                             chatRoom.providerName,
-                            style: AppTheme.of(context).bodyLarge.override(
+                            style: theme.bodyLarge.override(
                                   font: GoogleFonts.poppins(
                                     fontWeight: FontWeight.w700,
                                   ),
-                                  color: const Color(0xFF14213D),
+                                  color: theme.primaryText,
                                 ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -491,9 +439,9 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                         const SizedBox(width: 8),
                         Text(
                           _formatTime(chatRoom.lastMessageTime),
-                          style: AppTheme.of(context).bodySmall.override(
+                          style: theme.bodySmall.override(
                                 font: GoogleFonts.poppins(),
-                                color: const Color(0xFF94A3B8),
+                                color: theme.textTertiary,
                               ),
                         ),
                       ],
@@ -501,9 +449,9 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                     const SizedBox(height: 6),
                     Text(
                       chatRoom.lastMessage ?? 'No messages yet',
-                      style: AppTheme.of(context).bodyMedium.override(
+                      style: theme.bodyMedium.override(
                             font: GoogleFonts.poppins(),
-                            color: const Color(0xFF64748B),
+                            color: theme.secondaryText,
                           ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -517,16 +465,16 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
+                            color: theme.surfaceAlt,
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
                             'Conversation',
-                            style: AppTheme.of(context).labelSmall.override(
+                            style: theme.labelSmall.override(
                                   font: GoogleFonts.poppins(
                                     fontWeight: FontWeight.w700,
                                   ),
-                                  color: const Color(0xFF475569),
+                                  color: AppThemeData.statusCompleted,
                                 ),
                           ),
                         ),
@@ -538,12 +486,12 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: AppTheme.of(context).primary,
+                              color: theme.primary,
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Text(
                               '${chatRoom.unreadCount} unread',
-                              style: AppTheme.of(context).labelSmall.override(
+                              style: theme.labelSmall.override(
                                     font: GoogleFonts.poppins(
                                       fontWeight: FontWeight.w700,
                                     ),
@@ -560,13 +508,15 @@ class _MessagesWidgetState extends State<MessagesWidget> {
           ),
         ),
       );
+  }
 
   Widget _buildCallHistoryCard(BuildContext context, CallHistory call) {
+    final theme = AppTheme.of(context);
     final statusColor = switch (call.callStatus) {
-      'missed' => const Color(0xFFDC2626),
-      'incoming' => const Color(0xFF059669),
-      'outgoing' => const Color(0xFF2563EB),
-      _ => const Color(0xFF64748B),
+      'missed' => AppThemeData.statusCancelled,
+      'incoming' => AppThemeData.statusActive,
+      'outgoing' => AppThemeData.statusConfirmed,
+      _ => AppThemeData.statusCompleted,
     };
 
     final callIcon = switch (call.callType) {
@@ -592,15 +542,9 @@ class _MessagesWidgetState extends State<MessagesWidget> {
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.primaryBackground,
           borderRadius: BorderRadius.circular(24),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x12000000),
-              blurRadius: 18,
-              offset: Offset(0, 10),
-            ),
-          ],
+          border: Border.all(color: theme.border),
         ),
         child: Row(
           children: [
@@ -612,11 +556,11 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                 children: [
                   Text(
                     call.providerName,
-                    style: AppTheme.of(context).bodyLarge.override(
+                    style: theme.bodyLarge.override(
                           font: GoogleFonts.poppins(
                             fontWeight: FontWeight.w700,
                           ),
-                          color: const Color(0xFF14213D),
+                          color: theme.primaryText,
                         ),
                   ),
                   const SizedBox(height: 6),
@@ -634,7 +578,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                       const SizedBox(width: 6),
                       Text(
                         call.callStatus.toUpperCase(),
-                        style: AppTheme.of(context).labelSmall.override(
+                        style: theme.labelSmall.override(
                               font: GoogleFonts.poppins(
                                 fontWeight: FontWeight.w700,
                               ),
@@ -645,14 +589,14 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                       Icon(
                         callIcon,
                         size: 16,
-                        color: const Color(0xFF64748B),
+                        color: theme.textTertiary,
                       ),
                       const SizedBox(width: 6),
                       Text(
                         call.callType.toUpperCase(),
-                        style: AppTheme.of(context).bodySmall.override(
+                        style: theme.bodySmall.override(
                               font: GoogleFonts.poppins(),
-                              color: const Color(0xFF64748B),
+                              color: theme.secondaryText,
                             ),
                       ),
                     ],
@@ -662,9 +606,9 @@ class _MessagesWidgetState extends State<MessagesWidget> {
             ),
             Text(
               _formatTime(call.createdAt),
-              style: AppTheme.of(context).bodySmall.override(
+              style: theme.bodySmall.override(
                     font: GoogleFonts.poppins(),
-                    color: const Color(0xFF94A3B8),
+                    color: theme.textTertiary,
                   ),
             ),
           ],

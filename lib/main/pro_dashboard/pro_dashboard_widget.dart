@@ -62,7 +62,7 @@ class _ProDashboardWidgetState extends State<ProDashboardWidget> {
 
     return Scaffold(
       resizeToAvoidBottomInset: !widget.disableResizeToAvoidBottomInset,
-      backgroundColor: const Color(0xFFF4F7FB),
+      backgroundColor: AppTheme.of(context).secondaryBackground,
       body: _currentPage ?? tabs[_currentPageName],
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
@@ -297,7 +297,7 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
         .length;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FB),
+      backgroundColor: AppTheme.of(context).secondaryBackground,
       appBar: _buildDashboardAppBar(
         context,
         title: 'Job Requests',
@@ -937,7 +937,7 @@ class _ProScheduleWidgetState extends State<ProScheduleWidget> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        backgroundColor: const Color(0xFFF4F7FB),
+        backgroundColor: AppTheme.of(context).secondaryBackground,
         appBar: _buildDashboardAppBar(
           context,
           title: 'Schedule',
@@ -1271,7 +1271,7 @@ class _ProScheduleWidgetState extends State<ProScheduleWidget> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppTheme.of(context).secondaryBackground,
+                  color: const Color(0xFFF4F7FB),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: AppTheme.of(context).primary,
@@ -1505,7 +1505,7 @@ class _ProEarningsWidgetState extends State<ProEarningsWidget> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-      backgroundColor: const Color(0xFFF4F7FB),
+      backgroundColor: AppTheme.of(context).secondaryBackground,
       appBar: _buildDashboardAppBar(
         context,
         title: 'Earnings',
@@ -2376,7 +2376,7 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        backgroundColor: const Color(0xFFF4F7FB),
+        backgroundColor: AppTheme.of(context).secondaryBackground,
         body: SafeArea(
           child: RefreshIndicator(
             color: AppTheme.of(context).primary,
@@ -3086,7 +3086,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        backgroundColor: const Color(0xFFF4F7FB),
+        backgroundColor: AppTheme.of(context).secondaryBackground,
         appBar: _buildDashboardAppBar(
           context,
           title: 'Profile',
@@ -3803,7 +3803,7 @@ PreferredSizeWidget _buildDashboardAppBar(
   required VoidCallback onRefresh,
 }) =>
     AppBar(
-      backgroundColor: const Color(0xFFF4F7FB),
+      backgroundColor: AppTheme.of(context).secondaryBackground,
       elevation: 0,
       surfaceTintColor: Colors.transparent,
       titleSpacing: 20,

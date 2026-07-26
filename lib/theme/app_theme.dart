@@ -254,7 +254,69 @@ class AppThemeData {
     required this.error,
     required this.info,
     required this.iconBackground,
+    required this.primaryLight,
+    required this.primaryDark,
+    required this.primaryBrandText,
+    required this.surfaceAlt,
+    required this.border,
+    required this.textTertiary,
   });
+
+  static const double radiusSm = 10;
+  static const double radiusMd = 14;
+  static const double radiusLg = 16;
+  static const double radiusCard = 24;
+  static const double radiusPill = 9999;
+
+  static const double containerNarrow = 560;
+  static const double containerReadable = 760;
+  static const double containerWide = 1100;
+  static const double containerDashboard = 1200;
+
+  static const List<BoxShadow> shadowSoft = [
+    BoxShadow(
+      color: Color(0x0F10264A),
+      blurRadius: 6,
+      offset: Offset(0, 1),
+    ),
+  ];
+
+  static const List<BoxShadow> shadowCard = [
+    BoxShadow(
+      color: Color(0x140F1828),
+      blurRadius: 24,
+      offset: Offset(0, 8),
+    ),
+  ];
+
+  static const List<BoxShadow> shadowElevated = [
+    BoxShadow(
+      color: Color(0x2E11264A),
+      blurRadius: 26,
+      offset: Offset(0, 10),
+    ),
+  ];
+
+  // Status pill colors (matching web --shph-status-* tokens)
+  static const Color statusConfirmed = Color(0xFF0D6D78);
+  static const Color statusConfirmedBg = Color(0xFFD4F0EF);
+  static const Color statusActive = Color(0xFF166534);
+  static const Color statusActiveBg = Color(0xFFE7F6EC);
+  static const Color statusCompleted = Color(0xFF475569);
+  static const Color statusCompletedBg = Color(0xFFEEF1F5);
+  static const Color statusCancelled = Color(0xFFB91C1C);
+  static const Color statusCancelledBg = Color(0xFFFDE9E9);
+  static const Color statusPending = Color(0xFF92400E);
+  static const Color statusPendingBg = Color(0xFFFDF0DD);
+
+  static (Color text, Color bg) statusColors(String status) => switch (status) {
+        'confirmed' => (statusConfirmed, statusConfirmedBg),
+        'in_progress' || 'in progress' => (statusActive, statusActiveBg),
+        'completed' => (statusCompleted, statusCompletedBg),
+        'cancelled' => (statusCancelled, statusCancelledBg),
+        'pending' => (statusPending, statusPendingBg),
+        _ => (statusCompleted, statusCompletedBg),
+      };
 
   factory AppThemeData.light() => AppThemeData(
       primary: const Color(0xFF368EFF),
@@ -274,6 +336,12 @@ class AppThemeData {
       error: const Color(0xFFFF5963),
       info: const Color(0xFFFFFFFF),
       iconBackground: const Color(0xFFE6F0FF),
+      primaryLight: const Color(0xFFD4F0EF),
+      primaryDark: const Color(0xFF49B8C4),
+      primaryBrandText: const Color(0xFF0D6D78),
+      surfaceAlt: const Color(0xFFF1F5F9),
+      border: const Color(0xFFE2E8F0),
+      textTertiary: const Color(0xFF94A3B8),
     );
 
   factory AppThemeData.dark() => AppThemeData(
@@ -294,6 +362,12 @@ class AppThemeData {
       error: const Color(0xFFFF5963),
       info: const Color(0xFFFFFFFF),
       iconBackground: const Color(0xFFF34966),
+      primaryLight: const Color(0xFF1A3D3C),
+      primaryDark: const Color(0xFF49B8C4),
+      primaryBrandText: const Color(0xFF63CBD6),
+      surfaceAlt: const Color(0xFF2A2A3C),
+      border: const Color(0xFF3A3A4E),
+      textTertiary: const Color(0xFF94A3B8),
     );
   final Color primary;
   final Color secondary;
@@ -312,6 +386,12 @@ class AppThemeData {
   final Color error;
   final Color info;
   final Color iconBackground;
+  final Color primaryLight;
+  final Color primaryDark;
+  final Color primaryBrandText;
+  final Color surfaceAlt;
+  final Color border;
+  final Color textTertiary;
 
   // Typography getters for compatibility with FlutterFlow theme
   TextStyle get displayLarge => GoogleFonts.poppins(

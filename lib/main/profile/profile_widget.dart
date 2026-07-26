@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 
 import '/auth/supabase_auth/auth_util.dart';
 import '/backend/supabase/supabase.dart';
+import '/components/content_container.dart';
+import '/components/screen_header.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/upload_data.dart';
@@ -60,25 +62,27 @@ class _ProfileWidgetState extends State<ProfileWidget> {
         if (!snapshot.hasData) {
           return Scaffold(
             backgroundColor: const Color(0xFFF5F7FA),
-            appBar: AppBar(
-              backgroundColor: const Color(0xFFF5F7FA),
-              automaticallyImplyLeading: false,
-              title: Text(
-                'Profile',
-                style: AppTheme.of(context).titleLarge,
-              ),
-              centerTitle: true,
-              elevation: 0,
-            ),
-            body: const SingleChildScrollView(
+            body: SafeArea(
               child: Column(
                 children: [
-                  ProfileHeaderSkeleton(),
-                  ProfileMenuItemSkeleton(),
-                  ProfileMenuItemSkeleton(),
-                  ProfileMenuItemSkeleton(),
-                  ProfileMenuItemSkeleton(),
-                  ProfileMenuItemSkeleton(),
+                  const ScreenHeader(
+                    title: 'Profile Hub',
+                    subtitle: 'Manage your account, saved places, payments, and preferences.',
+                  ),
+                  const Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          ProfileHeaderSkeleton(),
+                          ProfileMenuItemSkeleton(),
+                          ProfileMenuItemSkeleton(),
+                          ProfileMenuItemSkeleton(),
+                          ProfileMenuItemSkeleton(),
+                          ProfileMenuItemSkeleton(),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -90,20 +94,19 @@ class _ProfileWidgetState extends State<ProfileWidget> {
           return Scaffold(
             key: scaffoldKey,
             backgroundColor: const Color(0xFFF5F7FA),
-            appBar: AppBar(
-              backgroundColor: const Color(0xFFF5F7FA),
-              automaticallyImplyLeading: false,
-              title: Text(
-                'Profile',
-                style: AppTheme.of(context).titleLarge,
-              ),
-              centerTitle: true,
-              elevation: 0,
-            ),
-            body: Center(
-              child: Text(
-                'Profile not found',
-                style: AppTheme.of(context).bodyMedium,
+            body: SafeArea(
+              child: Column(
+                children: [
+                  const ScreenHeader(
+                    title: 'Profile Hub',
+                    subtitle: 'Manage your account, saved places, payments, and preferences.',
+                  ),
+                  const Expanded(
+                    child: Center(
+                      child: Text('Profile not found'),
+                    ),
+                  ),
+                ],
               ),
             ),
           );
@@ -127,8 +130,10 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                   ),
                   slivers: [
                     SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+                      child: ContentContainer(
+                        variant: ContentVariant.wide,
+                        padded: true,
+                        center: true,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -277,52 +282,13 @@ class _ProfileWidgetState extends State<ProfileWidget> {
     );
   }
 
-  Widget _buildTopBar() => Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Profile Hub',
-                  style: AppTheme.of(context).headlineSmall.override(
-                        font: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w700,
-                        ),
-                        color: const Color(0xFF16202A),
-                      ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Manage your account, saved places, payments, and preferences.',
-                  style: AppTheme.of(context).bodySmall.override(
-                        font: GoogleFonts.poppins(),
-                        color: const Color(0xFF66727E),
-                      ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x12000000),
-                  blurRadius: 18,
-                  offset: Offset(0, 10),
-                ),
-              ],
-            ),
-            child: Icon(
-              Icons.tune_rounded,
-              color: AppTheme.of(context).primary,
-            ),
-          ),
-        ],
+  Widget _buildTopBar() => const ScreenHeader(
+        title: 'Profile Hub',
+        subtitle: 'Manage your account, saved places, payments, and preferences.',
+        action: Icon(
+          Icons.tune_rounded,
+          color: Color(0xFF368EFF),
+        ),
       );
 
   Widget _buildProfileHero(ProfilesRow profile) {
@@ -342,15 +308,14 @@ class _ProfileWidgetState extends State<ProfileWidget> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF0F8A6C),
-            Color(0xFF17B890),
-            Color(0xFF73D8B4),
+            Color(0xFF0D6D78),
+            Color(0xFF63CBD6),
           ],
         ),
         borderRadius: BorderRadius.circular(28),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x220F8A6C),
+            color: Color(0x220D6D78),
             blurRadius: 24,
             offset: Offset(0, 16),
           ),
@@ -714,37 +679,35 @@ class _ProfileSection extends StatelessWidget {
   final List<Widget> children;
 
   @override
-  Widget build(BuildContext context) => Column(
+  Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 10),
             child: Text(
               title,
-              style: AppTheme.of(context).labelLarge.override(
+              style: theme.labelLarge.override(
                     font: GoogleFonts.poppins(
                       fontWeight: FontWeight.w700,
                     ),
-                    color: const Color(0xFF6A7681),
+                    color: theme.textTertiary,
                   ),
             ),
           ),
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: theme.primaryBackground,
               borderRadius: BorderRadius.circular(24),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x12000000),
-                  blurRadius: 20,
-                  offset: Offset(0, 10),
-                ),
-              ],
+              border: Border.all(color: theme.border),
+              boxShadow: AppThemeData.shadowCard,
             ),
             child: Column(children: children),
           ),
         ],
       );
+  }
 }
 
 class _ProfileQuickAction extends StatelessWidget {
@@ -761,51 +724,48 @@ class _ProfileQuickAction extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(22),
-          child: Ink(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(22),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x12000000),
-                  blurRadius: 18,
-                  offset: Offset(0, 10),
+  Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(22),
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+          decoration: BoxDecoration(
+            color: theme.primaryBackground,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: theme.border),
+          ),
+          child: Column(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: tint.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: tint.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(14),
+                child: Icon(icon, color: tint),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: theme.labelLarge.override(
+                  font: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w600,
                   ),
-                  child: Icon(icon, color: tint),
+                  color: theme.primaryText,
                 ),
-                const SizedBox(height: 10),
-                Text(
-                  label,
-                  textAlign: TextAlign.center,
-                  style: AppTheme.of(context).labelLarge.override(
-                        font: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w600,
-                        ),
-                        color: const Color(0xFF16202A),
-                      ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
-      );
+      ),
+    );
+  }
 }
 
 class _ProfileMenuTile extends StatelessWidget {
@@ -828,60 +788,63 @@ class _ProfileMenuTile extends StatelessWidget {
   final Color? titleColor;
 
   @override
-  Widget build(BuildContext context) => Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(24),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: iconBackground ?? iconTint.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(icon, color: iconTint, size: 24),
+  Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: iconBackground ?? iconTint.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: AppTheme.of(context).titleSmall.override(
-                              font: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600,
-                              ),
-                              color: titleColor ?? const Color(0xFF16202A),
-                            ),
+                child: Icon(icon, color: iconTint, size: 24),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.titleSmall.override(
+                        font: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        color: titleColor ?? theme.primaryText,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: AppTheme.of(context).bodySmall.override(
-                              font: GoogleFonts.poppins(),
-                              color: const Color(0xFF6F7B86),
-                            ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: theme.bodySmall.override(
+                        font: GoogleFonts.poppins(),
+                        color: theme.textTertiary,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                const Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  color: Color(0xFF8A97A4),
-                  size: 16,
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 12),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: theme.textTertiary,
+                size: 16,
+              ),
+            ],
           ),
         ),
-      );
+      ),
+    );
+  }
 }
 
 class _ProfileToggleTile extends StatelessWidget {
@@ -902,56 +865,59 @@ class _ProfileToggleTile extends StatelessWidget {
   final ValueChanged<bool> onChanged;
 
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: iconTint.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(icon, color: iconTint, size: 24),
+  Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: iconTint.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(16),
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: AppTheme.of(context).titleSmall.override(
-                          font: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w600,
-                          ),
-                          color: const Color(0xFF16202A),
-                        ),
+            child: Icon(icon, color: iconTint, size: 24),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.titleSmall.override(
+                    font: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    color: theme.primaryText,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: AppTheme.of(context).bodySmall.override(
-                          font: GoogleFonts.poppins(),
-                          color: const Color(0xFF6F7B86),
-                        ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: theme.bodySmall.override(
+                    font: GoogleFonts.poppins(),
+                    color: theme.textTertiary,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Switch.adaptive(
-              value: value,
-              onChanged: onChanged,
-              activeThumbColor: AppTheme.of(context).primary,
-              activeTrackColor: AppTheme.of(context).primary,
-              inactiveTrackColor: AppTheme.of(context).alternate,
-              inactiveThumbColor: AppTheme.of(context).secondaryBackground,
-            ),
-          ],
-        ),
-      );
+          ),
+          const SizedBox(width: 12),
+          Switch.adaptive(
+            value: value,
+            onChanged: onChanged,
+            activeThumbColor: theme.primary,
+            activeTrackColor: theme.primary,
+            inactiveTrackColor: theme.alternate,
+            inactiveThumbColor: theme.secondaryBackground,
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _ProfileMetric extends StatelessWidget {

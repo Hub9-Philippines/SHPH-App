@@ -512,7 +512,7 @@ class _SectionRow extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: Color(0xFF8A97A4)),
+            Icon(Icons.chevron_right_rounded, color: theme.textTertiary),
           ],
         ),
       ),

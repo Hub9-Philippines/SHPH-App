@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '/auth/supabase_auth/auth_util.dart';
 import '/backend/supabase/supabase.dart';
-import '/components/back_button/back_button_widget.dart';
+import '/components/screen_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import '/services/logging_service.dart';
@@ -339,48 +339,15 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: const Color(0xFFF4F7FB),
+          backgroundColor: AppTheme.of(context).secondaryBackground,
           body: SafeArea(
             child: Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: Row(
-                    children: [
-                      Material(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(18),
-                        child: wrapWithModel(
-                          model: _model.backButtonModel,
-                          updateCallback: () => safeSetState(() {}),
-                          child: const BackButtonWidget(),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Notifications',
-                              style: AppTheme.of(context).titleLarge.override(
-                                    font: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                    color: const Color(0xFF14213D),
-                                  ),
-                            ),
-                            Text(
-                              'Updates about bookings, messages, and payments.',
-                              style: AppTheme.of(context).bodySmall.override(
-                                    font: GoogleFonts.poppins(),
-                                    color: const Color(0xFF64748B),
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: ScreenHeader(
+                    title: 'Notifications',
+                    subtitle: 'Updates about bookings, messages, and payments.',
                   ),
                 ),
                 Expanded(
@@ -552,15 +519,11 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
             constraints: const BoxConstraints(maxWidth: 420),
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppTheme.of(context).primaryBackground,
               borderRadius: BorderRadius.circular(28),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x12000000),
-                  blurRadius: 18,
-                  offset: Offset(0, 8),
-                ),
-              ],
+              border: Border.all(
+                color: AppTheme.of(context).border,
+              ),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -580,7 +543,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                   textAlign: TextAlign.center,
                   style: AppTheme.of(context).titleMedium.override(
                         font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                        color: const Color(0xFF14213D),
+                        color: AppTheme.of(context).primaryText,
                       ),
                 ),
                 const SizedBox(height: 8),
@@ -589,7 +552,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                   textAlign: TextAlign.center,
                   style: AppTheme.of(context).bodyMedium.override(
                         font: GoogleFonts.poppins(),
-                        color: const Color(0xFF64748B),
+                        color: AppTheme.of(context).secondaryText,
                       ),
                 ),
               ],
@@ -603,7 +566,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppTheme.of(context).primaryBackground,
             borderRadius: BorderRadius.circular(24),
             border: notification.isRead
                 ? null
@@ -611,13 +574,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                     color: AppTheme.of(context).primary.withValues(alpha: 0.28),
                     width: 1.4,
                   ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x12000000),
-                blurRadius: 18,
-                offset: Offset(0, 10),
-              ),
-            ],
+            boxShadow: AppThemeData.shadowCard,
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -649,7 +606,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                                   font: GoogleFonts.poppins(
                                     fontWeight: FontWeight.w700,
                                   ),
-                                  color: const Color(0xFF14213D),
+                                  color: AppTheme.of(context).primaryText,
                                 ),
                           ),
                         ),
@@ -672,7 +629,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                           'Open this update to see more details.',
                       style: AppTheme.of(context).bodyMedium.override(
                             font: GoogleFonts.poppins(),
-                            color: const Color(0xFF64748B),
+                            color: AppTheme.of(context).secondaryText,
                           ),
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
@@ -682,7 +639,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                       _formatTime(notification.createdAt),
                       style: AppTheme.of(context).labelSmall.override(
                             font: GoogleFonts.poppins(),
-                            color: const Color(0xFF94A3B8),
+                            color: AppTheme.of(context).textTertiary,
                           ),
                     ),
                   ],

@@ -301,7 +301,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
           'Setup 2FA',
           style: AppTheme.of(context).titleMedium.override(
                 font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                color: const Color(0xFF14213D),
+                color: AppTheme.of(context).primaryText,
               ),
         ),
         content: SingleChildScrollView(
@@ -313,7 +313,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                 textAlign: TextAlign.center,
                 style: AppTheme.of(context).bodyMedium.override(
                       font: GoogleFonts.poppins(),
-                      color: const Color(0xFF64748B),
+                      color: AppTheme.of(context).secondaryText,
                     ),
               ),
               const SizedBox(height: 16),
@@ -336,14 +336,14 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                   labelText: 'Verification code',
                   hintText: '123456',
                   filled: true,
-                  fillColor: const Color(0xFFF8FAFC),
+                  fillColor: AppTheme.of(context).surfaceAlt,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(18),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    borderSide: BorderSide(color: AppTheme.of(context).border),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(18),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    borderSide: BorderSide(color: AppTheme.of(context).border),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(18),
@@ -417,16 +417,16 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: const Color(0xFFF4F7FB),
+          backgroundColor: AppTheme.of(context).secondaryBackground,
           body: SafeArea(
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               children: [
                 Row(
                   children: [
-                    Material(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(18),
+                      Material(
+                        color: AppTheme.of(context).primaryBackground,
+                        borderRadius: BorderRadius.circular(18),
                       child: wrapWithModel(
                         model: _model.backButtonModel,
                         updateCallback: () => safeSetState(() {}),
@@ -444,14 +444,14 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                                   font: GoogleFonts.poppins(
                                     fontWeight: FontWeight.w700,
                                   ),
-                                  color: const Color(0xFF14213D),
+                                  color: AppTheme.of(context).primaryText,
                                 ),
                           ),
                           Text(
                             'Protect your account, password, and sign-in access.',
                             style: AppTheme.of(context).bodySmall.override(
                                   font: GoogleFonts.poppins(),
-                                  color: const Color(0xFF64748B),
+                                  color: AppTheme.of(context).secondaryText,
                                 ),
                           ),
                         ],
@@ -692,7 +692,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
               title,
               style: AppTheme.of(context).labelLarge.override(
                     font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                    color: const Color(0xFF64748B),
+                    color: AppTheme.of(context).secondaryText,
                   ),
             ),
           ),
@@ -700,15 +700,9 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
             width: double.infinity,
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppTheme.of(context).primaryBackground,
               borderRadius: BorderRadius.circular(26),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x12000000),
-                  blurRadius: 18,
-                  offset: Offset(0, 10),
-                ),
-              ],
+              boxShadow: AppThemeData.shadowCard,
             ),
             child: child,
           ),
@@ -732,14 +726,14 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
           labelText: label,
           hintText: hint,
           filled: true,
-          fillColor: const Color(0xFFF8FAFC),
+          fillColor: AppTheme.of(context).surfaceAlt,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(18),
-            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            borderSide: BorderSide(color: AppTheme.of(context).border),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(18),
-            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            borderSide: BorderSide(color: AppTheme.of(context).border),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(18),
@@ -787,40 +781,40 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: AppTheme.of(context).titleSmall.override(
-                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                        color: const Color(0xFF14213D),
-                      ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: AppTheme.of(context).bodySmall.override(
-                        font: GoogleFonts.poppins(),
-                        color: const Color(0xFF64748B),
-                      ),
-                ),
-              ],
+                  Text(
+                    title,
+                    style: AppTheme.of(context).titleSmall.override(
+                          font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                          color: AppTheme.of(context).primaryText,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: AppTheme.of(context).bodySmall.override(
+                          font: GoogleFonts.poppins(),
+                          color: AppTheme.of(context).secondaryText,
+                        ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          if (trailing != null) trailing,
+            if (trailing != null) trailing,
         ],
       );
 
   Widget _buildEmptySessions() => Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
+          color: AppTheme.of(context).surfaceAlt,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          border: Border.all(color: AppTheme.of(context).border),
         ),
         child: Text(
           'No active sessions were returned for this account yet.',
           style: AppTheme.of(context).bodyMedium.override(
                 font: GoogleFonts.poppins(),
-                color: const Color(0xFF64748B),
+                color: AppTheme.of(context).secondaryText,
               ),
         ),
       );
@@ -832,12 +826,12 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
       Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
+          color: AppTheme.of(context).surfaceAlt,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isCurrent
                 ? AppTheme.of(context).primary.withValues(alpha: 0.20)
-                : const Color(0xFFE2E8F0),
+                : AppTheme.of(context).border,
           ),
         ),
         child: Row(
@@ -849,7 +843,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
               decoration: BoxDecoration(
                 color: isCurrent
                     ? AppTheme.of(context).primary.withValues(alpha: 0.12)
-                    : Colors.white,
+                    : AppTheme.of(context).primaryBackground,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(
@@ -871,7 +865,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                                 font: GoogleFonts.poppins(
                                   fontWeight: FontWeight.w700,
                                 ),
-                                color: const Color(0xFF14213D),
+                                color: AppTheme.of(context).primaryText,
                               ),
                         ),
                       ),
@@ -911,7 +905,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                       'Last active ${_formatDate(session.createdAt!)}',
                       style: AppTheme.of(context).bodySmall.override(
                             font: GoogleFonts.poppins(),
-                            color: const Color(0xFF64748B),
+                            color: AppTheme.of(context).secondaryText,
                           ),
                     ),
                   ],

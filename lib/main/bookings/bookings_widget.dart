@@ -205,11 +205,15 @@ class _BookingsWidgetState extends State<BookingsWidget> {
       );
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-      itemCount: items.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (context, index) => _buildBookingCard(context, items[index]),
+    return RefreshIndicator(
+      onRefresh: () => _model.reloadBookings(),
+      child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        itemCount: items.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        itemBuilder: (context, index) => _buildBookingCard(context, items[index]),
+      ),
     );
   }
 
@@ -218,13 +222,7 @@ class _BookingsWidgetState extends State<BookingsWidget> {
     final status = booking.status.toLowerCase();
     final shouldShowStatusButton = _isToday(booking.scheduledExecutionDate) &&
         !_isTerminalStatus(booking.status);
-    final statusColor = switch (status) {
-      'completed' => const Color(0xFF64748B),
-      'cancelled' => const Color(0xFFEF4444),
-      'in progress' => const Color(0xFF16A34A),
-      'confirmed' => const Color(0xFF2563EB),
-      _ => const Color(0xFFF59E0B),
-    };
+    final (statusColor, statusBgColor) = AppThemeData.statusColors(status);
 
     return Container(
       width: double.infinity,
@@ -271,7 +269,7 @@ class _BookingsWidgetState extends State<BookingsWidget> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: statusColor.withValues(alpha: 0.12),
+                          color: statusBgColor,
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(

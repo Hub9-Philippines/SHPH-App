@@ -53,6 +53,7 @@ export '/pages/signup/signup_widget.dart' show SignupWidget;
 export '/pages/splash/splash_widget.dart' show SplashWidget;
 export 'main/bookings/bookings_widget.dart' show BookingsWidget;
 export 'main/category/category_widget.dart' show CategoryWidget;
+export 'main/explore/explore_widget.dart' show ExploreWidget;
 export 'main/home/home_widget.dart' show HomeWidget;
 export 'main/messages/messages_widget.dart' show MessagesWidget;
 export 'main/payment_methods/add_card_payment_widget.dart'

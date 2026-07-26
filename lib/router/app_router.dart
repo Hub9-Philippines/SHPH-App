@@ -255,6 +255,17 @@ class AppRouter {
             },
           ),
           GoRoute(
+            path: ExploreWidget.routePath,
+            name: ExploreWidget.routeName,
+            builder: (context, state) {
+              final queryParams = state.uri.queryParameters;
+              if (queryParams.isEmpty) {
+                return const NavBarPage(initialPage: 'Explore');
+              }
+              return const ExploreWidget();
+            },
+          ),
+          GoRoute(
             path: EKYCBeginWidget.routePath,
             name: EKYCBeginWidget.routeName,
             builder: (context, state) => const EKYCBeginWidget(),

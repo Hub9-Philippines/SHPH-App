@@ -3,7 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '/auth/supabase_auth/auth_util.dart';
-import '/components/back_button/back_button_widget.dart';
+import '/components/content_container.dart';
+import '/components/screen_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import '/theme/app_theme.dart';
@@ -91,47 +92,14 @@ class _SettingsWidgetState extends State<SettingsWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: const Color(0xFFF4F7FB),
+          backgroundColor: AppTheme.of(context).secondaryBackground,
           body: SafeArea(
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               children: [
-                Row(
-                  children: [
-                    Material(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(18),
-                      child: wrapWithModel(
-                        model: _model.backButtonModel,
-                        updateCallback: () => safeSetState(() {}),
-                        child: const BackButtonWidget(),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Settings',
-                            style: AppTheme.of(context).titleLarge.override(
-                                  font: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                  color: const Color(0xFF14213D),
-                                ),
-                          ),
-                          Text(
-                            'Manage preferences, account, and support options.',
-                            style: AppTheme.of(context).bodySmall.override(
-                                  font: GoogleFonts.poppins(),
-                                  color: const Color(0xFF64748B),
-                                ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                const ScreenHeader(
+                  title: 'Settings',
+                  subtitle: 'Manage preferences, account, and support options.',
                 ),
                 const SizedBox(height: 18),
                 _buildHeroCard(),
@@ -225,7 +193,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
                     ),
-                    backgroundColor: Colors.white,
+                    backgroundColor: AppTheme.of(context).primaryBackground,
                   ),
                   child: Text(
                     'Log Out',
@@ -309,44 +277,41 @@ class _SettingsWidgetState extends State<SettingsWidget> {
   Widget _buildSection({
     required String title,
     required List<Widget> children,
-  }) =>
-      Column(
+  }) {
+    final theme = AppTheme.of(context);
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 10),
             child: Text(
               title,
-              style: AppTheme.of(context).labelLarge.override(
+              style: theme.titleSmall.override(
                     font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                    color: const Color(0xFF64748B),
+                    color: theme.textTertiary,
                   ),
             ),
           ),
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: theme.primaryBackground,
               borderRadius: BorderRadius.circular(26),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x12000000),
-                  blurRadius: 18,
-                  offset: Offset(0, 10),
-                ),
-              ],
+              border: Border.all(color: theme.border),
             ),
             child: Column(children: children),
           ),
         ],
       );
+  }
 
   Widget _buildSettingTile({
     required IconData icon,
     required String title,
     required String subtitle,
     VoidCallback? onTap,
-  }) =>
-      Material(
+  }) {
+    final theme = AppTheme.of(context);
+    return Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
@@ -359,10 +324,10 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                   width: 46,
                   height: 46,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF3F7FA),
+                    color: theme.surfaceAlt,
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Icon(icon, color: AppTheme.of(context).primary),
+                  child: Icon(icon, color: theme.primary),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -371,33 +336,34 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                     children: [
                       Text(
                         title,
-                        style: AppTheme.of(context).titleSmall.override(
+                        style: theme.titleSmall.override(
                               font: GoogleFonts.poppins(
                                 fontWeight: FontWeight.w700,
                               ),
-                              color: const Color(0xFF14213D),
+                              color: theme.primaryText,
                             ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         subtitle,
-                        style: AppTheme.of(context).bodySmall.override(
+                        style: theme.bodySmall.override(
                               font: GoogleFonts.poppins(),
-                              color: const Color(0xFF64748B),
+                              color: theme.secondaryText,
                             ),
                       ),
                     ],
                   ),
                 ),
-                const Icon(
+                Icon(
                   Icons.chevron_right_rounded,
-                  color: Color(0xFF94A3B8),
+                  color: theme.textTertiary,
                 ),
               ],
             ),
           ),
         ),
       );
+  }
 
   Widget _buildToggleTile({
     required IconData icon,
@@ -405,8 +371,9 @@ class _SettingsWidgetState extends State<SettingsWidget> {
     required String subtitle,
     required bool value,
     required ValueChanged<bool> onChanged,
-  }) =>
-      Padding(
+  }) {
+    final theme = AppTheme.of(context);
+    return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         child: Row(
           children: [
@@ -414,10 +381,10 @@ class _SettingsWidgetState extends State<SettingsWidget> {
               width: 46,
               height: 46,
               decoration: BoxDecoration(
-                color: const Color(0xFFF3F7FA),
+                color: theme.surfaceAlt,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(icon, color: AppTheme.of(context).primary),
+              child: Icon(icon, color: theme.primary),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -426,17 +393,17 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                 children: [
                   Text(
                     title,
-                    style: AppTheme.of(context).titleSmall.override(
+                    style: theme.titleSmall.override(
                           font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                          color: const Color(0xFF14213D),
+                          color: theme.primaryText,
                         ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: AppTheme.of(context).bodySmall.override(
+                    style: theme.bodySmall.override(
                           font: GoogleFonts.poppins(),
-                          color: const Color(0xFF64748B),
+                          color: theme.secondaryText,
                         ),
                   ),
                 ],
@@ -445,9 +412,10 @@ class _SettingsWidgetState extends State<SettingsWidget> {
             Switch.adaptive(
               value: value,
               onChanged: onChanged,
-              activeThumbColor: AppTheme.of(context).primary,
+              activeThumbColor: theme.primary,
             ),
           ],
         ),
       );
+  }
 }

@@ -155,24 +155,11 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
     }
   }
 
-  Color _getStatusColor(String? status) {
+  (Color, Color) _getStatusColors(String? status) {
     if (status == null) {
-      return AppTheme.of(context).secondaryText;
+      return (AppTheme.of(context).secondaryText, AppTheme.of(context).primaryBackground);
     }
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return const Color(0xFFF59E0B);
-      case 'confirmed':
-        return const Color(0xFF2563EB);
-      case 'in_progress':
-        return const Color(0xFF16A34A);
-      case 'completed':
-        return const Color(0xFF64748B);
-      case 'cancelled':
-        return const Color(0xFFEF4444);
-      default:
-        return AppTheme.of(context).secondaryText;
-    }
+    return AppThemeData.statusColors(status.toLowerCase());
   }
 
   @override
@@ -183,7 +170,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: const Color(0xFFF4F7FB),
+          backgroundColor: AppTheme.of(context).secondaryBackground,
           body: SafeArea(
             child: _model.isLoading
                 ? Center(
@@ -272,7 +259,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                                             .bodyMedium
                                             .override(
                                               font: GoogleFonts.poppins(),
-                                              color: const Color(0xFF64748B),
+                                              color: AppTheme.of(context).secondaryText,
                                             ),
                                       ),
                                     ],
@@ -328,7 +315,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
   Widget _buildTopBar(BuildContext context) => Row(
         children: [
           Material(
-            color: Colors.white,
+            color: AppTheme.of(context).primaryBackground,
             borderRadius: BorderRadius.circular(18),
             child: wrapWithModel(
               model: _model.backButtonModel,
@@ -345,14 +332,14 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                   'Booking Details',
                   style: AppTheme.of(context).titleLarge.override(
                         font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                        color: const Color(0xFF14213D),
+                        color: AppTheme.of(context).primaryText,
                       ),
                 ),
                 Text(
                   'Review progress, schedule, and payment state.',
                   style: AppTheme.of(context).bodySmall.override(
                         font: GoogleFonts.poppins(),
-                        color: const Color(0xFF64748B),
+                        color: AppTheme.of(context).secondaryText,
                       ),
                 ),
               ],
@@ -378,15 +365,9 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
             constraints: const BoxConstraints(maxWidth: 420),
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppTheme.of(context).primaryBackground,
               borderRadius: BorderRadius.circular(28),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x12000000),
-                  blurRadius: 18,
-                  offset: Offset(0, 8),
-                ),
-              ],
+              boxShadow: AppThemeData.shadowCard,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -430,7 +411,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
       );
 
   Widget _buildStatusHero(BuildContext context) {
-    final statusColor = _getStatusColor(_model.booking!.status);
+    final (statusColor, _) = _getStatusColors(_model.booking!.status);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(22),
@@ -492,15 +473,9 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
   Widget _buildServiceCard(BuildContext context) => Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.of(context).primaryBackground,
           borderRadius: BorderRadius.circular(26),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x10000000),
-              blurRadius: 18,
-              offset: Offset(0, 8),
-            ),
-          ],
+          boxShadow: AppThemeData.shadowCard,
         ),
         child: Row(
           children: [
@@ -526,7 +501,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                     _model.serviceListing?['category_name'] ?? 'Service',
                     style: AppTheme.of(context).bodySmall.override(
                           font: GoogleFonts.poppins(),
-                          color: const Color(0xFF64748B),
+                          color: AppTheme.of(context).secondaryText,
                         ),
                   ),
                   const SizedBox(height: 6),
@@ -554,15 +529,9 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.of(context).primaryBackground,
           borderRadius: BorderRadius.circular(26),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x10000000),
-              blurRadius: 18,
-              offset: Offset(0, 8),
-            ),
-          ],
+          boxShadow: AppThemeData.shadowCard,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -571,7 +540,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
               title,
               style: AppTheme.of(context).titleMedium.override(
                     font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                    color: const Color(0xFF14213D),
+                    color: AppTheme.of(context).primaryText,
                   ),
             ),
             const SizedBox(height: 4),
@@ -579,7 +548,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
               subtitle,
               style: AppTheme.of(context).bodySmall.override(
                     font: GoogleFonts.poppins(),
-                    color: const Color(0xFF64748B),
+                    color: AppTheme.of(context).secondaryText,
                   ),
             ),
             const SizedBox(height: 12),
@@ -600,7 +569,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                 label,
                 style: AppTheme.of(context).bodyMedium.override(
                       font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                      color: const Color(0xFF64748B),
+                      color: AppTheme.of(context).secondaryText,
                     ),
               ),
             ),

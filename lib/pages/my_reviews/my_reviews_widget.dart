@@ -104,7 +104,7 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: const Color(0xFFF4F7FB),
+          backgroundColor: AppTheme.of(context).secondaryBackground,
           body: SafeArea(
             child: Column(
               children: [
@@ -113,7 +113,7 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
                   child: Row(
                     children: [
                       Material(
-                        color: Colors.white,
+                        color: AppTheme.of(context).primaryBackground,
                         borderRadius: BorderRadius.circular(18),
                         child: wrapWithModel(
                           model: _model.backButtonModel,
@@ -132,14 +132,14 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
                                     font: GoogleFonts.poppins(
                                       fontWeight: FontWeight.w700,
                                     ),
-                                    color: const Color(0xFF14213D),
+                                    color: AppTheme.of(context).primaryText,
                                   ),
                             ),
                             Text(
                               'Track every service you rated and revisit your feedback.',
                               style: AppTheme.of(context).bodySmall.override(
                                     font: GoogleFonts.poppins(),
-                                    color: const Color(0xFF64748B),
+                                    color: AppTheme.of(context).secondaryText,
                                   ),
                             ),
                           ],
@@ -326,15 +326,9 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
             constraints: const BoxConstraints(maxWidth: 420),
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppTheme.of(context).primaryBackground,
               borderRadius: BorderRadius.circular(28),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x12000000),
-                  blurRadius: 18,
-                  offset: Offset(0, 8),
-                ),
-              ],
+              boxShadow: AppThemeData.shadowSoft,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -358,7 +352,7 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
                   textAlign: TextAlign.center,
                   style: AppTheme.of(context).titleMedium.override(
                         font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                        color: const Color(0xFF14213D),
+                        color: AppTheme.of(context).primaryText,
                       ),
                 ),
                 const SizedBox(height: 8),
@@ -367,7 +361,7 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
                   textAlign: TextAlign.center,
                   style: AppTheme.of(context).bodyMedium.override(
                         font: GoogleFonts.poppins(),
-                        color: const Color(0xFF64748B),
+                        color: AppTheme.of(context).secondaryText,
                       ),
                 ),
               ],
@@ -399,11 +393,11 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
                 'Pull to refresh or try again now.',
                 style: AppTheme.of(context).bodyMedium.override(
                       font: GoogleFonts.poppins(),
-                      color: const Color(0xFF64748B),
-                    ),
-              ),
-              const SizedBox(height: 16),
-              FilledButton(
+                       color: AppTheme.of(context).secondaryText,
+                     ),
+               ),
+               const SizedBox(height: 16),
+               FilledButton(
                 onPressed: () {
                   _loadReviews();
                   safeSetState(() {});
@@ -425,15 +419,9 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.of(context).primaryBackground,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x12000000),
-            blurRadius: 18,
-            offset: Offset(0, 10),
-          ),
-        ],
+        boxShadow: AppThemeData.shadowCard,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -464,7 +452,7 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
                             font: GoogleFonts.poppins(
                               fontWeight: FontWeight.w700,
                             ),
-                            color: const Color(0xFF14213D),
+                            color: AppTheme.of(context).primaryText,
                           ),
                     ),
                     const SizedBox(height: 4),
@@ -472,7 +460,7 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
                       '$category • $providerName',
                       style: AppTheme.of(context).bodySmall.override(
                             font: GoogleFonts.poppins(),
-                            color: const Color(0xFF64748B),
+                            color: AppTheme.of(context).secondaryText,
                           ),
                     ),
                   ],
@@ -482,7 +470,7 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
                 _formatDate(review.createdAt),
                 style: AppTheme.of(context).labelSmall.override(
                       font: GoogleFonts.poppins(),
-                      color: const Color(0xFF94A3B8),
+                      color: AppTheme.of(context).textTertiary,
                     ),
               ),
             ],
@@ -508,7 +496,7 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
                 '${review.rating}/5',
                 style: AppTheme.of(context).labelLarge.override(
                       font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                      color: const Color(0xFF14213D),
+                      color: AppTheme.of(context).primaryText,
                     ),
               ),
             ],

@@ -68,13 +68,7 @@ class _SuccessTopCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: theme.primaryBackground.withValues(alpha: 0.94),
             borderRadius: BorderRadius.circular(26),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.10),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
+            boxShadow: AppThemeData.shadowCard,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -139,13 +133,7 @@ class _SuccessBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.primaryBackground.withValues(alpha: 0.96),
         shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.16),
-            blurRadius: 22,
-            offset: const Offset(0, 12),
-          ),
-        ],
+        boxShadow: AppThemeData.shadowElevated,
       ),
       child: Icon(
         Icons.check_circle_rounded,

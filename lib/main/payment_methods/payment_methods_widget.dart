@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/backend/supabase/database/tables/payment_methods.dart';
+import '/components/screen_header.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -52,13 +53,16 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: const Color(0xFFF5F7FA),
+          backgroundColor: AppTheme.of(context).secondaryBackground,
           body: SafeArea(
             child: FutureBuilder<List<PaymentMethodsRow>>(
               future: _paymentMethodsFuture,
               builder: (context, snapshot) => Column(
                 children: [
-                  _buildTopBar(context),
+                  const ScreenHeader(
+                    title: 'Payment Methods',
+                    subtitle: 'Manage how you pay for bookings.',
+                  ),
                   Expanded(
                     child: RefreshIndicator(
                       color: AppTheme.of(context).primary,
@@ -100,56 +104,6 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
               ),
             ),
           ),
-        ),
-      );
-
-  Widget _buildTopBar(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-        child: Row(
-          children: [
-            Material(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              child: InkWell(
-                onTap: () {
-                  if (context.canPop()) {
-                    context.pop();
-                  } else {
-                    context.go('/profile');
-                  }
-                },
-                borderRadius: BorderRadius.circular(16),
-                child: const SizedBox(
-                  width: 44,
-                  height: 44,
-                  child: Icon(Icons.arrow_back_rounded),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Payment Methods',
-                    style: AppTheme.of(context).titleLarge.override(
-                          font:
-                              GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                          color: const Color(0xFF16202A),
-                        ),
-                  ),
-                  Text(
-                    'Manage how you pay for bookings.',
-                    style: AppTheme.of(context).bodySmall.override(
-                          font: GoogleFonts.poppins(),
-                          color: const Color(0xFF6F7B86),
-                        ),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ),
       );
 
@@ -230,19 +184,13 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.of(context).primaryBackground,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: method.isDefault ? tint : const Color(0xFFE5E9EE),
+          color: method.isDefault ? tint : AppTheme.of(context).border,
           width: method.isDefault ? 1.5 : 1,
         ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x10000000),
-            blurRadius: 18,
-            offset: Offset(0, 8),
-          ),
-        ],
+        boxShadow: AppThemeData.shadowCard,
       ),
       child: Row(
         children: [
@@ -275,7 +223,7 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
                               font: GoogleFonts.poppins(
                                 fontWeight: FontWeight.w700,
                               ),
-                              color: const Color(0xFF16202A),
+                              color: AppTheme.of(context).primaryText,
                             ),
                       ),
                     ),
@@ -319,19 +267,15 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) => Container(
+  Widget _buildEmptyState(BuildContext context) {
+    final theme = AppTheme.of(context);
+    return Container(
         width: double.infinity,
         padding: const EdgeInsets.all(28),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.primaryBackground,
           borderRadius: BorderRadius.circular(28),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x10000000),
-              blurRadius: 18,
-              offset: Offset(0, 8),
-            ),
-          ],
+          border: Border.all(color: theme.border),
         ),
         child: Column(
           children: [
@@ -353,7 +297,7 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
               'No payment methods yet',
               style: AppTheme.of(context).titleMedium.override(
                     font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                    color: const Color(0xFF16202A),
+                    color: AppTheme.of(context).primaryText,
                   ),
             ),
             const SizedBox(height: 8),
@@ -367,12 +311,13 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
           ],
         ),
       );
+  }
 
   Widget _buildErrorState(BuildContext context, String error) => Container(
         width: double.infinity,
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.of(context).primaryBackground,
           borderRadius: BorderRadius.circular(24),
         ),
         child: Column(
@@ -402,16 +347,10 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
 
   Widget _buildBottomAction(BuildContext context) => Container(
         padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          boxShadow: [
-            BoxShadow(
-              color: Color(0x12000000),
-              blurRadius: 20,
-              offset: Offset(0, -8),
-            ),
-          ],
+        decoration: BoxDecoration(
+          color: AppTheme.of(context).primaryBackground,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          boxShadow: AppThemeData.shadowCard,
         ),
         child: SafeArea(
           top: false,
@@ -441,9 +380,9 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        decoration: BoxDecoration(
+          color: AppTheme.of(context).primaryBackground,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -452,7 +391,7 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: const Color(0xFFD6DBE1),
+                color: AppTheme.of(context).border,
                 borderRadius: BorderRadius.circular(999),
               ),
             ),

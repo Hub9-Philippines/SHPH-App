@@ -1056,7 +1056,7 @@ class _AssignedProviderRouteMapState extends State<_AssignedProviderRouteMap> {
                                       widget.providerLocation,
                                     ]
                                   : _routePoints,
-                              color: const Color(0xFF1976D2),
+                              color: theme.primary,
                               width: 5,
                               jointType: JointType.round,
                               startCap: Cap.roundCap,
@@ -1248,13 +1248,7 @@ class _AssignedRouteBottomSheet extends StatelessWidget {
         decoration: BoxDecoration(
           color: theme.primaryBackground.withValues(alpha: 0.98),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.12),
-              blurRadius: 24,
-              offset: const Offset(0, -8),
-            ),
-          ],
+          boxShadow: AppThemeData.shadowCard,
         ),
         child: ListView(
           controller: scrollController,
@@ -1744,13 +1738,7 @@ class _StatusBadge extends StatelessWidget {
                   ? theme.success.withValues(alpha: 0.30)
                   : Colors.white.withValues(alpha: 0.18),
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
+            boxShadow: AppThemeData.shadowCard,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

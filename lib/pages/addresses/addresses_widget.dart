@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '/auth/supabase_auth/auth_util.dart';
 import '/backend/supabase/supabase.dart';
 import '/components/back_button/back_button_widget.dart';
+import '/components/content_container.dart';
+import '/components/screen_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
@@ -68,8 +70,9 @@ class _AddressesWidgetState extends State<AddressesWidget> {
         future: _addressesFuture,
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
+            final loadingTheme = AppTheme.of(context);
             return Scaffold(
-              backgroundColor: const Color(0xFFF5F7FA),
+              backgroundColor: loadingTheme.secondaryBackground,
               appBar: _buildAppBar(),
               body: const Center(
                 child: CircularProgressIndicator(),
@@ -86,7 +89,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
             },
             child: Scaffold(
               key: scaffoldKey,
-              backgroundColor: const Color(0xFFF5F7FA),
+              backgroundColor: AppTheme.of(context).secondaryBackground,
               appBar: _buildAppBar(),
               body: SafeArea(
                 top: false,
@@ -119,17 +122,11 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                     ),
                     Container(
                       padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
+                      decoration: BoxDecoration(
+                        color: AppTheme.of(context).primaryBackground,
                         borderRadius:
-                            BorderRadius.vertical(top: Radius.circular(28)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Color(0x12000000),
-                            blurRadius: 20,
-                            offset: Offset(0, -8),
-                          ),
-                        ],
+                            const BorderRadius.vertical(top: Radius.circular(28)),
+                        boxShadow: AppThemeData.shadowCard,
                       ),
                       child: SafeArea(
                         top: false,
@@ -179,7 +176,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
       );
 
   PreferredSizeWidget _buildAppBar() => AppBar(
-        backgroundColor: const Color(0xFFF5F7FA),
+        backgroundColor: AppTheme.of(context).secondaryBackground,
         automaticallyImplyLeading: false,
         leading: wrapWithModel(
           model: _model.backButtonModel,
@@ -192,7 +189,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                 font: GoogleFonts.poppins(
                   fontWeight: FontWeight.w700,
                 ),
-                color: const Color(0xFF16202A),
+                color: AppTheme.of(context).primaryText,
               ),
         ),
         centerTitle: true,
@@ -302,19 +299,15 @@ class _AddressesWidgetState extends State<AddressesWidget> {
     );
   }
 
-  Widget _buildEmptyState() => Container(
+  Widget _buildEmptyState() {
+    final theme = AppTheme.of(context);
+    return Container(
         width: double.infinity,
         padding: const EdgeInsets.all(26),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.primaryBackground,
           borderRadius: BorderRadius.circular(28),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x10000000),
-              blurRadius: 18,
-              offset: Offset(0, 8),
-            ),
-          ],
+          border: Border.all(color: theme.border),
         ),
         child: Column(
           children: [
@@ -338,7 +331,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                     font: GoogleFonts.poppins(
                       fontWeight: FontWeight.w700,
                     ),
-                    color: const Color(0xFF16202A),
+                    color: AppTheme.of(context).primaryText,
                   ),
             ),
             const SizedBox(height: 8),
@@ -347,12 +340,13 @@ class _AddressesWidgetState extends State<AddressesWidget> {
               textAlign: TextAlign.center,
               style: AppTheme.of(context).bodySmall.override(
                     font: GoogleFonts.poppins(),
-                    color: const Color(0xFF6F7B86),
+                    color: AppTheme.of(context).secondaryText,
                   ),
             ),
           ],
         ),
       );
+  }
 
   Widget _buildAddressCard(AddressesRow address) {
     final isDefault = address.isDefault == true;
@@ -362,23 +356,17 @@ class _AddressesWidgetState extends State<AddressesWidget> {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.of(context).primaryBackground,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: isSelected
               ? AppTheme.of(context).primary
               : isDefault
-                  ? const Color(0xFFCBD5DF)
+                  ? AppTheme.of(context).border
                   : Colors.transparent,
           width: isSelected ? 1.6 : 1,
         ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x10000000),
-            blurRadius: 18,
-            offset: Offset(0, 8),
-          ),
-        ],
+        boxShadow: AppThemeData.shadowCard,
       ),
       child: Material(
         color: Colors.transparent,
@@ -428,14 +416,14 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                                             font: GoogleFonts.poppins(
                                               fontWeight: FontWeight.w700,
                                             ),
-                                            color: const Color(0xFF16202A),
+                                            color: AppTheme.of(context).primaryText,
                                           ),
                                 ),
                               ),
                               PopupMenuButton<String>(
-                                icon: const Icon(
+                                icon: Icon(
                                   Icons.more_horiz_rounded,
-                                  color: Color(0xFF7C8793),
+                                  color: AppTheme.of(context).textTertiary,
                                 ),
                                 onSelected: (value) async {
                                   switch (value) {
@@ -509,7 +497,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                             runSpacing: 8,
                             children: [
                               if (isDefault)
-                                _buildPill('Default', const Color(0xFF0F8A6C)),
+                                _buildPill('Default', AppTheme.of(context).primaryBrandText),
                               if (isSelected)
                                 _buildPill(
                                     'Selected', AppTheme.of(context).primary),
@@ -525,7 +513,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                   _formatAddress(address),
                   style: AppTheme.of(context).bodyMedium.override(
                         font: GoogleFonts.poppins(),
-                        color: const Color(0xFF5F6B76),
+                        color: AppTheme.of(context).secondaryText,
                         fontSize: 13,
                       ),
                 ),
@@ -538,15 +526,15 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                       vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF6F8FB),
+                      color: AppTheme.of(context).surfaceAlt,
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.map_outlined,
                           size: 18,
-                          color: Color(0xFF6F7B86),
+                          color: AppTheme.of(context).secondaryText,
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -554,7 +542,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                             '${address.latitude!.toStringAsFixed(5)}, ${address.longitude!.toStringAsFixed(5)}',
                             style: AppTheme.of(context).bodySmall.override(
                                   font: GoogleFonts.poppins(),
-                                  color: const Color(0xFF6F7B86),
+                                  color: AppTheme.of(context).secondaryText,
                                 ),
                           ),
                         ),

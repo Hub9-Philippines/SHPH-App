@@ -15,6 +15,7 @@ import 'auth/supabase_auth/supabase_user_provider.dart';
 import 'flutter_flow/flutter_flow_util.dart';
 import 'index.dart';
 import 'l10n/app_localizations.dart';
+import 'main/pro_dashboard/pro_dashboard_widget.dart';
 import 'services/error_handler.dart';
 
 void main() async {
@@ -193,14 +194,46 @@ class NavBarPage extends StatefulWidget {
 
 /// This is the private State class that goes with NavBarPage.
 class _NavBarPageState extends State<NavBarPage> {
-  String _currentPageName = 'Home';
+  String _clientPageName = 'Home';
+  String _providerPageName = 'Jobs';
   late Widget? _currentPage;
 
   @override
   void initState() {
     super.initState();
-    _currentPageName = widget.initialPage ?? _currentPageName;
+    _clientPageName = widget.initialPage ?? _clientPageName;
     _currentPage = widget.page;
+  }
+
+  Map<String, Widget> get _clientTabs => const {
+        'Home': HomeWidget(),
+        'Explore': ExploreWidget(),
+        'Bookings': BookingsWidget(),
+        'Messages': MessagesWidget(),
+        'Profile': ProfileWidget(),
+      };
+
+  Map<String, Widget> get _providerTabs => {
+        'Jobs': const ProJobsWidget(),
+        'Schedule': const ProScheduleWidget(),
+        'Earnings': const ProEarningsWidget(),
+        'Messages': const MessagesWidget(),
+        'Profile': const ProfileWidget(),
+      };
+
+  bool get _isProvider => FFAppState().isProvider;
+
+  Map<String, Widget> get _tabs => _isProvider ? _providerTabs : _clientTabs;
+
+  String get _currentPageName =>
+      _isProvider ? _providerPageName : _clientPageName;
+
+  set _currentPageName(String value) {
+    if (_isProvider) {
+      _providerPageName = value;
+    } else {
+      _clientPageName = value;
+    }
   }
 
   Widget _buildMessagesIcon(BuildContext context) {
@@ -236,74 +269,102 @@ class _NavBarPageState extends State<NavBarPage> {
     );
   }
 
+  List<BottomNavigationBarItem> _buildClientItems(BuildContext context) =>
+      const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home_outlined, size: 24),
+          label: 'Home',
+          tooltip: '',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.explore_outlined, size: 24),
+          label: 'Explore',
+          tooltip: '',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.content_paste_outlined, size: 24),
+          label: 'Bookings',
+          tooltip: '',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.chat_outlined, size: 24),
+          label: 'Messages',
+          tooltip: '',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.person_outline, size: 24),
+          label: 'Profile',
+          tooltip: '',
+        ),
+      ];
+
+  List<BottomNavigationBarItem> _buildProviderItems(BuildContext context) =>
+      const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.work_outlined, size: 24),
+          label: 'Jobs',
+          tooltip: '',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.calendar_today_outlined, size: 24),
+          label: 'Schedule',
+          tooltip: '',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.account_balance_wallet_outlined, size: 24),
+          label: 'Earnings',
+          tooltip: '',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.chat_outlined, size: 24),
+          label: 'Messages',
+          tooltip: '',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.person_outline, size: 24),
+          label: 'Profile',
+          tooltip: '',
+        ),
+      ];
+
   @override
   Widget build(BuildContext context) {
-    final tabs = {
-      'Home': const HomeWidget(),
-      'Category': const CategoryWidget(),
-      'Bookings': const BookingsWidget(),
-      'Messages': const MessagesWidget(),
-      'Profile': const ProfileWidget(),
-    };
+    final isProvider = _isProvider;
+    final tabs = _tabs;
     final currentIndex = tabs.keys.toList().indexOf(_currentPageName);
 
     return Scaffold(
       resizeToAvoidBottomInset: !widget.disableResizeToAvoidBottomInset,
-      body: _currentPage ?? tabs[_currentPageName],
+      body: ListenableBuilder(
+        listenable: FFAppState(),
+        builder: (context, _) {
+          final currentTabs = _tabs;
+          return _currentPage ?? (currentTabs[_currentPageName] ?? currentTabs.values.first);
+        },
+      ),
       bottomNavigationBar: ListenableBuilder(
         listenable: FFAppState(),
-        builder: (context, _) => BottomNavigationBar(
-          currentIndex: currentIndex,
-          onTap: (i) => safeSetState(() {
-            _currentPage = null;
-            _currentPageName = tabs.keys.toList()[i];
-          }),
-          backgroundColor: AppTheme.of(context).primaryBackground,
-          selectedItemColor: AppTheme.of(context).primary,
-          unselectedItemColor: AppTheme.of(context).secondaryText,
-          showSelectedLabels: true,
-          showUnselectedLabels: true,
-          type: BottomNavigationBarType.fixed,
-          items: <BottomNavigationBarItem>[
-            const BottomNavigationBarItem(
-              icon: Icon(
-                Icons.home_outlined,
-                size: 24,
-              ),
-              label: 'Home',
-              tooltip: '',
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(
-                Icons.grid_view_outlined,
-                size: 24,
-              ),
-              label: 'Category',
-              tooltip: '',
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(
-                Icons.content_paste_rounded,
-                size: 24,
-              ),
-              label: 'Bookings',
-              tooltip: '',
-            ),
-            BottomNavigationBarItem(
-              icon: _buildMessagesIcon(context),
-              label: 'Messages',
-              tooltip: '',
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(
-                Icons.person,
-                size: 24,
-              ),
-              label: 'Profile',
-              tooltip: '',
-            )
-          ],
-        ),
+        builder: (context, _) {
+          final currentTabs = _tabs;
+          final idx = currentTabs.keys.toList().indexOf(_currentPageName);
+          final items = isProvider
+              ? _buildProviderItems(context)
+              : _buildClientItems(context);
+          return BottomNavigationBar(
+            currentIndex: idx.clamp(0, items.length - 1),
+            onTap: (i) => safeSetState(() {
+              _currentPage = null;
+              _currentPageName = currentTabs.keys.toList()[i];
+            }),
+            backgroundColor: AppTheme.of(context).primaryBackground,
+            selectedItemColor: AppTheme.of(context).primary,
+            unselectedItemColor: AppTheme.of(context).secondaryText,
+            showSelectedLabels: true,
+            showUnselectedLabels: true,
+            type: BottomNavigationBarType.fixed,
+            items: items,
+          );
+        },
       ),
     );
   }
