@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/components/back_button/back_button_widget.dart';
+import '/components/screen_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
@@ -47,36 +47,22 @@ class _ProUnverifiedLandingWidgetState
         child: Scaffold(
           key: scaffoldKey,
           backgroundColor: AppTheme.of(context).primaryBackground,
-          appBar: AppBar(
-            backgroundColor: AppTheme.of(context).primaryBackground,
-            automaticallyImplyLeading: false,
-            leading: wrapWithModel(
-              model: _model.backButtonModel,
-              updateCallback: () => safeSetState(() {}),
-              child: const BackButtonWidget(),
-            ),
-            title: Text(
-              'Verification Required',
-              style: AppTheme.of(context).titleLarge.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-                  ),
-            ),
-            elevation: 0,
-          ),
           body: SafeArea(
-            top: true,
-            child: Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(24, 0, 24, 0),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
               child: Column(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Warning Icon
+                  ScreenHeader(
+                    title: 'Verification Required',
+                    padding: const EdgeInsets.only(bottom: 24),
+                  ),
+                  const SizedBox(height: 32),
                   Container(
                     width: 120,
                     height: 120,
-                    decoration: const BoxDecoration(
-                      color: Color(0x2EFF5252),
+                    decoration: BoxDecoration(
+                      color: AppTheme.of(context).error.withValues(alpha: 0.18),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -86,17 +72,14 @@ class _ProUnverifiedLandingWidgetState
                     ),
                   ),
                   const SizedBox(height: 32),
-                  // Warning Title
                   Text(
                     'Account Not Verified',
                     textAlign: TextAlign.center,
                     style: AppTheme.of(context).headlineMedium.override(
-                          font:
-                              GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                          font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
                         ),
                   ),
                   const SizedBox(height: 16),
-                  // Warning Message
                   Text(
                     'Your account is not yet verified. To access your provider dashboard, you must complete the identity verification process.',
                     textAlign: TextAlign.center,
@@ -105,7 +88,6 @@ class _ProUnverifiedLandingWidgetState
                         ),
                   ),
                   const SizedBox(height: 48),
-                  // Info Cards
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
@@ -175,7 +157,6 @@ class _ProUnverifiedLandingWidgetState
                     ),
                   ),
                   const SizedBox(height: 48),
-                  // Start Verification Button
                   FFButtonWidget(
                     onPressed: () {
                       context.pushNamed(DocumentScanWidget.routeName);

@@ -1,25 +1,20 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '/components/back_button/back_button_model.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/profiles_service.dart';
 import 'document_scan_widget.dart' show DocumentScanWidget;
 
 class DocumentScanModel extends FlutterFlowModel<DocumentScanWidget> {
   ///  State fields for stateful widgets in this page.
-
   final scaffoldKey = GlobalKey<ScaffoldState>();
-  late BackButtonModel backButtonModel;
 
   File? selectedImage;
   String? documentUrl;
   bool isUploading = false;
 
   @override
-  void initState(BuildContext context) {
-    backButtonModel = createModel(context, BackButtonModel.new);
-  }
+  void initState(BuildContext context) {}
 
   // Upload document to Supabase storage
   Future<void> uploadDocument(XFile image,
@@ -57,7 +52,5 @@ class DocumentScanModel extends FlutterFlowModel<DocumentScanWidget> {
   }
 
   @override
-  void dispose() {
-    backButtonModel.dispose();
-  }
+  void dispose() {}
 }

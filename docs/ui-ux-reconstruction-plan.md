@@ -197,15 +197,17 @@ Standardize on a 4px base unit scale: 4, 8, 12, 16, 20, 24, 32, 40, 48, 56, 64.
 | 6.8 Removed old layout | `home_widget.dart` | ✅ Removed `_buildTopOverlay`, `_buildBottomCard`, `_buildCategoryChip`, `_LiveProgressShortcut` — replaced with scrollable `SingleChildScrollView` layout |
 | Total: **1 file** (`home_widget.dart`) | | |
 
-#### Phase 7 — Provider Verification & KYC
+#### ✅ Phase 7 — Provider Verification & KYC (Complete)
 
-| Task | Files | Description |
-|------|-------|-------------|
-| 7.1 E-KYC begin | `pages/e_k_y_c_begin/` | KYC intro page |
-| 7.2 ID verification | `pages/i_d_verify/` | ID upload + verification |
-| 7.3 Document scan | `pages/pro_verification/document_scan_widget.dart` | Document scanning UI |
-| 7.4 Face verification | `pages/pro_verification/face_verification_screen.dart` | Liveness detection |
-| 7.5 Verification status | `pages/pro_verification/` (unverified + reviewing) | Status pages |
+| Task | Files Affected | Status |
+|------|---------------|--------|
+| 7.1 Model cleanup (4 files) | `e_k_y_c_begin_model.dart`, `i_d_verify_model.dart`, `document_scan_model.dart`, `pro_unverified_landing_model.dart` | ✅ Removed `BackButtonModel` imports + `backButtonModel` fields |
+| 7.2 Pro unverified landing | `pro_unverified_landing_widget.dart` | ✅ ScreenHeader, AppTheme tokens, Column layout |
+| 7.3 E-KYC begin | `e_k_y_c_begin_widget.dart` | ✅ ScreenHeader, AppTheme tokens, content card theming |
+| 7.4 ID verify | `i_d_verify_widget.dart` | ✅ ScreenHeader, AppTheme tokens, themed instruction cards + camera button |
+| 7.5 Document scan | `document_scan_widget.dart` | ✅ ScreenHeader, AppTheme tokens, themed snackbars/dialogs with error/success colors |
+| 7.6 Face verification | `face_verification_screen.dart` | ✅ 26+ hardcoded `Color(0x…)`, `Colors.grey`, `Colors.green`, `Colors.red`, `Colors.black87`, `Colors.white70` → AppTheme tokens; `AppBar` → `ScreenHeader`; `TextStyle` → `GoogleFonts.poppins`; liveness overlay preserved |
+| 7.7 Verification reviewing | `verification_reviewing_widget.dart` | ✅ ScreenHeader, AppTheme tokens, `Colors.white` → `secondaryBackground` |
 | Total: **11 files** | | |
 
 #### Phase 8 — Provider Dashboard Sub-pages & TM Flow
@@ -396,7 +398,7 @@ Rather than a full rewrite, progressively replace and align:
 - [ ] All pages use `ScreenHeader` consistently (remaining: auth, booking funnel parts, old booking pages)
 - [ ] `StarRating`, `StatusPill`, `UserAvatar` extracted as reusable components
 - [ ] ServiceCard, BookingCard extracted as shared components
-- [ ] Home page matches web layout: hero + categories + recommendations
+- [x] Home page matches web layout: hero + categories + recommendations
 - [ ] Booking funnel uses `BookingStepIndicator`
 - [ ] Chat matches web design fully: bubbles, status, avatars
 - [ ] Payment integration works end-to-end (Stripe + Maya)

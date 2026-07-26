@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/components/screen_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import '/services/profiles_service.dart';
@@ -84,32 +85,27 @@ class _VerificationReviewingWidgetState
         child: Scaffold(
           key: scaffoldKey,
           backgroundColor: AppTheme.of(context).primaryBackground,
-          appBar: AppBar(
-            backgroundColor: AppTheme.of(context).primaryBackground,
-            automaticallyImplyLeading: false,
-            title: Text(
-              'Verification In Progress',
-              style: AppTheme.of(context).titleLarge.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-                  ),
-            ),
-            elevation: 0,
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.edit),
-                onPressed: () {
-                  context.pushNamed(EditProfileWidget.routeName);
-                },
-                tooltip: 'Edit Profile',
-              ),
-            ],
-          ),
           body: SafeArea(
             top: true,
-            child: Center(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 20),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  ScreenHeader(
+                    title: 'Verification In Progress',
+                    action: IconButton(
+                      icon: const Icon(Icons.edit),
+                      onPressed: () {
+                        context.pushNamed(EditProfileWidget.routeName);
+                      },
+                      tooltip: 'Edit Profile',
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 20),
                   child: Column(
                     mainAxisSize: MainAxisSize.max,
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -269,7 +265,7 @@ class _VerificationReviewingWidgetState
                               child: Text(
                                 'Back to Home',
                                 style: AppTheme.of(context).titleSmall.override(
-                                      color: Colors.white,
+                                      color: AppTheme.of(context).secondaryBackground,
                                       fontWeight: FontWeight.w600,
                                     ),
                               ),
@@ -295,11 +291,12 @@ class _VerificationReviewingWidgetState
                     ],
                   ),
                 ),
-              ),
+              ],
             ),
           ),
         ),
-      );
+      ),
+    );
 
   Widget _buildInfoCard(
     BuildContext context,
