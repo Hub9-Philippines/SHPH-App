@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '/components/screen_header.dart';
 import '/components/soft_card.dart';
+import '/flutter_flow/flutter_flow_util.dart';
 import '/theme/app_theme.dart';
 import 'wallet_model.dart';
 
@@ -25,7 +26,12 @@ class _WalletWidgetState extends State<WalletWidget> {
   void initState() {
     super.initState();
     _model = WalletModel();
-    _model.loadTransactions();
+    _loadWalletData();
+  }
+
+  Future<void> _loadWalletData() async {
+    await _model.loadTransactions();
+    safeSetState(() {});
   }
 
   @override
@@ -44,7 +50,12 @@ class _WalletWidgetState extends State<WalletWidget> {
         child: Column(
           children: [
             const ScreenHeader(title: 'Wallet'),
-            Expanded(
+            if (_model.isLoading)
+              const Expanded(
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else
+              Expanded(
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                 children: [

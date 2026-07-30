@@ -65,6 +65,28 @@ class ShphServiceListing {
     );
   }
 
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'category': category,
+        'category_name': categoryName,
+        'provider': provider,
+        'provider_name': providerName,
+        'provider_photo': providerPhoto,
+        'description': description,
+        'base_price': basePrice,
+        'price_unit': priceUnit,
+        'status': status,
+        'is_available': isAvailable,
+        'rating': rating,
+        'thumbnail': thumbnail,
+        'review_count': reviewCount,
+        'created_at': createdAt,
+        'city': city,
+        'province': province,
+        'is_time_material': isTimeMaterial,
+      };
+
   static double? _toDouble(Object? value) {
     if (value == null) return null;
     if (value is num) return value.toDouble();

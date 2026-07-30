@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
+import '/services/ai_service.dart';
+
 class AIBookingComposerService {
   AIBookingComposerService._();
   static final instance = AIBookingComposerService._();
@@ -11,41 +13,35 @@ class AIBookingComposerService {
     String? imageBase64,
   }) async {
     try {
-      final messages = [
-        {
-          'role': 'system',
-          'content':
-              'You are a booking assistant for a home services platform. '
-              'Extract structured data from the user\'s request. '
-              'Return ONLY valid JSON with fields: service_name, description, '
-              'estimated_budget, preferred_date, preferred_time, location_notes. '
-              'Use null for missing fields.',
-        },
-        {
-          'role': 'user',
-          'content': prompt,
-        },
-      ];
+      final systemPrompt = _buildSystemPrompt();
 
+      var userMessage = prompt;
       if (imageBase64 != null) {
-        messages.add({
-          'role': 'user',
-          'content': 'Analyze this image and extract booking details. Image data: base64 encoded.',
-        });
+        userMessage +=
+            '\n\n[Image included: analyze this image and extract booking details. '
+            'Image data is base64 encoded.]';
       }
 
-      // Use AI service endpoint
-      final response = await _callOpenRouter(messages);
+      final response = await AIService.instance.chat(
+        userMessage,
+        systemPrompt: systemPrompt,
+      );
 
-      final text = response['choices']?[0]?['message']?['content'] as String?;
-      if (text == null) return _emptyResult();
-
-      final cleaned = text
+      final cleaned = response
           .replaceAll(RegExp(r'^```json\s*'), '')
           .replaceAll(RegExp(r'\s*```$'), '')
           .trim();
 
-      final parsed = jsonDecode(cleaned) as Map<String, dynamic>;
+      final jsonStart = cleaned.indexOf('{');
+      final jsonEnd = cleaned.lastIndexOf('}');
+      if (jsonStart == -1 || jsonEnd == -1) {
+        return _emptyResult();
+      }
+
+      final parsed =
+          jsonDecode(cleaned.substring(jsonStart, jsonEnd + 1))
+              as Map<String, dynamic>;
+
       return {
         'service_name': parsed['service_name'] as String?,
         'description': parsed['description'] as String?,
@@ -69,25 +65,19 @@ class AIBookingComposerService {
         'location_notes': null,
       };
 
-  Future<Map<String, dynamic>> _callOpenRouter(
-      List<Map<String, dynamic>> messages) async {
-    // Placeholder — will integrate with actual OpenRouter API
-    await Future.delayed(const Duration(milliseconds: 500));
-    return {
-      'choices': [
-        {
-          'message': {
-            'content': jsonEncode({
-              'service_name': 'Plumbing Repair',
-              'description': 'Leaking pipe under kitchen sink needs repair',
-              'estimated_budget': '1500-3000',
-              'preferred_date': '2026-07-28',
-              'preferred_time': '10:00',
-              'location_notes': null,
-            }),
-          },
-        },
-      ],
-    };
+  String _buildSystemPrompt() {
+    return '''
+You are a booking assistant for a home services platform in the Philippines called SerbisyoHub PH.
+Extract structured data from the user's request. 
+Return ONLY valid JSON with these fields:
+- service_name: the type of service needed (e.g., "Plumbing Repair", "Aircon Cleaning")
+- description: brief description of what needs to be done
+- estimated_budget: budget range if provided (e.g., "1500-3000")
+- preferred_date: preferred date (YYYY-MM-DD format)
+- preferred_time: preferred time (HH:MM format)
+- location_notes: any location details
+
+Use null for missing fields. No other text outside the JSON.
+''';
   }
 }

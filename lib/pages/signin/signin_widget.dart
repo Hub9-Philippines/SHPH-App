@@ -146,7 +146,7 @@ class _SigninWidgetState extends State<SigninWidget>
         Text(
           'Sign in to continue with your home services.',
           style: theme.bodyMedium.copyWith(
-            color: const Color(0xFF889096),
+            color: AppTheme.of(context).secondaryText,
             fontSize: 15,
           ),
         ),

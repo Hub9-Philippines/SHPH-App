@@ -119,7 +119,7 @@ class _SignupWidgetState extends State<SignupWidget> {
         Text(
           'Join SerbisyoHub PH and access home services at your fingertips.',
           style: theme.bodyMedium.copyWith(
-            color: const Color(0xFF889096),
+            color: AppTheme.of(context).secondaryText,
             fontSize: 15,
           ),
         ),

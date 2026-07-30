@@ -13,6 +13,10 @@ class ShphKycApi {
     return response.data ?? {};
   }
 
+  Future<void> skipKyc() async {
+    await _client.post('/api/auth/me/skip-kyc/');
+  }
+
   Future<Map<String, dynamic>> submitKyc({
     required List<int> documentBytes,
     required String fileName,

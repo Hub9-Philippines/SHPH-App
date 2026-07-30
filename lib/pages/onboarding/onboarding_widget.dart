@@ -102,7 +102,9 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                             20, 0, 20, 0),
                         iconPadding:
                             EdgeInsetsDirectional.zero,
-                        color: const Color(0x1E368EFF),
+                        color: AppTheme.of(context)
+                            .primary
+                            .withValues(alpha: 0.12),
                         textStyle:
                             AppTheme.of(context).titleSmall.override(
                                   font: GoogleFonts.poppins(
@@ -124,7 +126,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                                 ),
                         elevation: 0,
                         borderRadius: BorderRadius.circular(24),
-                        hoverColor: const Color(0xFF7C7C7C),
+                        hoverColor: AppTheme.of(context).alternate,
                       ),
                     ),
                   ],
@@ -397,7 +399,9 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                               radius: 3,
                               dotWidth: 15,
                               dotHeight: 5,
-                              dotColor: const Color(0x13368EFF),
+                              dotColor: AppTheme.of(context)
+                                  .primary
+                                  .withValues(alpha: 0.08),
                               activeDotColor:
                                   AppTheme.of(context).primary,
                               paintStyle: PaintingStyle.fill,
@@ -442,14 +446,14 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                           fontStyle:
                               AppTheme.of(context).titleSmall.fontStyle,
                         ),
-                        color: Colors.white,
+                        color: AppTheme.of(context).primaryText,
                         letterSpacing: 0,
                         fontWeight:
                             AppTheme.of(context).titleSmall.fontWeight,
                         fontStyle:
                             AppTheme.of(context).titleSmall.fontStyle,
                       ),
-                  elevation: 0,
+                  elevation: 2,
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),

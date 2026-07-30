@@ -683,6 +683,200 @@ class AppRouter {
               );
             },
           ),
+          GoRoute(
+            path: ProviderProfileWidget.routePath,
+            name: ProviderProfileWidget.routeName,
+            builder: (context, state) => ProviderProfileWidget(
+              providerId: state.pathParameters['providerId'],
+            ),
+          ),
+          GoRoute(
+            path: CategoryDetailWidget.routePath,
+            name: CategoryDetailWidget.routeName,
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return CategoryDetailWidget(
+                categoryId: int.tryParse(
+                      state.pathParameters['categoryId'] ?? '') ??
+                  0,
+                categoryName: extra?['categoryName'] as String? ??
+                    state.uri.queryParameters['categoryName'] ??
+                    '',
+              );
+            },
+          ),
+          GoRoute(
+            path: RecommendationsWidget.routePath,
+            name: RecommendationsWidget.routeName,
+            builder: (context, state) => const RecommendationsWidget(),
+          ),
+          GoRoute(
+            path: ProviderBidsWidget.routePath,
+            name: ProviderBidsWidget.routeName,
+            builder: (context, state) => const ProviderBidsWidget(),
+          ),
+          GoRoute(
+            path: ClientOnDemandJobsWidget.routePath,
+            name: ClientOnDemandJobsWidget.routeName,
+            builder: (context, state) => const ClientOnDemandJobsWidget(),
+          ),
+          GoRoute(
+            path: DisputesWidget.routePath,
+            name: DisputesWidget.routeName,
+            builder: (context, state) => const DisputesWidget(),
+          ),
+          GoRoute(
+            path: NotificationPreferencesWidget.routePath,
+            name: NotificationPreferencesWidget.routeName,
+            builder: (context, state) =>
+                const NotificationPreferencesWidget(),
+          ),
+          GoRoute(
+            path: ThemeSettingsWidget.routePath,
+            name: ThemeSettingsWidget.routeName,
+            builder: (context, state) => const ThemeSettingsWidget(),
+          ),
+          GoRoute(
+            path: SessionsWidget.routePath,
+            name: SessionsWidget.routeName,
+            builder: (context, state) => const SessionsWidget(),
+          ),
+          GoRoute(
+            path: SubcategoryWidget.routePath,
+            name: SubcategoryWidget.routeName,
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return SubcategoryWidget(
+                categoryId: int.tryParse(
+                      state.pathParameters['categoryId'] ?? '') ??
+                  0,
+                categoryName: extra?['categoryName'] as String? ??
+                    state.uri.queryParameters['categoryName'] ??
+                    '',
+              );
+            },
+          ),
+          GoRoute(
+            path: KycHubWidget.routePath,
+            name: KycHubWidget.routeName,
+            builder: (context, state) => const KycHubWidget(),
+          ),
+          GoRoute(
+            path: ReportProblemWidget.routePath,
+            name: ReportProblemWidget.routeName,
+            builder: (context, state) => const ReportProblemWidget(),
+          ),
+          GoRoute(
+            path: RoomListWidget.routePath,
+            name: RoomListWidget.routeName,
+            builder: (context, state) => const RoomListWidget(),
+          ),
+          GoRoute(
+            path: RoomCreateWidget.routePath,
+            name: RoomCreateWidget.routeName,
+            builder: (context, state) => const RoomCreateWidget(),
+          ),
+          GoRoute(
+            path: RoomJoinWidget.routePath,
+            name: RoomJoinWidget.routeName,
+            builder: (context, state) => const RoomJoinWidget(),
+          ),
+          GoRoute(
+            path: RoomDetailWidget.routePath,
+            name: RoomDetailWidget.routeName,
+            builder: (context, state) => RoomDetailWidget(
+              roomId: state.pathParameters['roomId'] ?? '',
+            ),
+          ),
+          GoRoute(
+            path: ProjectListWidget.routePath,
+            name: ProjectListWidget.routeName,
+            builder: (context, state) => const ProjectListWidget(),
+          ),
+          GoRoute(
+            path: ProjectCreateWidget.routePath,
+            name: ProjectCreateWidget.routeName,
+            builder: (context, state) => const ProjectCreateWidget(),
+          ),
+          GoRoute(
+            path: ProjectDetailWidget.routePath,
+            name: ProjectDetailWidget.routeName,
+            builder: (context, state) => ProjectDetailWidget(
+              projectId: state.pathParameters['projectId'] ?? '',
+            ),
+          ),
+          GoRoute(
+            path: MyServicesWidget.routePath,
+            name: MyServicesWidget.routeName,
+            builder: (context, state) => const MyServicesWidget(),
+          ),
+          GoRoute(
+            path: EarningsWidget.routePath,
+            name: EarningsWidget.routeName,
+            builder: (context, state) => const EarningsWidget(),
+          ),
+          GoRoute(
+            path: ProviderAnalyticsWidget.routePath,
+            name: ProviderAnalyticsWidget.routeName,
+            builder: (context, state) => const ProviderAnalyticsWidget(),
+          ),
+          GoRoute(
+            path: ProviderBookingFlowWidget.routePath,
+            name: ProviderBookingFlowWidget.routeName,
+            builder: (context, state) => ProviderBookingFlowWidget(
+              bookingId:
+                  state.pathParameters['bookingId'] ?? '',
+            ),
+          ),
+          GoRoute(
+            path: WriteReviewWidget.routePath,
+            name: WriteReviewWidget.routeName,
+            builder: (context, state) => WriteReviewWidget(
+              bookingId:
+                  state.pathParameters['bookingId'] ?? '',
+              serviceName: state.extra != null
+                  ? (state.extra as Map)['serviceName'] as String?
+                  : state.uri.queryParameters['serviceName'],
+            ),
+          ),
+          GoRoute(
+            path: OtpPageWidget.routePath,
+            name: OtpPageWidget.routeName,
+            builder: (context, state) => OtpPageWidget(
+              initialPhone: state.uri.queryParameters['phone'],
+            ),
+          ),
+          GoRoute(
+            path: NotFoundWidget.routePath,
+            name: NotFoundWidget.routeName,
+            builder: (context, state) => const NotFoundWidget(),
+          ),
+          GoRoute(
+            path: EtaTrackingWidget.routePath,
+            name: EtaTrackingWidget.routeName,
+            builder: (context, state) => EtaTrackingWidget(
+              token: state.pathParameters['token'] ?? '',
+            ),
+          ),
+          GoRoute(
+            path: BiometricSetupWidget.routePath,
+            name: BiometricSetupWidget.routeName,
+            builder: (context, state) => const BiometricSetupWidget(),
+          ),
+          GoRoute(
+            path: CallPermissionWidget.routePath,
+            name: CallPermissionWidget.routeName,
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return CallPermissionWidget(
+                mediaType: extra?['mediaType'] as String? ??
+                    state.uri.queryParameters['mediaType'] ??
+                    'audio',
+                participantName: extra?['participantName'] as String? ??
+                    state.uri.queryParameters['participantName'],
+              );
+            },
+          ),
         ],
       );
 }

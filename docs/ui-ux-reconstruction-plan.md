@@ -36,21 +36,37 @@ The Flutter app uses `AppThemeData` in `lib/theme/app_theme.dart`.
 
 | Token | Web Value | Flutter Equivalent | Status |
 |-------|-----------|-------------------|--------|
-| `--shph-primary` | `#0F8A6C` | `AppTheme.of(context).primary` | ✅ Exists |
-| `--shph-primary-dark` | `#0B6B54` | — | ❌ Missing |
-| `--shph-primary-light` | `#17B890` | — | ❌ Missing |
-| `--shph-secondary` | `#F59E0B` | (provider mode amber) | ❌ Missing |
-| `--shph-background` | `#F4F7FB` | `Color(0xFFF4F7FB)` | ✅ Partial |
-| `--shph-surface` | `#FFFFFF` | `Colors.white` | ✅ |
-| `--shph-text-primary` | `#14213D` | `Color(0xFF14213D)` | ✅ Partial |
-| `--shph-text-secondary` | `#64748B` | `Color(0xFF64748B)` | ✅ Partial |
-| `--shph-error` | `#EF4444` | `AppTheme.of(context).error` | ✅ |
-| `--shph-success` | `#10B981` | — | ❌ Missing |
-| `--shph-warning` | `#F59E0B` | — | ❌ Missing |
-| `--shph-radius-sm` | `8px` | `8.0` | ✅ |
-| `--shph-radius-md` | `16px` | `16.0` | ✅ |
-| `--shph-radius-card` | `24px` | `24.0` | ✅ |
-| `--shph-shadow-card` | `0 10px 18px rgba(0,0,0,0.07)` | `BoxShadow` | ❌ Not standardized |
+| `--shph-primary` | `#63CBD6` (teal) | `AppTheme.of(context).primary` = `#368EFF` (blue) | ❌ Brand mismatch |
+| `--shph-primary-dark` | `#49B8C4` | `AppTheme.of(context).primaryDark` = `#49B8C4` | ✅ Matches |
+| `--shph-primary-light` | `#D4F0EF` | `AppTheme.of(context).primaryLight` = `#D4F0EF` | ✅ Matches |
+| `--shph-primary-text` | `#0D6D78` | `AppTheme.of(context).primaryBrandText` = `#0D6D78` | ✅ Matches |
+| `--shph-primary-deep` | `#0D6D78` | `primaryBrandText` = `#0D6D78` | ✅ Matches |
+| `--shph-on-primary` | `#0F172A` | — | ❌ Missing |
+| `--shph-secondary` | `#39D2C0` | `AppTheme.of(context).secondary` = `#39D2C0` | ✅ Matches |
+| `--shph-tertiary` | `#EE8B60` | `AppTheme.of(context).tertiary` = `#EE8B60` | ✅ Matches |
+| `--shph-bg-primary` | `#FFFFFF` | `Colors.white` / `secondaryBackground` | ✅ |
+| `--shph-bg-secondary` | `#F1F5F9` | `AppTheme.of(context).surfaceAlt` = `#F1F5F9` | ✅ Matches |
+| `--shph-bg-page` | `#F8FAFC` | — | ❌ Missing (uses `primaryBackground` = white) |
+| `--shph-text-primary` | `#0F172A` | `AppTheme.of(context).primaryText` = `#14181B` | ❌ Slight diff |
+| `--shph-text-secondary` | `#64748B` | `AppTheme.of(context).secondaryText` = `#57636C` | ❌ Slight diff |
+| `--shph-text-hint` | `#94A3B8` | `AppTheme.of(context).textTertiary` = `#94A3B8` | ✅ Matches |
+| `--shph-text-heading` | `#0F172A` | `primaryText` = `#14181B` | ❌ Slight diff |
+| `--shph-error` | `#DC2626` | `AppTheme.of(context).error` = `#FF5963` | ❌ Value diff |
+| `--shph-success` | `#249689` | `AppTheme.of(context).success` = `#249689` | ✅ Matches |
+| `--shph-warning` | `#F9CF58` | `AppTheme.of(context).warning` = `#F9CF58` | ✅ Matches |
+| `--shph-info` | `#63CBD6` | `AppTheme.of(context).info` = `#FFFFFF` | ❌ Mismatch |
+| `--shph-radius-sm` | `10px` | `AppThemeData.radiusSm` = `8.0` | ❌ Slight diff |
+| `--shph-radius-md` | `14px` | `AppThemeData.radiusMd` = `16.0` | ❌ Slight diff |
+| `--shph-radius-lg` | `16px` | — | ❌ Missing |
+| `--shph-radius-card` | `24px` | `AppThemeData.radiusCard` = `24.0` | ✅ Matches |
+| `--shph-radius-hero` | `24px` | — | ❌ Missing (same as radiusCard) |
+| `--shph-shadow-sm` | `0 1px 6px rgba(16,38,74,0.06)` | `shadowSoft` ≈ `0 1px 6px rgba(16,38,74,0.06)` | ✅ Close match |
+| `--shph-shadow-md` | `0 3px 16px rgba(17,38,74,0.07)` | — | ❌ Missing |
+| `--shph-shadow-lg` | `0 10px 26px -8px rgba(17,38,74,0.18)` | — | ❌ Missing |
+| `--shph-shadow-card` | `0 8px 24px rgba(16,24,40,0.08)` | `shadowCard` ≈ `0 8px 24px rgba(16,24,40,0.08)` | ✅ Close match |
+| `--shph-border` | `#E2E8F0` | `AppTheme.of(context).border` = `#E2E8F0` | ✅ Matches |
+| `--shph-star` | `#FFC107` | — | ❌ Missing |
+| `--shph-gradient-hero` | `linear-gradient(125deg, #0D6D78, #63CBD6)` | Used in profile page | ✅ Implemented |
 
 ### 2.2 Typography
 
@@ -168,20 +184,18 @@ Standardize on a 4px base unit scale: 4, 8, 12, 16, 20, 24, 32, 40, 48, 56, 64.
 | 4.9 express_shimmer | `widgets/express_shimmer.dart` | ✅ Added app_theme import, Container bg → `primaryBackground` |
 | 4.10 Old booking pages | 4 files (booking, booking_payment, booking_success, booking_details) | ✅ Scaffold bg → `secondaryBackground`, container bg → `primaryBackground`, text → `primaryText`/`secondaryText`/`textTertiary`, borders → `border`, surfaces → `surfaceAlt`, shadows → `shadowCard` |
 
-### 📋 Proposed Future Phases
+### ✅ Phase 5 — Authentication & Onboarding (Complete)
 
-#### Phase 5 — Authentication & Onboarding
-
-| Task | Files | Description |
-|------|-------|-------------|
-| 5.1 Splash screen | `pages/splash/splash_widget.dart` | Theme tokens, dark mode |
-| 5.2 Onboarding | `pages/onboarding/onboarding_widget.dart` | Theme tokens, ScreenHeader |
-| 5.3 Sign options | `pages/sign_options/sign_options_widget.dart` | Entry point theming |
-| 5.4 Sign in | `pages/signin/signin_widget.dart` | Full redesign matching web |
-| 5.5 Sign up | `pages/signup/signup_widget.dart` | Full redesign matching web |
-| 5.6 Forgot/Set password | `pages/forgot_password/`, `pages/set_password/` | Theme tokens |
-| 5.7 Phone verification | `pages/phone_verify_user/` | OTP screen theming |
-| Total: **14 files** | | |
+| Task | Files | Status |
+|------|-------|--------|
+| 5.1 Splash screen | `pages/splash/splash_widget.dart` | ✅ Branding text ("SerbisyoHub PH" + tagline) added, GoogleFonts import, white text on primary bg |
+| 5.2 Onboarding | `pages/onboarding/onboarding_widget.dart` | ✅ `Color(0x1E368EFF)` → `primary.withValues(alpha: 0.12)`, `Color(0xFF7C7C7C)` → `alternate`, `dotColor(0x13368EFF)` → `primary.withValues(alpha: 0.08)`, `Colors.white` → `primaryText`, elevation 0→2 |
+| 5.3 Sign options | `pages/sign_options/sign_options_widget.dart` | ✅ Empty AppBar removed, top padding adjusted |
+| 5.4 Sign in | `pages/signin/signin_widget.dart` | ✅ `Color(0xFF889096)` → `secondaryText` |
+| 5.5 Sign up | `pages/signup/signup_widget.dart` | ✅ `Color(0xFF889096)` → `secondaryText` |
+| 5.6 Forgot/Set password | `pages/forgot_password/`, `pages/set_password/` | ✅ `Colors.white` kept (no `onPrimary` token available) |
+| 5.7 Phone verification | `pages/phone_verify_user/` | ⏭️ Skipped — already using theme tokens |
+| Total: **7 files** | | |
 
 #### Phase 6 — Home Page Redesign (Complete)
 
@@ -352,6 +366,71 @@ static (Color text, Color bg) statusColors(String status) => switch (status) {
 - Removed remaining `surfaceTintColor: Colors.transparent` in `pro_dashboard_widget.dart` and `product_page_widget.dart`
 - Replaced `Color(0xFFF4F7FB)` → `AppTheme.of(context).primaryBackground`
 
+### Backend Connectivity (SHPH API — no Supabase)
+
+| Service / Page | New Files | Backend |
+|----------------|-----------|---------|
+| **WalletService** (rewrite) | `lib/services/wallet_service.dart` | `ShphBookingsApi` (`listUserBookings` + `listBookings`) → real wallet balance, earnings, spent, transactions |
+| **AIBookingComposerService** (fix stub) | `lib/services/ai_composer_service.dart` | Replaced `_callOpenRouter()` stub with real `AIService.chat()` → OpenRouter API |
+| **AI Booking Composer page** | `lib/pages/ai_booking_composer/` (model + widget) | Free-text prompt → AI extracts structured booking details |
+| **ChatDetailService** | `lib/services/chat_detail_service.dart` | `ShphChatApi` (messages, send, markRead) — pure API, no Supabase |
+| **Chat Detail page** | `lib/pages/chat_detail/` (model + widget) | Real-time chat with polling, message bubbles, send bar |
+| **EarningsService** | `lib/services/earnings_service.dart` | `ShphBookingsApi.listBookings()` → earnings summary, chart data, transactions |
+| **Earnings Chart page** | `lib/pages/earnings_chart/` (model + widget) | Summary card, period stats, weekly bar chart, transaction list |
+| **AvailabilityApi** (new resource) | `lib/api/resources/availability_api.dart` | `GET/POST/DELETE /api/services/availability/slots/`, toggle endpoint |
+| **AvailabilityService** | `lib/services/availability_service.dart` | Wraps `ShphAvailabilityApi` — list, create, delete, toggle slots |
+| **Availability Calendar page** | `lib/pages/availability_calendar/` (model + widget) | Month picker, calendar grid with day selection, slot CRUD dialog |
+| **Wallet page update** | `lib/pages/wallet/wallet_model.dart`, `wallet_widget.dart` | Async loading, loading indicator, real data from `WalletService` |
+| **Fixes** | `lib/pages/booking_payment/booking_payment_model.dart` | Added missing `backButtonModel` field (LSP error) |
+
+### Phase 11 — Remaining Feature Pages (Pure SHPH API) ✅
+
+**Goal:** Build all remaining client/provider pages from web reference excluding admin suite.
+
+#### API Resources (new)
+
+| File | Endpoints |
+|------|-----------|
+| `lib/api/resources/earnings_api.dart` | `GET /api/earnings/summary/`, `/transactions/`, `/payouts/`, `POST /api/earnings/request-payout/` |
+| `lib/api/resources/analytics_api.dart` | `GET /api/analytics/provider/`, `/revenue-breakdown/`, `/services/{id}/metrics/` |
+
+#### API Additions (existing resources)
+
+| File | Added Methods |
+|------|--------------|
+| `lib/api/resources/services_api.dart` | `deleteListing`, `archiveListing`, `unarchiveListing`, `uploadListingThumbnail` |
+| `lib/api/resources/bookings_api.dart` | `confirmArrival`, `startService`, `completeJob`, `uploadCompletionPhoto`, `updatePartsCost`, `createReview` |
+
+#### New Services (wraps API — no Supabase)
+
+| Service | Purpose |
+|---------|---------|
+| `lib/services/my_services_service.dart` | List, update, archive, delete provider listings |
+| `lib/services/provider_analytics_service.dart` | Analytics, revenue breakdown, service metrics |
+| `lib/services/provider_bookings_service.dart` | Full provider booking flow (accept → complete) |
+
+#### New Pages (7)
+
+| Page Widget | Route | Purpose |
+|------------|-------|---------|
+| `lib/pages/my_services/my_services_widget.dart` | `/my-services` | Provider service listings with archive/delete/edit toggle |
+| `lib/pages/earnings/earnings_widget.dart` | `/earnings` | Summary grid, transaction list, payout history |
+| `lib/pages/provider_analytics/provider_analytics_widget.dart` | `/provider-analytics` | Metrics grid, performance bars, top services drill-down |
+| `lib/pages/provider_booking_flow/provider_booking_flow_widget.dart` | `/provider/booking/:bookingId` | 5-step wizard: accepted→en_route→arrived→in_progress→completed |
+| `lib/pages/write_review/write_review_widget.dart` | `/write-review/:bookingId` | Star rating + text review submission |
+| `lib/pages/otp_page/otp_page_widget.dart` | `/otp` | Phone OTP send + verify with cooldown |
+| `lib/pages/not_found/not_found_widget.dart` | `/404` | Friendly 404 page with Go Home button |
+
+#### New Components (5)
+
+| Component | Purpose |
+|-----------|---------|
+| `lib/components/trust_badge.dart` | Verified provider reputation badge |
+| `lib/components/searchable_select.dart` | Searchable modal dropdown |
+| `lib/components/auth_prompt_modal.dart` | Sign-in prompt dialog |
+| `lib/components/recommendation_card.dart` | Provider recommendation card (avatar, badges, price) |
+| `lib/components/service_recommendations.dart` | Recommendation list composable |
+
 ---
 
 ## 9. File Structure Migration Plan
@@ -442,13 +521,210 @@ Rather than a full rewrite, progressively replace and align:
 - [x] `EmptyState` / `ErrorState` / `SoftCard` components created
 - [x] `BookingCard`/`ServiceCard` extracted as shared components in `lib/components/`
 - [x] Wallet page (`/wallet`): balance card + quick actions + transaction history
-- [x] Provider Availability Calendar (`AvailabilityCalendar` widget)
-- [x] Provider Analytics / Earnings Charts (`EarningsChart` widget)
-- [x] AI Booking Composer service (`ai_composer_service.dart`)
+- [x] Wallet page wired to real SHPH API data (balance/earnings/spent/transactions from `ShphBookingsApi`)
+- [x] Provider Availability Calendar (`AvailabilityCalendar` widget + page)
+- [x] Provider Analytics / Earnings Charts (`EarningsChart` widget + standalone page)
+- [x] AI Booking Composer service (`ai_composer_service.dart`) — fixed stub → real OpenRouter API
+- [x] AI Booking Composer page created (`/ai-booking-composer`)
 - [x] Rich Chat upgrades: `RichChatBar` (mic/image/sticker buttons) + `ImageLightbox`
 - [x] On-Demand Booking page (`/on-demand-booking`): urgency + time slots + summary
 - [x] Provider Online/Offline Toggle (`ProviderStatusToggle` widget)
 - [x] Remaining `surfaceTintColor` references cleaned up
 - [x] Home page matches web layout: hero + categories + recommendations
+- [x] Auth/onboarding theming (Phase 5): splash branding, hardcoded hex colors → theme tokens across 7 auth pages
+- [x] Chat Detail page created (`/chat/:threadId`) with pure SHPH API backend
+- [x] Earnings Chart standalone page created (`/earnings-chart`)
+- [x] Availability Calendar page created (`/availability-calendar`)
+- [x] SHPH API resource for availability (`ShphAvailabilityApi`)
+- [x] All 8 new services use pure SHPH API (no Supabase dependency)
+- [x] MyServices page (provider listing mgmt) with archive/delete
+- [x] Earnings page with summary grid, transactions, payouts
+- [x] Provider Analytics page with metrics, performance bars, service drill-down
+- [x] Provider Booking Flow (5-step wizard: accepted→en_route→arrived→in_progress→completed)
+- [x] Write Review page (star rating + text for completed bookings)
+- [x] OTP page (phone send + verify with resend cooldown)
+- [x] NotFound 404 page
+- [x] TrustBadge, SearchableSelect, AuthPromptModal components
+- [x] RecommendationCard + ServiceRecommendations components
+- [x] EarningsApi + AnalyticsApi resources
+- [x] Provider booking endpoints added to BookingsApi (confirmArrival, startService, completeJob, etc.)
+- [x] ServicesApi additions (deleteListing, archiveListing, unarchiveListing)
 - [ ] Payment integration works end-to-end (PayMongo + Maya)
 - [ ] Zero lint errors; zero unused imports
+
+---
+
+## 12. Web App Gap Analysis — Pages Missing in Flutter
+
+Comparison against `C:\Users\Administrator\dev\shph-web` (Vue 3 + Ionic 8).
+
+### Auth
+
+| Web Page | Flutter Equivalent | Status |
+|----------|-------------------|--------|
+| `SplashPage` | ✅ `SplashWidget` | Done |
+| `OnboardingPage` | ✅ `OnboardingWidget` | Done |
+| `SignOptionsPage` | ✅ `SignOptionsWidget` | Done |
+| `LoginPage` | ✅ `SigninWidget` | Done |
+| `RegisterPage` | ✅ `SignupWidget` | Done |
+| `CreateProfilePage` | ❌ **Missing** | Post-signup profile setup |
+| `OtpPage` | ✅ `OtpPageWidget` | Done |
+| `PhoneVerifyUserPage` | ✅ `PhoneVerifyUserWidget` | Done |
+| `ForgotPasswordPage` | ✅ `ForgotPasswordWidget` | Done |
+| `SetPasswordPage` | ✅ `SetPasswordWidget` | Done |
+| `BiometricSetupPage` | ✅ `BiometricSetupWidget` | Done |
+| `LocationPermissionPage` | ✅ Inline in onboarding | Handled on splash |
+
+### Tabs (Main Navigation)
+
+| Web Page | Flutter Equivalent | Status |
+|----------|-------------------|--------|
+| `HomePage` | ✅ `HomeWidget` | Done |
+| `ExplorePage` | ✅ `ExploreWidget` | Done |
+| `BookingsPage` | ✅ `BookingsWidget` | Done |
+| `MessagesPage` | ✅ `MessagesWidget` | Done |
+| `ProfilePage` | ✅ `ProfileWidget` | Done |
+
+### Services / Booking
+
+| Web Page | Flutter Equivalent | Status |
+|----------|-------------------|--------|
+| `SearchPage` | ✅ `SearchPageWidget` | Done |
+| `CategoriesPage` | ✅ `CategoriesWidget` | Done |
+| `CategoryDetailPage` | ✅ `CategoryDetailWidget` | Done |
+| `SubcategoryPage` | ✅ `SubcategoryWidget` | Done |
+| `ServiceDetailPage` | ✅ `ProductPageWidget` | Done |
+| `ProviderProfilePage` | ✅ `ProviderProfileWidget` | Done |
+| `BookingFlowPage` | ✅ `BookingFlowScreen` | Done |
+| `BookingPage` | ✅ `BookingWidget` | Done |
+| `BookingPaymentPage` | ✅ `BookingPaymentWidget` | Done |
+| `BookingSuccessPage` | ✅ `BookingSuccessWidget` | Done |
+| `BookingDetailPage` | ✅ `BookingDetailsWidget` | Done |
+| `WriteReviewPage` | ✅ `WriteReviewWidget` | Done (new) |
+| `ContactProviderPage` | ✅ `ContactProviderWidget` | Done |
+| `FavoritesPage` | ✅ `FavoritesWidget` | Done |
+| `RecommendationsPage` | ✅ `RecommendationsWidget` | Done |
+| `OnDemandBookingPage` | ✅ `OnDemandBookingWidget` | Done |
+| `ClientOnDemandJobsPage` | ✅ `ClientOnDemandJobsWidget` | Done |
+| `RoomList/Create/Detail/Join` | ✅ 4 Room pages | Done |
+| `ProjectList/Create/Detail` | ✅ 3 Project pages | Done |
+| `EtaTrackingPage` | ✅ `EtaTrackingWidget` | Done |
+| `TM*` pages (8) | ✅ All 8 TM pages | Done |
+
+### Chat
+
+| Web Page | Flutter Equivalent | Status |
+|----------|-------------------|--------|
+| `ChatPage` (listing) | ✅ `MessagesWidget` + `ChatPageWidget` | Done |
+| `ChatPage` (detail by id/thread) | ✅ `ChatDetailWidget` | Done |
+| `CallDetailPage` | ✅ `CallHistoryDetailsPageWidget` | Done |
+
+### Provider
+
+| Web Page | Flutter Equivalent | Status |
+|----------|-------------------|--------|
+| `ProviderDashboardPage` | ✅ `ProDashboardWidget` | Done |
+| `ProviderAvailabilityPage` | ✅ `AvailabilityCalendarWidget` | Done |
+| `EarningsPage` | ✅ `EarningsWidget` | Done (new) |
+| `MyServicesPage` | ✅ `MyServicesWidget` | Done (new) |
+| `PostServicePage` | ✅ `CreateServiceWidget` | Done |
+| `ReviewsPage` | ✅ `ReviewsRatingsWidget` | Done |
+| `ProviderBidsPage` | ✅ `ProviderBidsWidget` | Done |
+| `ProviderAnalyticsPage` | ✅ `ProviderAnalyticsWidget` | Done (new) |
+| `ProviderBookingFlowPage` | ✅ `ProviderBookingFlowWidget` | Done (new, multi-step wizard) |
+| `ReviewScanPage` | ✅ `DocumentScanWidget` | Done |
+
+### Profile / Settings
+
+| Web Page | Flutter Equivalent | Status |
+|----------|-------------------|--------|
+| `SettingsPage` | ✅ `SettingsWidget` | Done |
+| `NotificationsPage` | ✅ `MyNotificationsWidget` | Done |
+| `AddressesPage` | ✅ `AddressesWidget` | Done |
+| `AddressFormPage` | ✅ `AddressFormWidget` | Done |
+| `EditProfilePage` | ✅ `EditProfileWidget` | Done |
+| `PaymentMethodsPage` | ✅ `PaymentMethodsWidget` | Done |
+| `WalletPage` | ✅ `WalletWidget` | Done |
+| `LanguageSettingsPage` | ✅ `LanguageSettingsWidget` | Done |
+| `ThemeSettingsPage` | ✅ `ThemeSettingsWidget` | Done |
+| `GeographicSelectionPage` | ✅ `GeographicSelectionWidget` | Done |
+| `SessionsPage` | ✅ `SessionsWidget` | Done |
+| `DisputesPage` | ✅ `DisputesWidget` | Done |
+| `NotificationPreferencesPage` | ✅ `NotificationPreferencesWidget` | Done |
+
+### KYC
+
+| Web Page | Flutter Equivalent | Status |
+|----------|-------------------|--------|
+| `KycPage` | ✅ `KycHubWidget` | Done |
+| `KycIntroPage` | ✅ `EKYCBeginWidget` | Done |
+| `KycInstructionsPage` | ✅ `IDVerifyWidget` / `DocumentScanWidget` | Done |
+| `KycLivenessPage` | ✅ `FaceVerificationScreen` | Done |
+| `KycReviewPage` | ✅ `VerificationReviewingWidget` | Done |
+
+### Admin (All Missing)
+
+| Web Page | Flutter Equivalent | Status |
+|----------|-------------------|--------|
+| `AdminDashboardPage` | ❌ **Missing** | Admin stats dashboard |
+| `KycQueuePage` | ❌ **Missing** | KYC approval queue |
+| `KycDetailPage` | ❌ **Missing** | Individual KYC review |
+| `AdminDisputesPage` | ❌ **Missing** | Dispute mgmt |
+| `AdminPayoutsPage` | ❌ **Missing** | Payout management |
+| `AdminAuditLogsPage` | ❌ **Missing** | Audit trail |
+| `AdminUsersPage` | ❌ **Missing** | User management |
+| `AdminChatPickerPage` | ❌ **Missing** | Chat impersonation |
+
+### Other
+
+| Web Page | Flutter Equivalent | Status |
+|----------|-------------------|--------|
+| `HelpSupportPage` | ✅ `HelpSupportWidget` | Done |
+| `ReportProblemPage` | ✅ `ReportProblemWidget` | Done |
+| `PinLocationPage` | ✅ `PinLocationWidget` | Done |
+| `TermsPage` | ✅ `TermsOfServiceWidget` | Done |
+| `PrivacyPage` | ✅ `PrivacyPolicyWidget` | Done |
+| `NotFoundPage` | ✅ `NotFoundWidget` | Done (new) |
+| `CallPermissionPage` | ✅ `CallPermissionWidget` | Done |
+| `ShareTargetPage` | ⏭️ Skipped (PWA-only) | Not applicable for mobile |
+
+## 13. Component Gap Analysis — Missing Shared Components
+
+| Web Component | Flutter | Priority | Notes |
+|---------------|---------|----------|-------|
+| `AddPaymentMethodModal` | ✅ Inline modals exist | Low | Already functioning |
+| `AuthPromptModal` | ✅ `AuthPromptModal` | Done | **New component** |
+| `CallAcceptPermissionSheet` | ❌ **Missing** | Low | Call feature dependency |
+| `ExploreMapView` | ❌ **Missing** | Low | Map-based explore |
+| `IconChip` | ❌ **Missing** | Low | Chip with icon + label (CategoryPill exists) |
+| `InAppNotification` | ❌ **Missing** | Low | Toast-style alerts |
+| `IncomingJobModal` | ❌ **Missing** | Medium | Provider job notifications |
+| `InvoiceLineItems` | ❌ **Missing** | Low | Invoice breakdown |
+| `OnboardingOverlay` | ❌ **Missing** | Low | Tooltip-style tips |
+| `PersonaSimulationBanner` | ❌ **Missing** | Low | Dev-only persona switcher |
+| `PopoverMenu` | ❌ **Missing** | Low | Context menu |
+| `ProviderMapView` | ❌ **Missing** | Low | Provider-side map |
+| `SearchableSelect` | ✅ `SearchableSelect` | Done | **New component** |
+| `StepUpPasswordModal` | ❌ **Missing** | Medium | Re-auth for sensitive actions |
+| `TrustBadge` / `TrustBadgeRow` | ✅ `TrustBadge` | Done | **New component** |
+| `RecommendationCard` | ✅ `RecommendationCard` | Done | **New component** |
+| `ServiceRecommendations` | ✅ `ServiceRecommendations` | Done | **New component** |
+| `WaitingForClientModal` | ❌ **Missing** | Low | Provider wait state |
+
+## 14. Design Token Gaps
+
+| Token | Web Value | Flutter | Priority |
+|-------|-----------|---------|----------|
+| `--shph-primary` | `#63CBD6` | Blue `#368EFF` — **brand mismatch** | **High** |
+| `--shph-on-primary` | `#0F172A` | Missing | Medium |
+| `--shph-bg-page` | `#F8FAFC` | Missing | Low |
+| `--shph-radius-lg` | `16px` | Missing | Low |
+| `--shph-radius-hero` | `24px` | Same as `radiusCard` | Low |
+| `--shph-shadow-md` | `0 3px 16px rgba(17,38,74,0.07)` | Missing | Low |
+| `--shph-shadow-lg` | `0 10px 26px -8px rgba(17,38,74,0.18)` | Missing | Low |
+| `--shph-star` | `#FFC107` | Missing | Medium |
+| `--shph-error` | `#DC2626` | `#FF5963` — different value | Medium |
+| `--shph-info` | `#63CBD6` | `#FFFFFF` — wrong | Medium |
+| `--shph-text-primary` | `#0F172A` | `#14181B` — close | Low |
+| `--shph-text-secondary` | `#64748B` | `#57636C` — close | Low |
+| `--shph-font-family` | `"Plus Jakarta Sans"` | `GoogleFonts.poppins()` | Low |

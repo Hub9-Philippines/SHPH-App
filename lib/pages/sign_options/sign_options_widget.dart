@@ -48,15 +48,8 @@ class _SignOptionsWidgetState extends State<SignOptionsWidget> {
         child: Scaffold(
           key: scaffoldKey,
           backgroundColor: AppTheme.of(context).primaryBackground,
-          appBar: AppBar(
-            backgroundColor: AppTheme.of(context).primaryBackground,
-            automaticallyImplyLeading: false,
-            actions: const [],
-            centerTitle: true,
-            elevation: 0,
-          ),
           body: Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(0, 20, 0, 20),
+            padding: const EdgeInsetsDirectional.fromSTEB(0, 40, 0, 20),
             child: Column(
               mainAxisSize: MainAxisSize.max,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

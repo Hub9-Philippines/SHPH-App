@@ -1,44 +1,30 @@
 import 'package:flutter/material.dart';
 
-class WalletModel {
-  double balance = 2850.00;
-  double totalEarnings = 12400.00;
-  double totalSpent = 9550.00;
-  List<Map<String, dynamic>> transactions = [];
+import '/services/logging_service.dart';
+import '/services/wallet_service.dart';
 
-  void loadTransactions() {
-    transactions = [
-      {
-        'type': 'credit',
-        'description': 'Service Payment — Plumbing Repair',
-        'date': 'Jul 25, 2026',
-        'amount': 1500.00,
-      },
-      {
-        'type': 'debit',
-        'description': 'Top-up via GCash',
-        'date': 'Jul 24, 2026',
-        'amount': 2000.00,
-      },
-      {
-        'type': 'credit',
-        'description': 'Service Payment — Electrical Wiring',
-        'date': 'Jul 22, 2026',
-        'amount': 3500.00,
-      },
-      {
-        'type': 'debit',
-        'description': 'Withdrawal to Bank',
-        'date': 'Jul 20, 2026',
-        'amount': 5000.00,
-      },
-      {
-        'type': 'credit',
-        'description': 'Service Payment — AC Cleaning',
-        'date': 'Jul 18, 2026',
-        'amount': 1200.00,
-      },
-    ];
+class WalletModel {
+  double balance = 0.0;
+  double totalEarnings = 0.0;
+  double totalSpent = 0.0;
+  List<Map<String, dynamic>> transactions = [];
+  bool isLoading = false;
+
+  Future<void> loadTransactions() async {
+    isLoading = true;
+    try {
+      final data = await WalletService.instance.getWalletData();
+      balance = (data['balance'] as num?)?.toDouble() ?? 0.0;
+      totalEarnings = (data['totalEarnings'] as num?)?.toDouble() ?? 0.0;
+      totalSpent = (data['totalSpent'] as num?)?.toDouble() ?? 0.0;
+      transactions = (data['transactions'] as List<dynamic>?)
+              ?.cast<Map<String, dynamic>>() ??
+          [];
+    } catch (e) {
+      LoggingService.error('Error loading wallet: $e', tag: 'WalletModel');
+    } finally {
+      isLoading = false;
+    }
   }
 
   void dispose() {}
