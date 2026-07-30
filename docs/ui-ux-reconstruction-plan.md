@@ -70,10 +70,8 @@ The Flutter app uses `AppThemeData` in `lib/theme/app_theme.dart`.
 
 ### 2.2 Typography
 
-**Web:** "Plus Jakarta Sans" via Google Fonts (currently commented out fallback to system sans-serif).
-**Flutter:** Already uses `GoogleFonts.poppins()` throughout.
-
-Consider aligning to "Plus Jakarta Sans" on Flutter side to match the brand.
+**Web:** "Plus Jakarta Sans" via Google Fonts
+**Flutter:** ✅ Now uses `GoogleFonts.plusJakartaSans()` throughout (Phase 12)
 
 ### 2.3 Spacing Scale
 
@@ -86,43 +84,45 @@ Standardize on a 4px base unit scale: 4, 8, 12, 16, 20, 24, 32, 40, 48, 56, 64.
 
 ### 3.1 Shared Components (Flutter) — Status
 
-| Component | Flutter | Web (Vue) | Action |
+| Component | Flutter | Web (Vue) | Status |
 |-----------|---------|-----------|--------|
-| `AppBar` / Header | Per-page custom headers | `ScreenHeader.vue` | Standardize with `ScreenHeader` |
-| `SectionHeader` | Inline in pages | `SectionHeader.vue` | Create reusable component |
-| `ServiceCard` | Inline in home/services | `ServiceCard.vue` | Extract to shared card component |
-| `BookingCard` | Inline | `BookingCard.vue` | Extract to shared component |
-| `StarRating` | Inline 5-star display | `StarRating.vue` | **Create reusable** |
-| `StatusPill` | Hardcoded containers | `StatusPill.vue` | Create standardized pill |
-| `EmptyState` | Ad-hoc checks | `EmptyState.vue` | Create reusable |
-| `ErrorState` | ScaffoldMessenger | `ErrorState.vue` | Create reusable |
-| `UserAvatar` | `CircleAvatar` | `UserAvatar.vue` | Standardize with fallback initials |
-| `CategoryTile` | Inline grid in home | `CategoryTile.vue` | Extract to reusable |
-| `SoftCard` | Inline containers | `SoftCard.vue` | Extract to reusable card |
-| `ReviewCard` | Inline | `ReviewCard.vue` | Extract to shared |
-| `Modal / BottomSheet` | `showModalBottomSheet` | `ion-modal` (bottom sheet) | Standardize |
-| `Loading / Skeleton` | `SkeletonLoadingWidget` | Ionic `ion-skeleton-text` | Already has ✅ |
-| `SearchField` | Per-page TextFormField | `SearchableSelect.vue` | Standardize search |
+| `ScreenHeader` | ✅ `lib/components/screen_header.dart` | `ScreenHeader.vue` | ✅ Done |
+| `SectionHeader` | ✅ `lib/components/section_header.dart` | `SectionHeader.vue` | ✅ Done |
+| `ServiceCard` | ✅ `lib/components/service_card.dart` | `ServiceCard.vue` | ✅ Done |
+| `BookingCard` | ✅ `lib/components/booking_card.dart` | `BookingCard.vue` | ✅ Done |
+| `StarRating` | ✅ `lib/components/star_rating.dart` | `StarRating.vue` | ✅ Done |
+| `StatusPill` | ✅ `lib/components/status_pill.dart` | `StatusPill.vue` | ✅ Done |
+| `EmptyState` | ✅ `lib/components/empty_state_widget.dart` | `EmptyState.vue` | ✅ Done |
+| `ErrorState` | ✅ `lib/components/error_state_widget.dart` | `ErrorState.vue` | ✅ Done |
+| `UserAvatar` | ✅ `lib/components/user_avatar.dart` | `UserAvatar.vue` | ✅ Done |
+| `CategoryTile` | ✅ `lib/components/categoriesgrid/` | `CategoryTile.vue` | ✅ Done |
+| `SoftCard` | ✅ `lib/components/soft_card.dart` | `SoftCard.vue` | ✅ Done |
+| `ReviewCard` | ✅ `lib/components/review_card.dart` | `ReviewCard.vue` | ✅ Done |
+| `BottomSheet` | ✅ Standardized `showModalBottomSheet` | `ion-modal` | ✅ Done |
+| `Skeleton` | ✅ `SkeletonLoadingWidget` | `ion-skeleton-text` | ✅ Already had |
+| `SearchField` | ✅ `SearchableSelect` component | `SearchableSelect.vue` | ✅ Done |
 
-### 3.2 New Components to Create (port from Web)
+### 3.2 New Components Created (ported from Web) — All Done ✅
 
-| Component | Web Source | Priority | Notes |
-|-----------|-----------|----------|-------|
-| `ScreenHeader` | `src/components/ScreenHeader.vue` | High | Consistent page titles with back button |
-| `SectionHeader` | `src/components/SectionHeader.vue` | High | Title + "See all" link |
-| `ServiceCard` | `src/components/ServiceCard.vue` | High | Used across home, search, category pages |
-| `BookingCard` | `src/components/BookingCard.vue` | High | Booking list items with status |
-| `StarRating` | `src/components/StarRating.vue` | High | Reusable 5-star display/input |
-| `StatusPill` | `src/components/StatusPill.vue` | Medium | Colored status badges |
-| `EmptyState` | `src/components/EmptyState.vue` | Medium | Illustrated empty states |
-| `ErrorState` | `src/components/ErrorState.vue` | Medium | Error display with retry |
-| `UserAvatar` | `src/components/UserAvatar.vue` | Medium | Avatar with initials fallback |
-| `CategoryTile` | `src/components/CategoryTile.vue` | Medium | Category grid tile |
-| `SoftCard` | `src/components/SoftCard.vue` | Medium | Elevated card wrapper |
-| `TrustBadge` | `src/components/TrustBadge.vue` | Low | Verified provider badge |
-| `ReviewCard` | `src/components/ReviewCard.vue` | Medium | Standardized review display |
-| `BookingStepIndicator` | `src/components/booking/BookingStepIndicator.vue` | High | Multi-step progress |
-| `ContentContainer` | `src/components/layout/ContentContainer.vue` | Medium | Responsive max-width wrapper |
+| Component | File | Status |
+|-----------|------|--------|
+| `ScreenHeader` | `lib/components/screen_header.dart` | ✅ Phase 1 |
+| `SectionHeader` | `lib/components/section_header.dart` | ✅ Phase 1 |
+| `ContentContainer` | `lib/components/content_container.dart` | ✅ Phase 1 |
+| `CategoryPill` | `lib/components/category_pill.dart` | ✅ Phase 1 |
+| `ServiceCard` | `lib/components/service_card.dart` | ✅ Phase 4 |
+| `BookingCard` | `lib/components/booking_card.dart` | ✅ Phase 4 |
+| `BookingStepIndicator` | `lib/components/booking_step_indicator.dart` | ✅ Phase 4 |
+| `StarRating` | `lib/components/star_rating.dart` | ✅ Phase 5 |
+| `StatusPill` | `lib/components/status_pill.dart` | ✅ Phase 5 |
+| `EmptyState` | `lib/components/empty_state_widget.dart` | ✅ Phase 5 |
+| `ErrorState` | `lib/components/error_state_widget.dart` | ✅ Phase 5 |
+| `UserAvatar` | `lib/components/user_avatar.dart` | ✅ Phase 5 |
+| `CategoryTile` | `lib/components/categoriesgrid/` | ✅ Phase 6 |
+| `SoftCard` | `lib/components/soft_card.dart` | ✅ Phase 6 |
+| `TrustBadge` | `lib/components/trust_badge.dart` | ✅ Phase 8 |
+| `ReviewCard` | `lib/components/review_card.dart` | ✅ Phase 8 |
+| Phase 12 components | 10 new files in `lib/components/` | ✅ See Section 13 |
 
 ---
 
@@ -285,27 +285,30 @@ These items have been started in the current session and need completion:
 ### Color Tokens — Implemented ✅
 
 ```dart
-// In lib/theme/app_theme.dart — AppThemeData class (all implemented)
-final Color primary;          // #368EFF (blue)
+// In lib/theme/app_theme.dart — AppThemeData class (Phase 12 final)
+final Color primary;          // #63CBD6 (teal) — realigned from #368EFF
+final Color onPrimary;        // #0F172A — added
+final Color bgPage;           // #F8FAFC — added
 final Color secondary;        // #39D2C0 (teal)
 final Color tertiary;         // #EE8B60 (orange)
 final Color alternate;        // #E0E3E7
-final Color primaryText;      // #14181B
-final Color secondaryText;    // #57636C
+final Color primaryText;      // #0F172A — aligned from #14181B
+final Color secondaryText;    // #64748B — aligned from #57636C
 final Color primaryBackground; // #FFFFFF
 final Color secondaryBackground; // #F7F7F7
 final Color accent1-4;        // Various
 final Color success;          // #249689
 final Color warning;          // #F9CF58
-final Color error;            // #FF5963
-final Color info;             // #FFFFFF
+final Color error;            // #DC2626 — aligned from #FF5963
+final Color info;             // #63CBD6 — aligned from #FFFFFF
+final Color star;             // #FFC107 — added
 final Color iconBackground;   // #E6F0FF
 final Color primaryLight;     // #D4F0EF
 final Color primaryDark;      // #49B8C4
 final Color primaryBrandText; // #0D6D78
-final Color surfaceAlt;       // #F1F5F9 (card alternate background)
-final Color border;           // #E2E8F0 (card borders)
-final Color textTertiary;     // #94A3B8 (placeholder text)
+final Color surfaceAlt;       // #F1F5F9
+final Color border;           // #E2E8F0
+final Color textTertiary;     // #94A3B8
 ```
 
 ### Standardized BoxShadows — Implemented ✅
@@ -317,7 +320,7 @@ static const List<BoxShadow> shadowSoft = [
 static const List<BoxShadow> shadowCard = [
   BoxShadow(color: Color(0x140F1828), blurRadius: 24, offset: Offset(0, 8)),
 ];
-static const List<BoxShadow> shadowElevated = [
+static const List<BoxShadow> shadowLg = [
   BoxShadow(color: Color(0x2E11264A), blurRadius: 26, offset: Offset(0, 10)),
 ];
 ```
@@ -455,31 +458,45 @@ static (Color text, Color bg) statusColors(String status) => switch (status) {
 
 ```
 lib/
-├── components/           # Shared components (new)
-│   ├── screen_header.dart
-│   ├── section_header.dart
-│   ├── service_card.dart
-│   ├── booking_card.dart
-│   ├── star_rating.dart
-│   ├── status_pill.dart
-│   ├── category_tile.dart
-│   ├── soft_card.dart
-│   ├── user_avatar.dart
-│   ├── empty_state.dart
-│   ├── error_state.dart
-│   ├── content_container.dart
-│   └── booking_step_indicator.dart
+├── components/           # 30+ shared components (all ported, Phase 12 final)
+│   ├── screen_header.dart         # Phase 1
+│   ├── section_header.dart        # Phase 1
+│   ├── content_container.dart     # Phase 1
+│   ├── category_pill.dart         # Phase 1
+│   ├── service_card.dart          # Phase 4
+│   ├── booking_card.dart          # Phase 4
+│   ├── booking_step_indicator.dart # Phase 4
+│   ├── star_rating.dart           # Phase 5
+│   ├── status_pill.dart           # Phase 5
+│   ├── empty_state_widget.dart    # Phase 5
+│   ├── error_state_widget.dart    # Phase 5
+│   ├── user_avatar.dart           # Phase 5
+│   ├── categoriesgrid/            # Phase 6
+│   ├── soft_card.dart             # Phase 6
+│   ├── trust_badge.dart           # Phase 8
+│   ├── review_card.dart           # Phase 8
+│   ├── provider_status_toggle.dart # Phase 8
+│   ├── availability_calendar.dart # Phase 8
+│   ├── earnings_chart.dart        # Phase 8
+│   ├── call_accept_permission_sheet.dart  # Phase 12
+│   ├── explore_map_view.dart      # Phase 12
+│   ├── in_app_notification.dart   # Phase 12
+│   ├── incoming_job_modal.dart    # Phase 12
+│   ├── invoice_line_items.dart    # Phase 12
+│   ├── onboarding_overlay.dart    # Phase 12
+│   ├── popover_menu.dart          # Phase 12
+│   ├── provider_map_view.dart     # Phase 12
+│   ├── step_up_password_modal.dart # Phase 12
+│   └── waiting_for_client_modal.dart # Phase 12
 ├── theme/
-│   └── app_theme.dart    # Expanded with new tokens
+│   └── app_theme.dart    # 25+ tokens, 3 shadow levels, radii, statusColors
 ├── services/
-│   ├── payment_controller.dart  ✅
+│   ├── auth_service.dart          # Phase 12
+│   ├── notification_store.dart    # Phase 12
+│   ├── favorites_service.dart
+│   ├── payment_controller.dart
 │   ├── chat_service.dart
-│   ├── bookings_service.dart
-│   ├── favorites_service.dart   # New
-│   └── notifications_service.dart # New
-├── stores/               # New — Pinia-like service stores
-│   ├── auth_store.dart
-│   └── notification_store.dart
+│   └── bookings_service.dart
 ├── app_state.dart        # Keep + expand
 ├── main/
 │   ├── home/
@@ -595,7 +612,7 @@ Comparison against `C:\Users\Administrator\dev\shph-web` (Vue 3 + Ionic 8).
 | `SignOptionsPage` | ✅ `SignOptionsWidget` | Done |
 | `LoginPage` | ✅ `SigninWidget` | Done |
 | `RegisterPage` | ✅ `SignupWidget` | Done |
-| `CreateProfilePage` | ❌ **Missing** | Post-signup profile setup |
+| `CreateProfilePage` | ✅ `CreateProfileWidget` | Done |
 | `OtpPage` | ✅ `OtpPageWidget` | Done |
 | `PhoneVerifyUserPage` | ✅ `PhoneVerifyUserWidget` | Done |
 | `ForgotPasswordPage` | ✅ `ForgotPasswordWidget` | Done |
@@ -722,37 +739,37 @@ Comparison against `C:\Users\Administrator\dev\shph-web` (Vue 3 + Ionic 8).
 |---------------|---------|----------|-------|
 | `AddPaymentMethodModal` | ✅ Inline modals exist | Low | Already functioning |
 | `AuthPromptModal` | ✅ `AuthPromptModal` | Done | **New component** |
-| `CallAcceptPermissionSheet` | ❌ **Missing** | Low | Call feature dependency |
-| `ExploreMapView` | ❌ **Missing** | Low | Map-based explore |
-| `IconChip` | ❌ **Missing** | Low | Chip with icon + label (CategoryPill exists) |
-| `InAppNotification` | ❌ **Missing** | Low | Toast-style alerts |
-| `IncomingJobModal` | ❌ **Missing** | Medium | Provider job notifications |
-| `InvoiceLineItems` | ❌ **Missing** | Low | Invoice breakdown |
-| `OnboardingOverlay` | ❌ **Missing** | Low | Tooltip-style tips |
-| `PersonaSimulationBanner` | ❌ **Missing** | Low | Dev-only persona switcher |
-| `PopoverMenu` | ❌ **Missing** | Low | Context menu |
-| `ProviderMapView` | ❌ **Missing** | Low | Provider-side map |
-| `SearchableSelect` | ✅ `SearchableSelect` | Done | **New component** |
-| `StepUpPasswordModal` | ❌ **Missing** | Medium | Re-auth for sensitive actions |
-| `TrustBadge` / `TrustBadgeRow` | ✅ `TrustBadge` | Done | **New component** |
-| `RecommendationCard` | ✅ `RecommendationCard` | Done | **New component** |
-| `ServiceRecommendations` | ✅ `ServiceRecommendations` | Done | **New component** |
-| `WaitingForClientModal` | ❌ **Missing** | Low | Provider wait state |
+| `CallAcceptPermissionSheet` | ✅ `CallAcceptPermissionSheet` | Done | Built Phase 12 |
+| `ExploreMapView` | ✅ `ExploreMapView` | Done | Built Phase 12 |
+| `IconChip` | ❌ **Low priority** | Deferred | CategoryPill already covers this use case |
+| `InAppNotification` | ✅ `InAppNotification` | Done | Built Phase 12 |
+| `IncomingJobModal` | ✅ `IncomingJobModal` | Done | Built Phase 12 |
+| `InvoiceLineItems` | ✅ `InvoiceLineItems` | Done | Built Phase 12 |
+| `OnboardingOverlay` | ✅ `OnboardingOverlay` | Done | Built Phase 12 |
+| `PersonaSimulationBanner` | ❌ **Dev-only** | Skipped | Not needed in production |
+| `PopoverMenu` | ✅ `PopoverMenu` | Done | Built Phase 12 |
+| `ProviderMapView` | ✅ `ProviderMapView` | Done | Built Phase 12 |
+| `SearchableSelect` | ✅ `SearchableSelect` | Done | Built earlier |
+| `StepUpPasswordModal` | ✅ `StepUpPasswordModal` | Done | Built Phase 12 |
+| `TrustBadge` / `TrustBadgeRow` | ✅ `TrustBadge` | Done | Built earlier |
+| `RecommendationCard` | ✅ `RecommendationCard` | Done | Built earlier |
+| `ServiceRecommendations` | ✅ `ServiceRecommendations` | Done | Built earlier |
+| `WaitingForClientModal` | ✅ `WaitingForClientModal` | Done | Built Phase 12 |
 
-## 14. Design Token Gaps
+## 14. Design Token Gaps — All Resolved ✅ (Phase 12)
 
-| Token | Web Value | Flutter | Priority |
-|-------|-----------|---------|----------|
-| `--shph-primary` | `#63CBD6` | Blue `#368EFF` — **brand mismatch** | **High** |
-| `--shph-on-primary` | `#0F172A` | Missing | Medium |
-| `--shph-bg-page` | `#F8FAFC` | Missing | Low |
-| `--shph-radius-lg` | `16px` | Missing | Low |
-| `--shph-radius-hero` | `24px` | Same as `radiusCard` | Low |
-| `--shph-shadow-md` | `0 3px 16px rgba(17,38,74,0.07)` | Missing | Low |
-| `--shph-shadow-lg` | `0 10px 26px -8px rgba(17,38,74,0.18)` | Missing | Low |
-| `--shph-star` | `#FFC107` | Missing | Medium |
-| `--shph-error` | `#DC2626` | `#FF5963` — different value | Medium |
-| `--shph-info` | `#63CBD6` | `#FFFFFF` — wrong | Medium |
-| `--shph-text-primary` | `#0F172A` | `#14181B` — close | Low |
-| `--shph-text-secondary` | `#64748B` | `#57636C` — close | Low |
-| `--shph-font-family` | `"Plus Jakarta Sans"` | `GoogleFonts.poppins()` | Low |
+| Token | Web Value | Flutter Final | Status |
+|-------|-----------|---------------|--------|
+| `--shph-primary` | `#63CBD6` | `AppTheme.of(context).primary` = `#63CBD6` | ✅ Realigned |
+| `--shph-on-primary` | `#0F172A` | `AppTheme.of(context).onPrimary` = `#0F172A` | ✅ Added |
+| `--shph-bg-page` | `#F8FAFC` | `AppTheme.of(context).bgPage` = `#F8FAFC` | ✅ Added |
+| `--shph-radius-lg` | `16px` | `AppThemeData.radiusLg` = `16` | ✅ Already existed |
+| `--shph-radius-hero` | `24px` | Same as `radiusCard` | ✅ Covered |
+| `--shph-shadow-md` | `0 3px 16px rgba(17,38,74,0.07)` | `shadowMd` = same | ✅ Added |
+| `--shph-shadow-lg` | `0 10px 26px -8px rgba(17,38,74,0.18)` | `shadowLg` = same | ✅ Added |
+| `--shph-star` | `#FFC107` | `AppThemeData.star` = `#FFC107` | ✅ Added |
+| `--shph-error` | `#DC2626` | `AppTheme.of(context).error` = `#DC2626` | ✅ Realigned |
+| `--shph-info` | `#63CBD6` | `AppTheme.of(context).info` = `#63CBD6` | ✅ Realigned |
+| `--shph-text-primary` | `#0F172A` | `AppTheme.of(context).primaryText` = `#0F172A` | ✅ Aligned |
+| `--shph-text-secondary` | `#64748B` | `AppTheme.of(context).secondaryText` = `#64748B` | ✅ Aligned |
+| `--shph-font-family` | `"Plus Jakarta Sans"` | `GoogleFonts.plusJakartaSans()` throughout | ✅ Aligned |
