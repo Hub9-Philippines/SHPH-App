@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/components/back_button/back_button_widget.dart';
@@ -113,7 +113,7 @@ class _LanguageSettingsWidgetState extends State<LanguageSettingsWidget> {
                             Text(
                               'Language',
                               style: AppTheme.of(context).titleLarge.override(
-                                    font: GoogleFonts.poppins(
+                                    font: GoogleFonts.plusJakartaSans(
                                       fontWeight: FontWeight.w700,
                                     ),
                                     color: const Color(0xFF14213D),
@@ -122,7 +122,7 @@ class _LanguageSettingsWidgetState extends State<LanguageSettingsWidget> {
                             Text(
                               'Choose the preferred language for your app experience.',
                               style: AppTheme.of(context).bodySmall.override(
-                                    font: GoogleFonts.poppins(),
+                                    font: GoogleFonts.plusJakartaSans(),
                                     color: const Color(0xFF64748B),
                                   ),
                             ),
@@ -164,7 +164,7 @@ class _LanguageSettingsWidgetState extends State<LanguageSettingsWidget> {
                             Text(
                               'Current language',
                               style: AppTheme.of(context).bodySmall.override(
-                                    font: GoogleFonts.poppins(),
+                                    font: GoogleFonts.plusJakartaSans(),
                                     color: Colors.white.withValues(alpha: 0.82),
                                   ),
                             ),
@@ -172,7 +172,7 @@ class _LanguageSettingsWidgetState extends State<LanguageSettingsWidget> {
                             Text(
                               _selectedLanguage,
                               style: AppTheme.of(context).headlineSmall.override(
-                                    font: GoogleFonts.poppins(
+                                    font: GoogleFonts.plusJakartaSans(
                                       fontWeight: FontWeight.w700,
                                     ),
                                     color: Colors.white,
@@ -240,7 +240,7 @@ class _LanguageSettingsWidgetState extends State<LanguageSettingsWidget> {
                   child: Text(
                     language['flag']!,
                     style: AppTheme.of(context).labelLarge.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
                           color: AppTheme.of(context).primary,
@@ -251,7 +251,7 @@ class _LanguageSettingsWidgetState extends State<LanguageSettingsWidget> {
               title: Text(
                 language['name']!,
                 style: AppTheme.of(context).titleMedium.override(
-                      font: GoogleFonts.poppins(
+                      font: GoogleFonts.plusJakartaSans(
                         fontWeight: FontWeight.w700,
                       ),
                       color: const Color(0xFF14213D),

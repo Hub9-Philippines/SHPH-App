@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/theme/app_theme.dart';
@@ -75,14 +75,14 @@ class _ProviderBidsWidgetState extends State<ProviderBidsWidget> {
                 size: 64, color: theme.textTertiary),
             const SizedBox(height: 16),
             Text('No bids yet',
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.plusJakartaSans(
                     color: theme.primaryText,
                     fontSize: 18,
                     fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             Text('When you place bids on job requests, they will appear here.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.plusJakartaSans(
                     color: theme.secondaryText, fontSize: 14)),
           ],
         ),
@@ -134,19 +134,19 @@ class _ProviderBidsWidgetState extends State<ProviderBidsWidget> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(status[0].toUpperCase() + status.substring(1),
-                      style: GoogleFonts.poppins(
+                      style: GoogleFonts.plusJakartaSans(
                           color: statusColor,
                           fontSize: 11,
                           fontWeight: FontWeight.w600)),
                 ),
                 Text(category,
-                    style: GoogleFonts.poppins(
+                    style: GoogleFonts.plusJakartaSans(
                         color: theme.secondaryText, fontSize: 12)),
               ],
             ),
             const SizedBox(height: 8),
-            Text('₱${price.toStringAsFixed(2)}',
-                style: GoogleFonts.poppins(
+            Text('â‚±${price.toStringAsFixed(2)}',
+                style: GoogleFonts.plusJakartaSans(
                     color: theme.primary,
                     fontSize: 22,
                     fontWeight: FontWeight.w700)),
@@ -155,7 +155,7 @@ class _ProviderBidsWidgetState extends State<ProviderBidsWidget> {
               Text(description,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.poppins(
+                  style: GoogleFonts.plusJakartaSans(
                       color: theme.primaryText, fontSize: 13)),
             ],
             const SizedBox(height: 8),
@@ -166,7 +166,7 @@ class _ProviderBidsWidgetState extends State<ProviderBidsWidget> {
                       size: 14, color: theme.textTertiary),
                   const SizedBox(width: 4),
                   Text('$distance km',
-                      style: GoogleFonts.poppins(
+                      style: GoogleFonts.plusJakartaSans(
                           color: theme.textTertiary, fontSize: 11)),
                   const SizedBox(width: 12),
                 ],
@@ -175,7 +175,7 @@ class _ProviderBidsWidgetState extends State<ProviderBidsWidget> {
                       size: 14, color: theme.textTertiary),
                   const SizedBox(width: 4),
                   Text('$eta min',
-                      style: GoogleFonts.poppins(
+                      style: GoogleFonts.plusJakartaSans(
                           color: theme.textTertiary, fontSize: 11)),
                 ],
               ],
@@ -197,7 +197,7 @@ class _ProviderBidsWidgetState extends State<ProviderBidsWidget> {
                       : Icon(Icons.cancel_outlined,
                           size: 16, color: theme.error),
                   label: Text('Withdraw',
-                      style: GoogleFonts.poppins(
+                      style: GoogleFonts.plusJakartaSans(
                           color: theme.error,
                           fontSize: 13,
                           fontWeight: FontWeight.w500)),

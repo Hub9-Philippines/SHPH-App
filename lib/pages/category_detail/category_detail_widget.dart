@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
@@ -74,13 +74,13 @@ class _CategoryDetailWidgetState extends State<CategoryDetailWidget> {
                 size: 64, color: theme.textTertiary),
             const SizedBox(height: 16),
             Text('No services found in this category',
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.plusJakartaSans(
                     color: theme.primaryText,
                     fontSize: 16,
                     fontWeight: FontWeight.w500)),
             const SizedBox(height: 8),
             Text('Check back later or browse other categories.',
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.plusJakartaSans(
                     color: theme.secondaryText, fontSize: 14)),
           ],
         ),
@@ -140,14 +140,14 @@ class _CategoryDetailWidgetState extends State<CategoryDetailWidget> {
                     Text(title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.plusJakartaSans(
                             color: theme.primaryText,
                             fontSize: 14,
                             fontWeight: FontWeight.w500)),
                     const SizedBox(height: 4),
                     if (providerName != null)
                       Text(providerName,
-                          style: GoogleFonts.poppins(
+                          style: GoogleFonts.plusJakartaSans(
                               color: theme.secondaryText, fontSize: 12)),
                     const SizedBox(height: 6),
                     Row(
@@ -157,16 +157,16 @@ class _CategoryDetailWidgetState extends State<CategoryDetailWidget> {
                               size: 14, color: theme.warning),
                           const SizedBox(width: 2),
                           Text(rating,
-                              style: GoogleFonts.poppins(
+                              style: GoogleFonts.plusJakartaSans(
                                   color: theme.secondaryText,
                                   fontSize: 12)),
                           const SizedBox(width: 8),
                         ],
                         Text(
                             price != null
-                                ? '₱${price.toStringAsFixed(0)}'
+                                ? 'â‚±${price.toStringAsFixed(0)}'
                                 : '',
-                            style: GoogleFonts.poppins(
+                            style: GoogleFonts.plusJakartaSans(
                                 color: theme.primary,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600)),

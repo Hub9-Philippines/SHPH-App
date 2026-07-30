@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -282,12 +282,12 @@ class _ProfileWidgetState extends State<ProfileWidget> {
     );
   }
 
-  Widget _buildTopBar() => const ScreenHeader(
+  Widget _buildTopBar() => ScreenHeader(
         title: 'Profile Hub',
         subtitle: 'Manage your account, saved places, payments, and preferences.',
         action: Icon(
           Icons.tune_rounded,
-          color: Color(0xFF368EFF),
+          color: AppTheme.of(context).primary,
         ),
       );
 
@@ -394,7 +394,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                     Text(
                       displayName,
                       style: AppTheme.of(context).headlineSmall.override(
-                            font: GoogleFonts.poppins(
+                            font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w700,
                             ),
                             color: Colors.white,
@@ -404,7 +404,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                     Text(
                       email.isNotEmpty ? email : phone,
                       style: AppTheme.of(context).bodyMedium.override(
-                            font: GoogleFonts.poppins(),
+                            font: GoogleFonts.plusJakartaSans(),
                             color: Colors.white.withValues(alpha: 0.88),
                           ),
                     ),
@@ -437,7 +437,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                             Text(
                               'Edit profile',
                               style: AppTheme.of(context).labelLarge.override(
-                                    font: GoogleFonts.poppins(
+                                    font: GoogleFonts.plusJakartaSans(
                                       fontWeight: FontWeight.w600,
                                     ),
                                     color: Colors.white,
@@ -689,7 +689,7 @@ class _ProfileSection extends StatelessWidget {
             child: Text(
               title,
               style: theme.labelLarge.override(
-                    font: GoogleFonts.poppins(
+                    font: GoogleFonts.plusJakartaSans(
                       fontWeight: FontWeight.w700,
                     ),
                     color: theme.textTertiary,
@@ -754,7 +754,7 @@ class _ProfileQuickAction extends StatelessWidget {
                 label,
                 textAlign: TextAlign.center,
                 style: theme.labelLarge.override(
-                  font: GoogleFonts.poppins(
+                  font: GoogleFonts.plusJakartaSans(
                     fontWeight: FontWeight.w600,
                   ),
                   color: theme.primaryText,
@@ -816,7 +816,7 @@ class _ProfileMenuTile extends StatelessWidget {
                     Text(
                       title,
                       style: theme.titleSmall.override(
-                        font: GoogleFonts.poppins(
+                        font: GoogleFonts.plusJakartaSans(
                           fontWeight: FontWeight.w600,
                         ),
                         color: titleColor ?? theme.primaryText,
@@ -826,7 +826,7 @@ class _ProfileMenuTile extends StatelessWidget {
                     Text(
                       subtitle,
                       style: theme.bodySmall.override(
-                        font: GoogleFonts.poppins(),
+                        font: GoogleFonts.plusJakartaSans(),
                         color: theme.textTertiary,
                       ),
                     ),
@@ -888,7 +888,7 @@ class _ProfileToggleTile extends StatelessWidget {
                 Text(
                   title,
                   style: theme.titleSmall.override(
-                    font: GoogleFonts.poppins(
+                    font: GoogleFonts.plusJakartaSans(
                       fontWeight: FontWeight.w600,
                     ),
                     color: theme.primaryText,
@@ -898,7 +898,7 @@ class _ProfileToggleTile extends StatelessWidget {
                 Text(
                   subtitle,
                   style: theme.bodySmall.override(
-                    font: GoogleFonts.poppins(),
+                    font: GoogleFonts.plusJakartaSans(),
                     color: theme.textTertiary,
                   ),
                 ),
@@ -939,7 +939,7 @@ class _ProfileMetric extends StatelessWidget {
           Text(
             value,
             style: AppTheme.of(context).labelLarge.override(
-                  font: GoogleFonts.poppins(
+                  font: GoogleFonts.plusJakartaSans(
                     fontWeight: FontWeight.w700,
                   ),
                   color: Colors.white,
@@ -949,7 +949,7 @@ class _ProfileMetric extends StatelessWidget {
           Text(
             label,
             style: AppTheme.of(context).bodySmall.override(
-                  font: GoogleFonts.poppins(),
+                  font: GoogleFonts.plusJakartaSans(),
                   color: Colors.white.withValues(alpha: 0.78),
                 ),
           ),

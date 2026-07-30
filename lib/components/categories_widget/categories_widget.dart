@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/backend/supabase/supabase.dart';
@@ -152,7 +152,7 @@ class _CategoriesWidgetWidgetState extends State<CategoriesWidgetWidget> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: AppTheme.of(context).titleMedium.override(
-                        font: GoogleFonts.poppins(
+                        font: GoogleFonts.plusJakartaSans(
                           fontWeight: FontWeight.w700,
                         ),
                         color: Colors.white,
@@ -162,7 +162,7 @@ class _CategoriesWidgetWidgetState extends State<CategoriesWidgetWidget> {
                 Text(
                   'Open services',
                   style: AppTheme.of(context).bodySmall.override(
-                        font: GoogleFonts.poppins(),
+                        font: GoogleFonts.plusJakartaSans(),
                         color: Colors.white.withValues(alpha: 0.82),
                       ),
                 ),

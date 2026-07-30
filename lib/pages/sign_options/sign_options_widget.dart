@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
@@ -82,7 +82,7 @@ class _SignOptionsWidgetState extends State<SignOptionsWidget> {
                               style: AppTheme.of(context)
                                   .headlineLarge
                                   .override(
-                                    font: GoogleFonts.poppins(
+                                    font: GoogleFonts.plusJakartaSans(
                                       fontWeight: FontWeight.bold,
                                       fontStyle: AppTheme.of(context)
                                           .headlineLarge
@@ -103,7 +103,7 @@ class _SignOptionsWidgetState extends State<SignOptionsWidget> {
                               style: AppTheme.of(context)
                                   .headlineLarge
                                   .override(
-                                    font: GoogleFonts.poppins(
+                                    font: GoogleFonts.plusJakartaSans(
                                       fontWeight: FontWeight.bold,
                                       fontStyle: AppTheme.of(context)
                                           .headlineLarge
@@ -126,7 +126,7 @@ class _SignOptionsWidgetState extends State<SignOptionsWidget> {
                           style: AppTheme.of(context)
                               .bodyMedium
                               .override(
-                                font: GoogleFonts.poppins(
+                                font: GoogleFonts.plusJakartaSans(
                                   fontWeight: FontWeight.w600,
                                   fontStyle: AppTheme.of(context)
                                       .bodyMedium
@@ -167,7 +167,7 @@ class _SignOptionsWidgetState extends State<SignOptionsWidget> {
                                 textStyle: AppTheme.of(context)
                                     .titleMedium
                                     .override(
-                                      font: GoogleFonts.poppins(
+                                      font: GoogleFonts.plusJakartaSans(
                                         fontWeight: FontWeight.w600,
                                         fontStyle: AppTheme.of(context)
                                             .titleMedium
@@ -208,7 +208,7 @@ class _SignOptionsWidgetState extends State<SignOptionsWidget> {
                                 textStyle: AppTheme.of(context)
                                     .titleMedium
                                     .override(
-                                      font: GoogleFonts.poppins(
+                                      font: GoogleFonts.plusJakartaSans(
                                         fontWeight: FontWeight.w600,
                                         fontStyle: AppTheme.of(context)
                                             .titleMedium
@@ -247,7 +247,7 @@ class _SignOptionsWidgetState extends State<SignOptionsWidget> {
                         style: AppTheme.of(context)
                             .bodyMedium
                             .override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: AppTheme.of(context)
                                     .bodyMedium
                                     .fontWeight,
@@ -279,7 +279,7 @@ class _SignOptionsWidgetState extends State<SignOptionsWidget> {
                           style: AppTheme.of(context)
                               .bodyMedium
                               .override(
-                                font: GoogleFonts.poppins(
+                                font: GoogleFonts.plusJakartaSans(
                                   fontWeight: FontWeight.w600,
                                   fontStyle: AppTheme.of(context)
                                       .bodyMedium

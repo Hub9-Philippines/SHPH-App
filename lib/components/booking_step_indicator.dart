@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/theme/app_theme.dart';
@@ -78,7 +78,7 @@ class BookingStepIndicator extends StatelessWidget {
                   if (isActive || isComplete)
                     Text(
                       steps[stepIndex].label,
-                      style: GoogleFonts.poppins(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: theme.primary,

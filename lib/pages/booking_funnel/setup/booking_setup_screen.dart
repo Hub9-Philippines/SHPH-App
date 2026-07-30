@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -40,7 +40,7 @@ class BookingSetupScreen extends StatelessWidget {
             Text(
               'Service setup',
               style: theme.titleLarge.override(
-                font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
               ),
             ),
           ],

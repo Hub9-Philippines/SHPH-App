@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -303,7 +303,7 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
                             Text(
                               'Contact Provider',
                               style: AppTheme.of(context).titleLarge.override(
-                                    font: GoogleFonts.poppins(
+                                    font: GoogleFonts.plusJakartaSans(
                                       fontWeight: FontWeight.w700,
                                     ),
                                     color: const Color(0xFF14213D),
@@ -312,7 +312,7 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
                             Text(
                               'Reach out to ${_providerDisplayName ?? widget.providerName} about service details or availability.',
                               style: AppTheme.of(context).bodySmall.override(
-                                    font: GoogleFonts.poppins(),
+                                    font: GoogleFonts.plusJakartaSans(),
                                     color: const Color(0xFF64748B),
                                   ),
                             ),
@@ -337,7 +337,7 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
                         Text(
                           'Contact options',
                           style: AppTheme.of(context).titleMedium.override(
-                                font: GoogleFonts.poppins(
+                                font: GoogleFonts.plusJakartaSans(
                                   fontWeight: FontWeight.w700,
                                 ),
                                 color: const Color(0xFF14213D),
@@ -360,7 +360,7 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
                                   color: const Color(0xFF0F8A6C),
                                   textStyle:
                                       AppTheme.of(context).titleSmall.override(
-                                            font: GoogleFonts.poppins(
+                                            font: GoogleFonts.plusJakartaSans(
                                               fontWeight: FontWeight.w700,
                                             ),
                                             color: Colors.white,
@@ -384,7 +384,7 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
                                   color: AppTheme.of(context).primary,
                                   textStyle:
                                       AppTheme.of(context).titleSmall.override(
-                                            font: GoogleFonts.poppins(
+                                            font: GoogleFonts.plusJakartaSans(
                                               fontWeight: FontWeight.w700,
                                             ),
                                             color: Colors.white,
@@ -418,7 +418,7 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
                                   'Send a message',
                                   style:
                                       AppTheme.of(context).titleMedium.override(
-                                            font: GoogleFonts.poppins(
+                                            font: GoogleFonts.plusJakartaSans(
                                               fontWeight: FontWeight.w700,
                                             ),
                                             color: const Color(0xFF14213D),
@@ -428,7 +428,7 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
                                 Text(
                                   'This sends your message straight into the existing in-app chat thread.',
                                   style: AppTheme.of(context).bodySmall.override(
-                                        font: GoogleFonts.poppins(),
+                                        font: GoogleFonts.plusJakartaSans(),
                                         color: const Color(0xFF64748B),
                                       ),
                                 ),
@@ -482,7 +482,7 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
                                     textStyle: AppTheme.of(context)
                                         .titleMedium
                                         .override(
-                                          font: GoogleFonts.poppins(
+                                          font: GoogleFonts.plusJakartaSans(
                                             fontWeight: FontWeight.w700,
                                           ),
                                           color: Colors.white,
@@ -546,7 +546,7 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
                         child: Text(
                           _providerDisplayName ?? widget.providerName,
                           style: AppTheme.of(context).titleMedium.override(
-                                font: GoogleFonts.poppins(
+                                font: GoogleFonts.plusJakartaSans(
                                   fontWeight: FontWeight.w700,
                                 ),
                                 color: const Color(0xFF14213D),
@@ -567,7 +567,7 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
                         ? _providerPhone!
                         : 'Phone number unavailable',
                     style: AppTheme.of(context).bodySmall.override(
-                          font: GoogleFonts.poppins(),
+                          font: GoogleFonts.plusJakartaSans(),
                           color: const Color(0xFF64748B),
                         ),
                   ),
@@ -605,7 +605,7 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
             Text(
               'Service details',
               style: AppTheme.of(context).titleSmall.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: const Color(0xFF14213D),
                   ),
             ),
@@ -613,7 +613,7 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
             Text(
               widget.serviceName!,
               style: AppTheme.of(context).bodyLarge.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: const Color(0xFF14213D),
                   ),
             ),
@@ -622,7 +622,7 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
               Text(
                 widget.serviceCategory!,
                 style: AppTheme.of(context).bodySmall.override(
-                      font: GoogleFonts.poppins(),
+                      font: GoogleFonts.plusJakartaSans(),
                       color: const Color(0xFF64748B),
                     ),
               ),
@@ -632,7 +632,7 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
               Text(
                 widget.servicePrice!,
                 style: AppTheme.of(context).bodyMedium.override(
-                      font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                      font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                       color: AppTheme.of(context).primary,
                     ),
               ),
@@ -642,7 +642,7 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
               Text(
                 widget.serviceDescription!,
                 style: AppTheme.of(context).bodySmall.override(
-                      font: GoogleFonts.poppins(),
+                      font: GoogleFonts.plusJakartaSans(),
                       color: const Color(0xFF64748B),
                     ),
               ),

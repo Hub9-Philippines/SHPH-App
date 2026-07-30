@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/theme/app_theme.dart';
@@ -28,7 +28,7 @@ class SectionHeader extends StatelessWidget {
             child: Text(
               title,
               style: AppTheme.of(context).titleSmall.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                     color: const Color(0xFF0F172A),
                   ),
             ),
@@ -39,7 +39,7 @@ class SectionHeader extends StatelessWidget {
               child: Text(
                 'See all',
                 style: AppTheme.of(context).bodySmall.override(
-                      font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                      font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                       color: AppTheme.of(context).primaryBrandText,
                     ),
               ),

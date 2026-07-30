@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -198,7 +198,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                   child: Text(
                     'Log Out',
                     style: AppTheme.of(context).titleSmall.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
                           color: AppTheme.of(context).error,
@@ -255,7 +255,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                   Text(
                     'Control your app experience',
                     style: AppTheme.of(context).titleMedium.override(
-                          font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                          font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                           color: Colors.white,
                         ),
                   ),
@@ -263,7 +263,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                   Text(
                     'Appearance, security, notifications, and support all live here.',
                     style: AppTheme.of(context).bodySmall.override(
-                          font: GoogleFonts.poppins(),
+                          font: GoogleFonts.plusJakartaSans(),
                           color: Colors.white.withValues(alpha: 0.82),
                         ),
                   ),
@@ -287,7 +287,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
             child: Text(
               title,
               style: theme.titleSmall.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: theme.textTertiary,
                   ),
             ),
@@ -337,7 +337,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                       Text(
                         title,
                         style: theme.titleSmall.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,
                               ),
                               color: theme.primaryText,
@@ -347,7 +347,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                       Text(
                         subtitle,
                         style: theme.bodySmall.override(
-                              font: GoogleFonts.poppins(),
+                              font: GoogleFonts.plusJakartaSans(),
                               color: theme.secondaryText,
                             ),
                       ),
@@ -394,7 +394,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                   Text(
                     title,
                     style: theme.titleSmall.override(
-                          font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                          font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                           color: theme.primaryText,
                         ),
                   ),
@@ -402,7 +402,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                   Text(
                     subtitle,
                     style: theme.bodySmall.override(
-                          font: GoogleFonts.poppins(),
+                          font: GoogleFonts.plusJakartaSans(),
                           color: theme.secondaryText,
                         ),
                   ),

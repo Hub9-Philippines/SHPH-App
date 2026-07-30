@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -241,7 +241,7 @@ class _ExpressSheet extends StatelessWidget {
                   Text(
                     service.title,
                     style: theme.titleMedium.override(
-                      font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                      font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -583,7 +583,7 @@ class _Pill extends StatelessWidget {
   }
 }
 
-// ── Time edit bottom sheet ──
+// â”€â”€ Time edit bottom sheet â”€â”€
 
 class _TimeEditSheet extends StatelessWidget {
   const _TimeEditSheet({required this.controller});
@@ -617,14 +617,14 @@ class _TimeEditSheet extends StatelessWidget {
           Text(
             'When do you need the service?',
             style: theme.titleLarge.override(
-              font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(height: 16),
           _TimeOption(
             icon: Icons.flash_on_rounded,
             title: 'Right now',
-            subtitle: 'ASAP dispatch — nearest provider',
+            subtitle: 'ASAP dispatch â€” nearest provider',
             selected: controller.draft.urgency == BookingUrgency.rightNow,
             onTap: () {
               controller.setUrgency(BookingUrgency.rightNow);
@@ -759,7 +759,7 @@ class _TimeOption extends StatelessWidget {
   }
 }
 
-// ── Scope edit bottom sheet ──
+// â”€â”€ Scope edit bottom sheet â”€â”€
 
 class _ScopeEditSheet extends StatefulWidget {
   const _ScopeEditSheet({required this.controller});
@@ -822,7 +822,7 @@ class _ScopeEditSheetState extends State<_ScopeEditSheet> {
           Text(
             'Scope & level',
             style: theme.titleLarge.override(
-              font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(height: 16),

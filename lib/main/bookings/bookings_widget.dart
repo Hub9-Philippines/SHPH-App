@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
@@ -161,7 +161,7 @@ class _BookingsWidgetState extends State<BookingsWidget> {
                 Text(
                   'Bookings',
                   style: AppTheme.of(context).headlineSmall.override(
-                        font: GoogleFonts.poppins(
+                        font: GoogleFonts.plusJakartaSans(
                           fontWeight: FontWeight.w700,
                         ),
                         color: const Color(0xFF14213D),
@@ -171,7 +171,7 @@ class _BookingsWidgetState extends State<BookingsWidget> {
                 Text(
                   'Track active work, completed visits, and next steps.',
                   style: AppTheme.of(context).bodySmall.override(
-                        font: GoogleFonts.poppins(),
+                        font: GoogleFonts.plusJakartaSans(),
                         color: const Color(0xFF64748B),
                       ),
                 ),
@@ -275,7 +275,7 @@ class _BookingsWidgetState extends State<BookingsWidget> {
                         child: Text(
                           booking.status,
                           style: theme.labelMedium.override(
-                            font: GoogleFonts.poppins(
+                            font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w700,
                             ),
                             color: statusColor,
@@ -288,7 +288,7 @@ class _BookingsWidgetState extends State<BookingsWidget> {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: theme.titleSmall.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
                           color: const Color(0xFF14213D),
@@ -298,7 +298,7 @@ class _BookingsWidgetState extends State<BookingsWidget> {
                       Text(
                         booking.serviceType,
                         style: theme.bodySmall.override(
-                          font: GoogleFonts.poppins(),
+                          font: GoogleFonts.plusJakartaSans(),
                           color: const Color(0xFF64748B),
                         ),
                       ),
@@ -347,7 +347,7 @@ class _BookingsWidgetState extends State<BookingsWidget> {
                 height: 52,
                 color: theme.primary.withValues(alpha: 0.10),
                 textStyle: theme.titleSmall.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                   color: theme.primary,
                 ),
                 elevation: 0,
@@ -377,7 +377,7 @@ class _BookingsWidgetState extends State<BookingsWidget> {
                   height: 52,
                   color: theme.primary,
                   textStyle: theme.titleSmall.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: Colors.white,
                   ),
                   elevation: 0,
@@ -460,7 +460,7 @@ class _BookingsWidgetState extends State<BookingsWidget> {
                 title,
                 textAlign: TextAlign.center,
                 style: theme.titleMedium.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                   color: const Color(0xFF14213D),
                 ),
               ),
@@ -469,7 +469,7 @@ class _BookingsWidgetState extends State<BookingsWidget> {
                 subtitle,
                 textAlign: TextAlign.center,
                 style: theme.bodyMedium.override(
-                  font: GoogleFonts.poppins(),
+                  font: GoogleFonts.plusJakartaSans(),
                   color: const Color(0xFF64748B),
                 ),
               ),
@@ -509,7 +509,7 @@ class _BookingsWidgetState extends State<BookingsWidget> {
                 _model.errorMessage ?? 'Something went wrong',
                 textAlign: TextAlign.center,
                 style: theme.bodyMedium.override(
-                  font: GoogleFonts.poppins(),
+                  font: GoogleFonts.plusJakartaSans(),
                 ),
               ),
               const SizedBox(height: 16),
@@ -522,7 +522,7 @@ class _BookingsWidgetState extends State<BookingsWidget> {
                   color: theme.primary,
                   textStyle: theme.bodySmall.override(
                     color: Colors.white,
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -555,14 +555,14 @@ class _BookingMetaRow extends StatelessWidget {
         Text(
           label,
           style: theme.bodyMedium.override(
-            font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+            font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
             color: const Color(0xFF64748B),
           ),
         ),
         Text(
           value,
           style: theme.bodyMedium.override(
-            font: GoogleFonts.poppins(
+            font: GoogleFonts.plusJakartaSans(
               fontWeight: emphasized ? FontWeight.w700 : FontWeight.w500,
             ),
             color: emphasized ? theme.primary : theme.primaryText,

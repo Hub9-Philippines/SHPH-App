@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
@@ -83,7 +83,7 @@ class _SuccessTopCard extends StatelessWidget {
               Text(
                 'Reservation confirmed',
                 style: theme.titleMedium.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                 ),
               ),
               const SizedBox(height: 4),
@@ -133,7 +133,7 @@ class _SuccessBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.primaryBackground.withValues(alpha: 0.96),
         shape: BoxShape.circle,
-        boxShadow: AppThemeData.shadowElevated,
+        boxShadow: AppThemeData.shadowLg,
       ),
       child: Icon(
         Icons.check_circle_rounded,
@@ -176,7 +176,7 @@ class _SuccessSheet extends StatelessWidget {
         Text(
           'Slot reserved',
           style: theme.titleLarge.override(
-            font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+            font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
           ),
         ),
         const SizedBox(height: 6),
@@ -295,7 +295,7 @@ class _SuccessSheet extends StatelessWidget {
   String _serviceSetupText(BookingDraft draft) {
     final category = (draft.serviceCategoryName ?? '').trim();
     final categoryText = category.isEmpty ? 'Service' : category;
-    return '$categoryText • ${draft.rooms} ${draft.rooms == 1 ? 'unit' : 'units'} • ${draft.cleaningType.name}';
+    return '$categoryText â€¢ ${draft.rooms} ${draft.rooms == 1 ? 'unit' : 'units'} â€¢ ${draft.cleaningType.name}';
   }
 }
 

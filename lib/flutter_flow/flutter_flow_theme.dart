@@ -1,4 +1,4 @@
-// ignore_for_file: overridden_fields, annotate_overrides
+﻿// ignore_for_file: overridden_fields, annotate_overrides
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -142,12 +142,12 @@ class LightModeTheme extends FlutterFlowTheme {
   @Deprecated('Use tertiary instead')
   Color get tertiaryColor => tertiary;
 
-  late Color primary = const Color(0xFF368EFF);
+  late Color primary = const Color(0xFF63CBD6);
   late Color secondary = const Color(0xFF39D2C0);
   late Color tertiary = const Color(0xFFEE8B60);
   late Color alternate = const Color(0xFFE0E3E7);
-  late Color primaryText = const Color(0xFF14181B);
-  late Color secondaryText = const Color(0xFF57636C);
+  late Color primaryText = const Color(0xFF0F172A);
+  late Color secondaryText = const Color(0xFF64748B);
   late Color primaryBackground = const Color(0xFFFFFFFF);
   late Color secondaryBackground = const Color(0xFFF7F7F7);
   late Color accent1 = const Color(0x4C4B39EF);
@@ -156,10 +156,10 @@ class LightModeTheme extends FlutterFlowTheme {
   late Color accent4 = const Color(0xCCFFFFFF);
   late Color success = const Color(0xFF249689);
   late Color warning = const Color(0xFFF9CF58);
-  late Color error = const Color(0xFFFF5963);
-  late Color info = const Color(0xFFFFFFFF);
+  late Color error = const Color(0xFFDC2626);
+  late Color info = const Color(0xFF63CBD6);
 
-  late Color iconBackground = const Color(0xFFE6F0FF);
+  late Color iconBackground = const Color(0xFFD4F0EF);
 }
 
 abstract class Typography {
@@ -217,105 +217,105 @@ class ThemeTypography extends Typography {
 
   String get displayLargeFamily => 'Poppins';
   bool get displayLargeIsCustom => false;
-  TextStyle get displayLarge => GoogleFonts.poppins(
+  TextStyle get displayLarge => GoogleFonts.plusJakartaSans(
         color: theme.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 64,
       );
   String get displayMediumFamily => 'Poppins';
   bool get displayMediumIsCustom => false;
-  TextStyle get displayMedium => GoogleFonts.poppins(
+  TextStyle get displayMedium => GoogleFonts.plusJakartaSans(
         color: theme.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 44,
       );
   String get displaySmallFamily => 'Poppins';
   bool get displaySmallIsCustom => false;
-  TextStyle get displaySmall => GoogleFonts.poppins(
+  TextStyle get displaySmall => GoogleFonts.plusJakartaSans(
         color: theme.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 36,
       );
   String get headlineLargeFamily => 'Poppins';
   bool get headlineLargeIsCustom => false;
-  TextStyle get headlineLarge => GoogleFonts.poppins(
+  TextStyle get headlineLarge => GoogleFonts.plusJakartaSans(
         color: theme.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 32,
       );
   String get headlineMediumFamily => 'Poppins';
   bool get headlineMediumIsCustom => false;
-  TextStyle get headlineMedium => GoogleFonts.poppins(
+  TextStyle get headlineMedium => GoogleFonts.plusJakartaSans(
         color: theme.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 28,
       );
   String get headlineSmallFamily => 'Poppins';
   bool get headlineSmallIsCustom => false;
-  TextStyle get headlineSmall => GoogleFonts.poppins(
+  TextStyle get headlineSmall => GoogleFonts.plusJakartaSans(
         color: theme.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 24,
       );
   String get titleLargeFamily => 'Poppins';
   bool get titleLargeIsCustom => false;
-  TextStyle get titleLarge => GoogleFonts.poppins(
+  TextStyle get titleLarge => GoogleFonts.plusJakartaSans(
         color: theme.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 20,
       );
   String get titleMediumFamily => 'Poppins';
   bool get titleMediumIsCustom => false;
-  TextStyle get titleMedium => GoogleFonts.poppins(
+  TextStyle get titleMedium => GoogleFonts.plusJakartaSans(
         color: theme.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 18,
       );
   String get titleSmallFamily => 'Poppins';
   bool get titleSmallIsCustom => false;
-  TextStyle get titleSmall => GoogleFonts.poppins(
+  TextStyle get titleSmall => GoogleFonts.plusJakartaSans(
         color: theme.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 16,
       );
   String get labelLargeFamily => 'Poppins';
   bool get labelLargeIsCustom => false;
-  TextStyle get labelLarge => GoogleFonts.poppins(
+  TextStyle get labelLarge => GoogleFonts.plusJakartaSans(
         color: theme.secondaryText,
         fontWeight: FontWeight.normal,
         fontSize: 16,
       );
   String get labelMediumFamily => 'Poppins';
   bool get labelMediumIsCustom => false;
-  TextStyle get labelMedium => GoogleFonts.poppins(
+  TextStyle get labelMedium => GoogleFonts.plusJakartaSans(
         color: theme.secondaryText,
         fontWeight: FontWeight.normal,
         fontSize: 14,
       );
   String get labelSmallFamily => 'Poppins';
   bool get labelSmallIsCustom => false;
-  TextStyle get labelSmall => GoogleFonts.poppins(
+  TextStyle get labelSmall => GoogleFonts.plusJakartaSans(
         color: theme.secondaryText,
         fontWeight: FontWeight.normal,
         fontSize: 12,
       );
   String get bodyLargeFamily => 'Poppins';
   bool get bodyLargeIsCustom => false;
-  TextStyle get bodyLarge => GoogleFonts.poppins(
+  TextStyle get bodyLarge => GoogleFonts.plusJakartaSans(
         color: theme.primaryText,
         fontWeight: FontWeight.normal,
         fontSize: 16,
       );
   String get bodyMediumFamily => 'Poppins';
   bool get bodyMediumIsCustom => false;
-  TextStyle get bodyMedium => GoogleFonts.poppins(
+  TextStyle get bodyMedium => GoogleFonts.plusJakartaSans(
         color: theme.primaryText,
         fontWeight: FontWeight.normal,
         fontSize: 14,
       );
   String get bodySmallFamily => 'Poppins';
   bool get bodySmallIsCustom => false;
-  TextStyle get bodySmall => GoogleFonts.poppins(
+  TextStyle get bodySmall => GoogleFonts.plusJakartaSans(
         color: theme.primaryText,
         fontWeight: FontWeight.normal,
         fontSize: 12,
@@ -330,7 +330,7 @@ class DarkModeTheme extends FlutterFlowTheme {
   @Deprecated('Use tertiary instead')
   Color get tertiaryColor => tertiary;
 
-  late Color primary = const Color(0xFF368EFF);
+  late Color primary = const Color(0xFF63CBD6);
   late Color secondary = const Color(0xFF39D2C0);
   late Color tertiary = const Color(0xFFEE8B60);
   late Color alternate = const Color(0xFFE0E3E7);
@@ -344,8 +344,8 @@ class DarkModeTheme extends FlutterFlowTheme {
   late Color accent4 = const Color(0xB2262D34);
   late Color success = const Color(0xFF249689);
   late Color warning = const Color(0xFFF9CF58);
-  late Color error = const Color(0xFFFF5963);
-  late Color info = const Color(0xFFFFFFFF);
+  late Color error = const Color(0xFFDC2626);
+  late Color info = const Color(0xFF63CBD6);
 
   late Color iconBackground = const Color(0xFFF34966);
 }

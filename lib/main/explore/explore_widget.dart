@@ -6,6 +6,7 @@ import '/components/content_container.dart';
 import '/components/refreshable_page.dart';
 import '/components/screen_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/theme/app_theme.dart';
 import 'explore_model.dart';
 
 export 'explore_model.dart';
@@ -68,12 +69,12 @@ class _ExploreWidgetState extends State<ExploreWidget> with RefreshablePage<Expl
           body: SafeArea(
             child: Column(
               children: [
-                const ScreenHeader(
+                ScreenHeader(
                   title: 'Explore',
                   subtitle: 'Jump into the service type you need most.',
                   action: Icon(
                     Icons.grid_view_rounded,
-                    color: Color(0xFF368EFF),
+                    color: AppTheme.of(context).primary,
                   ),
                 ),
                 SizedBox(

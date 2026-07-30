@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -271,7 +271,7 @@ class _TMBroadcastTopCard extends StatelessWidget {
               Text(
                 stageLabel,
                 style: theme.titleMedium.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                 ),
               ),
               const SizedBox(height: 4),
@@ -362,7 +362,7 @@ class _TMBroadcastSheet extends StatelessWidget {
         Text(
           'Looking for a provider',
           style: theme.titleMedium.override(
-            font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+            font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
           ),
         ),
         const SizedBox(height: 6),
@@ -681,7 +681,7 @@ class _NoProviderFoundModal extends StatelessWidget {
               Text(
                 'No provider found',
                 style: theme.titleMedium.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                 ),
               ),
               const SizedBox(height: 8),

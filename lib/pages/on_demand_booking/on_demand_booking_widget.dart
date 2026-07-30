@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/components/screen_header.dart';
@@ -91,7 +91,7 @@ class _OnDemandBookingWidgetState extends State<OnDemandBookingWidget> {
                   ),
                   child: Text(
                     label,
-                    style: GoogleFonts.poppins(
+                    style: GoogleFonts.plusJakartaSans(
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
                       color: selected ? Colors.white : theme.primaryText,
@@ -177,11 +177,11 @@ class _OnDemandBookingWidgetState extends State<OnDemandBookingWidget> {
                 color: theme.primaryText,
               )),
           const SizedBox(height: 12),
-          _infoRow(theme, 'Service Fee', '₱150.00'),
-          _infoRow(theme, 'Urgency Fee', _urgencyDays == 0 ? '₱50.00' : '₱0.00'),
-          _infoRow(theme, 'Service Charge', '₱20.00'),
+          _infoRow(theme, 'Service Fee', 'â‚±150.00'),
+          _infoRow(theme, 'Urgency Fee', _urgencyDays == 0 ? 'â‚±50.00' : 'â‚±0.00'),
+          _infoRow(theme, 'Service Charge', 'â‚±20.00'),
           const Divider(height: 24),
-          _infoRow(theme, 'Total', '₱${_urgencyDays == 0 ? '220.00' : '170.00'}',
+          _infoRow(theme, 'Total', 'â‚±${_urgencyDays == 0 ? '220.00' : '170.00'}',
               bold: true, color: theme.primary),
         ],
       ),
@@ -228,7 +228,7 @@ class _OnDemandBookingWidgetState extends State<OnDemandBookingWidget> {
         ),
         child: Text(
           'Confirm Booking',
-          style: GoogleFonts.poppins(
+          style: GoogleFonts.plusJakartaSans(
             fontWeight: FontWeight.w600,
             fontSize: 15,
           ),

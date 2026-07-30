@@ -1,4 +1,4 @@
-import 'package:easy_debounce/easy_debounce.dart';
+﻿import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -383,7 +383,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
                 decoration: InputDecoration(
                   hintText: 'Search for services...',
                   hintStyle: AppTheme.of(context).bodyMedium.override(
-                        font: GoogleFonts.poppins(),
+                        font: GoogleFonts.plusJakartaSans(),
                         color: AppTheme.of(context).textTertiary,
                       ),
                   border: InputBorder.none,
@@ -434,7 +434,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
                   ? 'Start with a keyword'
                   : '"${_searchController.text.trim()}"',
               style: AppTheme.of(context).headlineSmall.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: Colors.white,
                   ),
             ),
@@ -444,7 +444,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
                   ? 'Search by service name or category.'
                   : '${_searchResults.length} matching services',
               style: AppTheme.of(context).bodyMedium.override(
-                    font: GoogleFonts.poppins(),
+                    font: GoogleFonts.plusJakartaSans(),
                     color: Colors.white.withValues(alpha: 0.82),
                   ),
             ),
@@ -487,7 +487,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
             Text(
               label,
               style: AppTheme.of(context).labelMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                     color: Colors.white,
                   ),
             ),
@@ -555,7 +555,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
                   Text(
                     label,
                     style: AppTheme.of(context).bodySmall.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w600,
                           ),
                           color: AppTheme.of(context).primaryText,
@@ -684,7 +684,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
           Text(
             title,
             style: AppTheme.of(context).labelLarge.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                   color: const Color(0xFF16202A),
                 ),
           ),
@@ -711,7 +711,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
         backgroundColor: const Color(0xFFF3F6F8),
         selectedColor: AppTheme.of(context).primary,
         labelStyle: AppTheme.of(context).labelMedium.override(
-              font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
               color: selected ? Colors.white : const Color(0xFF16202A),
             ),
       );
@@ -737,7 +737,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
             Text(
               'Search for services',
               style: AppTheme.of(context).titleMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: const Color(0xFF16202A),
                   ),
             ),
@@ -746,7 +746,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
               'Try keywords like cleaning, painting, or plumbing.',
               textAlign: TextAlign.center,
               style: AppTheme.of(context).bodySmall.override(
-                    font: GoogleFonts.poppins(),
+                    font: GoogleFonts.plusJakartaSans(),
                     color: const Color(0xFF6F7B86),
                   ),
             ),
@@ -800,7 +800,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
           Text(
             title,
             style: AppTheme.of(context).labelLarge.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                   color: const Color(0xFF16202A),
                 ),
           ),
@@ -837,7 +837,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
                 Text(
                   label,
                   style: AppTheme.of(context).bodySmall.override(
-                        font: GoogleFonts.poppins(),
+                        font: GoogleFonts.plusJakartaSans(),
                         color: const Color(0xFF16202A),
                       ),
                 ),
@@ -867,7 +867,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
               Text(
                 'No services found',
                 style: AppTheme.of(context).titleMedium.override(
-                      font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                      font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                       color: const Color(0xFF16202A),
                     ),
               ),
@@ -876,7 +876,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
                 'Try another keyword, open a broader category, or clear your filters.',
                 textAlign: TextAlign.center,
                 style: AppTheme.of(context).bodySmall.override(
-                      font: GoogleFonts.poppins(),
+                      font: GoogleFonts.plusJakartaSans(),
                       color: const Color(0xFF6F7B86),
                     ),
               ),
@@ -1005,7 +1005,7 @@ class _SearchServiceCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.titleMedium.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
                           color: const Color(0xFF16202A),
@@ -1015,7 +1015,7 @@ class _SearchServiceCard extends StatelessWidget {
                       Text(
                         service.categoryName ?? 'Service',
                         style: theme.bodySmall.override(
-                          font: GoogleFonts.poppins(),
+                          font: GoogleFonts.plusJakartaSans(),
                           color: const Color(0xFF6F7B86),
                         ),
                       ),
@@ -1032,7 +1032,7 @@ class _SearchServiceCard extends StatelessWidget {
                             (double.tryParse(service.rating ?? '0') ?? 0)
                                 .toStringAsFixed(1),
                             style: theme.bodySmall.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -1041,7 +1041,7 @@ class _SearchServiceCard extends StatelessWidget {
                           Text(
                             '${service.reviewCount ?? 0} reviews',
                             style: theme.bodySmall.override(
-                              font: GoogleFonts.poppins(),
+                              font: GoogleFonts.plusJakartaSans(),
                               color: const Color(0xFF6F7B86),
                             ),
                           ),
@@ -1053,7 +1053,7 @@ class _SearchServiceCard extends StatelessWidget {
                             ? 'PHP ${service.basePrice}${service.priceUnit ?? ''}'
                             : 'PHP 0',
                         style: theme.titleSmall.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
                           color: theme.primary,

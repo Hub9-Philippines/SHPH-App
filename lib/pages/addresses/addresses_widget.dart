@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/auth/supabase_auth/auth_util.dart';
@@ -155,7 +155,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                             iconPadding: EdgeInsetsDirectional.zero,
                             color: AppTheme.of(context).primary,
                             textStyle: AppTheme.of(context).titleSmall.override(
-                                  font: GoogleFonts.poppins(
+                                  font: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.w600,
                                   ),
                                   color: Colors.white,
@@ -186,7 +186,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
         title: Text(
           'Addresses',
           style: AppTheme.of(context).titleLarge.override(
-                font: GoogleFonts.poppins(
+                font: GoogleFonts.plusJakartaSans(
                   fontWeight: FontWeight.w700,
                 ),
                 color: AppTheme.of(context).primaryText,
@@ -248,7 +248,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                     Text(
                       'Saved places',
                       style: AppTheme.of(context).titleLarge.override(
-                            font: GoogleFonts.poppins(
+                            font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w700,
                             ),
                             color: Colors.white,
@@ -258,7 +258,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                     Text(
                       'Keep your booking flow fast by storing your key locations.',
                       style: AppTheme.of(context).bodySmall.override(
-                            font: GoogleFonts.poppins(),
+                            font: GoogleFonts.plusJakartaSans(),
                             color: Colors.white.withValues(alpha: 0.82),
                           ),
                     ),
@@ -328,7 +328,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
             Text(
               'No addresses yet',
               style: AppTheme.of(context).titleMedium.override(
-                    font: GoogleFonts.poppins(
+                    font: GoogleFonts.plusJakartaSans(
                       fontWeight: FontWeight.w700,
                     ),
                     color: AppTheme.of(context).primaryText,
@@ -339,7 +339,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
               'Add your home, work, or favorite places so future bookings are quicker.',
               textAlign: TextAlign.center,
               style: AppTheme.of(context).bodySmall.override(
-                    font: GoogleFonts.poppins(),
+                    font: GoogleFonts.plusJakartaSans(),
                     color: AppTheme.of(context).secondaryText,
                   ),
             ),
@@ -413,7 +413,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                                   overflow: TextOverflow.ellipsis,
                                   style:
                                       AppTheme.of(context).titleMedium.override(
-                                            font: GoogleFonts.poppins(
+                                            font: GoogleFonts.plusJakartaSans(
                                               fontWeight: FontWeight.w700,
                                             ),
                                             color: AppTheme.of(context).primaryText,
@@ -512,7 +512,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                 Text(
                   _formatAddress(address),
                   style: AppTheme.of(context).bodyMedium.override(
-                        font: GoogleFonts.poppins(),
+                        font: GoogleFonts.plusJakartaSans(),
                         color: AppTheme.of(context).secondaryText,
                         fontSize: 13,
                       ),
@@ -541,7 +541,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                           child: Text(
                             '${address.latitude!.toStringAsFixed(5)}, ${address.longitude!.toStringAsFixed(5)}',
                             style: AppTheme.of(context).bodySmall.override(
-                                  font: GoogleFonts.poppins(),
+                                  font: GoogleFonts.plusJakartaSans(),
                                   color: AppTheme.of(context).secondaryText,
                                 ),
                           ),
@@ -567,7 +567,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
         child: Text(
           text,
           style: AppTheme.of(context).labelSmall.override(
-                font: GoogleFonts.poppins(
+                font: GoogleFonts.plusJakartaSans(
                   fontWeight: FontWeight.w700,
                 ),
                 color: color,
@@ -726,7 +726,7 @@ class _AddressHeaderMetric extends StatelessWidget {
           Text(
             value,
             style: AppTheme.of(context).titleMedium.override(
-                  font: GoogleFonts.poppins(
+                  font: GoogleFonts.plusJakartaSans(
                     fontWeight: FontWeight.w700,
                   ),
                   color: Colors.white,
@@ -736,7 +736,7 @@ class _AddressHeaderMetric extends StatelessWidget {
           Text(
             label,
             style: AppTheme.of(context).bodySmall.override(
-                  font: GoogleFonts.poppins(),
+                  font: GoogleFonts.plusJakartaSans(),
                   color: Colors.white.withValues(alpha: 0.78),
                 ),
           ),

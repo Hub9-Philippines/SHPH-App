@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -275,7 +275,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                                   child: Text(
                                     widget.category,
                                     style: AppTheme.of(context).labelMedium.override(
-                                          font: GoogleFonts.poppins(
+                                          font: GoogleFonts.plusJakartaSans(
                                             fontWeight: FontWeight.w700,
                                           ),
                                           color: Colors.white,
@@ -286,7 +286,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                                 Text(
                                   widget.serviceName,
                                   style: AppTheme.of(context).headlineMedium.override(
-                                        font: GoogleFonts.poppins(
+                                        font: GoogleFonts.plusJakartaSans(
                                           fontWeight: FontWeight.w700,
                                         ),
                                         color: Colors.white,
@@ -340,7 +340,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                           style: AppTheme.of(context)
                               .bodyMedium
                               .override(
-                                font: GoogleFonts.poppins(),
+                                font: GoogleFonts.plusJakartaSans(),
                                 color: const Color(0xFF64748B),
                               )
                               .copyWith(height: 1.5),
@@ -424,7 +424,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
             Text(
               label,
               style: AppTheme.of(context).labelMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                     color: Colors.white,
                   ),
             ),
@@ -455,7 +455,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                   child: Text(
                     widget.price,
                     style: AppTheme.of(context).headlineSmall.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
                           color: AppTheme.of(context).primary,
@@ -479,9 +479,9 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '${widget.rating.toStringAsFixed(1)} • ${widget.reviewCount} reviews',
+                        '${widget.rating.toStringAsFixed(1)} â€¢ ${widget.reviewCount} reviews',
                         style: AppTheme.of(context).labelMedium.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,
                               ),
                               color: const Color(0xFF8A6116),
@@ -533,7 +533,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
             Text(
               label,
               style: AppTheme.of(context).labelMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                     color: const Color(0xFF334155),
                   ),
             ),
@@ -593,7 +593,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                         child: Text(
                           widget.providerName,
                           style: AppTheme.of(context).titleMedium.override(
-                                font: GoogleFonts.poppins(
+                                font: GoogleFonts.plusJakartaSans(
                                   fontWeight: FontWeight.w700,
                                 ),
                                 color: const Color(0xFF14213D),
@@ -622,7 +622,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                               Text(
                                 'Verified',
                                 style: AppTheme.of(context).labelSmall.override(
-                                      font: GoogleFonts.poppins(
+                                      font: GoogleFonts.plusJakartaSans(
                                         fontWeight: FontWeight.w700,
                                       ),
                                       color: const Color(0xFF027A48),
@@ -637,7 +637,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                   Text(
                     widget.providerCategory,
                     style: AppTheme.of(context).bodySmall.override(
-                          font: GoogleFonts.poppins(),
+                          font: GoogleFonts.plusJakartaSans(),
                           color: const Color(0xFF64748B),
                         ),
                   ),
@@ -705,7 +705,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
             Text(
               title,
               style: AppTheme.of(context).titleMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: const Color(0xFF14213D),
                   ),
             ),
@@ -713,7 +713,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
             Text(
               subtitle,
               style: AppTheme.of(context).bodySmall.override(
-                    font: GoogleFonts.poppins(),
+                    font: GoogleFonts.plusJakartaSans(),
                     color: const Color(0xFF64748B),
                   ),
             ),
@@ -776,7 +776,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                 Text(
                   title,
                   style: AppTheme.of(context).titleSmall.override(
-                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                         color: const Color(0xFF14213D),
                       ),
                 ),
@@ -784,7 +784,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                 Text(
                   description,
                   style: AppTheme.of(context).bodySmall.override(
-                        font: GoogleFonts.poppins(),
+                        font: GoogleFonts.plusJakartaSans(),
                         color: const Color(0xFF64748B),
                       ),
                 ),
@@ -820,7 +820,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                       Text(
                         'Recent reviews',
                         style: AppTheme.of(context).titleMedium.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,
                               ),
                               color: const Color(0xFF14213D),
@@ -830,7 +830,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                       Text(
                         'Recent customer feedback for this listing.',
                         style: AppTheme.of(context).bodySmall.override(
-                              font: GoogleFonts.poppins(),
+                              font: GoogleFonts.plusJakartaSans(),
                               color: const Color(0xFF64748B),
                             ),
                       ),
@@ -886,7 +886,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                     child: Text(
                       review.userId.substring(0, 2).toUpperCase(),
                       style: AppTheme.of(context).bodyMedium.override(
-                            font: GoogleFonts.poppins(
+                            font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w700,
                             ),
                             color: AppTheme.of(context).primary,
@@ -902,7 +902,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                       Text(
                         'Customer',
                         style: AppTheme.of(context).bodyMedium.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,
                               ),
                               color: const Color(0xFF14213D),
@@ -928,7 +928,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                 Text(
                   _formatDate(review.createdAt),
                   style: AppTheme.of(context).labelSmall.override(
-                        font: GoogleFonts.poppins(),
+                        font: GoogleFonts.plusJakartaSans(),
                         color: const Color(0xFF94A3B8),
                       ),
                 ),
@@ -941,7 +941,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                 style: AppTheme.of(context)
                     .bodyMedium
                     .override(
-                      font: GoogleFonts.poppins(),
+                      font: GoogleFonts.plusJakartaSans(),
                       color: const Color(0xFF64748B),
                     )
                     .copyWith(height: 1.45),
@@ -962,7 +962,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
           label,
           textAlign: TextAlign.center,
           style: AppTheme.of(context).bodyMedium.override(
-                font: GoogleFonts.poppins(),
+                font: GoogleFonts.plusJakartaSans(),
                 color: const Color(0xFF64748B),
               ),
         ),
@@ -993,7 +993,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                     height: 54,
                     color: const Color(0xFFF3F7FA),
                     textStyle: AppTheme.of(context).titleSmall.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
                           color: const Color(0xFF17212B),
@@ -1014,7 +1014,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                     height: 54,
                     color: AppTheme.of(context).primary,
                     textStyle: AppTheme.of(context).titleSmall.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
                           color: Colors.white,

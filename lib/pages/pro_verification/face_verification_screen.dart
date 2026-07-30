@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
@@ -355,7 +355,7 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
             const SizedBox(height: 24),
             Text(
               'Face Verification',
-              style: GoogleFonts.poppins(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: theme.primaryText,
@@ -367,7 +367,7 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
               child: Text(
                 'We need to take a photo of your face to verify your identity. Please ensure you are in a well-lit area.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 14,
                   color: theme.secondaryText,
                 ),
@@ -407,7 +407,7 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
           Expanded(
             child: Text(
               text,
-              style: GoogleFonts.poppins(
+              style: GoogleFonts.plusJakartaSans(
                 color: theme.secondaryText,
               ),
             ),
@@ -427,7 +427,7 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
           const SizedBox(height: 16),
           Text(
             'Initializing camera...',
-            style: GoogleFonts.poppins(color: theme.secondaryText),
+            style: GoogleFonts.plusJakartaSans(color: theme.secondaryText),
           ),
         ],
       ),
@@ -489,7 +489,7 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
                   _faceDetected
                       ? 'Face detected! Ready to capture'
                       : 'Position your face within the circle',
-                  style: GoogleFonts.poppins(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: _faceDetected ? theme.success : theme.primaryText,
@@ -557,7 +557,7 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
               : Center(
                   child: Text(
                     'Image not found',
-                    style: GoogleFonts.poppins(color: theme.secondaryText),
+                    style: GoogleFonts.plusJakartaSans(color: theme.secondaryText),
                   ),
                 ),
         ),
@@ -584,7 +584,7 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
                       const SizedBox(width: 6),
                       Text(
                         'Review Photo',
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.plusJakartaSans(
                           color: theme.primary,
                           fontWeight: FontWeight.w600,
                         ),
@@ -642,12 +642,12 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
           const SizedBox(height: 16),
           Text(
             'Uploading verification...',
-            style: GoogleFonts.poppins(color: theme.primaryText),
+            style: GoogleFonts.plusJakartaSans(color: theme.primaryText),
           ),
           const SizedBox(height: 8),
           Text(
             'Please wait',
-            style: GoogleFonts.poppins(color: theme.secondaryText),
+            style: GoogleFonts.plusJakartaSans(color: theme.secondaryText),
           ),
         ],
       ),
@@ -664,7 +664,7 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
           const SizedBox(height: 24),
           Text(
             'Verification Submitted!',
-            style: GoogleFonts.poppins(
+            style: GoogleFonts.plusJakartaSans(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: theme.success,
@@ -673,7 +673,7 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
           const SizedBox(height: 16),
           Text(
             'Redirecting to status page...',
-            style: GoogleFonts.poppins(color: theme.secondaryText),
+            style: GoogleFonts.plusJakartaSans(color: theme.secondaryText),
           ),
         ],
       ),
@@ -692,7 +692,7 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
             const SizedBox(height: 24),
             Text(
               'Verification Failed',
-              style: GoogleFonts.poppins(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: theme.error,
@@ -705,7 +705,7 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
                 child: Text(
                   _errorMessage!,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(color: theme.secondaryText),
+                  style: GoogleFonts.plusJakartaSans(color: theme.secondaryText),
                 ),
               ),
             const SizedBox(height: 32),
@@ -716,7 +716,7 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
                   onPressed: () => context.pop(),
                   child: Text(
                     'Cancel',
-                    style: GoogleFonts.poppins(color: theme.primaryText),
+                    style: GoogleFonts.plusJakartaSans(color: theme.primaryText),
                   ),
                 ),
                 const SizedBox(width: 16),

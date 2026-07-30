@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/theme/app_theme.dart';
@@ -83,7 +83,7 @@ class _AvailabilityCalendarState extends State<AvailabilityCalendar> {
           child: Text(
             '${months[_focusedMonth.month - 1]} ${_focusedMonth.year}',
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
+            style: GoogleFonts.plusJakartaSans(
               fontWeight: FontWeight.w600,
               fontSize: 15,
               color: theme.primaryText,
@@ -149,7 +149,7 @@ class _AvailabilityCalendarState extends State<AvailabilityCalendar> {
           alignment: Alignment.center,
           child: Text(
             '$day',
-            style: GoogleFonts.poppins(
+            style: GoogleFonts.plusJakartaSans(
               fontWeight: isSelected || isToday ? FontWeight.w600 : FontWeight.normal,
               fontSize: 13,
               color: isSelected

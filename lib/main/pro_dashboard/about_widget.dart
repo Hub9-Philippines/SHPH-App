@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
@@ -28,7 +28,7 @@ class _AboutWidgetState extends State<AboutWidget> {
         title: Text(
           'About',
           style: AppTheme.of(context).titleLarge.override(
-                font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
               ),
         ),
         backgroundColor: AppTheme.of(context).primaryBackground,
@@ -157,7 +157,7 @@ class _AboutWidgetState extends State<AboutWidget> {
             Padding(
               padding: const EdgeInsets.all(24),
               child: Text(
-                '© 2024 SerbisyoHub. All rights reserved.',
+                'Â© 2024 SerbisyoHub. All rights reserved.',
                 style: AppTheme.of(context).bodySmall.override(
                       color: AppTheme.of(context).secondaryText,
                     ),

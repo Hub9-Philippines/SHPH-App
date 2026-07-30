@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -161,7 +161,7 @@ class _VerificationReviewingWidgetState
                                             style: AppTheme.of(context)
                                                 .headlineMedium
                                                 .override(
-                                                  font: GoogleFonts.poppins(
+                                                  font: GoogleFonts.plusJakartaSans(
                                                       fontWeight:
                                                           FontWeight.bold),
                                                 ),
@@ -197,7 +197,7 @@ class _VerificationReviewingWidgetState
                       Text(
                         'Verification Submitted',
                         style: AppTheme.of(context).headlineMedium.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                   fontWeight: FontWeight.bold),
                             ),
                       ),

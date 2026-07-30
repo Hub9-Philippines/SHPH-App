@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
@@ -62,7 +62,7 @@ class _CategoryWidgetState extends State<CategoryWidget> {
                                   style: AppTheme.of(context)
                                       .headlineSmall
                                       .override(
-                                        font: GoogleFonts.poppins(
+                                        font: GoogleFonts.plusJakartaSans(
                                           fontWeight: FontWeight.w700,
                                         ),
                                         color: const Color(0xFF16202A),
@@ -73,7 +73,7 @@ class _CategoryWidgetState extends State<CategoryWidget> {
                                   'Jump into the service type you need most.',
                                   style:
                                       AppTheme.of(context).bodySmall.override(
-                                            font: GoogleFonts.poppins(),
+                                            font: GoogleFonts.plusJakartaSans(),
                                             color: const Color(0xFF6F7B86),
                                           ),
                                 ),

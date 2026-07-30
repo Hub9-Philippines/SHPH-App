@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart'
@@ -107,7 +107,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                             .withValues(alpha: 0.12),
                         textStyle:
                             AppTheme.of(context).titleSmall.override(
-                                  font: GoogleFonts.poppins(
+                                  font: GoogleFonts.plusJakartaSans(
                                     fontWeight: AppTheme.of(context)
                                         .titleSmall
                                         .fontWeight,
@@ -173,7 +173,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                                     style: AppTheme.of(context)
                                         .headlineMedium
                                         .override(
-                                          font: GoogleFonts.poppins(
+                                          font: GoogleFonts.plusJakartaSans(
                                             fontWeight:
                                                 AppTheme.of(context)
                                                     .headlineMedium
@@ -200,7 +200,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                                     style: AppTheme.of(context)
                                         .bodyMedium
                                         .override(
-                                          font: GoogleFonts.poppins(
+                                          font: GoogleFonts.plusJakartaSans(
                                             fontWeight:
                                                 AppTheme.of(context)
                                                     .bodyMedium
@@ -247,7 +247,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                                     style: AppTheme.of(context)
                                         .headlineMedium
                                         .override(
-                                          font: GoogleFonts.poppins(
+                                          font: GoogleFonts.plusJakartaSans(
                                             fontWeight:
                                                 AppTheme.of(context)
                                                     .headlineMedium
@@ -274,7 +274,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                                     style: AppTheme.of(context)
                                         .bodyMedium
                                         .override(
-                                          font: GoogleFonts.poppins(
+                                          font: GoogleFonts.plusJakartaSans(
                                             fontWeight:
                                                 AppTheme.of(context)
                                                     .bodyMedium
@@ -321,7 +321,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                                     style: AppTheme.of(context)
                                         .headlineMedium
                                         .override(
-                                          font: GoogleFonts.poppins(
+                                          font: GoogleFonts.plusJakartaSans(
                                             fontWeight:
                                                 AppTheme.of(context)
                                                     .headlineMedium
@@ -348,7 +348,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                                     style: AppTheme.of(context)
                                         .bodyMedium
                                         .override(
-                                          font: GoogleFonts.poppins(
+                                          font: GoogleFonts.plusJakartaSans(
                                             fontWeight:
                                                 AppTheme.of(context)
                                                     .bodyMedium
@@ -439,7 +439,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                       EdgeInsetsDirectional.zero,
                   color: AppTheme.of(context).primary,
                   textStyle: AppTheme.of(context).titleSmall.override(
-                        font: GoogleFonts.poppins(
+                        font: GoogleFonts.plusJakartaSans(
                           fontWeight: AppTheme.of(context)
                               .titleSmall
                               .fontWeight,

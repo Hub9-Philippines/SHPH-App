@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -80,7 +80,7 @@ class _TMSubCategoryView extends StatelessWidget {
                           Text(
                             controller.selectedServiceLabel,
                             style: theme.headlineSmall.override(
-                              font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                             ),
                           ),
                           const SizedBox(height: 8),

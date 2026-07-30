@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:geolocator/geolocator.dart';
@@ -378,7 +378,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                     alignment: Alignment.center,
                     child: Text(
                       'S',
-                      style: GoogleFonts.poppins(
+                      style: GoogleFonts.plusJakartaSans(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
                         fontSize: 18,
@@ -388,7 +388,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                   const SizedBox(width: 8),
                   Text(
                     'serbisyo',
-                    style: GoogleFonts.poppins(
+                    style: GoogleFonts.plusJakartaSans(
                       fontWeight: FontWeight.w700,
                       fontSize: 18,
                       color: theme.primaryText,
@@ -459,7 +459,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                     alignment: Alignment.center,
                     child: Text(
                       avatarInitial,
-                      style: GoogleFonts.poppins(
+                      style: GoogleFonts.plusJakartaSans(
                         color: theme.primaryText,
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
@@ -482,7 +482,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                     Flexible(
                       child: Text(
                         _locationLabel(),
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.plusJakartaSans(
                           fontWeight: FontWeight.w500,
                           fontSize: 13,
                           color: theme.primaryBrandText,
@@ -502,7 +502,7 @@ class _HomeWidgetState extends State<HomeWidget> {
               const SizedBox(height: 16),
               Text(
                 _greeting(),
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.plusJakartaSans(
                   fontWeight: FontWeight.w700,
                   fontSize: 22,
                   color: theme.primaryText,
@@ -511,7 +511,7 @@ class _HomeWidgetState extends State<HomeWidget> {
               const SizedBox(height: 4),
               Text(
                 'Find a trusted professional instantly',
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.plusJakartaSans(
                   fontWeight: FontWeight.w400,
                   fontSize: 14,
                   color: theme.secondaryText,
@@ -552,7 +552,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                 Expanded(
                   child: Text(
                     'Try "tulo sa sink" or "locksmith"...',
-                    style: GoogleFonts.poppins(
+                    style: GoogleFonts.plusJakartaSans(
                       color: theme.textTertiary,
                       fontSize: 14,
                     ),
@@ -578,7 +578,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                       const SizedBox(width: 4),
                       Text(
                         _locationLabel(),
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.plusJakartaSans(
                           fontWeight: FontWeight.w500,
                           fontSize: 11,
                           color: theme.primaryBrandText,
@@ -670,7 +670,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                 children: [
                   Text(
                     booking.serviceTitle,
-                    style: GoogleFonts.poppins(
+                    style: GoogleFonts.plusJakartaSans(
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
                       color: theme.primaryText,
@@ -681,7 +681,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                     isConfirmationPending
                         ? 'Waiting for provider confirmation'
                         : 'Provider confirmed for today',
-                    style: GoogleFonts.poppins(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 11,
                       color: theme.secondaryText,
                     ),
@@ -700,7 +700,7 @@ class _HomeWidgetState extends State<HomeWidget> {
               ),
               child: Text(
                 isConfirmationPending ? 'Pending' : 'Track',
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.plusJakartaSans(
                   fontWeight: FontWeight.w600,
                   fontSize: 11,
                   color: Colors.white,
@@ -769,7 +769,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                     const SizedBox(width: 4),
                     Text(
                       _addressText(appState),
-                      style: GoogleFonts.poppins(
+                      style: GoogleFonts.plusJakartaSans(
                         fontWeight: FontWeight.w500,
                         fontSize: 10,
                         color: theme.primaryBrandText,
@@ -805,7 +805,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                 ],
               ),
               borderRadius: BorderRadius.circular(16),
-              boxShadow: AppThemeData.shadowElevated,
+              boxShadow: AppThemeData.shadowLg,
             ),
             child: Row(
               children: [
@@ -815,7 +815,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                     children: [
                       Text(
                         'Book a Service',
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.plusJakartaSans(
                           fontWeight: FontWeight.w700,
                           fontSize: 16,
                           color: Colors.white,
@@ -824,7 +824,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                       const SizedBox(height: 4),
                       Text(
                         'Tap here to get a professional to your destination',
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.plusJakartaSans(
                           fontWeight: FontWeight.w400,
                           fontSize: 12,
                           color: Colors.white.withValues(alpha: 0.85),
@@ -998,7 +998,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                     children: [
                       Text(
                         'Pin location',
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.plusJakartaSans(
                           fontWeight: FontWeight.w400,
                           fontSize: 12,
                           color: theme.secondaryText,
@@ -1009,7 +1009,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                         _addressText(appState),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.plusJakartaSans(
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
                           color: theme.primaryText,
@@ -1290,7 +1290,7 @@ class _HomeLocationSheet extends StatelessWidget {
               Text(
                 'Choose location',
                 style: theme.titleMedium.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                   color: const Color(0xFF16202A),
                 ),
               ),
@@ -1298,7 +1298,7 @@ class _HomeLocationSheet extends StatelessWidget {
               Text(
                 'Use your live device location or one of your saved addresses.',
                 style: theme.bodySmall.override(
-                  font: GoogleFonts.poppins(),
+                  font: GoogleFonts.plusJakartaSans(),
                   color: const Color(0xFF66727E),
                 ),
               ),
@@ -1319,7 +1319,7 @@ class _HomeLocationSheet extends StatelessWidget {
                 Text(
                   'Saved addresses',
                   style: theme.labelLarge.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: const Color(0xFF16202A),
                   ),
                 ),
@@ -1526,7 +1526,7 @@ class _CategoryTileItem extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(
+                  style: GoogleFonts.plusJakartaSans(
                     fontWeight: FontWeight.w500,
                     fontSize: 11,
                     color: theme.primaryText,
@@ -1687,7 +1687,7 @@ class _ServiceCardItem extends StatelessWidget {
                         title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.plusJakartaSans(
                           fontWeight: FontWeight.w600,
                           fontSize: 12,
                           color: theme.primaryText,
@@ -1698,7 +1698,7 @@ class _ServiceCardItem extends StatelessWidget {
                         providerName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 10,
                           color: theme.secondaryText,
                         ),
@@ -1707,8 +1707,8 @@ class _ServiceCardItem extends StatelessWidget {
                       Row(
                         children: [
                           Text(
-                            price != null ? '₱${price!.toStringAsFixed(0)}' : '₱—',
-                            style: GoogleFonts.poppins(
+                            price != null ? 'â‚±${price!.toStringAsFixed(0)}' : 'â‚±â€”',
+                            style: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w700,
                               fontSize: 12,
                               color: theme.primary,
@@ -1718,8 +1718,8 @@ class _ServiceCardItem extends StatelessWidget {
                           Icon(Icons.star_rounded, size: 12, color: theme.warning),
                           const SizedBox(width: 2),
                           Text(
-                            ratingValue > 0 ? ratingValue.toStringAsFixed(1) : '—',
-                            style: GoogleFonts.poppins(
+                            ratingValue > 0 ? ratingValue.toStringAsFixed(1) : 'â€”',
+                            style: GoogleFonts.plusJakartaSans(
                               fontSize: 10,
                               color: theme.secondaryText,
                             ),
@@ -1829,7 +1829,7 @@ class _HomeLocationOption extends StatelessWidget {
                     Text(
                       title,
                       style: theme.bodyMedium.override(
-                        font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                        font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                         color: titleColor,
                       ),
                     ),
@@ -1839,7 +1839,7 @@ class _HomeLocationOption extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: theme.bodySmall.override(
-                        font: GoogleFonts.poppins(),
+                        font: GoogleFonts.plusJakartaSans(),
                         color: subtitleColor,
                       ),
                     ),

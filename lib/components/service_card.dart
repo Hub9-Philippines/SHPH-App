@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/components/star_rating.dart';
@@ -65,7 +65,7 @@ class ServiceCard extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: theme.titleSmall.override(
-                        font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                        font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                         color: theme.primaryText,
                       ),
                     ),
@@ -92,7 +92,7 @@ class ServiceCard extends StatelessWidget {
                     Text(
                       price,
                       style: theme.titleMedium.override(
-                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                         color: theme.primary,
                       ),
                     ),

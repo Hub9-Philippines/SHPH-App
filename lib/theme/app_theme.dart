@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -156,77 +156,77 @@ class AppTheme {
   }
 
   static TextTheme _buildTextTheme(AppThemeData data, Brightness brightness) => TextTheme(
-      displayLarge: GoogleFonts.poppins(
+      displayLarge: GoogleFonts.plusJakartaSans(
         color: data.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 64,
       ),
-      displayMedium: GoogleFonts.poppins(
+      displayMedium: GoogleFonts.plusJakartaSans(
         color: data.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 44,
       ),
-      displaySmall: GoogleFonts.poppins(
+      displaySmall: GoogleFonts.plusJakartaSans(
         color: data.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 36,
       ),
-      headlineLarge: GoogleFonts.poppins(
+      headlineLarge: GoogleFonts.plusJakartaSans(
         color: data.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 32,
       ),
-      headlineMedium: GoogleFonts.poppins(
+      headlineMedium: GoogleFonts.plusJakartaSans(
         color: data.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 28,
       ),
-      headlineSmall: GoogleFonts.poppins(
+      headlineSmall: GoogleFonts.plusJakartaSans(
         color: data.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 24,
       ),
-      titleLarge: GoogleFonts.poppins(
+      titleLarge: GoogleFonts.plusJakartaSans(
         color: data.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 20,
       ),
-      titleMedium: GoogleFonts.poppins(
+      titleMedium: GoogleFonts.plusJakartaSans(
         color: data.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 18,
       ),
-      titleSmall: GoogleFonts.poppins(
+      titleSmall: GoogleFonts.plusJakartaSans(
         color: data.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 16,
       ),
-      labelLarge: GoogleFonts.poppins(
+      labelLarge: GoogleFonts.plusJakartaSans(
         color: data.secondaryText,
         fontWeight: FontWeight.normal,
         fontSize: 16,
       ),
-      labelMedium: GoogleFonts.poppins(
+      labelMedium: GoogleFonts.plusJakartaSans(
         color: data.secondaryText,
         fontWeight: FontWeight.normal,
         fontSize: 14,
       ),
-      labelSmall: GoogleFonts.poppins(
+      labelSmall: GoogleFonts.plusJakartaSans(
         color: data.secondaryText,
         fontWeight: FontWeight.normal,
         fontSize: 12,
       ),
-      bodyLarge: GoogleFonts.poppins(
+      bodyLarge: GoogleFonts.plusJakartaSans(
         color: data.primaryText,
         fontWeight: FontWeight.normal,
         fontSize: 16,
       ),
-      bodyMedium: GoogleFonts.poppins(
+      bodyMedium: GoogleFonts.plusJakartaSans(
         color: data.primaryText,
         fontWeight: FontWeight.normal,
         fontSize: 14,
       ),
-      bodySmall: GoogleFonts.poppins(
+      bodySmall: GoogleFonts.plusJakartaSans(
         color: data.primaryText,
         fontWeight: FontWeight.normal,
         fontSize: 12,
@@ -238,6 +238,7 @@ class AppThemeData {
 
   AppThemeData({
     required this.primary,
+    required this.onPrimary,
     required this.secondary,
     required this.tertiary,
     required this.alternate,
@@ -245,6 +246,7 @@ class AppThemeData {
     required this.secondaryText,
     required this.primaryBackground,
     required this.secondaryBackground,
+    required this.bgPage,
     required this.accent1,
     required this.accent2,
     required this.accent3,
@@ -281,6 +283,14 @@ class AppThemeData {
     ),
   ];
 
+  static const List<BoxShadow> shadowMd = [
+    BoxShadow(
+      color: Color(0x1211264A),
+      blurRadius: 16,
+      offset: Offset(0, 3),
+    ),
+  ];
+
   static const List<BoxShadow> shadowCard = [
     BoxShadow(
       color: Color(0x140F1828),
@@ -289,13 +299,15 @@ class AppThemeData {
     ),
   ];
 
-  static const List<BoxShadow> shadowElevated = [
+  static const List<BoxShadow> shadowLg = [
     BoxShadow(
       color: Color(0x2E11264A),
       blurRadius: 26,
       offset: Offset(0, 10),
     ),
   ];
+
+  static const Color star = Color(0xFFFFC107);
 
   // Status pill colors (matching web --shph-status-* tokens)
   static const Color statusConfirmed = Color(0xFF0D6D78);
@@ -319,23 +331,25 @@ class AppThemeData {
       };
 
   factory AppThemeData.light() => AppThemeData(
-      primary: const Color(0xFF368EFF),
+      primary: const Color(0xFF63CBD6),
+      onPrimary: const Color(0xFF0F172A),
       secondary: const Color(0xFF39D2C0),
       tertiary: const Color(0xFFEE8B60),
       alternate: const Color(0xFFE0E3E7),
-      primaryText: const Color(0xFF14181B),
-      secondaryText: const Color(0xFF57636C),
+      primaryText: const Color(0xFF0F172A),
+      secondaryText: const Color(0xFF64748B),
       primaryBackground: const Color(0xFFFFFFFF),
       secondaryBackground: const Color(0xFFF7F7F7),
+      bgPage: const Color(0xFFF8FAFC),
       accent1: const Color(0x4C4B39EF),
       accent2: const Color(0x4D39D2C0),
       accent3: const Color(0x4DEE8B60),
       accent4: const Color(0xCCFFFFFF),
       success: const Color(0xFF249689),
       warning: const Color(0xFFF9CF58),
-      error: const Color(0xFFFF5963),
-      info: const Color(0xFFFFFFFF),
-      iconBackground: const Color(0xFFE6F0FF),
+      error: const Color(0xFFDC2626),
+      info: const Color(0xFF63CBD6),
+      iconBackground: const Color(0xFFD4F0EF),
       primaryLight: const Color(0xFFD4F0EF),
       primaryDark: const Color(0xFF49B8C4),
       primaryBrandText: const Color(0xFF0D6D78),
@@ -345,7 +359,8 @@ class AppThemeData {
     );
 
   factory AppThemeData.dark() => AppThemeData(
-      primary: const Color(0xFF368EFF),
+      primary: const Color(0xFF63CBD6),
+      onPrimary: const Color(0xFF0F172A),
       secondary: const Color(0xFF39D2C0),
       tertiary: const Color(0xFFEE8B60),
       alternate: const Color(0xFFE0E3E7),
@@ -353,14 +368,15 @@ class AppThemeData {
       secondaryText: const Color(0xFF95A1AC),
       primaryBackground: const Color(0xFF1D2428),
       secondaryBackground: const Color(0xFF14181B),
+      bgPage: const Color(0xFF0F172A),
       accent1: const Color(0x4C4B39EF),
       accent2: const Color(0x4D39D2C0),
       accent3: const Color(0x4DEE8B60),
       accent4: const Color(0xB2262D34),
       success: const Color(0xFF249689),
       warning: const Color(0xFFF9CF58),
-      error: const Color(0xFFFF5963),
-      info: const Color(0xFFFFFFFF),
+      error: const Color(0xFFDC2626),
+      info: const Color(0xFF63CBD6),
       iconBackground: const Color(0xFFF34966),
       primaryLight: const Color(0xFF1A3D3C),
       primaryDark: const Color(0xFF49B8C4),
@@ -370,6 +386,7 @@ class AppThemeData {
       textTertiary: const Color(0xFF94A3B8),
     );
   final Color primary;
+  final Color onPrimary;
   final Color secondary;
   final Color tertiary;
   final Color alternate;
@@ -377,6 +394,7 @@ class AppThemeData {
   final Color secondaryText;
   final Color primaryBackground;
   final Color secondaryBackground;
+  final Color bgPage;
   final Color accent1;
   final Color accent2;
   final Color accent3;
@@ -394,77 +412,77 @@ class AppThemeData {
   final Color textTertiary;
 
   // Typography getters for compatibility with FlutterFlow theme
-  TextStyle get displayLarge => GoogleFonts.poppins(
+  TextStyle get displayLarge => GoogleFonts.plusJakartaSans(
         color: primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 64,
       );
-  TextStyle get displayMedium => GoogleFonts.poppins(
+  TextStyle get displayMedium => GoogleFonts.plusJakartaSans(
         color: primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 44,
       );
-  TextStyle get displaySmall => GoogleFonts.poppins(
+  TextStyle get displaySmall => GoogleFonts.plusJakartaSans(
         color: primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 36,
       );
-  TextStyle get headlineLarge => GoogleFonts.poppins(
+  TextStyle get headlineLarge => GoogleFonts.plusJakartaSans(
         color: primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 32,
       );
-  TextStyle get headlineMedium => GoogleFonts.poppins(
+  TextStyle get headlineMedium => GoogleFonts.plusJakartaSans(
         color: primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 28,
       );
-  TextStyle get headlineSmall => GoogleFonts.poppins(
+  TextStyle get headlineSmall => GoogleFonts.plusJakartaSans(
         color: primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 24,
       );
-  TextStyle get titleLarge => GoogleFonts.poppins(
+  TextStyle get titleLarge => GoogleFonts.plusJakartaSans(
         color: primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 20,
       );
-  TextStyle get titleMedium => GoogleFonts.poppins(
+  TextStyle get titleMedium => GoogleFonts.plusJakartaSans(
         color: primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 18,
       );
-  TextStyle get titleSmall => GoogleFonts.poppins(
+  TextStyle get titleSmall => GoogleFonts.plusJakartaSans(
         color: primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 16,
       );
-  TextStyle get bodyLarge => GoogleFonts.poppins(
+  TextStyle get bodyLarge => GoogleFonts.plusJakartaSans(
         color: primaryText,
         fontWeight: FontWeight.normal,
         fontSize: 16,
       );
-  TextStyle get bodyMedium => GoogleFonts.poppins(
+  TextStyle get bodyMedium => GoogleFonts.plusJakartaSans(
         color: primaryText,
         fontWeight: FontWeight.normal,
         fontSize: 14,
       );
-  TextStyle get bodySmall => GoogleFonts.poppins(
+  TextStyle get bodySmall => GoogleFonts.plusJakartaSans(
         color: primaryText,
         fontWeight: FontWeight.normal,
         fontSize: 12,
       );
-  TextStyle get labelLarge => GoogleFonts.poppins(
+  TextStyle get labelLarge => GoogleFonts.plusJakartaSans(
         color: secondaryText,
         fontWeight: FontWeight.normal,
         fontSize: 16,
       );
-  TextStyle get labelMedium => GoogleFonts.poppins(
+  TextStyle get labelMedium => GoogleFonts.plusJakartaSans(
         color: secondaryText,
         fontWeight: FontWeight.normal,
         fontSize: 14,
       );
-  TextStyle get labelSmall => GoogleFonts.poppins(
+  TextStyle get labelSmall => GoogleFonts.plusJakartaSans(
         color: secondaryText,
         fontWeight: FontWeight.normal,
         fontSize: 12,

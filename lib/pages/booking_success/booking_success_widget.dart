@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
@@ -113,7 +113,7 @@ class _BookingSuccessWidgetState extends State<BookingSuccessWidget>
                             'Booking Confirmed',
                             textAlign: TextAlign.center,
                             style: AppTheme.of(context).headlineMedium.override(
-                                  font: GoogleFonts.poppins(
+                                  font: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.w700,
                                   ),
                                   color: Colors.white,
@@ -124,7 +124,7 @@ class _BookingSuccessWidgetState extends State<BookingSuccessWidget>
                             'Your request has been created successfully and the provider will be notified shortly.',
                             textAlign: TextAlign.center,
                             style: AppTheme.of(context).bodyMedium.override(
-                                  font: GoogleFonts.poppins(),
+                                  font: GoogleFonts.plusJakartaSans(),
                                   color: Colors.white.withValues(alpha: 0.86),
                                 ),
                           ),
@@ -160,7 +160,7 @@ class _BookingSuccessWidgetState extends State<BookingSuccessWidget>
                         height: 56,
                         color: AppTheme.of(context).primary,
                         textStyle: AppTheme.of(context).titleMedium.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,
                               ),
                               color: Colors.white,
@@ -188,7 +188,7 @@ class _BookingSuccessWidgetState extends State<BookingSuccessWidget>
                         'Back to Home',
                         style: AppTheme.of(context).bodyMedium.override(
                               color: AppTheme.of(context).primary,
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -237,7 +237,7 @@ class _BookingSuccessWidgetState extends State<BookingSuccessWidget>
                   Text(
                     title,
                   style: AppTheme.of(context).titleSmall.override(
-                        font: GoogleFonts.poppins(
+                        font: GoogleFonts.plusJakartaSans(
                           fontWeight: FontWeight.w700,
                         ),
                         color: AppTheme.of(context).primaryText,
@@ -247,7 +247,7 @@ class _BookingSuccessWidgetState extends State<BookingSuccessWidget>
                 Text(
                   description,
                   style: AppTheme.of(context).bodySmall.override(
-                        font: GoogleFonts.poppins(),
+                        font: GoogleFonts.plusJakartaSans(),
                         color: AppTheme.of(context).secondaryText,
                         ),
                   ),

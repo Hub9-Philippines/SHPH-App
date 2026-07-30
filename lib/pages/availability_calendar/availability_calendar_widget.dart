@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
@@ -95,7 +95,7 @@ class _AvailabilityCalendarWidgetState
         ),
         Text(
           _formatMonth(_model.selectedDate),
-          style: GoogleFonts.poppins(
+          style: GoogleFonts.plusJakartaSans(
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
@@ -122,7 +122,7 @@ class _AvailabilityCalendarWidgetState
                 child: Text(
                   d,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(
+                  style: GoogleFonts.plusJakartaSans(
                     color: theme.secondaryText,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -202,7 +202,7 @@ class _AvailabilityCalendarWidgetState
         child: Center(
           child: Text(
             dayNum.toString(),
-            style: GoogleFonts.poppins(
+            style: GoogleFonts.plusJakartaSans(
               color: isSelected ? Colors.white : theme.primaryText,
               fontSize: 14,
               fontWeight: isSelected || isToday
@@ -225,7 +225,7 @@ class _AvailabilityCalendarWidgetState
         padding: const EdgeInsets.symmetric(vertical: 24),
         child: Text(
           'No availability slots set for this date.',
-          style: GoogleFonts.poppins(
+          style: GoogleFonts.plusJakartaSans(
             color: theme.secondaryText,
             fontSize: 14,
           ),
@@ -273,8 +273,8 @@ class _AvailabilityCalendarWidgetState
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              '$startTime — $endTime',
-              style: GoogleFonts.poppins(
+              '$startTime â€” $endTime',
+              style: GoogleFonts.plusJakartaSans(
                 color: theme.primaryText,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -303,7 +303,7 @@ class _AvailabilityCalendarWidgetState
         icon: const Icon(Icons.add_rounded),
         label: Text(
           'Add Time Slot',
-          style: GoogleFonts.poppins(
+          style: GoogleFonts.plusJakartaSans(
             fontWeight: FontWeight.w600,
             color: Colors.white,
           ),
@@ -329,7 +329,7 @@ class _AvailabilityCalendarWidgetState
         backgroundColor: theme.secondaryBackground,
         title: Text(
           'Add Time Slot',
-          style: GoogleFonts.poppins(
+          style: GoogleFonts.plusJakartaSans(
             fontWeight: FontWeight.w600,
             color: theme.primaryText,
           ),
@@ -370,7 +370,7 @@ class _AvailabilityCalendarWidgetState
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             child: Text('Cancel',
-                style: GoogleFonts.poppins(color: theme.secondaryText)),
+                style: GoogleFonts.plusJakartaSans(color: theme.secondaryText)),
           ),
           FilledButton(
             onPressed: () async {
@@ -382,7 +382,7 @@ class _AvailabilityCalendarWidgetState
               if (ctx.mounted) Navigator.of(ctx).pop();
             },
             child: Text('Add',
-                style: GoogleFonts.poppins(color: Colors.white)),
+                style: GoogleFonts.plusJakartaSans(color: Colors.white)),
           ),
         ],
       ),

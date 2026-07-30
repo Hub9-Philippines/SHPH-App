@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/components/status_pill.dart';
@@ -55,7 +55,7 @@ class BookingCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.titleSmall.override(
-                      font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                      font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                       color: theme.primaryText,
                     ),
                   ),
@@ -72,7 +72,7 @@ class BookingCard extends StatelessWidget {
                       Text(
                         price,
                         style: theme.titleSmall.override(
-                          font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                          font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                           color: theme.primary,
                         ),
                       ),

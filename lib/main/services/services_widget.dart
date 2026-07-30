@@ -1,4 +1,4 @@
-import 'package:easy_debounce/easy_debounce.dart';
+﻿import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -199,7 +199,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   Text(
                     'Services',
                     style: AppTheme.of(context).titleLarge.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
                           color: const Color(0xFF16202A),
@@ -208,7 +208,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   Text(
                     'Find the right pro for the job.',
                     style: AppTheme.of(context).bodySmall.override(
-                          font: GoogleFonts.poppins(),
+                          font: GoogleFonts.plusJakartaSans(),
                           color: const Color(0xFF6F7B86),
                         ),
                   ),
@@ -263,7 +263,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 decoration: InputDecoration(
                   hintText: 'Search services or categories...',
                   hintStyle: AppTheme.of(context).bodySmall.override(
-                        font: GoogleFonts.poppins(),
+                        font: GoogleFonts.plusJakartaSans(),
                         color: const Color(0xFF93A0AC),
                       ),
                   border: InputBorder.none,
@@ -328,7 +328,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 ? selectedCategory
                 : 'Explore every service',
             style: AppTheme.of(context).headlineSmall.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                   color: Colors.white,
                 ),
           ),
@@ -338,7 +338,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 ? '$count services sorted by ${_filterLabels[selectedFilter] ?? selectedFilter}'
                 : '$count services ready to book',
             style: AppTheme.of(context).bodyMedium.override(
-                  font: GoogleFonts.poppins(),
+                  font: GoogleFonts.plusJakartaSans(),
                   color: Colors.white.withValues(alpha: 0.86),
                 ),
           ),
@@ -385,7 +385,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
             Text(
               label,
               style: AppTheme.of(context).labelMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                     color: Colors.white,
                   ),
             ),
@@ -419,7 +419,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 backgroundColor: Colors.white,
                 selectedColor: AppTheme.of(context).primary,
                 labelStyle: AppTheme.of(context).labelMedium.override(
-                      font: GoogleFonts.poppins(
+                      font: GoogleFonts.plusJakartaSans(
                         fontWeight: FontWeight.w600,
                       ),
                       color:
@@ -439,7 +439,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
             child: Text(
               '${_model.filteredServices.length} results',
               style: AppTheme.of(context).titleSmall.override(
-                    font: GoogleFonts.poppins(
+                    font: GoogleFonts.plusJakartaSans(
                       fontWeight: FontWeight.w700,
                     ),
                     color: const Color(0xFF16202A),
@@ -458,7 +458,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 hint: Text(
                   'Sort by',
                   style: AppTheme.of(context).bodySmall.override(
-                        font: GoogleFonts.poppins(),
+                        font: GoogleFonts.plusJakartaSans(),
                       ),
                 ),
                 items: [
@@ -551,7 +551,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                         : 'No services found',
                     textAlign: TextAlign.center,
                     style: AppTheme.of(context).titleMedium.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
                           color: const Color(0xFF16202A),
@@ -564,7 +564,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                         : 'Try a broader keyword or switch the category filter.',
                     textAlign: TextAlign.center,
                     style: AppTheme.of(context).bodySmall.override(
-                          font: GoogleFonts.poppins(),
+                          font: GoogleFonts.plusJakartaSans(),
                           color: const Color(0xFF6F7B86),
                         ),
                   ),
@@ -688,7 +688,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTheme.of(context).titleMedium.override(
-                                font: GoogleFonts.poppins(
+                                font: GoogleFonts.plusJakartaSans(
                                   fontWeight: FontWeight.w700,
                                 ),
                                 color: const Color(0xFF16202A),
@@ -709,7 +709,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                           child: Text(
                             service['category'] as String,
                             style: AppTheme.of(context).labelSmall.override(
-                                  font: GoogleFonts.poppins(
+                                  font: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.w700,
                                   ),
                                   color: AppTheme.of(context).primary,
@@ -732,7 +732,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                                   service['distanceText'] as String,
                                   style:
                                       AppTheme.of(context).labelSmall.override(
-                                            font: GoogleFonts.poppins(),
+                                            font: GoogleFonts.plusJakartaSans(),
                                             color: AppTheme.of(context).primary,
                                           ),
                                 ),
@@ -751,7 +751,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                             Text(
                               (service['rating'] as double).toStringAsFixed(1),
                               style: AppTheme.of(context).bodySmall.override(
-                                    font: GoogleFonts.poppins(
+                                    font: GoogleFonts.plusJakartaSans(
                                       fontWeight: FontWeight.w600,
                                     ),
                                     color: const Color(0xFF16202A),
@@ -761,7 +761,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                             Text(
                               '${service['reviewCount']} reviews',
                               style: AppTheme.of(context).bodySmall.override(
-                                    font: GoogleFonts.poppins(),
+                                    font: GoogleFonts.plusJakartaSans(),
                                     color: const Color(0xFF6F7B86),
                                   ),
                             ),
@@ -774,7 +774,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                               child: Text(
                                 service['price'] as String,
                                 style: AppTheme.of(context).titleSmall.override(
-                                      font: GoogleFonts.poppins(
+                                      font: GoogleFonts.plusJakartaSans(
                                         fontWeight: FontWeight.w700,
                                       ),
                                       color: AppTheme.of(context).primary,

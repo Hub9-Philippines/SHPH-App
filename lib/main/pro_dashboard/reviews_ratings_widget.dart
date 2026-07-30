@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -339,7 +339,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
                 child: Text(
                   _stats.average.toStringAsFixed(1),
                   style: AppTheme.of(context).headlineMedium.override(
-                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                         color: AppTheme.of(context).secondaryBackground,
                       ),
                 ),
@@ -367,7 +367,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
                   Text(
                     '${_stats.total} total reviews',
                     style: AppTheme.of(context).titleMedium.override(
-                          font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                          font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                           color: AppTheme.of(context).secondaryBackground,
                         ),
                   ),
@@ -377,7 +377,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
                         ? 'Your rating will appear here as clients leave feedback.'
                         : '${_stats.withComment} reviews include written comments.',
                     style: AppTheme.of(context).bodyMedium.override(
-                          font: GoogleFonts.poppins(),
+                          font: GoogleFonts.plusJakartaSans(),
                           color: AppTheme.of(context).secondaryBackground.withValues(alpha: 0.82),
                         ),
                   ),
@@ -426,7 +426,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
             Text(
               'Rating Distribution',
               style: AppTheme.of(context).titleMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: AppTheme.of(context).primaryText,
                   ),
             ),
@@ -434,7 +434,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
             Text(
               'See how client ratings are spread across completed jobs.',
               style: AppTheme.of(context).bodySmall.override(
-                    font: GoogleFonts.poppins(),
+                    font: GoogleFonts.plusJakartaSans(),
                     color: AppTheme.of(context).secondaryText,
                   ),
             ),
@@ -482,7 +482,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
           Text(
             'Recent Reviews',
             style: AppTheme.of(context).titleMedium.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                   color: AppTheme.of(context).primaryText,
                 ),
           ),
@@ -490,7 +490,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
           Text(
             '${_reviews.length} total',
             style: AppTheme.of(context).bodyMedium.override(
-                  font: GoogleFonts.poppins(),
+                  font: GoogleFonts.plusJakartaSans(),
                   color: AppTheme.of(context).secondaryText,
                 ),
           ),
@@ -547,15 +547,15 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
                     Text(
                       clientName,
                       style: AppTheme.of(context).titleSmall.override(
-                            font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                            font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                             color: AppTheme.of(context).primaryText,
                           ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '$serviceName • $serviceCategory',
+                      '$serviceName â€¢ $serviceCategory',
                       style: AppTheme.of(context).bodySmall.override(
-                            font: GoogleFonts.poppins(),
+                            font: GoogleFonts.plusJakartaSans(),
                             color: AppTheme.of(context).secondaryText,
                           ),
                     ),
@@ -581,7 +581,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
                     Text(
                       '$rating/5',
                       style: AppTheme.of(context).labelMedium.override(
-                            font: GoogleFonts.poppins(
+                            font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w700,
                             ),
                             color: AppTheme.of(context).warning,
@@ -604,7 +604,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
               child: Text(
                 text,
                 style: AppTheme.of(context).bodyMedium.override(
-                      font: GoogleFonts.poppins(),
+                      font: GoogleFonts.plusJakartaSans(),
                       color: AppTheme.of(context).primaryText,
                     ),
               ),
@@ -614,7 +614,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
           Text(
             date == null ? 'Date unavailable' : _dateLabel(date),
             style: AppTheme.of(context).labelSmall.override(
-                  font: GoogleFonts.poppins(),
+                  font: GoogleFonts.plusJakartaSans(),
                   color: AppTheme.of(context).textTertiary,
                 ),
           ),
@@ -660,7 +660,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
                 title,
                 textAlign: TextAlign.center,
                 style: AppTheme.of(context).titleMedium.override(
-                      font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                      font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                       color: AppTheme.of(context).primaryText,
                     ),
               ),
@@ -669,7 +669,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
                 subtitle,
                 textAlign: TextAlign.center,
                 style: AppTheme.of(context).bodyMedium.override(
-                      font: GoogleFonts.poppins(),
+                      font: GoogleFonts.plusJakartaSans(),
                       color: AppTheme.of(context).secondaryText,
                     ),
               ),
@@ -689,7 +689,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
                   child: Text(
                     actionLabel,
                     style: AppTheme.of(context).labelLarge.override(
-                          font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                          font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                           color: AppTheme.of(context).secondaryBackground,
                         ),
                   ),
@@ -762,7 +762,7 @@ class _HighlightCard extends StatelessWidget {
             Text(
               title,
               style: AppTheme.of(context).bodySmall.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                     color: AppTheme.of(context).secondaryText,
                   ),
             ),
@@ -770,7 +770,7 @@ class _HighlightCard extends StatelessWidget {
             Text(
               value,
               style: AppTheme.of(context).titleMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: AppTheme.of(context).primaryText,
                   ),
             ),
@@ -778,7 +778,7 @@ class _HighlightCard extends StatelessWidget {
             Text(
               subtitle,
               style: AppTheme.of(context).labelSmall.override(
-                    font: GoogleFonts.poppins(),
+                    font: GoogleFonts.plusJakartaSans(),
                     color: AppTheme.of(context).textTertiary,
                   ),
             ),
@@ -810,7 +810,7 @@ class _DistributionRow extends StatelessWidget {
           child: Text(
             '$stars stars',
             style: AppTheme.of(context).bodySmall.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                   color: AppTheme.of(context).secondaryText,
                 ),
           ),
@@ -833,7 +833,7 @@ class _DistributionRow extends StatelessWidget {
             '$count',
             textAlign: TextAlign.right,
             style: AppTheme.of(context).bodySmall.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                   color: AppTheme.of(context).primaryText,
                 ),
           ),

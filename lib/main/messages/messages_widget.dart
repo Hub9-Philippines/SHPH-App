@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/components/content_container.dart';
@@ -104,12 +104,12 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const ScreenHeader(
+                        ScreenHeader(
                           title: 'Messages',
                           subtitle: 'Stay close to providers, updates, and support.',
                           action: Icon(
                             Icons.tune_rounded,
-                            color: Color(0xFF368EFF),
+                            color: AppTheme.of(context).primary,
                           ),
                         ),
                         Padding(
@@ -199,7 +199,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
           decoration: InputDecoration(
             hintText: 'Search conversations or calls',
             hintStyle: theme.bodyMedium.override(
-                  font: GoogleFonts.poppins(),
+                  font: GoogleFonts.plusJakartaSans(),
                   color: theme.textTertiary,
                 ),
             prefixIcon: const Icon(Icons.search_rounded),
@@ -249,7 +249,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
           child: Text(
             title,
             style: theme.titleMedium.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                   color: theme.primaryText,
                 ),
           ),
@@ -263,7 +263,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
           child: Text(
             '$itemCount items',
             style: theme.labelSmall.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                   color: theme.primaryBrandText,
                 ),
           ),
@@ -373,7 +373,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                 Text(
                   title,
                   style: theme.titleMedium.override(
-                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                         color: theme.primaryText,
                       ),
                   textAlign: TextAlign.center,
@@ -382,7 +382,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                 Text(
                   description,
                   style: theme.bodyMedium.override(
-                        font: GoogleFonts.poppins(),
+                        font: GoogleFonts.plusJakartaSans(),
                         color: theme.secondaryText,
                       ),
                   textAlign: TextAlign.center,
@@ -427,7 +427,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                           child: Text(
                             chatRoom.providerName,
                             style: theme.bodyLarge.override(
-                                  font: GoogleFonts.poppins(
+                                  font: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.w700,
                                   ),
                                   color: theme.primaryText,
@@ -440,7 +440,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                         Text(
                           _formatTime(chatRoom.lastMessageTime),
                           style: theme.bodySmall.override(
-                                font: GoogleFonts.poppins(),
+                                font: GoogleFonts.plusJakartaSans(),
                                 color: theme.textTertiary,
                               ),
                         ),
@@ -450,7 +450,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                     Text(
                       chatRoom.lastMessage ?? 'No messages yet',
                       style: theme.bodyMedium.override(
-                            font: GoogleFonts.poppins(),
+                            font: GoogleFonts.plusJakartaSans(),
                             color: theme.secondaryText,
                           ),
                       maxLines: 2,
@@ -471,7 +471,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                           child: Text(
                             'Conversation',
                             style: theme.labelSmall.override(
-                                  font: GoogleFonts.poppins(
+                                  font: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.w700,
                                   ),
                                   color: AppThemeData.statusCompleted,
@@ -492,7 +492,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                             child: Text(
                               '${chatRoom.unreadCount} unread',
                               style: theme.labelSmall.override(
-                                    font: GoogleFonts.poppins(
+                                    font: GoogleFonts.plusJakartaSans(
                                       fontWeight: FontWeight.w700,
                                     ),
                                     color: Colors.white,
@@ -557,7 +557,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                   Text(
                     call.providerName,
                     style: theme.bodyLarge.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
                           color: theme.primaryText,
@@ -579,7 +579,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                       Text(
                         call.callStatus.toUpperCase(),
                         style: theme.labelSmall.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,
                               ),
                               color: statusColor,
@@ -595,7 +595,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                       Text(
                         call.callType.toUpperCase(),
                         style: theme.bodySmall.override(
-                              font: GoogleFonts.poppins(),
+                              font: GoogleFonts.plusJakartaSans(),
                               color: theme.secondaryText,
                             ),
                       ),
@@ -607,7 +607,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
             Text(
               _formatTime(call.createdAt),
               style: theme.bodySmall.override(
-                    font: GoogleFonts.poppins(),
+                    font: GoogleFonts.plusJakartaSans(),
                     color: theme.textTertiary,
                   ),
             ),

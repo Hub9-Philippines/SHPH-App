@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -143,7 +143,7 @@ class _AddEwalletPaymentWidgetState extends State<AddEwalletPaymentWidget> {
             title: Text(
               'Add E-Wallet',
               style: AppTheme.of(context).titleLarge.override(
-                    font: GoogleFonts.poppins(
+                    font: GoogleFonts.plusJakartaSans(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -165,7 +165,7 @@ class _AddEwalletPaymentWidgetState extends State<AddEwalletPaymentWidget> {
                       Text(
                         'E-Wallet Information',
                         style: AppTheme.of(context).titleMedium.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -264,7 +264,7 @@ class _AddEwalletPaymentWidgetState extends State<AddEwalletPaymentWidget> {
                           width: double.infinity,
                           color: AppTheme.of(context).primary,
                           textStyle: AppTheme.of(context).titleMedium.override(
-                                font: GoogleFonts.poppins(
+                                font: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.w600),
                                 color: AppTheme.of(context).primaryText,
                               ),

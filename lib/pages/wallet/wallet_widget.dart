@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/components/screen_header.dart';
@@ -92,22 +92,22 @@ class _WalletWidgetState extends State<WalletWidget> {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(AppThemeData.radiusCard),
-        boxShadow: AppThemeData.shadowElevated,
+        boxShadow: AppThemeData.shadowLg,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Available Balance',
-            style: GoogleFonts.poppins(
+            style: GoogleFonts.plusJakartaSans(
               color: Colors.white.withValues(alpha: 0.8),
               fontSize: 14,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            '₱${_model.balance.toStringAsFixed(2)}',
-            style: GoogleFonts.poppins(
+            'â‚±${_model.balance.toStringAsFixed(2)}',
+            style: GoogleFonts.plusJakartaSans(
               color: Colors.white,
               fontSize: 36,
               fontWeight: FontWeight.w700,
@@ -141,15 +141,15 @@ class _WalletWidgetState extends State<WalletWidget> {
           children: [
             Text(
               label,
-              style: GoogleFonts.poppins(
+              style: GoogleFonts.plusJakartaSans(
                 color: Colors.white.withValues(alpha: 0.7),
                 fontSize: 11,
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              '₱${amount.toStringAsFixed(2)}',
-              style: GoogleFonts.poppins(
+              'â‚±${amount.toStringAsFixed(2)}',
+              style: GoogleFonts.plusJakartaSans(
                 color: Colors.white,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -266,7 +266,7 @@ class _WalletWidgetState extends State<WalletWidget> {
             ),
           ),
           Text(
-            '${isCredit ? '+' : '-'}₱${(transaction['amount'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
+            '${isCredit ? '+' : '-'}â‚±${(transaction['amount'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
             style: theme.titleSmall.override(
               fontWeight: FontWeight.w600,
               color: isCredit ? theme.success : theme.error,

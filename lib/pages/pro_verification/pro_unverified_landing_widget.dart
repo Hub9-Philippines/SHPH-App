@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/components/screen_header.dart';
@@ -76,7 +76,7 @@ class _ProUnverifiedLandingWidgetState
                     'Account Not Verified',
                     textAlign: TextAlign.center,
                     style: AppTheme.of(context).headlineMedium.override(
-                          font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                          font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
                         ),
                   ),
                   const SizedBox(height: 16),
@@ -175,7 +175,7 @@ class _ProUnverifiedLandingWidgetState
                       color: AppTheme.of(context).primary,
                       textStyle: AppTheme.of(context).titleMedium.override(
                             color: Colors.white,
-                            font: GoogleFonts.poppins(
+                            font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w600),
                           ),
                       elevation: 2,

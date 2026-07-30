@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
@@ -73,7 +73,7 @@ class _AiBookingComposerWidgetState extends State<AiBookingComposerWidget> {
                         decoration: InputDecoration(
                           hintText:
                               'e.g., I need a plumber to fix a leaking pipe under my kitchen sink',
-                          hintStyle: GoogleFonts.poppins(
+                          hintStyle: GoogleFonts.plusJakartaSans(
                             color: theme.textTertiary,
                             fontSize: 14,
                           ),
@@ -85,7 +85,7 @@ class _AiBookingComposerWidgetState extends State<AiBookingComposerWidget> {
                           ),
                           contentPadding: const EdgeInsets.all(16),
                         ),
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.plusJakartaSans(
                           color: theme.primaryText,
                           fontSize: 14,
                         ),
@@ -113,7 +113,7 @@ class _AiBookingComposerWidgetState extends State<AiBookingComposerWidget> {
                               : const Icon(Icons.auto_awesome_rounded),
                           label: Text(
                             _model.isLoading ? 'Analyzing...' : 'Compose Booking',
-                            style: GoogleFonts.poppins(
+                            style: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w600,
                               color: Colors.white,
                             ),
@@ -155,7 +155,7 @@ class _AiBookingComposerWidgetState extends State<AiBookingComposerWidget> {
         ),
         child: Text(
           'Could not extract booking details. Please try again with more specific information.',
-          style: GoogleFonts.poppins(
+          style: GoogleFonts.plusJakartaSans(
             color: theme.error,
             fontSize: 14,
           ),
@@ -191,7 +191,7 @@ class _AiBookingComposerWidgetState extends State<AiBookingComposerWidget> {
                 theme, 'Description', data['description']!),
           if (data['estimated_budget'] != null)
             _buildDetailRow(
-                theme, 'Budget', '₱${data['estimated_budget']}'),
+                theme, 'Budget', 'â‚±${data['estimated_budget']}'),
           if (data['preferred_date'] != null)
             _buildDetailRow(
                 theme, 'Date', data['preferred_date']!),
@@ -217,7 +217,7 @@ class _AiBookingComposerWidgetState extends State<AiBookingComposerWidget> {
             width: 100,
             child: Text(
               label,
-              style: GoogleFonts.poppins(
+              style: GoogleFonts.plusJakartaSans(
                 color: theme.secondaryText,
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
@@ -227,7 +227,7 @@ class _AiBookingComposerWidgetState extends State<AiBookingComposerWidget> {
           Expanded(
             child: Text(
               value,
-              style: GoogleFonts.poppins(
+              style: GoogleFonts.plusJakartaSans(
                 color: theme.primaryText,
                 fontSize: 13,
               ),

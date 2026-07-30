@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/auth/supabase_auth/auth_util.dart';
@@ -444,7 +444,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
             Text(
               'Stay on top of every update',
               style: AppTheme.of(context).titleMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: Colors.white,
                   ),
             ),
@@ -454,7 +454,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                   ? 'You are caught up right now.'
                   : '$unreadCount unread notifications still need your attention.',
               style: AppTheme.of(context).bodyMedium.override(
-                    font: GoogleFonts.poppins(),
+                    font: GoogleFonts.plusJakartaSans(),
                     color: Colors.white.withValues(alpha: 0.84),
                   ),
             ),
@@ -495,7 +495,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                 child: Text(
                   _isMarkingAllRead ? 'Marking...' : 'Mark all as read',
                   style: AppTheme.of(context).labelLarge.override(
-                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                         color: Colors.white,
                       ),
                 ),
@@ -542,7 +542,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                   title,
                   textAlign: TextAlign.center,
                   style: AppTheme.of(context).titleMedium.override(
-                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                         color: AppTheme.of(context).primaryText,
                       ),
                 ),
@@ -551,7 +551,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                   subtitle,
                   textAlign: TextAlign.center,
                   style: AppTheme.of(context).bodyMedium.override(
-                        font: GoogleFonts.poppins(),
+                        font: GoogleFonts.plusJakartaSans(),
                         color: AppTheme.of(context).secondaryText,
                       ),
                 ),
@@ -603,7 +603,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                           child: Text(
                             notification.title,
                             style: AppTheme.of(context).titleSmall.override(
-                                  font: GoogleFonts.poppins(
+                                  font: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.w700,
                                   ),
                                   color: AppTheme.of(context).primaryText,
@@ -628,7 +628,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                               : null) ??
                           'Open this update to see more details.',
                       style: AppTheme.of(context).bodyMedium.override(
-                            font: GoogleFonts.poppins(),
+                            font: GoogleFonts.plusJakartaSans(),
                             color: AppTheme.of(context).secondaryText,
                           ),
                       maxLines: 3,
@@ -638,7 +638,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                     Text(
                       _formatTime(notification.createdAt),
                       style: AppTheme.of(context).labelSmall.override(
-                            font: GoogleFonts.poppins(),
+                            font: GoogleFonts.plusJakartaSans(),
                             color: AppTheme.of(context).textTertiary,
                           ),
                     ),
@@ -712,7 +712,7 @@ class _SummaryMetric extends StatelessWidget {
             Text(
               value,
               style: AppTheme.of(context).titleMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: Colors.white,
                   ),
             ),

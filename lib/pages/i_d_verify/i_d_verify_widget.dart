@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/components/screen_header.dart';
@@ -79,7 +79,7 @@ class _IDVerifyWidgetState extends State<IDVerifyWidget> {
                       Text(
                         'Identity Verification',
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.plusJakartaSans(
                           fontWeight: FontWeight.w600,
                           fontSize: 24,
                           color: AppTheme.of(context).primaryText,
@@ -89,7 +89,7 @@ class _IDVerifyWidgetState extends State<IDVerifyWidget> {
                       Text(
                         'We need to verify your identity to comply with regulatory requirements and ensure account security.',
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 14,
                           color: AppTheme.of(context).secondaryText,
                           height: 1.4,
@@ -100,7 +100,7 @@ class _IDVerifyWidgetState extends State<IDVerifyWidget> {
                   const SizedBox(height: 24),
                   Text(
                     'Required Documents',
-                    style: GoogleFonts.poppins(
+                    style: GoogleFonts.plusJakartaSans(
                       fontWeight: FontWeight.w600,
                       fontSize: 16,
                       color: AppTheme.of(context).primaryText,
@@ -141,7 +141,7 @@ class _IDVerifyWidgetState extends State<IDVerifyWidget> {
                             children: [
                               Text(
                                 'Government ID',
-                                style: GoogleFonts.poppins(
+                                style: GoogleFonts.plusJakartaSans(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 14,
                                   color: AppTheme.of(context).primaryText,
@@ -150,7 +150,7 @@ class _IDVerifyWidgetState extends State<IDVerifyWidget> {
                               const SizedBox(height: 4),
                               Text(
                                 'Driver\'s license, passport, national ID card, NBI Clearance or Police Clearance',
-                                style: GoogleFonts.poppins(
+                                style: GoogleFonts.plusJakartaSans(
                                   fontSize: 12,
                                   color: AppTheme.of(context).secondaryText,
                                 ),
@@ -185,7 +185,7 @@ class _IDVerifyWidgetState extends State<IDVerifyWidget> {
                             const SizedBox(width: 8),
                             Text(
                               'Important Information',
-                              style: GoogleFonts.poppins(
+                              style: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 14,
                                 color: AppTheme.of(context).tertiary,
@@ -195,8 +195,8 @@ class _IDVerifyWidgetState extends State<IDVerifyWidget> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          '• Ensure your document is clear and well-lit\n• All corners of the document should be visible\n• Remove any covers or cases from your ID\n• Process typically takes 2-3 minutes',
-                          style: GoogleFonts.poppins(
+                          'â€¢ Ensure your document is clear and well-lit\nâ€¢ All corners of the document should be visible\nâ€¢ Remove any covers or cases from your ID\nâ€¢ Process typically takes 2-3 minutes',
+                          style: GoogleFonts.plusJakartaSans(
                             fontSize: 12,
                             color: AppTheme.of(context).primaryText,
                             height: 1.4,
@@ -219,7 +219,7 @@ class _IDVerifyWidgetState extends State<IDVerifyWidget> {
                       width: double.infinity,
                       height: 56,
                       color: AppTheme.of(context).primary,
-                      textStyle: GoogleFonts.poppins(
+                      textStyle: GoogleFonts.plusJakartaSans(
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
                         color: Colors.white,
@@ -241,7 +241,7 @@ class _IDVerifyWidgetState extends State<IDVerifyWidget> {
                       width: double.infinity,
                       height: 48,
                       color: Colors.transparent,
-                      textStyle: GoogleFonts.poppins(
+                      textStyle: GoogleFonts.plusJakartaSans(
                         fontWeight: FontWeight.w500,
                         fontSize: 14,
                         color: AppTheme.of(context).secondaryText,

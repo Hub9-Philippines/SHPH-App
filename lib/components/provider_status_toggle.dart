@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/theme/app_theme.dart';
@@ -42,7 +42,7 @@ class ProviderStatusToggle extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 isOnline ? 'Online' : 'Offline',
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: isOnline ? theme.success : theme.textTertiary,
@@ -86,7 +86,7 @@ class ProviderStatusToggle extends StatelessWidget {
                 Text(
                   isOnline ? 'You\'re Online' : 'You\'re Offline',
                   style: theme.titleSmall.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                     color: theme.primaryText,
                   ),
                 ),

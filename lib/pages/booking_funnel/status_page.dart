@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -520,7 +520,7 @@ class _StatusTopBar extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.titleSmall.override(
-                            font: GoogleFonts.poppins(
+                            font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -675,7 +675,7 @@ class _StatusSheetContainer extends StatelessWidget {
                     Text(
                       title,
                       style: theme.titleMedium.override(
-                        font: GoogleFonts.poppins(
+                        font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700),
                       ),
                     ),
@@ -925,7 +925,7 @@ class _StageRow extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     _isActive && !isTerminal
-                        ? '${stage.description}…'
+                        ? '${stage.description}â€¦'
                         : stage.description,
                     style: theme.bodySmall.override(color: descColor),
                   ),

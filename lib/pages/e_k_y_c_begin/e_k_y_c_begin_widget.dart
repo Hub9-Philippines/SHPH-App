@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/components/screen_header.dart';
@@ -80,7 +80,7 @@ class _EKYCBeginWidgetState extends State<EKYCBeginWidget> {
                       Text(
                         'Complete Your Verification',
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.plusJakartaSans(
                           fontWeight: FontWeight.bold,
                           fontSize: 24,
                           color: AppTheme.of(context).primaryText,
@@ -90,7 +90,7 @@ class _EKYCBeginWidgetState extends State<EKYCBeginWidget> {
                       Text(
                         'To become a verified provider and start accepting bookings, we need to verify your identity with a valid government ID and a face scan. This ensures trust and safety for all users.',
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 14,
                           color: AppTheme.of(context).secondaryText,
                           height: 1.5,
@@ -100,7 +100,7 @@ class _EKYCBeginWidgetState extends State<EKYCBeginWidget> {
                       Text(
                         'What you\'ll need:',
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.plusJakartaSans(
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
                           color: AppTheme.of(context).primaryText,
@@ -142,7 +142,7 @@ class _EKYCBeginWidgetState extends State<EKYCBeginWidget> {
                             Expanded(
                               child: Text(
                                 'This process typically takes 2-3 minutes. Your information is encrypted and secure.',
-                                style: GoogleFonts.poppins(
+                                style: GoogleFonts.plusJakartaSans(
                                   fontSize: 12,
                                   color: AppTheme.of(context).primary,
                                 ),
@@ -163,7 +163,7 @@ class _EKYCBeginWidgetState extends State<EKYCBeginWidget> {
                       width: double.infinity,
                       height: 52,
                       color: AppTheme.of(context).primary,
-                      textStyle: GoogleFonts.poppins(
+                      textStyle: GoogleFonts.plusJakartaSans(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
                         color: Colors.white,
@@ -216,7 +216,7 @@ class _EKYCBeginWidgetState extends State<EKYCBeginWidget> {
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.poppins(
+                    style: GoogleFonts.plusJakartaSans(
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
                       color: AppTheme.of(context).primaryText,
@@ -225,7 +225,7 @@ class _EKYCBeginWidgetState extends State<EKYCBeginWidget> {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: GoogleFonts.poppins(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 12,
                       color: AppTheme.of(context).secondaryText,
                     ),

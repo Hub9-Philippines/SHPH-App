@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
@@ -17,9 +17,9 @@ import '../../../api/app_config.dart';
 import '../booking_controller.dart';
 import '../booking_models.dart';
 
-// ────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Screen
-// ────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class LiveMatchingScreen extends StatefulWidget {
   const LiveMatchingScreen({
@@ -39,21 +39,21 @@ class LiveMatchingScreen extends StatefulWidget {
 
 class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     with TickerProviderStateMixin {
-  // ── Animation controllers ──────────────────────────────────────────
+  // â”€â”€ Animation controllers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   late final AnimationController _radarController;
   late final AnimationController _gradientController;
 
-  // ── Map ────────────────────────────────────────────────────────────
+  // â”€â”€ Map â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   GoogleMapController? _mapController;
 
-  // ── Timer / stage ──────────────────────────────────────────────────
+  // â”€â”€ Timer / stage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   Timer? _timer;
   Timer? _matchTimer;
   Timer? _mockStatusTimer;
   int _secondsRemaining = 30;
   bool _timedOut = false;
 
-  // ── Mock provider matching ─────────────────────────────────────────
+  // â”€â”€ Mock provider matching â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   Map<String, dynamic>? _matchedPro;
   List<Map<String, dynamic>> _nearbyPros = [];
   LatLng? _providerLatLng;
@@ -61,13 +61,13 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
   late final List<_MockBooking> _mockBookings;
   late _MockBooking _activeMockBooking;
 
-  // ── Zoom targets per stage ─────────────────────────────────────────
+  // â”€â”€ Zoom targets per stage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   static const _zoomNearby = 16.0;
   static const _zoomChecking = 14.5;
   static const _zoomSweep = 13.0;
   static const _zoomMatched = 15.0;
 
-  // ── Lifecycle ──────────────────────────────────────────────────────
+  // â”€â”€ Lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   @override
   void initState() {
     super.initState();
@@ -84,7 +84,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
       duration: const Duration(milliseconds: 1100),
     );
 
-    // Generate nearby pros immediately — context is valid in initState
+    // Generate nearby pros immediately â€” context is valid in initState
     // because the widget is already in the tree when pushed via Navigator.
     _generateNearbyPros();
 
@@ -201,7 +201,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     super.dispose();
   }
 
-  // ── Tick ───────────────────────────────────────────────────────────
+  // â”€â”€ Tick â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   void _onTick(Timer timer) {
     if (!mounted) {
       return;
@@ -224,7 +224,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     });
   }
 
-  // ── Map zoom animation ────────────────────────────────────────────
+  // â”€â”€ Map zoom animation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   void _animateMapZoom() {
     final zoom = _targetZoom();
     _mapController?.animateCamera(CameraUpdate.zoomTo(zoom));
@@ -262,7 +262,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     return 3;
   }
 
-  // ── Matching stage helpers ─────────────────────────────────────────
+  // â”€â”€ Matching stage helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   _MatchingStage _matchingStage(int seconds) {
     if (_matchedPro != null) {
       final name = _matchedPro!['providerName'] as String? ?? 'a pro';
@@ -289,7 +289,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     );
   }
 
-  // ── Cancel / back ──────────────────────────────────────────────────
+  // â”€â”€ Cancel / back â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   void _onBackOrCancel() {
     if (_timedOut) {
       _popClean();
@@ -308,7 +308,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
         title: Text(
           'Cancel provider search?',
           style: theme.titleMedium.override(
-            font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+            font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
           ),
         ),
         content: Text(
@@ -355,7 +355,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     }
   }
 
-  // ── Build ──────────────────────────────────────────────────────────
+  // â”€â”€ Build â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   @override
   Widget build(BuildContext context) {
     final booking = context.watch<BookingFlowController?>();
@@ -404,12 +404,12 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
       child: Scaffold(
         body: Stack(
           children: [
-            // ── Layer 1: Full-screen map ──────────────────────────
+            // â”€â”€ Layer 1: Full-screen map â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             Positioned.fill(
               child: _mapBody(location),
             ),
 
-            // ── Layer 2: Radar / success pulse overlay ────────────
+            // â”€â”€ Layer 2: Radar / success pulse overlay â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             if (showActive)
               Positioned.fill(
                 child: IgnorePointer(
@@ -419,7 +419,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
                   ),
                 ),
               ),
-            // ── Layer 3: Top status badge ─────────────────────────
+            // â”€â”€ Layer 3: Top status badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             if (!_timedOut)
               Positioned(
                 top: 0,
@@ -436,7 +436,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
                 ),
               ),
 
-            // ── Layer 4: Collapsible dashboard ──────────────────
+            // â”€â”€ Layer 4: Collapsible dashboard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             Align(
               alignment: Alignment.bottomCenter,
               child: _buildDashboard(
@@ -485,7 +485,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     return 'Your Current Location';
   }
 
-  // ── Map widget ──────────────────────────────────────────────────────
+  // â”€â”€ Map widget â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   Widget _mapBody(LatLng location) {
     if (!widget.showMap) {
       return DecoratedBox(
@@ -540,7 +540,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     );
   }
 
-  // ── Collapsible dashboard ──────────────────────────────────────────
+  // â”€â”€ Collapsible dashboard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   Widget _buildDashboard({
     required _MatchingStage stage,
     required BookingDraft? draft,
@@ -637,9 +637,9 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
   }
 }
 
-// ────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Matching stage model
-// ────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _MockBooking {
   const _MockBooking({
@@ -1167,7 +1167,7 @@ class _AssignedRouteTopBar extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.titleSmall.override(
-                            font: GoogleFonts.poppins(
+                            font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -1295,7 +1295,7 @@ class _AssignedRouteBottomSheet extends StatelessWidget {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: theme.titleMedium.override(
-                                  font: GoogleFonts.poppins(
+                                  font: GoogleFonts.plusJakartaSans(
                                       fontWeight: FontWeight.w700),
                                 ),
                               ),
@@ -1608,9 +1608,9 @@ class _MatchingStage {
   final String subtitle;
 }
 
-// ────────────────────────────────────────────────────────────────────────
-// Radar pulse — CustomPainter for 3 cascading concentric circles
-// ────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Radar pulse â€” CustomPainter for 3 cascading concentric circles
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _RadarPulse extends StatelessWidget {
   const _RadarPulse({
@@ -1692,13 +1692,13 @@ class _RadarPainter extends CustomPainter {
   bool shouldRepaint(_RadarPainter old) => old.progress != progress;
 }
 
-// ────────────────────────────────────────────────────────────────────────
-// Match reveal — success pulse overlay when a provider is found
-// ────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Match reveal â€” success pulse overlay when a provider is found
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-// ────────────────────────────────────────────────────────────────────────
-// Top status badge — glassmorphic card with animated gradient bar
-// ────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Top status badge â€” glassmorphic card with animated gradient bar
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _StatusBadge extends StatelessWidget {
   const _StatusBadge({
@@ -1782,7 +1782,7 @@ class _StatusBadge extends StatelessWidget {
                     ? 'Provider assigned'
                     : 'Finding the nearest provider',
                 style: theme.titleMedium.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                 ),
               ),
               const SizedBox(height: 2),
@@ -1844,9 +1844,9 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
-// ────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Animated gradient progress bar
-// ────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _GradientBar extends StatelessWidget {
   const _GradientBar({
@@ -1863,7 +1863,7 @@ class _GradientBar extends StatelessWidget {
 
   static const _stages = <_GradientStage>[
     _GradientStage(
-      color1: Color(0xFF368EFF),
+      color1: Color(0xFF63CBD6),
       color2: Color(0xFF4FC3F7),
     ),
     _GradientStage(
@@ -1923,9 +1923,9 @@ class _GradientStage {
   final Color color2;
 }
 
-// ────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Searching sheet (collapsible dashboard content)
-// ────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _SearchingSheet extends StatelessWidget {
   const _SearchingSheet({
@@ -2033,7 +2033,7 @@ class _SearchingSheet extends StatelessWidget {
           Text(
             'Searching nearby providers',
             style: theme.titleMedium.override(
-              font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(height: 6),
@@ -2079,9 +2079,9 @@ class _SearchingSheet extends StatelessWidget {
       );
 }
 
-// ────────────────────────────────────────────────────────────────────────
-// Matched sheet — shown when a nearby pro has been found
-// ────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Matched sheet â€” shown when a nearby pro has been found
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _MatchedSheet extends StatelessWidget {
   const _MatchedSheet({
@@ -2354,9 +2354,9 @@ class _MatchedInfoTile extends StatelessWidget {
       );
 }
 
-// ────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Timeout sheet
-// ────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _TimeoutSheet extends StatelessWidget {
   const _TimeoutSheet({
@@ -2393,7 +2393,7 @@ class _TimeoutSheet extends StatelessWidget {
             'Providers are busy, try again',
             textAlign: TextAlign.center,
             style: theme.titleMedium.override(
-              font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(height: 8),
@@ -2440,9 +2440,9 @@ class _TimeoutSheet extends StatelessWidget {
       );
 }
 
-// ────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Meta row (small label + value card)
-// ────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _MetaRow extends StatelessWidget {
   const _MetaRow({

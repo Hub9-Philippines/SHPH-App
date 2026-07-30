@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -232,7 +232,7 @@ class _DocumentScanWidgetState extends State<DocumentScanWidget> {
             const SizedBox(height: 8),
             Text(
               'Step 1 of 2: Document Upload',
-              style: GoogleFonts.poppins(
+              style: GoogleFonts.plusJakartaSans(
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
                 color: AppTheme.of(context).primary,
@@ -249,7 +249,7 @@ class _DocumentScanWidgetState extends State<DocumentScanWidget> {
           children: [
             Text(
               'Upload Your Government ID',
-              style: GoogleFonts.poppins(
+              style: GoogleFonts.plusJakartaSans(
                 fontWeight: FontWeight.bold,
                 fontSize: 22,
                 color: AppTheme.of(context).primaryText,
@@ -258,7 +258,7 @@ class _DocumentScanWidgetState extends State<DocumentScanWidget> {
             const SizedBox(height: 12),
             Text(
               'Please take a clear photo of your valid government-issued ID (Driver\'s License, Passport, or National ID). Ensure all details are visible and readable.',
-              style: GoogleFonts.poppins(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 14,
                 color: AppTheme.of(context).secondaryText,
               ),
@@ -300,7 +300,7 @@ class _DocumentScanWidgetState extends State<DocumentScanWidget> {
             Expanded(
               child: Text(
                 text,
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 12,
                   color: AppTheme.of(context).primary,
                 ),
@@ -347,7 +347,7 @@ class _DocumentScanWidgetState extends State<DocumentScanWidget> {
                       const SizedBox(height: 16),
                       Text(
                         'ID Card Preview',
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 14,
                           color: AppTheme.of(context).secondaryText,
                         ),
@@ -355,7 +355,7 @@ class _DocumentScanWidgetState extends State<DocumentScanWidget> {
                       const SizedBox(height: 8),
                       Text(
                         'Select an option below',
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 12,
                           color: AppTheme.of(context).secondaryText,
                         ),
@@ -425,7 +425,7 @@ class _DocumentScanWidgetState extends State<DocumentScanWidget> {
               const SizedBox(height: 12),
               Text(
                 label,
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.plusJakartaSans(
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
                   color: AppTheme.of(context).primaryText,
@@ -457,7 +457,7 @@ class _DocumentScanWidgetState extends State<DocumentScanWidget> {
                   const SizedBox(width: 6),
                   Text(
                     'Preview Mode',
-                    style: GoogleFonts.poppins(
+                    style: GoogleFonts.plusJakartaSans(
                       fontWeight: FontWeight.w600,
                       fontSize: 12,
                       color: AppTheme.of(context).primary,
@@ -474,7 +474,7 @@ class _DocumentScanWidgetState extends State<DocumentScanWidget> {
                   const SizedBox(height: 12),
                   Text(
                     'Uploading document...',
-                    style: GoogleFonts.poppins(
+                    style: GoogleFonts.plusJakartaSans(
                       color: AppTheme.of(context).secondaryText,
                     ),
                   ),

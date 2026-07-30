@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
@@ -87,7 +87,7 @@ class _RecommendationsWidgetState extends State<RecommendationsWidget> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(title,
-            style: GoogleFonts.poppins(
+            style: GoogleFonts.plusJakartaSans(
                 color: theme.primaryText,
                 fontSize: 18,
                 fontWeight: FontWeight.w600)),
@@ -169,7 +169,7 @@ class _RecommendationsWidgetState extends State<RecommendationsWidget> {
                   Text(title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.poppins(
+                      style: GoogleFonts.plusJakartaSans(
                           color: theme.primaryText,
                           fontSize: 12,
                           fontWeight: FontWeight.w500)),
@@ -181,15 +181,15 @@ class _RecommendationsWidgetState extends State<RecommendationsWidget> {
                             size: 12, color: theme.warning),
                         const SizedBox(width: 2),
                         Text(rating,
-                            style: GoogleFonts.poppins(
+                            style: GoogleFonts.plusJakartaSans(
                                 color: theme.secondaryText, fontSize: 10)),
                         const SizedBox(width: 4),
                       ],
                       Text(
                           price != null
-                              ? '₱${price.toStringAsFixed(0)}'
+                              ? 'â‚±${price.toStringAsFixed(0)}'
                               : '',
-                          style: GoogleFonts.poppins(
+                          style: GoogleFonts.plusJakartaSans(
                               color: theme.primary,
                               fontSize: 12,
                               fontWeight: FontWeight.w600)),
@@ -210,7 +210,7 @@ class _RecommendationsWidgetState extends State<RecommendationsWidget> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Picked for You',
-            style: GoogleFonts.poppins(
+            style: GoogleFonts.plusJakartaSans(
                 color: theme.primaryText,
                 fontSize: 18,
                 fontWeight: FontWeight.w600)),
@@ -238,12 +238,12 @@ class _RecommendationsWidgetState extends State<RecommendationsWidget> {
                     children: [
                       if (cat != null)
                         Text(cat,
-                            style: GoogleFonts.poppins(
+                            style: GoogleFonts.plusJakartaSans(
                                 color: theme.secondaryText, fontSize: 11)),
                       Text(title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.poppins(
+                          style: GoogleFonts.plusJakartaSans(
                               color: theme.primaryText,
                               fontSize: 14,
                               fontWeight: FontWeight.w500)),
@@ -271,13 +271,13 @@ class _RecommendationsWidgetState extends State<RecommendationsWidget> {
                 size: 64, color: theme.textTertiary),
             const SizedBox(height: 16),
             Text('No recommendations yet',
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.plusJakartaSans(
                     color: theme.primaryText,
                     fontSize: 18,
                     fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             Text('Browse services to get personalized picks.',
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.plusJakartaSans(
                     color: theme.secondaryText, fontSize: 14)),
           ],
         ),

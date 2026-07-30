@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
@@ -108,7 +108,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                     decoration: BoxDecoration(
                       color: AppTheme.of(context).primaryBackground,
                       borderRadius: BorderRadius.circular(28),
-                      boxShadow: AppThemeData.shadowElevated,
+                      boxShadow: AppThemeData.shadowLg,
                     ),
                     child: _buildConversationBody(context),
                   ),
@@ -145,7 +145,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                     Text(
                       widget.providerName ?? 'Conversation',
                       style: AppTheme.of(context).titleMedium.override(
-                            font: GoogleFonts.poppins(
+                            font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w700,
                             ),
                             color: AppTheme.of(context).primaryText,
@@ -159,7 +159,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                           ? 'Start the conversation'
                           : 'Connected to this thread',
                       style: AppTheme.of(context).bodySmall.override(
-                            font: GoogleFonts.poppins(),
+                            font: GoogleFonts.plusJakartaSans(),
                             color: AppTheme.of(context).secondaryText,
                           ),
                     ),
@@ -176,7 +176,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                 child: Text(
                   'Chat',
                   style: AppTheme.of(context).labelSmall.override(
-                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                         color: AppTheme.of(context).primary,
                       ),
                 ),
@@ -231,7 +231,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
               Text(
                 'No messages yet',
                 style: AppTheme.of(context).titleMedium.override(
-                      font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                      font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                       color: AppTheme.of(context).primaryText,
                     ),
               ),
@@ -239,7 +239,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
               Text(
                 'Send the first message to coordinate service details, arrival timing, or updates.',
                 style: AppTheme.of(context).bodyMedium.override(
-                      font: GoogleFonts.poppins(),
+                      font: GoogleFonts.plusJakartaSans(),
                       color: AppTheme.of(context).secondaryText,
                     ),
                 textAlign: TextAlign.center,
@@ -298,7 +298,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                           style: AppTheme.of(context)
                               .bodyMedium
                               .override(
-                                font: GoogleFonts.poppins(),
+                                font: GoogleFonts.plusJakartaSans(),
                                 color: isMe
                                     ? AppTheme.of(context).secondaryBackground
                                     : AppTheme.of(context).primaryText,
@@ -312,7 +312,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                             Text(
                               message['time'] as String? ?? '',
                               style: AppTheme.of(context).labelSmall.override(
-                                    font: GoogleFonts.poppins(
+                                    font: GoogleFonts.plusJakartaSans(
                                       fontWeight: FontWeight.w500,
                                     ),
                                     color: isMe
@@ -325,7 +325,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                               Text(
                                 _statusLabel(message['status'] as String?),
                                 style: AppTheme.of(context).labelSmall.override(
-                                      font: GoogleFonts.poppins(
+                                      font: GoogleFonts.plusJakartaSans(
                                         fontWeight: FontWeight.w700,
                                       ),
                                       color: isMe
@@ -344,7 +344,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                     Text(
                       widget.providerName ?? 'Contact',
                       style: AppTheme.of(context).labelSmall.override(
-                            font: GoogleFonts.poppins(),
+                            font: GoogleFonts.plusJakartaSans(),
                             color: AppTheme.of(context).textTertiary,
                           ),
                     ),
@@ -371,7 +371,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                   decoration: BoxDecoration(
                     color: AppTheme.of(context).primaryBackground,
                     borderRadius: BorderRadius.circular(26),
-                    boxShadow: AppThemeData.shadowElevated,
+                    boxShadow: AppThemeData.shadowLg,
                   ),
                   child: TextField(
                     controller: _messageController,
@@ -382,7 +382,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                     decoration: InputDecoration(
                       hintText: 'Write a message...',
                       hintStyle: AppTheme.of(context).bodyMedium.override(
-                            font: GoogleFonts.poppins(),
+                            font: GoogleFonts.plusJakartaSans(),
                             color: AppTheme.of(context).textTertiary,
                           ),
                       border: InputBorder.none,
@@ -391,7 +391,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                       isCollapsed: true,
                     ),
                     style: AppTheme.of(context).bodyMedium.override(
-                          font: GoogleFonts.poppins(),
+                          font: GoogleFonts.plusJakartaSans(),
                           color: AppTheme.of(context).primaryText,
                         ),
                   ),
@@ -414,7 +414,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                       end: Alignment.bottomRight,
                     ),
                     shape: BoxShape.circle,
-                    boxShadow: AppThemeData.shadowElevated,
+                    boxShadow: AppThemeData.shadowLg,
                   ),
                   child: Icon(
                     Icons.send_rounded,

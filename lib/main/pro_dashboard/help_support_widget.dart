@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
@@ -66,7 +66,7 @@ class _HelpSupportWidgetState extends State<HelpSupportWidget> {
         title: Text(
           'Help & Support',
           style: AppTheme.of(context).titleLarge.override(
-                font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
               ),
         ),
         backgroundColor: AppTheme.of(context).primaryBackground,

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
@@ -27,7 +27,7 @@ class _HelpPageState extends State<HelpPage> {
         title: Text(
           'Help & Support',
           style: theme.titleLarge.override(
-            font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+            font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
           ),
         ),
         leading: IconButton(
@@ -149,7 +149,7 @@ class _FaqSection extends StatelessWidget {
           child: Text(
             title,
             style: theme.titleSmall.override(
-              font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
               color: theme.secondaryText,
             ),
           ),
@@ -202,7 +202,7 @@ class _FaqTile extends StatelessWidget {
         title: Text(
           item.question,
           style: theme.bodyMedium.override(
-            font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+            font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
           ),
         ),
         children: [
@@ -210,7 +210,7 @@ class _FaqTile extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: Text(
               item.answer,
-              style: GoogleFonts.poppins(
+              style: GoogleFonts.plusJakartaSans(
                 color: theme.secondaryText,
                 fontSize: 12,
                 height: 1.5,

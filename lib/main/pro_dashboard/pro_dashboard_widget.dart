@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -86,11 +86,11 @@ class _ProDashboardWidgetState extends State<ProDashboardWidget> {
             backgroundColor: Colors.white,
             selectedItemColor: theme.primary,
             unselectedItemColor: const Color(0xFF7B8794),
-            selectedLabelStyle: GoogleFonts.poppins(
+            selectedLabelStyle: GoogleFonts.plusJakartaSans(
               fontSize: 12,
               fontWeight: FontWeight.w700,
             ),
-            unselectedLabelStyle: GoogleFonts.poppins(
+            unselectedLabelStyle: GoogleFonts.plusJakartaSans(
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
@@ -263,7 +263,7 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            success ? 'Offer accepted — job confirmed' : 'Failed to accept offer',
+            success ? 'Offer accepted â€” job confirmed' : 'Failed to accept offer',
           ),
         ),
       );
@@ -398,7 +398,7 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
         child: Text(
           title,
           style: AppTheme.of(context).labelLarge.override(
-                font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                 color: const Color(0xFF64748B),
               ),
         ),
@@ -458,14 +458,14 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
                           Text(
                             'Dispatch match',
                             style: theme.labelMedium.override(
-                              font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                               color: Colors.white.withValues(alpha: 0.82),
                             ),
                           ),
                           Text(
                             'New offer available',
                             style: theme.titleSmall.override(
-                              font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                               color: Colors.white,
                             ),
                           ),
@@ -484,7 +484,7 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
                       child: Text(
                         '${elapsed.inSeconds ~/ 60}m ago',
                         style: theme.labelSmall.override(
-                          font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                          font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                           color: Colors.white,
                         ),
                       ),
@@ -500,7 +500,7 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
                       child: Text(
                         clientName,
                         style: theme.bodyMedium.override(
-                          font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                          font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                           color: Colors.white,
                         ),
                       ),
@@ -511,7 +511,7 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
                     Text(
                       serviceType,
                       style: theme.bodySmall.override(
-                        font: GoogleFonts.poppins(),
+                        font: GoogleFonts.plusJakartaSans(),
                         color: Colors.white.withValues(alpha: 0.90),
                       ),
                     ),
@@ -533,7 +533,7 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
                               child: Text(
                                 'Accept',
                                 style: theme.bodyMedium.override(
-                                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                                   color: const Color(0xFF0F766E),
                                 ),
                               ),
@@ -560,7 +560,7 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
                           child: Text(
                             'Decline',
                             style: theme.bodyMedium.override(
-                              font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                             ),
                           ),
                         ),
@@ -634,7 +634,7 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
                     Text(
                       clientName,
                       style: AppTheme.of(context).bodyLarge.override(
-                            font: GoogleFonts.poppins(
+                            font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w700,
                             ),
                             color: const Color(0xFF0F172A),
@@ -644,7 +644,7 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
                     Text(
                       serviceName,
                       style: AppTheme.of(context).bodySmall.override(
-                            font: GoogleFonts.poppins(),
+                            font: GoogleFonts.plusJakartaSans(),
                             color: const Color(0xFF64748B),
                           ),
                     ),
@@ -1888,7 +1888,7 @@ class _ProEarningsWidgetState extends State<ProEarningsWidget> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  clientName.isEmpty ? date : '$clientName • $date',
+                  clientName.isEmpty ? date : '$clientName â€¢ $date',
                   style: AppTheme.of(context).bodySmall.override(
                         color: const Color(0xFF64748B),
                       ),
@@ -2403,7 +2403,7 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
                                     style: AppTheme.of(context)
                                         .headlineSmall
                                         .override(
-                                          font: GoogleFonts.poppins(
+                                          font: GoogleFonts.plusJakartaSans(
                                             fontWeight: FontWeight.w700,
                                           ),
                                           color: const Color(0xFF0F172A),
@@ -2414,7 +2414,7 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
                                     'Keep customer conversations responsive and professional.',
                                     style:
                                         AppTheme.of(context).bodySmall.override(
-                                              font: GoogleFonts.poppins(),
+                                              font: GoogleFonts.plusJakartaSans(),
                                               color: const Color(0xFF64748B),
                                             ),
                                   ),
@@ -2479,7 +2479,7 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
                                       style: AppTheme.of(context)
                                           .titleMedium
                                           .override(
-                                            font: GoogleFonts.poppins(
+                                            font: GoogleFonts.plusJakartaSans(
                                               fontWeight: FontWeight.w700,
                                             ),
                                             color: Colors.white,
@@ -2570,7 +2570,7 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
                                 style: AppTheme.of(context)
                                     .titleMedium
                                     .override(
-                                      font: GoogleFonts.poppins(
+                                      font: GoogleFonts.plusJakartaSans(
                                         fontWeight: FontWeight.w700,
                                       ),
                                       color: const Color(0xFF0F172A),
@@ -2589,7 +2589,7 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
                               child: Text(
                                 '${_filteredChatRooms.length} threads',
                                 style: AppTheme.of(context).labelSmall.override(
-                                      font: GoogleFonts.poppins(
+                                      font: GoogleFonts.plusJakartaSans(
                                         fontWeight: FontWeight.w700,
                                       ),
                                       color: const Color(0xFF0F8A6C),
@@ -2658,7 +2658,7 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
             Text(
               label,
               style: AppTheme.of(context).bodySmall.override(
-                    font: GoogleFonts.poppins(),
+                    font: GoogleFonts.plusJakartaSans(),
                     color: Colors.white.withValues(alpha: 0.82),
                   ),
             ),
@@ -2666,7 +2666,7 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
             Text(
               value,
               style: AppTheme.of(context).titleLarge.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: Colors.white,
                   ),
             ),
@@ -2713,7 +2713,7 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
                       ? 'No messages yet'
                       : 'No conversations matched',
                   style: AppTheme.of(context).titleMedium.override(
-                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                         color: const Color(0xFF0F172A),
                       ),
                 ),
@@ -2723,7 +2723,7 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
                       ? 'Customer conversations will appear here as soon as new leads or active bookings open a thread.'
                       : 'Try a different customer name or keyword.',
                   style: AppTheme.of(context).bodyMedium.override(
-                        font: GoogleFonts.poppins(),
+                        font: GoogleFonts.plusJakartaSans(),
                         color: const Color(0xFF64748B),
                       ),
                   textAlign: TextAlign.center,
@@ -2799,7 +2799,7 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
                           child: Text(
                             customerName,
                             style: AppTheme.of(context).bodyLarge.override(
-                                  font: GoogleFonts.poppins(
+                                  font: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.w700,
                                   ),
                                   color: const Color(0xFF0F172A),
@@ -2812,7 +2812,7 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
                         Text(
                           _formatTime(lastMessageTime),
                           style: AppTheme.of(context).bodySmall.override(
-                                font: GoogleFonts.poppins(),
+                                font: GoogleFonts.plusJakartaSans(),
                                 color: const Color(0xFF94A3B8),
                               ),
                         ),
@@ -2822,7 +2822,7 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
                     Text(
                       lastMessageText,
                       style: AppTheme.of(context).bodyMedium.override(
-                            font: GoogleFonts.poppins(),
+                            font: GoogleFonts.plusJakartaSans(),
                             color: const Color(0xFF64748B),
                           ),
                       maxLines: 2,
@@ -2841,7 +2841,7 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
                       child: Text(
                         'Customer',
                         style: AppTheme.of(context).labelSmall.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,
                               ),
                               color: const Color(0xFF475569),
@@ -2864,7 +2864,7 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
                 child: Text(
                   unreadCount.toString(),
                   style: AppTheme.of(context).labelSmall.override(
-                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                         color: Colors.white,
                   ),
                 ),
@@ -3181,7 +3181,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                         style: AppTheme.of(context)
                                             .headlineSmall
                                             .override(
-                                              font: GoogleFonts.poppins(
+                                              font: GoogleFonts.plusJakartaSans(
                                                 fontWeight: FontWeight.w700,
                                               ),
                                               color: Colors.white,
@@ -3195,7 +3195,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                         style: AppTheme.of(context)
                                             .bodyMedium
                                             .override(
-                                              font: GoogleFonts.poppins(),
+                                              font: GoogleFonts.plusJakartaSans(),
                                               color: Colors.white
                                                   .withValues(alpha: 0.84),
                                             ),
@@ -3241,7 +3241,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                               style: AppTheme.of(context)
                                                   .labelSmall
                                                   .override(
-                                                    font: GoogleFonts.poppins(
+                                                    font: GoogleFonts.plusJakartaSans(
                                                       fontWeight:
                                                           FontWeight.w700,
                                                     ),
@@ -3355,7 +3355,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                       style: AppTheme.of(context)
                                           .bodyLarge
                                           .override(
-                                            font: GoogleFonts.poppins(
+                                            font: GoogleFonts.plusJakartaSans(
                                               fontWeight: FontWeight.w700,
                                             ),
                                             color: const Color(0xFF0F172A),
@@ -3369,7 +3369,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                       style: AppTheme.of(context)
                                           .bodySmall
                                           .override(
-                                            font: GoogleFonts.poppins(),
+                                            font: GoogleFonts.plusJakartaSans(),
                                             color: const Color(0xFF64748B),
                                           ),
                                     ),
@@ -3407,7 +3407,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                   'Hourly Rate',
                                   style:
                                       AppTheme.of(context).bodyLarge.override(
-                                            font: GoogleFonts.poppins(
+                                            font: GoogleFonts.plusJakartaSans(
                                               fontWeight: FontWeight.w700,
                                             ),
                                             color: const Color(0xFF0F172A),
@@ -3417,7 +3417,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                 Text(
                                   'Keep your pricing current so quotes and customer expectations stay aligned.',
                                   style: AppTheme.of(context).bodySmall.override(
-                                        font: GoogleFonts.poppins(),
+                                        font: GoogleFonts.plusJakartaSans(),
                                         color: const Color(0xFF64748B),
                                       ),
                                 ),
@@ -3438,7 +3438,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                       ),
                                       child: Center(
                                         child: Text(
-                                          'â‚±',
+                                          'Ã¢â€šÂ±',
                                           style: AppTheme.of(context)
                                               .bodyLarge
                                               .override(
@@ -3479,7 +3479,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                         style: AppTheme.of(context)
                                             .bodyLarge
                                             .override(
-                                              font: GoogleFonts.poppins(
+                                              font: GoogleFonts.plusJakartaSans(
                                                 fontWeight: FontWeight.w600,
                                               ),
                                             ),
@@ -3505,7 +3505,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                         style: AppTheme.of(context)
                                             .bodyMedium
                                             .override(
-                                              font: GoogleFonts.poppins(
+                                              font: GoogleFonts.plusJakartaSans(
                                                 fontWeight: FontWeight.w700,
                                               ),
                                               color: Colors.white,
@@ -3588,7 +3588,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                           style: AppTheme.of(context)
                                               .bodySmall
                                               .override(
-                                                font: GoogleFonts.poppins(),
+                                                font: GoogleFonts.plusJakartaSans(),
                                                 color: const Color(0xFF64748B),
                                               ),
                                         ),
@@ -3602,7 +3602,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                           style: AppTheme.of(context)
                                               .bodyMedium
                                               .override(
-                                                font: GoogleFonts.poppins(
+                                                font: GoogleFonts.plusJakartaSans(
                                                   fontWeight: FontWeight.w700,
                                                 ),
                                                 color: const Color(0xFF0F172A),
@@ -3722,7 +3722,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
             Text(
               label,
               style: AppTheme.of(context).bodySmall.override(
-                    font: GoogleFonts.poppins(),
+                    font: GoogleFonts.plusJakartaSans(),
                     color: Colors.white.withValues(alpha: 0.78),
                   ),
             ),
@@ -3730,7 +3730,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
             Text(
               value,
               style: AppTheme.of(context).titleMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: Colors.white,
                   ),
             ),
@@ -3780,7 +3780,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                 child: Text(
                   title,
                   style: AppTheme.of(context).bodyLarge.override(
-                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                         color: const Color(0xFF0F172A),
                       ),
                 ),
@@ -3812,7 +3812,7 @@ PreferredSizeWidget _buildDashboardAppBar(
           Text(
             title,
             style: AppTheme.of(context).titleLarge.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                   color: const Color(0xFF0F172A),
                 ),
           ),
@@ -3820,7 +3820,7 @@ PreferredSizeWidget _buildDashboardAppBar(
           Text(
             subtitle,
             style: AppTheme.of(context).bodySmall.override(
-                  font: GoogleFonts.poppins(),
+                  font: GoogleFonts.plusJakartaSans(),
                   color: const Color(0xFF64748B),
                 ),
           ),
@@ -3901,7 +3901,7 @@ class _DashboardHeroCard extends StatelessWidget {
                       Text(
                         title,
                         style: AppTheme.of(context).labelLarge.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w600,
                               ),
                               color: Colors.white.withValues(alpha: 0.82),
@@ -3911,7 +3911,7 @@ class _DashboardHeroCard extends StatelessWidget {
                       Text(
                         headline,
                         style: AppTheme.of(context).headlineSmall.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,
                               ),
                               color: Colors.white,
@@ -3926,7 +3926,7 @@ class _DashboardHeroCard extends StatelessWidget {
             Text(
               subtitle,
               style: AppTheme.of(context).bodyMedium.override(
-                    font: GoogleFonts.poppins(),
+                    font: GoogleFonts.plusJakartaSans(),
                     color: Colors.white.withValues(alpha: 0.86),
                   ),
             ),
@@ -3949,7 +3949,7 @@ class _DashboardHeroCard extends StatelessWidget {
                               Text(
                                 stat.label,
                                 style: AppTheme.of(context).bodySmall.override(
-                                      font: GoogleFonts.poppins(),
+                                      font: GoogleFonts.plusJakartaSans(),
                                       color:
                                           Colors.white.withValues(alpha: 0.78),
                                     ),
@@ -3959,7 +3959,7 @@ class _DashboardHeroCard extends StatelessWidget {
                                 stat.value,
                                 style:
                                     AppTheme.of(context).titleMedium.override(
-                                          font: GoogleFonts.poppins(
+                                          font: GoogleFonts.plusJakartaSans(
                                             fontWeight: FontWeight.w700,
                                           ),
                                           color: Colors.white,
@@ -4020,7 +4020,7 @@ class _DashboardMessageCard extends StatelessWidget {
                 Text(
                   title,
                   style: AppTheme.of(context).titleMedium.override(
-                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                         color: const Color(0xFF0F172A),
                       ),
                   textAlign: TextAlign.center,
@@ -4029,7 +4029,7 @@ class _DashboardMessageCard extends StatelessWidget {
                 Text(
                   message,
                   style: AppTheme.of(context).bodyMedium.override(
-                        font: GoogleFonts.poppins(),
+                        font: GoogleFonts.plusJakartaSans(),
                         color: const Color(0xFF64748B),
                       ),
                   textAlign: TextAlign.center,
@@ -4102,7 +4102,7 @@ class _StatusPill extends StatelessWidget {
       child: Text(
         label,
         style: AppTheme.of(context).bodySmall.override(
-              font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
               color: foreground,
               fontSize: 10,
             ),

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -112,7 +112,7 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
             title: Text(
               'Reviews',
               style: AppTheme.of(context).titleLarge.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
                   ),
             ),
             actions: const [],
@@ -205,7 +205,7 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
                     style: AppTheme.of(context)
                         .bodyMedium
                         .override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -222,7 +222,7 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
                       style: AppTheme.of(context)
                           .bodyMedium
                           .override(
-                            font: GoogleFonts.poppins(
+                            font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w600,
                             ),
                           ),

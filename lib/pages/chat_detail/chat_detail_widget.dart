@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
@@ -107,7 +107,7 @@ class _ChatDetailWidgetState extends State<ChatDetailWidget> {
           children: [
             Text(
               content,
-              style: GoogleFonts.poppins(
+              style: GoogleFonts.plusJakartaSans(
                 color: isMine ? Colors.white : theme.primaryText,
                 fontSize: 14,
               ),
@@ -117,7 +117,7 @@ class _ChatDetailWidgetState extends State<ChatDetailWidget> {
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
                   _formatTime(time),
-                  style: GoogleFonts.poppins(
+                  style: GoogleFonts.plusJakartaSans(
                     color: isMine
                         ? Colors.white.withValues(alpha: 0.7)
                         : theme.textTertiary,
@@ -157,7 +157,7 @@ class _ChatDetailWidgetState extends State<ChatDetailWidget> {
               controller: _model.messageController,
               decoration: InputDecoration(
                 hintText: 'Type a message...',
-                hintStyle: GoogleFonts.poppins(
+                hintStyle: GoogleFonts.plusJakartaSans(
                   color: theme.textTertiary,
                   fontSize: 14,
                 ),
@@ -170,7 +170,7 @@ class _ChatDetailWidgetState extends State<ChatDetailWidget> {
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
-              style: GoogleFonts.poppins(
+              style: GoogleFonts.plusJakartaSans(
                 color: theme.primaryText,
                 fontSize: 14,
               ),

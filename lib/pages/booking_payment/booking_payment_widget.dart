@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/components/back_button/back_button_widget.dart';
@@ -210,7 +210,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                               Text(
                                 'Select Payment',
                                 style: AppTheme.of(context).titleLarge.override(
-                                      font: GoogleFonts.poppins(
+                                      font: GoogleFonts.plusJakartaSans(
                                         fontWeight: FontWeight.w700,
                                       ),
                                       color: AppTheme.of(context).primaryText,
@@ -219,7 +219,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                               Text(
                                 'Review the booking and choose how you want to pay.',
                                 style: AppTheme.of(context).bodySmall.override(
-                                      font: GoogleFonts.poppins(),
+                                      font: GoogleFonts.plusJakartaSans(),
                                       color: AppTheme.of(context).secondaryText,
                                     ),
                               ),
@@ -246,7 +246,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                       Text(
                         'Choose how you want to pay',
                                 style: AppTheme.of(context).titleMedium.override(
-                                      font: GoogleFonts.poppins(
+                                      font: GoogleFonts.plusJakartaSans(
                                         fontWeight: FontWeight.w700,
                                       ),
                                       color: AppTheme.of(context).primaryText,
@@ -256,7 +256,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                               Text(
                                 'Card, wallet, and QR payments are protected through escrow until the job is completed.',
                                 style: AppTheme.of(context).bodySmall.override(
-                                      font: GoogleFonts.poppins(),
+                                      font: GoogleFonts.plusJakartaSans(),
                                       color: AppTheme.of(context).secondaryText,
                             ),
                       ),
@@ -316,7 +316,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
             ],
           ),
           borderRadius: BorderRadius.circular(30),
-          boxShadow: AppThemeData.shadowElevated,
+          boxShadow: AppThemeData.shadowLg,
         ),
         child: Row(
           children: [
@@ -348,7 +348,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                     child: Text(
                       widget.category ?? 'Service',
                       style: AppTheme.of(context).labelMedium.override(
-                            font: GoogleFonts.poppins(
+                            font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w700,
                             ),
                             color: Colors.white,
@@ -359,7 +359,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                   Text(
                     widget.serviceName ?? 'Service',
                     style: AppTheme.of(context).titleLarge.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
                           color: Colors.white,
@@ -369,7 +369,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                   Text(
                     widget.price ?? 'PHP 0',
                     style: AppTheme.of(context).headlineSmall.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
                           color: Colors.white,
@@ -396,7 +396,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
             Text(
               'Booking summary',
               style: AppTheme.of(context).titleMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: AppTheme.of(context).primaryText,
                   ),
             ),
@@ -449,7 +449,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                 Text(
                   label,
                   style: AppTheme.of(context).bodySmall.override(
-                        font: GoogleFonts.poppins(),
+                        font: GoogleFonts.plusJakartaSans(),
                         color: AppTheme.of(context).secondaryText,
                       ),
                 ),
@@ -457,7 +457,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                 Text(
                   value,
                   style: AppTheme.of(context).bodyMedium.override(
-                        font: GoogleFonts.poppins(
+                        font: GoogleFonts.plusJakartaSans(
                           fontWeight: FontWeight.w700,
                         ),
                         color: AppTheme.of(context).primaryText,
@@ -496,7 +496,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
               child: Text(
                 'Card, e-wallet, and QR payments are held in escrow. The provider receives the funds only after you confirm the work is done from your bookings page.',
                 style: AppTheme.of(context).bodySmall.override(
-                      font: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                      font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w500),
                       color: const Color(0xFF17426E),
                     ),
               ),
@@ -554,7 +554,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                     Text(
                       label,
                       style: AppTheme.of(context).titleSmall.override(
-                            font: GoogleFonts.poppins(
+                            font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w700,
                             ),
                             color: AppTheme.of(context).primaryText,
@@ -564,7 +564,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                     Text(
                       sublabel,
                       style: AppTheme.of(context).bodySmall.override(
-                            font: GoogleFonts.poppins(),
+                            font: GoogleFonts.plusJakartaSans(),
                             color: AppTheme.of(context).secondaryText,
                           ),
                     ),
@@ -641,7 +641,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                         Text(
                           'Total',
                           style: AppTheme.of(context).bodySmall.override(
-                                font: GoogleFonts.poppins(),
+                                font: GoogleFonts.plusJakartaSans(),
                                 color: AppTheme.of(context).secondaryText,
                               ),
                         ),
@@ -649,7 +649,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                         Text(
                           widget.price ?? 'PHP 0',
                           style: AppTheme.of(context).titleLarge.override(
-                                font: GoogleFonts.poppins(
+                                font: GoogleFonts.plusJakartaSans(
                                   fontWeight: FontWeight.w700,
                                 ),
                                 color: AppTheme.of(context).primary,
@@ -671,7 +671,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                             ? AppTheme.of(context).alternate
                             : AppTheme.of(context).primary,
                         textStyle: AppTheme.of(context).titleSmall.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,
                               ),
                               color: Colors.white,
@@ -687,7 +687,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                 Text(
                   _model.errorMessage!,
                   style: AppTheme.of(context).bodySmall.override(
-                        font: GoogleFonts.poppins(
+                        font: GoogleFonts.plusJakartaSans(
                           fontWeight: FontWeight.w600,
                         ),
                         color: AppTheme.of(context).error,

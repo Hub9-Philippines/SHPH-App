@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/backend/supabase/database/tables/addresses.dart';
@@ -178,7 +178,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                               Text(
                                 'Book Service',
                                 style: AppTheme.of(context).titleLarge.override(
-                                      font: GoogleFonts.poppins(
+                                      font: GoogleFonts.plusJakartaSans(
                                         fontWeight: FontWeight.w700,
                                       ),
                                       color: AppTheme.of(context).primaryText,
@@ -187,7 +187,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                                   Text(
                                     'Choose your schedule and location before payment.',
                                     style: AppTheme.of(context).bodySmall.override(
-                                          font: GoogleFonts.poppins(),
+                                          font: GoogleFonts.plusJakartaSans(),
                                           color: AppTheme.of(context).secondaryText,
                                     ),
                               ),
@@ -259,7 +259,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                           decoration: InputDecoration(
                             hintText: 'Add any special instructions...',
                             hintStyle: AppTheme.of(context).bodySmall.override(
-                                  font: GoogleFonts.poppins(),
+                                  font: GoogleFonts.plusJakartaSans(),
                                   color: AppTheme.of(context).textTertiary,
                                 ),
                             enabledBorder: OutlineInputBorder(
@@ -336,7 +336,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                     child: Text(
                       widget.category ?? 'Service',
                       style: AppTheme.of(context).labelMedium.override(
-                            font: GoogleFonts.poppins(
+                            font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w700,
                             ),
                             color: Colors.white,
@@ -347,7 +347,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                   Text(
                     widget.serviceName ?? 'Service',
                     style: AppTheme.of(context).titleLarge.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
                           color: Colors.white,
@@ -359,7 +359,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                   Text(
                     widget.price ?? 'PHP 0',
                     style: AppTheme.of(context).headlineSmall.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
                           color: Colors.white,
@@ -435,7 +435,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                     child: Text(
                       step,
                       style: AppTheme.of(context).labelLarge.override(
-                            font: GoogleFonts.poppins(
+                            font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w700,
                             ),
                             color: AppTheme.of(context).primary,
@@ -451,7 +451,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                       Text(
                         title,
                         style: AppTheme.of(context).titleMedium.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,
                               ),
                               color: AppTheme.of(context).primaryText,
@@ -461,7 +461,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                       Text(
                         subtitle,
                         style: AppTheme.of(context).bodySmall.override(
-                              font: GoogleFonts.poppins(),
+                              font: GoogleFonts.plusJakartaSans(),
                               color: AppTheme.of(context).secondaryText,
                             ),
                       ),
@@ -527,7 +527,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                       Text(
                         label,
                         style: AppTheme.of(context).bodyMedium.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,
                               ),
                               color: isSelected
@@ -540,7 +540,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                         Text(
                           detail,
                           style: AppTheme.of(context).bodySmall.override(
-                                font: GoogleFonts.poppins(),
+                                font: GoogleFonts.plusJakartaSans(),
                                 color: AppTheme.of(context).secondaryText,
                               ),
                           maxLines: 2,
@@ -587,7 +587,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                   child: Text(
                     _model.errorMessage!,
                     style: AppTheme.of(context).bodySmall.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w600,
                           ),
                           color: AppTheme.of(context).error,
@@ -603,7 +603,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                         Text(
                           'Total',
                           style: AppTheme.of(context).bodySmall.override(
-                                font: GoogleFonts.poppins(),
+                                font: GoogleFonts.plusJakartaSans(),
                                 color: AppTheme.of(context).secondaryText,
                               ),
                         ),
@@ -611,7 +611,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                         Text(
                           widget.price ?? 'PHP 0',
                           style: AppTheme.of(context).titleMedium.override(
-                                font: GoogleFonts.poppins(
+                                font: GoogleFonts.plusJakartaSans(
                                   fontWeight: FontWeight.w700,
                                 ),
                                 color: AppTheme.of(context).primary,
@@ -630,7 +630,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                         height: 54,
                         color: AppTheme.of(context).primary,
                         textStyle: AppTheme.of(context).titleSmall.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,
                               ),
                               color: Colors.white,

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
@@ -85,15 +85,15 @@ class _EarningsChartWidgetState extends State<EarningsChartWidget> {
         children: [
           Text(
             'Total Earnings',
-            style: GoogleFonts.poppins(
+            style: GoogleFonts.plusJakartaSans(
               color: Colors.white.withValues(alpha: 0.8),
               fontSize: 14,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            '₱${total.toStringAsFixed(2)}',
-            style: GoogleFonts.poppins(
+            'â‚±${total.toStringAsFixed(2)}',
+            style: GoogleFonts.plusJakartaSans(
               color: Colors.white,
               fontSize: 36,
               fontWeight: FontWeight.w700,
@@ -102,7 +102,7 @@ class _EarningsChartWidgetState extends State<EarningsChartWidget> {
           const SizedBox(height: 4),
           Text(
             '$jobs completed jobs',
-            style: GoogleFonts.poppins(
+            style: GoogleFonts.plusJakartaSans(
               color: Colors.white.withValues(alpha: 0.7),
               fontSize: 14,
             ),
@@ -134,7 +134,7 @@ class _EarningsChartWidgetState extends State<EarningsChartWidget> {
                     children: [
                       Text(
                         p.$1,
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.plusJakartaSans(
                           color: theme.secondaryText,
                           fontSize: 10,
                           fontWeight: FontWeight.w500,
@@ -143,8 +143,8 @@ class _EarningsChartWidgetState extends State<EarningsChartWidget> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '₱${(_model.earningsData[p.$2] as double? ?? 0.0).toStringAsFixed(0)}',
-                        style: GoogleFonts.poppins(
+                        'â‚±${(_model.earningsData[p.$2] as double? ?? 0.0).toStringAsFixed(0)}',
+                        style: GoogleFonts.plusJakartaSans(
                           color: theme.primaryText,
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -199,8 +199,8 @@ class _EarningsChartWidgetState extends State<EarningsChartWidget> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       Text(
-                        '₱${earnings.toStringAsFixed(0)}',
-                        style: GoogleFonts.poppins(
+                        'â‚±${earnings.toStringAsFixed(0)}',
+                        style: GoogleFonts.plusJakartaSans(
                           color: theme.secondaryText,
                           fontSize: 9,
                         ),
@@ -216,7 +216,7 @@ class _EarningsChartWidgetState extends State<EarningsChartWidget> {
                       const SizedBox(height: 4),
                       Text(
                         entry.value['week'] as String? ?? '',
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.plusJakartaSans(
                           color: theme.secondaryText,
                           fontSize: 9,
                         ),
@@ -266,7 +266,7 @@ class _EarningsChartWidgetState extends State<EarningsChartWidget> {
                     children: [
                       Text(
                         t['serviceName'] as String? ?? '',
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.plusJakartaSans(
                           color: theme.primaryText,
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -274,7 +274,7 @@ class _EarningsChartWidgetState extends State<EarningsChartWidget> {
                       ),
                       Text(
                         t['date'] as String? ?? '',
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.plusJakartaSans(
                           color: theme.textTertiary,
                           fontSize: 12,
                         ),
@@ -283,8 +283,8 @@ class _EarningsChartWidgetState extends State<EarningsChartWidget> {
                   ),
                 ),
                 Text(
-                  '₱${(t['amount'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
-                  style: GoogleFonts.poppins(
+                  'â‚±${(t['amount'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
+                  style: GoogleFonts.plusJakartaSans(
                     color: theme.success,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,

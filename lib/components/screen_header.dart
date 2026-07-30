@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/theme/app_theme.dart';
@@ -30,7 +30,7 @@ class ScreenHeader extends StatelessWidget {
                   Text(
                     title,
                     style: AppTheme.of(context).headlineSmall.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
                           color: const Color(0xFF0F172A),
@@ -42,7 +42,7 @@ class ScreenHeader extends StatelessWidget {
                       child: Text(
                         subtitle!,
                         style: AppTheme.of(context).bodySmall.override(
-                              font: GoogleFonts.poppins(),
+                              font: GoogleFonts.plusJakartaSans(),
                               color: const Color(0xFF64748B),
                             ),
                       ),

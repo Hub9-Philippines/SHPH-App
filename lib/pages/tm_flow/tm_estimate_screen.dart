@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -74,7 +74,7 @@ class TMEstimateScreen extends StatelessWidget {
                     Text(
                       subCategory.title,
                       style: theme.headlineSmall.override(
-                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -109,7 +109,7 @@ class TMEstimateScreen extends StatelessWidget {
                           Text(
                             subCategory.estimateLabel,
                             style: theme.displaySmall.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,
                               ),
                               color: theme.primaryText,

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/backend/supabase/database/tables/payment_methods.dart';
@@ -130,7 +130,7 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
           Text(
             'Wallet setup',
             style: AppTheme.of(context).titleLarge.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                   color: Colors.white,
                 ),
           ),
@@ -138,7 +138,7 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
           Text(
             'Store your cards and e-wallets for a faster checkout experience.',
             style: AppTheme.of(context).bodyMedium.override(
-                  font: GoogleFonts.poppins(),
+                  font: GoogleFonts.plusJakartaSans(),
                   color: Colors.white.withValues(alpha: 0.82),
                 ),
           ),
@@ -220,7 +220,7 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTheme.of(context).titleSmall.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,
                               ),
                               color: AppTheme.of(context).primaryText,
@@ -296,7 +296,7 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
             Text(
               'No payment methods yet',
               style: AppTheme.of(context).titleMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: AppTheme.of(context).primaryText,
                   ),
             ),
@@ -364,7 +364,7 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
                 height: 54,
                 color: AppTheme.of(context).primary,
                 textStyle: AppTheme.of(context).titleSmall.override(
-                      font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                      font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                       color: Colors.white,
                     ),
                 borderRadius: BorderRadius.circular(18),
@@ -515,7 +515,7 @@ class _WalletMetric extends StatelessWidget {
             Text(
               value,
               style: AppTheme.of(context).titleMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: Colors.white,
                   ),
             ),

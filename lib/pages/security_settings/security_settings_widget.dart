@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/backend/supabase/supabase.dart';
@@ -300,7 +300,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
         title: Text(
           'Setup 2FA',
           style: AppTheme.of(context).titleMedium.override(
-                font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                 color: AppTheme.of(context).primaryText,
               ),
         ),
@@ -312,7 +312,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                 'Scan this QR code with your authenticator app, then enter the 6-digit code to finish setup.',
                 textAlign: TextAlign.center,
                 style: AppTheme.of(context).bodyMedium.override(
-                      font: GoogleFonts.poppins(),
+                      font: GoogleFonts.plusJakartaSans(),
                       color: AppTheme.of(context).secondaryText,
                     ),
               ),
@@ -441,7 +441,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                           Text(
                             'Security',
                             style: AppTheme.of(context).titleLarge.override(
-                                  font: GoogleFonts.poppins(
+                                  font: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.w700,
                                   ),
                                   color: AppTheme.of(context).primaryText,
@@ -450,7 +450,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                           Text(
                             'Protect your account, password, and sign-in access.',
                             style: AppTheme.of(context).bodySmall.override(
-                                  font: GoogleFonts.poppins(),
+                                  font: GoogleFonts.plusJakartaSans(),
                                   color: AppTheme.of(context).secondaryText,
                                 ),
                           ),
@@ -554,7 +554,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                                     style: AppTheme.of(context)
                                         .titleSmall
                                         .override(
-                                          font: GoogleFonts.poppins(
+                                          font: GoogleFonts.plusJakartaSans(
                                             fontWeight: FontWeight.w700,
                                           ),
                                           color: Colors.white,
@@ -660,7 +660,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                   Text(
                     'Keep your account protected',
                     style: AppTheme.of(context).titleMedium.override(
-                          font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                          font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                           color: Colors.white,
                         ),
                   ),
@@ -668,7 +668,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                   Text(
                     'Manage password strength, 2FA, and recent account access in one place.',
                     style: AppTheme.of(context).bodySmall.override(
-                          font: GoogleFonts.poppins(),
+                          font: GoogleFonts.plusJakartaSans(),
                           color: Colors.white.withValues(alpha: 0.84),
                         ),
                   ),
@@ -691,7 +691,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
             child: Text(
               title,
               style: AppTheme.of(context).labelLarge.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: AppTheme.of(context).secondaryText,
                   ),
             ),
@@ -784,7 +784,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                   Text(
                     title,
                     style: AppTheme.of(context).titleSmall.override(
-                          font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                          font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                           color: AppTheme.of(context).primaryText,
                         ),
                   ),
@@ -792,7 +792,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                   Text(
                     subtitle,
                     style: AppTheme.of(context).bodySmall.override(
-                          font: GoogleFonts.poppins(),
+                          font: GoogleFonts.plusJakartaSans(),
                           color: AppTheme.of(context).secondaryText,
                         ),
                   ),
@@ -813,7 +813,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
         child: Text(
           'No active sessions were returned for this account yet.',
           style: AppTheme.of(context).bodyMedium.override(
-                font: GoogleFonts.poppins(),
+                font: GoogleFonts.plusJakartaSans(),
                 color: AppTheme.of(context).secondaryText,
               ),
         ),
@@ -862,7 +862,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                         child: Text(
                           isCurrent ? 'Current device' : 'Other sign-in',
                           style: AppTheme.of(context).titleSmall.override(
-                                font: GoogleFonts.poppins(
+                                font: GoogleFonts.plusJakartaSans(
                                   fontWeight: FontWeight.w700,
                                 ),
                                 color: AppTheme.of(context).primaryText,
@@ -882,7 +882,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                           child: Text(
                             'Active now',
                             style: AppTheme.of(context).labelSmall.override(
-                                  font: GoogleFonts.poppins(
+                                  font: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.w700,
                                   ),
                                   color: const Color(0xFF0F9D58),
@@ -895,7 +895,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                   Text(
                     session.provider,
                     style: AppTheme.of(context).bodyMedium.override(
-                          font: GoogleFonts.poppins(),
+                          font: GoogleFonts.plusJakartaSans(),
                           color: const Color(0xFF334155),
                         ),
                   ),
@@ -904,7 +904,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                     Text(
                       'Last active ${_formatDate(session.createdAt!)}',
                       style: AppTheme.of(context).bodySmall.override(
-                            font: GoogleFonts.poppins(),
+                            font: GoogleFonts.plusJakartaSans(),
                             color: AppTheme.of(context).secondaryText,
                           ),
                     ),

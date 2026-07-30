@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/components/screen_header.dart';
@@ -329,7 +329,7 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
             Text(
               _currency(_stats.totalEarnings),
               style: AppTheme.of(context).headlineMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: AppTheme.of(context).secondaryBackground,
                   ),
             ),
@@ -337,7 +337,7 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
             Text(
               '${_stats.totalJobs} completed jobs recorded so far.',
               style: AppTheme.of(context).bodyMedium.override(
-                    font: GoogleFonts.poppins(),
+                    font: GoogleFonts.plusJakartaSans(),
                     color: AppTheme.of(context).secondaryBackground.withValues(alpha: 0.84),
                   ),
             ),
@@ -394,7 +394,7 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
           Text(
             'Completed Jobs',
             style: AppTheme.of(context).titleMedium.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                   color: AppTheme.of(context).primaryText,
                 ),
           ),
@@ -402,7 +402,7 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
           Text(
             '${_completedJobs.length} total',
             style: AppTheme.of(context).bodyMedium.override(
-                  font: GoogleFonts.poppins(),
+                  font: GoogleFonts.plusJakartaSans(),
                   color: AppTheme.of(context).secondaryText,
                 ),
           ),
@@ -491,7 +491,7 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: AppTheme.of(context).titleSmall.override(
-                                  font: GoogleFonts.poppins(
+                                  font: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.w700,
                                   ),
                                   color: AppTheme.of(context).primaryText,
@@ -499,9 +499,9 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '$clientName • $serviceCategory',
+                            '$clientName â€¢ $serviceCategory',
                             style: AppTheme.of(context).bodySmall.override(
-                                  font: GoogleFonts.poppins(),
+                                  font: GoogleFonts.plusJakartaSans(),
                                   color: AppTheme.of(context).secondaryText,
                                 ),
                           ),
@@ -515,7 +515,7 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
                         Text(
                           _currency(price),
                           style: AppTheme.of(context).titleSmall.override(
-                                font: GoogleFonts.poppins(
+                                font: GoogleFonts.plusJakartaSans(
                                   fontWeight: FontWeight.w700,
                                 ),
                                 color: AppTheme.of(context).success,
@@ -525,7 +525,7 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
                         Text(
                           '#${_bookingReference(job)}',
                           style: AppTheme.of(context).labelSmall.override(
-                                font: GoogleFonts.poppins(),
+                                font: GoogleFonts.plusJakartaSans(),
                                 color: AppTheme.of(context).textTertiary,
                               ),
                         ),
@@ -571,7 +571,7 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
                       child: Text(
                         'Open this completed booking to review full details.',
                         style: AppTheme.of(context).bodySmall.override(
-                              font: GoogleFonts.poppins(),
+                              font: GoogleFonts.plusJakartaSans(),
                               color: AppTheme.of(context).secondaryText,
                             ),
                       ),
@@ -628,7 +628,7 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
                 title,
                 textAlign: TextAlign.center,
                 style: AppTheme.of(context).titleMedium.override(
-                      font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                      font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                       color: AppTheme.of(context).primaryText,
                     ),
               ),
@@ -637,7 +637,7 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
                 subtitle,
                 textAlign: TextAlign.center,
                 style: AppTheme.of(context).bodyMedium.override(
-                      font: GoogleFonts.poppins(),
+                      font: GoogleFonts.plusJakartaSans(),
                       color: AppTheme.of(context).secondaryText,
                     ),
               ),
@@ -657,7 +657,7 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
                   child: Text(
                     actionLabel,
                     style: AppTheme.of(context).labelLarge.override(
-                          font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                          font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                           color: AppTheme.of(context).secondaryBackground,
                         ),
                   ),
@@ -713,7 +713,7 @@ class _HeroMetric extends StatelessWidget {
             Text(
               label,
               style: AppTheme.of(context).bodySmall.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                     color: AppTheme.of(context).secondaryBackground.withValues(alpha: 0.8),
                   ),
             ),
@@ -721,7 +721,7 @@ class _HeroMetric extends StatelessWidget {
             Text(
               value,
               style: AppTheme.of(context).titleMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: AppTheme.of(context).secondaryBackground,
                   ),
             ),
@@ -776,7 +776,7 @@ class _StatCard extends StatelessWidget {
             Text(
               title,
               style: AppTheme.of(context).bodySmall.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                     color: AppTheme.of(context).secondaryText,
                   ),
             ),
@@ -784,7 +784,7 @@ class _StatCard extends StatelessWidget {
             Text(
               value,
               style: AppTheme.of(context).titleMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: AppTheme.of(context).primaryText,
                   ),
             ),
@@ -792,7 +792,7 @@ class _StatCard extends StatelessWidget {
             Text(
               subtitle,
               style: AppTheme.of(context).labelSmall.override(
-                    font: GoogleFonts.poppins(),
+                    font: GoogleFonts.plusJakartaSans(),
                     color: AppTheme.of(context).textTertiary,
                   ),
             ),
@@ -822,7 +822,7 @@ class _StatusChip extends StatelessWidget {
         child: Text(
           label,
           style: AppTheme.of(context).labelSmall.override(
-                font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                 color: foreground,
               ),
         ),
@@ -848,7 +848,7 @@ class _MetaRow extends StatelessWidget {
             child: Text(
               label,
               style: AppTheme.of(context).bodySmall.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                     color: AppTheme.of(context).secondaryText,
                   ),
             ),
@@ -867,7 +867,7 @@ class _MetaRow extends StatelessWidget {
                     value,
                     textAlign: TextAlign.right,
                     style: AppTheme.of(context).bodySmall.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w600,
                           ),
                           color: AppTheme.of(context).primaryText,

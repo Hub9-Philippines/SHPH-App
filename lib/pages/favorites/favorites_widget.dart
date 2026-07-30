@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/backend/supabase/supabase.dart';
@@ -81,7 +81,7 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
                             Text(
                               'Favorites',
                               style: AppTheme.of(context).titleLarge.override(
-                                    font: GoogleFonts.poppins(
+                                    font: GoogleFonts.plusJakartaSans(
                                       fontWeight: FontWeight.w700,
                                     ),
                                     color: AppTheme.of(context).primaryText,
@@ -90,7 +90,7 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
                             Text(
                               'Quick access to the services you want to revisit.',
                               style: AppTheme.of(context).bodySmall.override(
-                                    font: GoogleFonts.poppins(),
+                                    font: GoogleFonts.plusJakartaSans(),
                                     color: AppTheme.of(context).secondaryText,
                                   ),
                             ),
@@ -184,7 +184,7 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
                   title,
                   textAlign: TextAlign.center,
                   style: AppTheme.of(context).titleMedium.override(
-                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                         color: AppTheme.of(context).primaryText,
                       ),
                 ),
@@ -193,7 +193,7 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
                   subtitle,
                   textAlign: TextAlign.center,
                   style: AppTheme.of(context).bodyMedium.override(
-                        font: GoogleFonts.poppins(),
+                        font: GoogleFonts.plusJakartaSans(),
                         color: AppTheme.of(context).secondaryText,
                       ),
                 ),
@@ -252,7 +252,7 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
                       Text(
                         service.title,
                         style: AppTheme.of(context).titleMedium.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,
                               ),
                               color: AppTheme.of(context).primaryText,
@@ -273,7 +273,7 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
                         child: Text(
                           service.categoryName ?? 'Service',
                           style: AppTheme.of(context).labelSmall.override(
-                                font: GoogleFonts.poppins(
+                                font: GoogleFonts.plusJakartaSans(
                                   fontWeight: FontWeight.w700,
                                 ),
                                 color: AppTheme.of(context).primary,
@@ -292,7 +292,7 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
                           Text(
                             _parseRating(service.rating).toStringAsFixed(1),
                             style: AppTheme.of(context).bodySmall.override(
-                                  font: GoogleFonts.poppins(
+                                  font: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.w600,
                                   ),
                                   color: AppTheme.of(context).primaryText,
@@ -302,7 +302,7 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
                           Text(
                             '(${service.reviewCount ?? 0})',
                             style: AppTheme.of(context).bodySmall.override(
-                                  font: GoogleFonts.poppins(),
+                                  font: GoogleFonts.plusJakartaSans(),
                                   color: AppTheme.of(context).secondaryText,
                                 ),
                           ),
@@ -313,7 +313,7 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
                         _formatPrice(service.basePrice, service.priceUnit),
                         style: AppTheme.of(context).titleSmall.override(
                               color: AppTheme.of(context).primary,
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,
                               ),
                             ),

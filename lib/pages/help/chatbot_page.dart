@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -275,7 +275,7 @@ Use the user's name when addressing them. If asked something you don't know, say
             ),
             child: Text(
               msg.text,
-              style: GoogleFonts.poppins(
+              style: GoogleFonts.plusJakartaSans(
                 color: textColor,
                 fontSize: 14,
                 height: 1.4,

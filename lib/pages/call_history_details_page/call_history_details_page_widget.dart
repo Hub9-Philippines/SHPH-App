@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/components/back_button/back_button_widget.dart';
@@ -84,7 +84,7 @@ class _CallHistoryDetailsPageWidgetState extends State<CallHistoryDetailsPageWid
           title: Text(
             'Call Details',
             style: AppTheme.of(context).titleLarge.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
                 ),
           ),
           elevation: 0,
@@ -130,7 +130,7 @@ class _CallHistoryDetailsPageWidgetState extends State<CallHistoryDetailsPageWid
                       Text(
                         widget.providerName ?? 'Unknown Provider',
                         style: AppTheme.of(context).headlineMedium.override(
-                              font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
                             ),
                       ),
                       const SizedBox(height: 8),
@@ -179,7 +179,7 @@ class _CallHistoryDetailsPageWidgetState extends State<CallHistoryDetailsPageWid
                         Text(
                           'Call Information',
                           style: AppTheme.of(context).titleMedium.override(
-                                font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                                font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
                               ),
                         ),
                         const SizedBox(height: 16),
@@ -234,7 +234,7 @@ class _CallHistoryDetailsPageWidgetState extends State<CallHistoryDetailsPageWid
                             iconPadding: EdgeInsetsDirectional.zero,
                             color: AppTheme.of(context).primary,
                             textStyle: AppTheme.of(context).titleSmall.override(
-                                  font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                                   color: Colors.white,
                                 ),
                             borderRadius: BorderRadius.circular(8),
@@ -260,7 +260,7 @@ class _CallHistoryDetailsPageWidgetState extends State<CallHistoryDetailsPageWid
                             iconPadding: EdgeInsetsDirectional.zero,
                             color: AppTheme.of(context).secondaryBackground,
                             textStyle: AppTheme.of(context).titleSmall.override(
-                                  font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                                   color: AppTheme.of(context).primaryText,
                                 ),
                             borderSide: BorderSide(

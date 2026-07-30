@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
@@ -100,7 +100,7 @@ class _PinLocationWidgetState extends State<PinLocationWidget> {
                           color: Colors.transparent,
                           textAlign: TextAlign.start,
                           textStyle: AppTheme.of(context).titleSmall.override(
-                                font: GoogleFonts.poppins(
+                                font: GoogleFonts.plusJakartaSans(
                                   fontWeight: AppTheme.of(context)
                                       .titleSmall
                                       .fontWeight,
@@ -355,7 +355,7 @@ class _PinLocationWidgetState extends State<PinLocationWidget> {
                                 color: AppTheme.of(context).primary,
                                 textStyle:
                                     AppTheme.of(context).titleSmall.override(
-                                          font: GoogleFonts.poppins(
+                                          font: GoogleFonts.plusJakartaSans(
                                             fontWeight: AppTheme.of(context)
                                                 .titleSmall
                                                 .fontWeight,

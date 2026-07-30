@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show kDebugMode;
+﻿import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -67,7 +67,7 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
           title: Text(
             'Phone Verification',
             style: AppTheme.of(context).titleLarge.override(
-                  font: GoogleFonts.poppins(
+                  font: GoogleFonts.plusJakartaSans(
                     fontWeight:
                         AppTheme.of(context).titleLarge.fontWeight,
                     fontStyle:
@@ -103,7 +103,7 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                         style: AppTheme.of(context)
                             .headlineMedium
                             .override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: AppTheme.of(context)
                                     .headlineMedium
                                     .fontWeight,
@@ -128,7 +128,7 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                         'We\'ve sent a 6-digit code to your phone number. Please enter it below.',
                         textAlign: TextAlign.center,
                         style: AppTheme.of(context).bodyMedium.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: AppTheme.of(context)
                                     .bodyMedium
                                     .fontWeight,
@@ -166,8 +166,8 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                           // Calculate cell size based on available width
                           // Available width = constraint width (which is full minus padding)
                           // For 6 cells with 8px spacing between them:
-                          // totalWidth = (6 × cellSize) + (5 × spacing)
-                          // Solve for cellSize: cellSize = (totalWidth - (5 × spacing)) / 6
+                          // totalWidth = (6 Ã— cellSize) + (5 Ã— spacing)
+                          // Solve for cellSize: cellSize = (totalWidth - (5 Ã— spacing)) / 6
                           const spacing = 8.0;
                           const numCells = 6;
                           const totalSpacing = (numCells - 1) * spacing;
@@ -193,7 +193,7 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                               textStyle: AppTheme.of(context)
                                   .bodyLarge
                                   .override(
-                                    font: GoogleFonts.poppins(
+                                    font: GoogleFonts.plusJakartaSans(
                                       fontWeight: AppTheme.of(context)
                                           .bodyLarge
                                           .fontWeight,
@@ -279,7 +279,7 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                           color: AppTheme.of(context).primary,
                           textStyle:
                               AppTheme.of(context).titleSmall.override(
-                                    font: GoogleFonts.poppins(
+                                    font: GoogleFonts.plusJakartaSans(
                                       fontWeight: AppTheme.of(context)
                                           .titleSmall
                                           .fontWeight,
@@ -311,7 +311,7 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                       child: Text(
                         'Didn\'t receive the code?',
                         style: AppTheme.of(context).bodySmall.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: AppTheme.of(context)
                                     .bodySmall
                                     .fontWeight,
@@ -366,7 +366,7 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                       child: Text(
                         'Resend Code',
                         style: AppTheme.of(context).bodySmall.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w600,
                                 fontStyle: AppTheme.of(context)
                                     .bodySmall

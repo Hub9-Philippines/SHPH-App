@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/auth/supabase_auth/auth_util.dart';
@@ -107,7 +107,7 @@ class _EditAddressWidgetState extends State<EditAddressWidget> {
                     Text(
                       'Select address',
                       style: AppTheme.of(context).headlineSmall.override(
-                            font: GoogleFonts.poppins(
+                            font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -217,7 +217,7 @@ class _EditAddressWidgetState extends State<EditAddressWidget> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0x1A368EFF),
+                  color: AppTheme.of(context).primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(

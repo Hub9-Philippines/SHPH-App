@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/theme/app_theme.dart';
@@ -35,8 +35,8 @@ class EarningsChart extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    '₱${data[i].toInt()}',
-                    style: GoogleFonts.poppins(
+                    'â‚±${data[i].toInt()}',
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 9,
                       fontWeight: FontWeight.w600,
                       color: theme.primary,
@@ -70,7 +70,7 @@ class EarningsChart extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     labels.length > i ? labels[i] : '',
-                    style: GoogleFonts.poppins(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 10,
                       color: theme.textTertiary,
                     ),

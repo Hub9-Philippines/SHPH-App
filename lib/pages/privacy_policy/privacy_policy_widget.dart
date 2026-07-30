@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
@@ -21,7 +21,7 @@ class _PrivacyPolicyWidgetState extends State<PrivacyPolicyWidget> {
           title: Text(
             'Privacy Policy',
             style: AppTheme.of(context).titleLarge.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
                 ),
           ),
           backgroundColor: AppTheme.of(context).primaryBackground,
@@ -101,14 +101,14 @@ class _PrivacyPolicyWidgetState extends State<PrivacyPolicyWidget> {
             Text(
               title,
               style: AppTheme.of(context).titleMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                   ),
             ),
             const SizedBox(height: 8),
             Text(
               body,
               style: AppTheme.of(context).bodyMedium.override(
-                    font: GoogleFonts.poppins(),
+                    font: GoogleFonts.plusJakartaSans(),
                     color: AppTheme.of(context).secondaryText,
                     lineHeight: 1.6,
                   ),

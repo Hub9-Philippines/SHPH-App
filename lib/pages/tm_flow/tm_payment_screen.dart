@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -64,7 +64,7 @@ class _TMPaymentScreenState extends State<TMPaymentScreen> {
                     Text(
                       'Php ${controller.totalInvoiceAmount.toStringAsFixed(0)}',
                       style: theme.displaySmall.override(
-                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                       ),
                     ),
                   ],

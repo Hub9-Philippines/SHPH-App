@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -144,7 +144,7 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
             title: Text(
               'Edit Profile',
               style: AppTheme.of(context).titleLarge.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
                   ),
             ),
             centerTitle: true,
@@ -165,7 +165,7 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
                       Text(
                         'Personal Information',
                         style: AppTheme.of(context).titleMedium.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                   fontWeight: FontWeight.bold),
                             ),
                       ),
@@ -319,7 +319,7 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
                           color: AppTheme.of(context).primary,
                           textStyle: AppTheme.of(context).titleSmall.override(
                                 color: AppTheme.of(context).secondaryBackground,
-                                font: GoogleFonts.poppins(
+                                font: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.w600),
                               ),
                           borderRadius: BorderRadius.circular(8),

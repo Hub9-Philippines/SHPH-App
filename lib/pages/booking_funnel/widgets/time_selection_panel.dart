@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/theme/app_theme.dart';
@@ -81,7 +81,7 @@ class TimeSelectionPanel extends StatelessWidget {
           Text(
             'When do you need ${serviceTitle.toLowerCase()}?',
             style: theme.titleMedium.override(
-              font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(height: 4),

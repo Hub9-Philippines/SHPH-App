@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
@@ -82,7 +82,7 @@ class _CategoriesgridWidgetState extends State<CategoriesgridWidget> {
                   category.name,
                   textAlign: TextAlign.center,
                   style: AppTheme.of(context).bodySmall.override(
-                        font: GoogleFonts.poppins(
+                        font: GoogleFonts.plusJakartaSans(
                           fontWeight: FontWeight.normal,
                           fontStyle: AppTheme.of(context).bodySmall.fontStyle,
                         ),

@@ -1,4 +1,4 @@
-import 'package:collection/collection.dart';
+﻿import 'package:collection/collection.dart';
 import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -347,7 +347,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
             title: Text(
               _model.editingAddressId != null ? 'Edit address' : 'New address',
               style: AppTheme.of(context).titleLarge.override(
-                    font: GoogleFonts.poppins(
+                    font: GoogleFonts.plusJakartaSans(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -483,7 +483,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
         child: Text(
           title,
           style: AppTheme.of(context).bodyLarge.override(
-                font: GoogleFonts.poppins(
+                font: GoogleFonts.plusJakartaSans(
                   fontWeight: FontWeight.w600,
                 ),
                 color: AppTheme.of(context).primaryText,
@@ -932,7 +932,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                       Text(
                         'Select Barangay',
                         style: AppTheme.of(context).titleLarge.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w600,
                               ),
                             ),

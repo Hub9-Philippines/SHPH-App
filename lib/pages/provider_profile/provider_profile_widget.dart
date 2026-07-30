@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
@@ -66,7 +66,7 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
                 size: 64, color: theme.textTertiary),
             const SizedBox(height: 16),
             Text('Provider not found',
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.plusJakartaSans(
                     color: theme.primaryText,
                     fontSize: 18,
                     fontWeight: FontWeight.w600)),
@@ -128,7 +128,7 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
             child: photo == null
                 ? Text(
                     name.isNotEmpty ? name[0].toUpperCase() : '?',
-                    style: GoogleFonts.poppins(
+                    style: GoogleFonts.plusJakartaSans(
                         color: Colors.white,
                         fontSize: 28,
                         fontWeight: FontWeight.w600),
@@ -137,7 +137,7 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
           ),
           const SizedBox(height: 12),
           Text(name,
-              style: GoogleFonts.poppins(
+              style: GoogleFonts.plusJakartaSans(
                   color: Colors.white,
                   fontSize: 22,
                   fontWeight: FontWeight.w600)),
@@ -145,7 +145,7 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
             const SizedBox(height: 6),
             Text(bio,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.plusJakartaSans(
                     color: Colors.white.withValues(alpha: 0.85),
                     fontSize: 14)),
           ],
@@ -172,13 +172,13 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
       child: Column(
         children: [
           Text(value,
-              style: GoogleFonts.poppins(
+              style: GoogleFonts.plusJakartaSans(
                   color: theme.primaryText,
                   fontSize: 20,
                   fontWeight: FontWeight.w700)),
           const SizedBox(height: 2),
           Text(label,
-              style: GoogleFonts.poppins(
+              style: GoogleFonts.plusJakartaSans(
                   color: theme.secondaryText, fontSize: 12)),
         ],
       ),
@@ -201,7 +201,7 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
                 size: 16, color: theme.success),
             const SizedBox(width: 6),
             Text('KYC Verified',
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.plusJakartaSans(
                     color: theme.success,
                     fontSize: 12,
                     fontWeight: FontWeight.w600)),
@@ -217,7 +217,7 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
       child: Align(
         alignment: Alignment.centerLeft,
         child: Text(title,
-            style: GoogleFonts.poppins(
+            style: GoogleFonts.plusJakartaSans(
                 color: theme.primaryText,
                 fontSize: 16,
                 fontWeight: FontWeight.w600)),
@@ -229,7 +229,7 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Text(message,
-          style: GoogleFonts.poppins(
+          style: GoogleFonts.plusJakartaSans(
               color: theme.secondaryText, fontSize: 14)),
     );
   }
@@ -280,7 +280,7 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
                           Text(title,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.poppins(
+                              style: GoogleFonts.plusJakartaSans(
                                   color: theme.primaryText,
                                   fontSize: 13,
                                   fontWeight: FontWeight.w500)),
@@ -294,7 +294,7 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
                                         size: 14, color: theme.warning),
                                     const SizedBox(width: 2),
                                     Text(rating,
-                                        style: GoogleFonts.poppins(
+                                        style: GoogleFonts.plusJakartaSans(
                                             color: theme.secondaryText,
                                             fontSize: 11)),
                                     const SizedBox(width: 6),
@@ -302,9 +302,9 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
                                 ),
                               Text(
                                   price != null
-                                      ? '₱${price.toStringAsFixed(0)}'
+                                      ? 'â‚±${price.toStringAsFixed(0)}'
                                       : '',
-                                  style: GoogleFonts.poppins(
+                                  style: GoogleFonts.plusJakartaSans(
                                       color: theme.primary,
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600)),
@@ -352,7 +352,7 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(r['reviewerName']?.toString() ?? 'Anonymous',
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.plusJakartaSans(
                             color: theme.primaryText,
                             fontSize: 14,
                             fontWeight: FontWeight.w500)),
@@ -364,14 +364,14 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
                         const SizedBox(width: 4),
                         Text(
                             (r['rating'] as num?)?.toStringAsFixed(1) ?? '',
-                            style: GoogleFonts.poppins(
+                            style: GoogleFonts.plusJakartaSans(
                                 color: theme.secondaryText, fontSize: 12)),
                       ],
                     ),
                     if (r['comment'] != null) ...[
                       const SizedBox(height: 4),
                       Text(r['comment'] as String,
-                          style: GoogleFonts.poppins(
+                          style: GoogleFonts.plusJakartaSans(
                               color: theme.primaryText, fontSize: 13)),
                     ],
                   ],

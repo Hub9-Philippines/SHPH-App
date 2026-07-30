@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/theme/app_theme.dart';
@@ -59,7 +59,7 @@ class _GeographicSelectionWidgetState extends State<GeographicSelectionWidget> {
               title: Text(
                 _model.getTitle(widget.selectionType),
                 style: AppTheme.of(context).titleLarge.override(
-                      font: GoogleFonts.poppins(
+                      font: GoogleFonts.plusJakartaSans(
                         fontWeight: AppTheme.of(context).titleLarge.fontWeight,
                         fontStyle: AppTheme.of(context).titleLarge.fontStyle,
                       ),
@@ -149,7 +149,7 @@ class _GeographicSelectionWidgetState extends State<GeographicSelectionWidget> {
                                           style: AppTheme.of(context)
                                               .titleMedium
                                               .override(
-                                                font: GoogleFonts.poppins(
+                                                font: GoogleFonts.plusJakartaSans(
                                                   fontWeight: FontWeight.bold,
                                                 ),
                                                 color: AppTheme.of(context)
@@ -177,7 +177,7 @@ class _GeographicSelectionWidgetState extends State<GeographicSelectionWidget> {
                                                     .bodyMedium
                                                     .override(
                                                       font:
-                                                          GoogleFonts.poppins(),
+                                                          GoogleFonts.plusJakartaSans(),
                                                       fontSize: 16,
                                                     ),
                                               ),
