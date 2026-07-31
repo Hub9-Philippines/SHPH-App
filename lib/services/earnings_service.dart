@@ -1,5 +1,3 @@
-import '/api/models/booking.dart';
-import '/api/models/paginated_response.dart';
 import '/api/resources/bookings_api.dart';
 import '/services/logging_service.dart';
 

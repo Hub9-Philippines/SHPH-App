@@ -1,13 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math' as math;
 
-import '/app_state.dart';
-import '/backend/supabase/supabase.dart';
 import '/models/service_listing.dart';
 import '/services/bookings_service.dart';
 import '/services/logging_service.dart';
-import '/utils/geo_utils.dart';
 
 import 'tm_models.dart';
 
@@ -96,7 +92,6 @@ class PersistentMockTMRepository implements TMRepository {
   final Duration providerMatchLatency;
   final Duration hardwareLatency;
   final Duration paymentLatency;
-  final _random = math.Random();
 
   static const _terminalStages = {
     'cancelled',
@@ -445,42 +440,48 @@ class PersistentMockTMRepository implements TMRepository {
   }
 
   @override
-  Stream<TMBookingSnapshot?> watchBookingSnapshot(String requestId) =>
-      Supabase.instance.client
-          .from('bookings')
-          .stream(primaryKey: ['id'])
-          .eq('id', requestId)
-          .map((rows) {
-            if (rows.isEmpty) {
-              return null;
-            }
+  Stream<TMBookingSnapshot?> watchBookingSnapshot(String requestId) async* {
+    while (true) {
+      try {
+        final booking = await _bookingsService.getBookingById(requestId);
+        if (booking == null) {
+          yield null;
+        } else {
+          final metadata = _extractMetadata(booking.notes);
+          final providerMap = metadata['provider'] as Map<String, dynamic>?;
+          final hardwareMap =
+              metadata['hardware_request'] as Map<String, dynamic>?;
 
-            final booking = BookingsRow(rows.first);
-            final metadata = _extractMetadata(booking.notes);
-            final providerMap = metadata['provider'] as Map<String, dynamic>?;
-            final hardwareMap =
-                metadata['hardware_request'] as Map<String, dynamic>?;
-
-            return TMBookingSnapshot(
-              requestId: booking.id,
-              status: booking.status,
-              stage: metadata['stage'] as String?,
-              dispatchMode: metadata['dispatch_mode'] as String?,
-              paymentStatus: booking.paymentStatus,
-              totalPrice: booking.totalPrice,
-              provider: _providerFromMap(providerMap),
-              hardwareRequest: hardwareMap == null
-                  ? null
-                  : TMHardwareRequest(
-                      id: hardwareMap['id']?.toString() ?? 'hardware',
-                      title: hardwareMap['title']?.toString() ??
-                          'Hardware Parts Required',
-                      description: hardwareMap['description']?.toString() ?? '',
-                      additionalCost:
-                          _toDouble(hardwareMap['additional_cost']) ?? 0,
-                    ),
-            );
-          });
+          yield TMBookingSnapshot(
+            requestId: booking.id,
+            status: booking.status,
+            stage: metadata['stage'] as String?,
+            dispatchMode: metadata['dispatch_mode'] as String?,
+            paymentStatus: booking.paymentStatus,
+            totalPrice: booking.totalPrice,
+            provider: _providerFromMap(providerMap),
+            hardwareRequest: hardwareMap == null
+                ? null
+                : TMHardwareRequest(
+                    id: hardwareMap['id']?.toString() ?? 'hardware',
+                    title: hardwareMap['title']?.toString() ??
+                        'Hardware Parts Required',
+                    description: hardwareMap['description']?.toString() ?? '',
+                    additionalCost:
+                        _toDouble(hardwareMap['additional_cost']) ?? 0,
+                  ),
+          );
+        }
+      } catch (e) {
+        LoggingService.error(
+          'TM snapshot watch failed: $e',
+          tag: 'TMRepository',
+        );
+        yield null;
+      }
+      await Future<void>.delayed(const Duration(seconds: 5));
+    }
+  }
 
   Future<bool> _persistMetadata(
     String requestId, {
@@ -540,133 +541,12 @@ class PersistentMockTMRepository implements TMRepository {
     required int searchRadiusKm,
     required int attempt,
   }) async {
-    try {
-      final appState = FFAppState();
-      final clientLat = appState.selectedLatitude;
-      final clientLng = appState.selectedLongitude;
-
-      if (!GeoUtils.hasValidLocation(clientLat, clientLng)) {
-        LoggingService.debug(
-          'No valid pinned location — using Manila fallback',
-          tag: 'TMRepository',
-        );
-      }
-      final originLat = GeoUtils.hasValidLocation(clientLat, clientLng)
-          ? clientLat!
-          : GeoUtils.fallbackLat;
-      final originLng = GeoUtils.hasValidLocation(clientLat, clientLng)
-          ? clientLng!
-          : GeoUtils.fallbackLng;
-
-      final profiles = await Supabase.instance.client
-          .from('profiles')
-          .select(
-            'id, display_name, first_name, skill_profession, latitude, longitude, is_verified',
-          )
-          .eq('role', 'provider')
-          .limit(attempt == 1 ? 25 : 50);
-
-      final candidates = List<Map<String, dynamic>>.from(profiles)
-          .where(_isEligibleProvider)
-          .where((p) {
-        final pLat = (p['latitude'] as num?)?.toDouble();
-        final pLng = (p['longitude'] as num?)?.toDouble();
-        if (pLat == null || pLng == null) return false;
-
-        final dist = GeoUtils.calculateDistance(
-          originLat,
-          originLng,
-          pLat,
-          pLng,
-        );
-        p['_distanceKm'] = dist;
-        return dist <= searchRadiusKm;
-      }).toList()
-        ..sort((a, b) {
-          final distA = a['_distanceKm'] as double;
-          final distB = b['_distanceKm'] as double;
-          final scoreA = _providerScore(
-            a,
-            service: service,
-            subCategory: subCategory,
-            distanceKm: distA,
-          );
-          final scoreB = _providerScore(
-            b,
-            service: service,
-            subCategory: subCategory,
-            distanceKm: distB,
-          );
-          return scoreB.compareTo(scoreA);
-        });
-
-      if (candidates.isEmpty) {
-        return null;
-      }
-
-      final best = candidates.first;
-      final bestDist = best['_distanceKm'] as double;
-      final bestLat = (best['latitude'] as num?)?.toDouble();
-      final bestLng = (best['longitude'] as num?)?.toDouble();
-
-      return TMProviderProfile(
-        id: best['id']?.toString() ?? '',
-        name: (best['display_name'] ?? best['first_name'] ?? 'Provider')
-            .toString(),
-        specialty: (best['skill_profession'] ?? subCategory.title).toString(),
-        rating: best['is_verified'] == true ? 4.9 : 4.7,
-        completedJobs: 120 + _random.nextInt(120),
-        etaMinutes: GeoUtils.calculateETA(bestDist),
-        vehicleLabel: bestDist <= 4
-            ? 'Nearby service unit'
-            : 'Expanded-area service unit',
-        latitude: bestLat,
-        longitude: bestLng,
-      );
-    } catch (e) {
-      LoggingService.error(
-        'TM real provider match failed: $e',
-        tag: 'TMRepository',
-      );
-      return null;
-    }
-  }
-
-  bool _isEligibleProvider(Map<String, dynamic> profile) {
-    final id = profile['id']?.toString();
-    if (id == null || id.isEmpty) {
-      return false;
-    }
-    return true;
-  }
-
-  double _providerScore(
-    Map<String, dynamic> profile, {
-    required ServiceListing service,
-    required TMSubCategoryOption subCategory,
-    required double distanceKm,
-  }) {
-    final profession =
-        (profile['skill_profession']?.toString() ?? '').toLowerCase();
-    final serviceTitle = service.title.toLowerCase();
-    final category = (service.categoryName ?? '').toLowerCase();
-    final subCategoryTitle = subCategory.title.toLowerCase();
-
-    double score = 0;
-    if (profession.contains(subCategoryTitle)) {
-      score += 6;
-    }
-    if (profession.contains(serviceTitle)) {
-      score += 4;
-    }
-    if (category.isNotEmpty && profession.contains(category)) {
-      score += 3;
-    }
-    if (profile['is_verified'] == true) {
-      score += 2;
-    }
-    score -= distanceKm * 1.5;
-    return score.clamp(0, double.infinity);
+    // SHPH API has no geo-radius provider-search endpoint; skip real matching.
+    LoggingService.debug(
+      'TM real provider matching not available — skipping',
+      tag: 'TMRepository',
+    );
+    return null;
   }
 
   String _buildNotes({

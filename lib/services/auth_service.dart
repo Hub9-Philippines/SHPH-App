@@ -11,8 +11,10 @@ class AuthService extends ChangeNotifier {
   AuthService._();
   static final AuthService instance = AuthService._();
 
-  final _authApi = ShphAuthApi.instance;
+  final ShphAuthApi _authApi = ShphAuthApi.instance;
   final _usersApi = ShphUsersApi.instance;
+
+  ShphAuthApi get authApi => _authApi;
 
   AuthStatus _status = AuthStatus.uninitialized;
   AuthStatus get status => _status;
@@ -53,9 +55,8 @@ class AuthService extends ChangeNotifier {
 
   Future<Map<String, dynamic>> registerInitiate({
     required Map<String, dynamic> payload,
-  }) async {
-    return await _authApi.registerInitiate(payload: payload);
-  }
+  }) =>
+      _authApi.registerInitiate(payload: payload);
 
   Future<Map<String, dynamic>> registerVerify({
     required Map<String, dynamic> payload,

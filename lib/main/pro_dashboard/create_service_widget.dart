@@ -1,7 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '/api/resources/services_api.dart';
+import '/auth/base_auth_user_provider.dart';
 import '/components/screen_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/logging_service.dart';
@@ -96,15 +97,17 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
             '$serviceId-$i-${DateTime.now().millisecondsSinceEpoch}.jpg';
         final filePath = 'service-images/$fileName';
 
-        await Supabase.instance.client.storage
-            .from('services')
-            .upload(filePath, file);
+        if (i == 0) {
+          final listingId = int.tryParse(serviceId);
+          if (listingId != null) {
+            await ShphServicesApi.instance
+                .uploadListingThumbnail(listingId, file.path);
+            urls.add('service-images/$fileName');
+            continue;
+          }
+        }
 
-        final url = Supabase.instance.client.storage
-            .from('services')
-            .getPublicUrl(filePath);
-
-        urls.add(url);
+        urls.add(filePath);
       } catch (e) {
         LoggingService.error('Error uploading image $i: $e',
             tag: 'CreateService');
@@ -125,41 +128,29 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
 
     setState(() => isLoading = true);
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
+      final userId = currentUser?.uid;
       if (userId == null) {
         throw Exception('User not authenticated');
       }
 
-      // Generate service ID
-      final serviceId = DateTime.now().millisecondsSinceEpoch.toString();
+      // Create service through the SHPH API
+      final listing = await ShphServicesApi.instance.createListing({
+        'provider': userId,
+        'title': _nameController.text.trim(),
+        'description': _descriptionController.text.trim(),
+        'category_name': _selectedCategory,
+        'base_price': double.tryParse(_priceController.text) ?? 0.0,
+        'price_unit': 'flat',
+      });
 
-      // Upload images first
+      final serviceId = listing.id.toString();
+      LoggingService.info('Service created: $serviceId', tag: 'CreateService');
+
+      // Upload images (thumbnail first, rest stubbed)
       List<String> imageUrls = [];
       if (_selectedImages.isNotEmpty) {
         imageUrls = await _uploadImages(serviceId);
       }
-
-      // Create service in database
-      final serviceData = {
-        'id': serviceId,
-        'provider_id': userId,
-        'name': _nameController.text.trim(),
-        'description': _descriptionController.text.trim(),
-        'category': _selectedCategory,
-        'base_price': double.tryParse(_priceController.text) ?? 0.0,
-        'duration_minutes': int.tryParse(_durationController.text) ?? 60,
-        'additional_info': _additionalInfoController.text.trim(),
-        'images': imageUrls,
-        'is_active': true,
-        'created_at': DateTime.now().toIso8601String(),
-        'updated_at': DateTime.now().toIso8601String(),
-      };
-
-      await Supabase.instance.client
-          .from('service_listings')
-          .insert(serviceData);
-
-      LoggingService.info('Service created: $serviceId', tag: 'CreateService');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

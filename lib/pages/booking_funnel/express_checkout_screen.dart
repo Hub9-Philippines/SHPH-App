@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -583,7 +583,7 @@ class _Pill extends StatelessWidget {
   }
 }
 
-// â”€â”€ Time edit bottom sheet â”€â”€
+// ── Time edit bottom sheet ──
 
 class _TimeEditSheet extends StatelessWidget {
   const _TimeEditSheet({required this.controller});
@@ -624,7 +624,7 @@ class _TimeEditSheet extends StatelessWidget {
           _TimeOption(
             icon: Icons.flash_on_rounded,
             title: 'Right now',
-            subtitle: 'ASAP dispatch â€” nearest provider',
+            subtitle: 'ASAP dispatch — nearest provider',
             selected: controller.draft.urgency == BookingUrgency.rightNow,
             onTap: () {
               controller.setUrgency(BookingUrgency.rightNow);
@@ -759,7 +759,7 @@ class _TimeOption extends StatelessWidget {
   }
 }
 
-// â”€â”€ Scope edit bottom sheet â”€â”€
+// ── Scope edit bottom sheet ──
 
 class _ScopeEditSheet extends StatefulWidget {
   const _ScopeEditSheet({required this.controller});

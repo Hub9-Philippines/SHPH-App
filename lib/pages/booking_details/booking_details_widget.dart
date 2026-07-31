@@ -1,7 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/api/resources/services_api.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -59,11 +59,25 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
           await BookingsService.instance.getBookingById(widget.bookingId!);
 
       if (booking != null) {
-        final service = await Supabase.instance.client
-            .from('service_listings')
-            .select()
-            .eq('id', booking.serviceListingId)
-            .maybeSingle();
+        Map<String, dynamic>? service;
+        final listingId = booking.serviceListingId;
+        if (listingId != null) {
+          final parsedId = int.tryParse(listingId.toString());
+          if (parsedId != null) {
+            try {
+              final listing =
+                  await ShphServicesApi.instance.getListing(parsedId);
+              service = {
+                'id': listing.id,
+                'title': listing.title,
+                'description': listing.description,
+                'base_price': listing.basePrice,
+                'category_name': listing.categoryName,
+                'thumbnail': listing.thumbnail,
+              };
+            } catch (_) {}
+          }
+        }
 
         if (!mounted) {
           return;

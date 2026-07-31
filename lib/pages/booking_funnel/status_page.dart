@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -44,8 +44,7 @@ class _StatusPageState extends State<StatusPage>
   late final AnimationController _pulseController;
 
   GoogleMapController? _mapController;
-  Timer? _movementTimer;
-  Timer? _statusTimer;
+  Timer? _mockProgressTimer;
   double _bottomSheetExtent = _collapsedSheetExtent;
   bool _mapReady = false;
 
@@ -53,8 +52,15 @@ class _StatusPageState extends State<StatusPage>
   String _currentStatus = '';
   int _etaSeconds = 0;
 
-  List<LatLng> _routeWaypoints = [];
-  int _currentWaypointIndex = 0;
+  static const _mockStatuses = [
+    'confirmed',
+    'en_route',
+    'on_site',
+    'in_progress',
+    'completed',
+  ];
+  int _mockStatusIndex = 0;
+
   final Set<Polyline> _polylines = {};
 
   bool get _isTerminal {
@@ -140,8 +146,8 @@ class _StatusPageState extends State<StatusPage>
     _currentStatus = widget.bookingStatus;
     _etaSeconds = _etaForStatus(_currentStatus);
 
-    _generateRouteWaypoints();
-    _buildPolyline();
+    _currentProviderLocation =
+        widget.providerLocation ?? const LatLng(14.5995, 120.9842);
 
     _pulseController = AnimationController(
       vsync: this,
@@ -151,111 +157,43 @@ class _StatusPageState extends State<StatusPage>
       _pulseController.repeat(reverse: true);
     }
 
-    _startRealtimeSimulation();
+    _startMockProgress();
   }
 
-  void _generateRouteWaypoints() {
-    final start = widget.providerLocation;
-    final end = _clientLocation;
-    if (start == null) {
-      _routeWaypoints = [end];
-      return;
-    }
+  void _startMockProgress() {
+    if (_isTerminal) return;
 
-    const count = 30;
-    _routeWaypoints = [start];
+    _mockStatusIndex =
+        _mockStatuses.indexOf(_currentStatus.toLowerCase()).clamp(0, 0);
 
-    final dx = end.longitude - start.longitude;
-    final dy = end.latitude - start.latitude;
-    final len = math.sqrt(dx * dx + dy * dy);
-    if (len < 1e-8) {
-      _routeWaypoints = [start, end];
-      return;
-    }
-
-    final perpX = -dy / len;
-    final perpY = dx / len;
-    final distKm = _distanceToClient(start);
-    final curveAmount = (distKm * 0.003).clamp(0.002, 0.02);
-
-    final ctrlLat =
-        (start.latitude + end.latitude) / 2 + perpY * curveAmount;
-    final ctrlLng =
-        (start.longitude + end.longitude) / 2 + perpX * curveAmount;
-
-    for (int i = 1; i <= count; i++) {
-      final t = i / count;
-      final inv = 1 - t;
-      final lat =
-          inv * inv * start.latitude + 2 * inv * t * ctrlLat + t * t * end.latitude;
-      final lng =
-          inv * inv * start.longitude + 2 * inv * t * ctrlLng + t * t * end.longitude;
-      _routeWaypoints.add(LatLng(lat, lng));
-    }
-  }
-
-  void _buildPolyline() {
-    if (_routeWaypoints.length < 2) return;
-    _polylines.clear();
-    _polylines.add(
-      Polyline(
-        polylineId: const PolylineId('route'),
-        points: _routeWaypoints,
-        color: AppTheme.of(context).primary,
-        width: 5,
-        jointType: JointType.round,
-      ),
-    );
-  }
-
-  void _startRealtimeSimulation() {
-    if (_routeWaypoints.length < 2 || _isTerminal) return;
-
-    _currentWaypointIndex = 0;
-    _currentProviderLocation = _routeWaypoints[0];
-
-    _movementTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    _mockProgressTimer = Timer.periodic(const Duration(milliseconds: 2500), (timer) {
       if (!mounted) {
         timer.cancel();
         return;
       }
 
       setState(() {
-        _currentWaypointIndex++;
-        if (_currentWaypointIndex >= _routeWaypoints.length - 1) {
-          _currentProviderLocation = _routeWaypoints.last;
+        _mockStatusIndex++;
+        if (_mockStatusIndex >= _mockStatuses.length) {
+          _mockStatusIndex = _mockStatuses.length - 1;
           timer.cancel();
-        } else {
-          _currentProviderLocation =
-              _routeWaypoints[_currentWaypointIndex];
+          _pulseController.stop();
+          _pulseController.value = 0;
+          return;
+        }
+
+        _currentStatus = _mockStatuses[_mockStatusIndex];
+
+        if (_currentStatus == 'on_site') {
+          _currentProviderLocation = _clientLocation;
+        } else if (_currentStatus == 'completed') {
+          _pulseController.stop();
+          _pulseController.value = 0;
         }
       });
 
-      _updateStatusBasedOnDistance();
-      _etaSeconds = math.max(0, _etaSeconds - 1);
       _scheduleBoundsUpdate();
     });
-  }
-
-  void _updateStatusBasedOnDistance() {
-    final distKm = _distanceToClient(_currentProviderLocation);
-    final current = _currentStatus.toLowerCase();
-
-    String newStatus;
-    if (distKm < 0.05) {
-      newStatus = current == 'in_progress' || current == 'completed'
-          ? current
-          : 'on_site';
-    } else if (distKm < 0.5) {
-      newStatus = 'on_site';
-    } else {
-      newStatus = 'en_route';
-    }
-
-    if (newStatus != _currentStatus) {
-      setState(() => _currentStatus = newStatus);
-      _etaSeconds = _etaForStatus(newStatus);
-    }
   }
 
   int _etaForStatus(String status) {
@@ -303,8 +241,7 @@ class _StatusPageState extends State<StatusPage>
   @override
   void dispose() {
     _pulseController.dispose();
-    _movementTimer?.cancel();
-    _statusTimer?.cancel();
+    _mockProgressTimer?.cancel();
     _mapController?.dispose();
     super.dispose();
   }
@@ -925,7 +862,7 @@ class _StageRow extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     _isActive && !isTerminal
-                        ? '${stage.description}â€¦'
+                        ? '${stage.description}…'
                         : stage.description,
                     style: theme.bodySmall.override(color: descColor),
                   ),

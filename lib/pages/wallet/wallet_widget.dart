@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/components/screen_header.dart';
@@ -106,7 +106,7 @@ class _WalletWidgetState extends State<WalletWidget> {
           ),
           const SizedBox(height: 8),
           Text(
-            'â‚±${_model.balance.toStringAsFixed(2)}',
+            '₱${_model.balance.toStringAsFixed(2)}',
             style: GoogleFonts.plusJakartaSans(
               color: Colors.white,
               fontSize: 36,
@@ -148,7 +148,7 @@ class _WalletWidgetState extends State<WalletWidget> {
             ),
             const SizedBox(height: 4),
             Text(
-              'â‚±${amount.toStringAsFixed(2)}',
+              '₱${amount.toStringAsFixed(2)}',
               style: GoogleFonts.plusJakartaSans(
                 color: Colors.white,
                 fontSize: 16,
@@ -266,7 +266,7 @@ class _WalletWidgetState extends State<WalletWidget> {
             ),
           ),
           Text(
-            '${isCredit ? '+' : '-'}â‚±${(transaction['amount'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
+            '${isCredit ? '+' : '-'}₱${(transaction['amount'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
             style: theme.titleSmall.override(
               fontWeight: FontWeight.w600,
               color: isCredit ? theme.success : theme.error,

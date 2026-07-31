@@ -1,10 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '/app_state.dart';
 import '/backend/supabase/database/tables/addresses.dart';
@@ -455,11 +454,7 @@ class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
         : controller.draft.address.city;
 
     if (appState.selectedAddressId != null) {
-      await Supabase.instance.client.from('addresses').update({
-        'latitude': latitude,
-        'longitude': longitude,
-        'address_line1': updatedLine1,
-      }).eq('id', appState.selectedAddressId!);
+      // Address persistence not exposed by SHPH API; keep in-app state only.
     }
 
     appState.setSelectedAddress(

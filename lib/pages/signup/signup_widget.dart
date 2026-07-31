@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
 
-import '/auth/supabase_auth/auth_util.dart';
+import '/auth/auth_util.dart';
 import '/backend/supabase/supabase.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -38,7 +38,6 @@ class _SignupWidgetState extends State<SignupWidget> {
     _model.phoneFieldTextController ??= TextEditingController();
     _model.phoneFieldFocusNode ??= FocusNode();
     _model.phoneFieldMask = MaskTextInputFormatter(mask: '+63##########');
-    handlePhoneAuthStateChanges(context);
   }
 
   @override

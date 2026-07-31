@@ -1,8 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/auth/base_auth_user_provider.dart';
 import '/backend/supabase/database/tables/payment_methods.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -61,7 +61,7 @@ class _AddEwalletPaymentWidgetState extends State<AddEwalletPaymentWidget> {
       return;
     }
 
-    final userId = Supabase.instance.client.auth.currentUser?.id;
+    final userId = currentUser?.uid;
     if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('User not authenticated')),

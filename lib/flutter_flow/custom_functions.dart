@@ -10,7 +10,7 @@ import 'place.dart';
 import 'uploaded_file.dart';
 
 import '/backend/supabase/supabase.dart';
-import '/auth/supabase_auth/auth_util.dart';
+import '/auth/auth_util.dart';
 
 dynamic passCheckupJSON(String? pass) {
   var ret = {

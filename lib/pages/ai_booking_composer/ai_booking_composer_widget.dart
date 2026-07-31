@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
@@ -191,7 +191,7 @@ class _AiBookingComposerWidgetState extends State<AiBookingComposerWidget> {
                 theme, 'Description', data['description']!),
           if (data['estimated_budget'] != null)
             _buildDetailRow(
-                theme, 'Budget', 'â‚±${data['estimated_budget']}'),
+                theme, 'Budget', '₱${data['estimated_budget']}'),
           if (data['preferred_date'] != null)
             _buildDetailRow(
                 theme, 'Date', data['preferred_date']!),

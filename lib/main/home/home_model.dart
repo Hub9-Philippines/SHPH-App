@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '/auth/supabase_auth/auth_util.dart';
+import '/auth/auth_util.dart';
 import '/backend/supabase/database/tables/notifications.dart';
 import '/components/categoriesgrid/categoriesgrid_widget.dart';
 import '../../app_state.dart';

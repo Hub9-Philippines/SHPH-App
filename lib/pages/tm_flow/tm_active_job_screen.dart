@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -349,7 +349,7 @@ class _TMProviderArrivalCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${provider.specialty} â€¢ ETA ${provider.etaMinutes} min',
+                  '${provider.specialty} • ETA ${provider.etaMinutes} min',
                   style: theme.bodySmall.override(color: theme.secondaryText),
                 ),
               ],
@@ -491,8 +491,8 @@ class _TMChatTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
     const messages = [
-      ('Provider', 'Iâ€™m on the way to your location now.'),
-      ('You', 'Thanks, Iâ€™ll keep my phone nearby.'),
+      ('Provider', 'I’m on the way to your location now.'),
+      ('You', 'Thanks, I’ll keep my phone nearby.'),
       ('Provider', 'I may need to inspect the hardware first before I start.'),
     ];
 

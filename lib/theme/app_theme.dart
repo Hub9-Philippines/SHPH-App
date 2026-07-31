@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -331,8 +331,8 @@ class AppThemeData {
       };
 
   factory AppThemeData.light() => AppThemeData(
-      primary: const Color(0xFF63CBD6),
-      onPrimary: const Color(0xFF0F172A),
+      primary: const Color(0xFF368EFF),
+      onPrimary: const Color(0xFFFFFFFF),
       secondary: const Color(0xFF39D2C0),
       tertiary: const Color(0xFFEE8B60),
       alternate: const Color(0xFFE0E3E7),
@@ -348,7 +348,7 @@ class AppThemeData {
       success: const Color(0xFF249689),
       warning: const Color(0xFFF9CF58),
       error: const Color(0xFFDC2626),
-      info: const Color(0xFF63CBD6),
+      info: const Color(0xFF368EFF),
       iconBackground: const Color(0xFFD4F0EF),
       primaryLight: const Color(0xFFD4F0EF),
       primaryDark: const Color(0xFF49B8C4),
@@ -359,8 +359,8 @@ class AppThemeData {
     );
 
   factory AppThemeData.dark() => AppThemeData(
-      primary: const Color(0xFF63CBD6),
-      onPrimary: const Color(0xFF0F172A),
+      primary: const Color(0xFF368EFF),
+      onPrimary: const Color(0xFFFFFFFF),
       secondary: const Color(0xFF39D2C0),
       tertiary: const Color(0xFFEE8B60),
       alternate: const Color(0xFFE0E3E7),

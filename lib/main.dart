@@ -1,21 +1,24 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:provider/provider.dart';
 
 import '/api/shph_api.dart';
-import '/backend/supabase/supabase.dart';
 import '/flutter_flow/token_refresh_manager.dart';
 import '/router/app_router.dart';
 import '/theme/app_theme.dart';
-// Authentication imports - Using Supabase for auth
+// Authentication imports - Using SHPH API for auth
 import 'auth/auth_manager_factory.dart';
-import 'auth/supabase_auth/auth_util.dart';
-import 'auth/supabase_auth/supabase_user_provider.dart';
+import 'auth/auth_util.dart';
+import 'auth/shph_auth/shph_user_provider.dart';
+import 'components/connectivity_banner.dart';
 import 'flutter_flow/flutter_flow_util.dart';
 import 'index.dart';
 import 'l10n/app_localizations.dart';
 import 'main/pro_dashboard/pro_dashboard_widget.dart';
+import 'services/auth_service.dart';
+import 'services/connectivity_service.dart';
 import 'services/error_handler.dart';
 
 void main() async {
@@ -23,36 +26,42 @@ void main() async {
   GoRouter.optionURLReflectsImperativeAPIs = true;
   usePathUrlStrategy();
 
-  // Initialize Supabase
-  await SupaFlow.initialize();
-
   // Initialize SHPH REST API client (OpenAPI-backed Dio layer)
   await initializeShphApi();
 
-  // Restore current auth session from local storage
-  final supabaseUser = Supabase.instance.client.auth.currentUser;
-  if (supabaseUser != null) {
-    // Set the global current user immediately so auth state is correct on app start
-    currentUser = SerbisyoHubPHSupabaseUser(supabaseUser);
-  }
+  // Initialize Auth Manager - Using SHPH API for authentication
+  AuthManagerFactory.initialize(AuthProvider.shph);
 
-  // Initialize Auth Manager - Using Supabase for authentication
-  AuthManagerFactory.initialize(AuthProvider.supabase);
+  // Restore current auth session from local storage
+  final shphAuth = AuthService.instance;
+  await shphAuth.initialize();
+  if (shphAuth.isAuthenticated) {
+    currentUser = SerbisyoHubPHShphUser(shphAuth.currentUser);
+  }
 
   await AppTheme.initialize();
 
   final appState = FFAppState();
   await appState.initializePersistedState();
 
-  runApp(MyApp(appState: appState));
+  final connectivityService = ConnectivityService();
+
+  runApp(
+    MyApp(
+      appState: appState,
+      connectivityService: connectivityService,
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {
   const MyApp({
     required this.appState,
+    this.connectivityService,
     super.key,
   });
   final FFAppState appState;
+  final ConnectivityService? connectivityService;
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -81,7 +90,7 @@ class _MyAppState extends State<MyApp> {
       _router.routerDelegate.currentConfiguration.matches
           .map((e) => getRoute(e as RouteMatch?))
           .toList();
-  late Stream<BaseAuthUser> userStream;
+
 
   @override
   void initState() {
@@ -91,11 +100,9 @@ class _MyAppState extends State<MyApp> {
     _router =
         AppRouter.createRouter(_appStateNotifier, appState: widget.appState);
 
-    // Use Supabase user stream for auth state management
-    userStream = serbisyoHubPHSupabaseUserStream()
-      ..listen((user) {
-        _appStateNotifier.update(user);
-      });
+    // Listen to SHPH API auth state changes
+    AuthService.instance.addListener(_onAuthChanged);
+    _emitCurrentUser();
 
     // Start automatic token refresh monitoring (Fix #5: Token Refresh Interceptor)
     TokenRefreshManager().startTokenRefreshMonitoring();
@@ -107,6 +114,18 @@ class _MyAppState extends State<MyApp> {
 
     widget.appState.addListener(_onAppStateChanged);
     _syncLocale();
+  }
+
+  void _onAuthChanged() {
+    _emitCurrentUser();
+  }
+
+  void _emitCurrentUser() {
+    final svc = AuthService.instance;
+    currentUser = svc.isAuthenticated
+        ? SerbisyoHubPHShphUser(svc.currentUser) as BaseAuthUser
+        : SerbisyoHubPHShphUser(null);
+    _appStateNotifier.update(currentUser!);
   }
 
   void _onAppStateChanged() {
@@ -124,6 +143,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void dispose() {
+    AuthService.instance.removeListener(_onAuthChanged);
     widget.appState.removeListener(_onAppStateChanged);
     super.dispose();
   }
@@ -150,28 +170,50 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) =>
       ChangeNotifierProvider<FFAppState>.value(
         value: widget.appState,
-        child: MaterialApp.router(
-          debugShowCheckedModeBanner: false,
-          title: 'SerbisyoHub PH',
-          locale: _locale,
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-            AppLocalizations.delegate,
-          ],
-          supportedLocales: _supportedLocales,
-          theme: ThemeData(
-            brightness: Brightness.light,
-            useMaterial3: false,
+        child: ChangeNotifierProvider<ConnectivityService>.value(
+          value: widget.connectivityService ?? ConnectivityService(),
+          child: Consumer<ConnectivityService>(
+            builder: (context, connectivity, _) {
+              return MaterialApp.router(
+                debugShowCheckedModeBanner: false,
+                title: 'SerbisyoHub PH',
+                locale: _locale,
+                localizationsDelegates: const [
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                  AppLocalizations.delegate,
+                ],
+                supportedLocales: _supportedLocales,
+                theme: ThemeData(
+                  brightness: Brightness.light,
+                  useMaterial3: false,
+                ),
+                darkTheme: ThemeData(
+                  brightness: Brightness.dark,
+                  useMaterial3: false,
+                ),
+                themeMode: _themeMode,
+                routerConfig: _router,
+                scaffoldMessengerKey: ErrorHandler.scaffoldMessengerKey,
+                builder: (context, child) {
+                  return Stack(
+                    children: [
+                      child ?? const SizedBox.shrink(),
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        child: ConnectivityBanner(
+                          isOffline: connectivity.isOffline,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
           ),
-          darkTheme: ThemeData(
-            brightness: Brightness.dark,
-            useMaterial3: false,
-          ),
-          themeMode: _themeMode,
-          routerConfig: _router,
-          scaffoldMessengerKey: ErrorHandler.scaffoldMessengerKey,
         ),
       );
 }

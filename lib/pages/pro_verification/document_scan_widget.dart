@@ -1,9 +1,9 @@
-﻿import 'dart:io';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '/auth/base_auth_user_provider.dart';
 import '/components/screen_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
@@ -74,7 +74,7 @@ class _DocumentScanWidgetState extends State<DocumentScanWidget> {
     setState(() => _model.isUploading = true);
 
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
+      final userId = currentUser?.uid;
       if (userId == null) {
         throw Exception('User not authenticated');
       }

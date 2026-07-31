@@ -1,10 +1,12 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/api/resources/users_api.dart';
+import '/auth/base_auth_user_provider.dart';
 import '/backend/supabase/database/tables/payment_methods.dart';
+import '/services/auth_service.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import '/services/chat_service.dart';
@@ -263,7 +265,7 @@ class _ProJobsWidgetState extends State<ProJobsWidget> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            success ? 'Offer accepted â€” job confirmed' : 'Failed to accept offer',
+            success ? 'Offer accepted — job confirmed' : 'Failed to accept offer',
           ),
         ),
       );
@@ -1384,8 +1386,8 @@ class _ProEarningsWidgetState extends State<ProEarningsWidget> {
       [];
 
   Future<void> _handleCashOut() async {
-    final userId = Supabase.instance.client.auth.currentUser?.id;
-    if (userId == null) {
+    final userId = currentUser?.uid;
+    if (userId == null || userId.isEmpty) {
       if (!mounted) {
         return;
       }
@@ -1888,7 +1890,7 @@ class _ProEarningsWidgetState extends State<ProEarningsWidget> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  clientName.isEmpty ? date : '$clientName â€¢ $date',
+                  clientName.isEmpty ? date : '$clientName • $date',
                   style: AppTheme.of(context).bodySmall.override(
                         color: const Color(0xFF64748B),
                       ),
@@ -2096,8 +2098,8 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
   Future<void> _loadChatRooms() async {
     safeSetState(() => _isLoading = true);
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) {
+      final userId = currentUser?.uid;
+      if (userId == null || userId.isEmpty) {
         safeSetState(() {
           _chatRooms = const [];
           _isLoading = false;
@@ -2120,24 +2122,7 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
       }
 
       if (rooms.isEmpty) {
-        final chatRoomsResponse = await Supabase.instance.client
-            .from('chat_rooms')
-            .select('''
-              *,
-              profiles!chat_rooms_client_id_fkey(
-                id,
-                display_name,
-                first_name,
-                photo_url
-              )
-            ''')
-            .eq('provider_id', userId)
-            .order('updated_at', ascending: false);
-
-        rooms = List<Map<String, dynamic>>.from(chatRoomsResponse)
-            .map(_normalizeChatRoom)
-            .whereType<Map<String, dynamic>>()
-            .toList();
+        rooms = const [];
       }
 
       rooms.sort(_sortChatRoomsByActivity);
@@ -2165,17 +2150,19 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
   }
 
   void _subscribeToChatRooms() {
-    final userId = Supabase.instance.client.auth.currentUser?.id;
-    if (userId == null) {
+    final userId = currentUser?.uid;
+    if (userId == null || userId.isEmpty) {
       return;
     }
 
-    // Subscribe to all chat rooms and let _loadChatRooms filter appropriately
-    _chatRoomsSubscription = Supabase.instance.client
-        .from('chat_rooms')
-        .stream(primaryKey: ['id']).listen((data) {
+    try {
+      // Poll for chat room updates (realtime not available via REST)
+      _chatRoomsSubscription = Stream.periodic(
+        const Duration(seconds: 30),
+        (_) => null,
+      ).listen((_) => _loadChatRooms());
       _loadChatRooms();
-    });
+    } catch (_) {}
   }
 
   String _formatTime(DateTime? dateTime) {
@@ -2915,28 +2902,28 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
       setState(() => isLoading = true);
     }
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) {
+      final userId = currentUser?.uid;
+      if (userId == null || userId.isEmpty) {
         if (mounted) {
           setState(() => isLoading = false);
         }
         return;
       }
 
-      final response = await Supabase.instance.client
-          .from('profiles')
-          .select()
-          .eq('id', userId)
-          .single();
+      final data = await ShphUsersApi.instance.getMe();
+      final profile = data['profile'] is Map<String, dynamic>
+          ? data['profile'] as Map<String, dynamic>
+          : data;
 
       if (!mounted) {
         return;
       }
 
       setState(() {
-        profileData = response;
-        isAvailable = response['is_available'] as bool? ?? true;
-        hourlyRate = (response['hourly_rate'] as num?)?.toDouble() ?? 500.0;
+        profileData = profile;
+        isAvailable = profile['is_available'] as bool? ?? true;
+        hourlyRate =
+            (profile['hourly_rate'] as num?)?.toDouble() ?? 500.0;
         _rateController.text = hourlyRate.toStringAsFixed(0);
         isLoading = false;
       });
@@ -2952,14 +2939,12 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
 
   Future<void> _updateAvailability(bool value) async {
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) {
+      final userId = currentUser?.uid;
+      if (userId == null || userId.isEmpty) {
         return;
       }
 
-      await Supabase.instance.client
-          .from('profiles')
-          .update({'is_available': value}).eq('id', userId);
+      await ShphUsersApi.instance.updateMe({'is_available': value});
 
       if (!mounted) {
         return;
@@ -3000,15 +2985,13 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
     }
 
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) {
+      final userId = currentUser?.uid;
+      if (userId == null || userId.isEmpty) {
         return;
       }
 
       setState(() => _isSavingRate = true);
-      await Supabase.instance.client
-          .from('profiles')
-          .update({'hourly_rate': parsedRate}).eq('id', userId);
+      await ShphUsersApi.instance.updateMe({'hourly_rate': parsedRate});
 
       if (!mounted) {
         return;
@@ -3069,8 +3052,9 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
     }
 
     try {
-      await Supabase.instance.client.auth.signOut();
+      await AuthService.instance.logout();
       if (mounted) {
+        currentUser = null;
         context.go('/');
       }
     } catch (e) {
@@ -3438,7 +3422,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                       ),
                                       child: Center(
                                         child: Text(
-                                          'Ã¢â€šÂ±',
+                                          'â‚±',
                                           style: AppTheme.of(context)
                                               .bodyLarge
                                               .override(
@@ -3647,6 +3631,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                             () => context
                                 .pushNamed(ProEditProfileWidget.routeName),
                           ),
+                          const SizedBox(height: 12),
                           _buildMenuOption(
                             context,
                             Icons.description_outlined,
@@ -3654,6 +3639,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                             () =>
                                 context.pushNamed(ServiceHistoryWidget.routeName),
                           ),
+                          const SizedBox(height: 12),
                           _buildMenuOption(
                             context,
                             Icons.star_outline,
@@ -3661,6 +3647,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                             () => context
                                 .pushNamed(ReviewsRatingsWidget.routeName),
                           ),
+                          const SizedBox(height: 12),
                           _buildMenuOption(
                             context,
                             Icons.help_outline,
@@ -3668,6 +3655,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                             () =>
                                 context.pushNamed(HelpSupportWidget.routeName),
                           ),
+                          const SizedBox(height: 12),
                           _buildMenuOption(
                             context,
                             Icons.info_outline,
@@ -3676,24 +3664,49 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                           ),
                           const SizedBox(height: 16),
                           // Logout Button
-                          Container(
-                            width: double.infinity,
-                            height: 56,
-                            decoration: BoxDecoration(
-                              color: AppTheme.of(context).error,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: InkWell(
-                              onTap: _logout,
-                              child: Center(
-                                child: Text(
-                                  'Log Out',
-                                  style:
-                                      AppTheme.of(context).titleSmall.override(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                ),
+                          InkWell(
+                            onTap: _logout,
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(22),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x12000000),
+                                    blurRadius: 18,
+                                    offset: Offset(0, 10),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFFFFEEF0),
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    child: Icon(
+                                      Icons.logout_rounded,
+                                      size: 22,
+                                      color: AppTheme.of(context).error,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Text(
+                                      'Log Out',
+                                      style: AppTheme.of(context).bodyLarge.override(
+                                        font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+                                        color: AppTheme.of(context).error,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),

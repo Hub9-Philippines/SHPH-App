@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
@@ -7,8 +7,8 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/auth/base_auth_user_provider.dart';
 import '/components/screen_header.dart';
 import '/services/profiles_service.dart';
 import '/theme/app_theme.dart';
@@ -239,8 +239,7 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
     setState(() => _state = VerificationState.uploading);
 
     try {
-      final userId =
-          widget.userId ?? Supabase.instance.client.auth.currentUser?.id;
+      final userId = widget.userId ?? currentUser?.uid;
       if (userId == null) {
         throw Exception('User not authenticated');
       }

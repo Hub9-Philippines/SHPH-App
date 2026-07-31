@@ -1,9 +1,9 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/auth/supabase_auth/auth_util.dart';
+import '/auth/auth_util.dart';
 import '/components/screen_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/ai_service.dart';

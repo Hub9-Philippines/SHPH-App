@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -6,7 +6,7 @@ import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:provider/provider.dart';
 
 import '/auth/post_auth_navigation_flow.dart';
-import '/auth/supabase_auth/auth_util.dart';
+import '/auth/auth_util.dart';
 import '/auth/test_auth_user.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -34,8 +34,6 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, PhoneVerifyUserModel.new);
-
-    handlePhoneAuthStateChanges(context);
   }
 
   @override
@@ -166,8 +164,8 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                           // Calculate cell size based on available width
                           // Available width = constraint width (which is full minus padding)
                           // For 6 cells with 8px spacing between them:
-                          // totalWidth = (6 Ã— cellSize) + (5 Ã— spacing)
-                          // Solve for cellSize: cellSize = (totalWidth - (5 Ã— spacing)) / 6
+                          // totalWidth = (6 × cellSize) + (5 × spacing)
+                          // Solve for cellSize: cellSize = (totalWidth - (5 × spacing)) / 6
                           const spacing = 8.0;
                           const numCells = 6;
                           const totalSpacing = (numCells - 1) * spacing;

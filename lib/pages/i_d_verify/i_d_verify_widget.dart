@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/components/screen_header.dart';
@@ -195,7 +195,7 @@ class _IDVerifyWidgetState extends State<IDVerifyWidget> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'â€¢ Ensure your document is clear and well-lit\nâ€¢ All corners of the document should be visible\nâ€¢ Remove any covers or cases from your ID\nâ€¢ Process typically takes 2-3 minutes',
+                          '• Ensure your document is clear and well-lit\n• All corners of the document should be visible\n• Remove any covers or cases from your ID\n• Process typically takes 2-3 minutes',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 12,
                             color: AppTheme.of(context).primaryText,

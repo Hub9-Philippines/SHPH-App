@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -479,7 +479,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '${widget.rating.toStringAsFixed(1)} â€¢ ${widget.reviewCount} reviews',
+                        '${widget.rating.toStringAsFixed(1)} • ${widget.reviewCount} reviews',
                         style: AppTheme.of(context).labelMedium.override(
                               font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,

@@ -1,9 +1,9 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '/auth/supabase_auth/auth_util.dart';
+import '/api/resources/users_api.dart';
+import '/auth/auth_util.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/models/service_listing.dart';
 import '/services/logging_service.dart';
@@ -146,11 +146,10 @@ If none match, return an empty array []. Do not include any other text.
     String userInfo = '';
     if (uid.isNotEmpty) {
       try {
-        final profile = await Supabase.instance.client
-            .from('profiles')
-            .select('display_name, first_name, city, province')
-            .eq('id', uid)
-            .single();
+        final data = await ShphUsersApi.instance.getMe();
+        final profile = data['profile'] is Map<String, dynamic>
+            ? data['profile'] as Map<String, dynamic>
+            : data;
         userInfo = '''
 USER INFORMATION:
 - Name: ${profile['display_name'] ?? profile['first_name'] ?? 'User'}

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
@@ -273,7 +273,7 @@ class _AvailabilityCalendarWidgetState
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              '$startTime â€” $endTime',
+              '$startTime — $endTime',
               style: GoogleFonts.plusJakartaSans(
                 color: theme.primaryText,
                 fontSize: 14,

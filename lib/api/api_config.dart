@@ -25,6 +25,6 @@ class ApiConfig {
 
   static bool get isConfigured => baseUrl.isNotEmpty;
 
-  /// Keep the app on Supabase for now.
-  static bool get preferShphApi => false;
+  /// The SHPH REST API is now the sole backend; Supabase has been removed.
+  static bool get preferShphApi => true;
 }

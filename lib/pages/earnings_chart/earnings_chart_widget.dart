@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
@@ -92,7 +92,7 @@ class _EarningsChartWidgetState extends State<EarningsChartWidget> {
           ),
           const SizedBox(height: 8),
           Text(
-            'â‚±${total.toStringAsFixed(2)}',
+            '₱${total.toStringAsFixed(2)}',
             style: GoogleFonts.plusJakartaSans(
               color: Colors.white,
               fontSize: 36,
@@ -143,7 +143,7 @@ class _EarningsChartWidgetState extends State<EarningsChartWidget> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'â‚±${(_model.earningsData[p.$2] as double? ?? 0.0).toStringAsFixed(0)}',
+                        '₱${(_model.earningsData[p.$2] as double? ?? 0.0).toStringAsFixed(0)}',
                         style: GoogleFonts.plusJakartaSans(
                           color: theme.primaryText,
                           fontSize: 14,
@@ -199,7 +199,7 @@ class _EarningsChartWidgetState extends State<EarningsChartWidget> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       Text(
-                        'â‚±${earnings.toStringAsFixed(0)}',
+                        '₱${earnings.toStringAsFixed(0)}',
                         style: GoogleFonts.plusJakartaSans(
                           color: theme.secondaryText,
                           fontSize: 9,
@@ -283,7 +283,7 @@ class _EarningsChartWidgetState extends State<EarningsChartWidget> {
                   ),
                 ),
                 Text(
-                  'â‚±${(t['amount'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
+                  '₱${(t['amount'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
                   style: GoogleFonts.plusJakartaSans(
                     color: theme.success,
                     fontSize: 14,

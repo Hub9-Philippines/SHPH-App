@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
@@ -295,7 +295,7 @@ class _SuccessSheet extends StatelessWidget {
   String _serviceSetupText(BookingDraft draft) {
     final category = (draft.serviceCategoryName ?? '').trim();
     final categoryText = category.isEmpty ? 'Service' : category;
-    return '$categoryText â€¢ ${draft.rooms} ${draft.rooms == 1 ? 'unit' : 'units'} â€¢ ${draft.cleaningType.name}';
+    return '$categoryText • ${draft.rooms} ${draft.rooms == 1 ? 'unit' : 'units'} • ${draft.cleaningType.name}';
   }
 }
 

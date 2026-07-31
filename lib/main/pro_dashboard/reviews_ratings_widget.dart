@@ -1,7 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/api/models/review.dart';
+import '/api/resources/providers_api.dart';
+import '/auth/base_auth_user_provider.dart';
 import '/components/screen_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/logging_service.dart';
@@ -18,8 +20,6 @@ class ReviewsRatingsWidget extends StatefulWidget {
 }
 
 class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
-  final _supabase = Supabase.instance.client;
-
   List<Map<String, dynamic>> _reviews = const [];
   bool _isLoading = true;
   String? _errorMessage;
@@ -38,8 +38,8 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
     });
 
     try {
-      final userId = _supabase.auth.currentUser?.id;
-      if (userId == null) {
+      final userId = currentUser?.uid;
+      if (userId == null || userId.isEmpty) {
         safeSetState(() {
           _reviews = const [];
           _stats = const _ReviewStats();
@@ -48,20 +48,10 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
         return;
       }
 
-      final response = await _supabase
-          .from('bookings')
-          .select('''
-            *,
-            service_listings(*),
-            profiles!bookings_user_id_fkey(*)
-          ''')
-          .eq('provider_id', userId)
-          .not('rating', 'is', 'null')
-          .order('rating_created_at', ascending: false)
-          .order('completed_at', ascending: false)
-          .order('updated_at', ascending: false);
-
-      final reviews = List<Map<String, dynamic>>.from(response)
+      final page = await ShphProvidersApi.instance
+          .listProviderReviews(userId);
+      final reviews = page.results
+          .map((review) => _reviewToMap(review))
           .where((item) => _readRating(item) > 0)
           .toList();
 
@@ -85,6 +75,20 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
         _errorMessage = 'We could not load your reviews right now.';
       });
     }
+  }
+
+  Map<String, dynamic> _reviewToMap(ShphReview review) {
+    return {
+      'rating': review.rating,
+      'review': review.comment,
+      'created_at': review.createdAt,
+      'reviewer_name': review.reviewerName,
+      'reviewer_photo': review.reviewerPhoto,
+      'service_listings': {
+        'title': 'Completed service',
+        'category_name': null,
+      },
+    };
   }
 
   int _readRating(Map<String, dynamic> review) {
@@ -117,16 +121,20 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
 
   String _clientName(Map<String, dynamic> review) {
     final profile = review['profiles'] as Map<String, dynamic>?;
+    final directName = review['reviewer_name'] as String?;
     return (profile?['display_name'] ??
             profile?['full_name'] ??
             profile?['first_name'] ??
+            directName ??
             'Client')
         .toString();
   }
 
   String? _clientPhoto(Map<String, dynamic> review) {
     final profile = review['profiles'] as Map<String, dynamic>?;
-    final value = (profile?['photo_url'] ?? profile?['avatar_url'])
+    final value = (profile?['photo_url'] ??
+            profile?['avatar_url'] ??
+            review['reviewer_photo'])
         ?.toString()
         .trim();
     return value == null || value.isEmpty ? null : value;
@@ -553,7 +561,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '$serviceName â€¢ $serviceCategory',
+                      '$serviceName • $serviceCategory',
                       style: AppTheme.of(context).bodySmall.override(
                             font: GoogleFonts.plusJakartaSans(),
                             color: AppTheme.of(context).secondaryText,

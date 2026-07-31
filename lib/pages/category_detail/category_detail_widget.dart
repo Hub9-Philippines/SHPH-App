@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
@@ -164,7 +164,7 @@ class _CategoryDetailWidgetState extends State<CategoryDetailWidget> {
                         ],
                         Text(
                             price != null
-                                ? 'â‚±${price.toStringAsFixed(0)}'
+                                ? '₱${price.toStringAsFixed(0)}'
                                 : '',
                             style: GoogleFonts.plusJakartaSans(
                                 color: theme.primary,

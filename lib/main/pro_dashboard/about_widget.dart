@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
@@ -157,7 +157,7 @@ class _AboutWidgetState extends State<AboutWidget> {
             Padding(
               padding: const EdgeInsets.all(24),
               child: Text(
-                'Â© 2024 SerbisyoHub. All rights reserved.',
+                '© 2024 SerbisyoHub. All rights reserved.',
                 style: AppTheme.of(context).bodySmall.override(
                       color: AppTheme.of(context).secondaryText,
                     ),

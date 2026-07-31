@@ -1,10 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/api/resources/users_api.dart';
 import '/services/logging_service.dart';
 
 class PushNotificationService {
@@ -14,7 +13,7 @@ class PushNotificationService {
 
   bool _initialized = false;
   String? _fcmToken;
-  final _supabase = Supabase.instance.client;
+  final _usersApi = ShphUsersApi.instance;
 
   bool get isInitialized => _initialized;
   String? get fcmToken => _fcmToken;
@@ -27,13 +26,11 @@ class PushNotificationService {
   Future<void> registerToken(String? uid) async {
     if (_fcmToken == null || uid == null) return;
     try {
-      await _supabase.from('user_push_tokens').upsert({
-        'user_id': uid,
+      await _usersApi.updateMe({
         'fcm_token': _fcmToken,
-        'platform': defaultTargetPlatform == TargetPlatform.iOS
+        'push_platform': defaultTargetPlatform == TargetPlatform.iOS
             ? 'ios'
             : 'android',
-        'updated_at': DateTime.now().toIso8601String(),
       });
     } catch (e) {
       LoggingService.error('Failed to register push token: $e',
@@ -44,11 +41,7 @@ class PushNotificationService {
   Future<void> unregisterToken(String? uid) async {
     if (_fcmToken == null || uid == null) return;
     try {
-      await _supabase
-          .from('user_push_tokens')
-          .delete()
-          .eq('user_id', uid)
-          .eq('fcm_token', _fcmToken!);
+      await _usersApi.updateMe({'fcm_token': null});
     } catch (e) {
       LoggingService.error('Failed to unregister push token: $e',
           tag: 'PushNotification');
@@ -61,15 +54,15 @@ class PushNotificationService {
     required String body,
   }) async {
     try {
-      final response = await _supabase.functions.invoke(
-        'send-notification',
-        body: {
+      final response = await http.post(
+        Uri.parse('https://api.serbisyohub.ph/api/notifications/send/'),
+        body: jsonEncode({
           'user_id': userId,
           'title': title,
           'body': body,
-        },
+        }),
       );
-      return response.data != null;
+      return response.statusCode >= 200 && response.statusCode < 300;
     } catch (e) {
       LoggingService.error('Failed to send test notification: $e',
           tag: 'PushNotification');

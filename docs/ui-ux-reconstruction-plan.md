@@ -41,7 +41,7 @@ The Flutter app uses `AppThemeData` in `lib/theme/app_theme.dart`.
 | `--shph-primary-light` | `#D4F0EF` | `AppTheme.of(context).primaryLight` = `#D4F0EF` | ✅ Matches |
 | `--shph-primary-text` | `#0D6D78` | `AppTheme.of(context).primaryBrandText` = `#0D6D78` | ✅ Matches |
 | `--shph-primary-deep` | `#0D6D78` | `primaryBrandText` = `#0D6D78` | ✅ Matches |
-| `--shph-on-primary` | `#0F172A` | — | ❌ Missing |
+| `--shph-on-primary` | `#0F172A` | `AppTheme.of(context).onPrimary` = `#FFFFFF` | ❌ Mismatch |
 | `--shph-secondary` | `#39D2C0` | `AppTheme.of(context).secondary` = `#39D2C0` | ✅ Matches |
 | `--shph-tertiary` | `#EE8B60` | `AppTheme.of(context).tertiary` = `#EE8B60` | ✅ Matches |
 | `--shph-bg-primary` | `#FFFFFF` | `Colors.white` / `secondaryBackground` | ✅ |
@@ -54,7 +54,7 @@ The Flutter app uses `AppThemeData` in `lib/theme/app_theme.dart`.
 | `--shph-error` | `#DC2626` | `AppTheme.of(context).error` = `#FF5963` | ❌ Value diff |
 | `--shph-success` | `#249689` | `AppTheme.of(context).success` = `#249689` | ✅ Matches |
 | `--shph-warning` | `#F9CF58` | `AppTheme.of(context).warning` = `#F9CF58` | ✅ Matches |
-| `--shph-info` | `#63CBD6` | `AppTheme.of(context).info` = `#FFFFFF` | ❌ Mismatch |
+| `--shph-info` | `#63CBD6` | `AppTheme.of(context).info` = `#368EFF` | ❌ Mismatch |
 | `--shph-radius-sm` | `10px` | `AppThemeData.radiusSm` = `8.0` | ❌ Slight diff |
 | `--shph-radius-md` | `14px` | `AppThemeData.radiusMd` = `16.0` | ❌ Slight diff |
 | `--shph-radius-lg` | `16px` | — | ❌ Missing |
@@ -197,18 +197,11 @@ Standardize on a 4px base unit scale: 4, 8, 12, 16, 20, 24, 32, 40, 48, 56, 64.
 | 5.7 Phone verification | `pages/phone_verify_user/` | ⏭️ Skipped — already using theme tokens |
 | Total: **7 files** | | |
 
-#### Phase 6 — Home Page Redesign (Complete)
+#### Phase 6 — Home Page Redesign ⚠️ Reverted
 
 | Task | Files Affected | Status |
 |------|---------------|--------|
-| 6.1 Hero section redesign | `home_widget.dart` | ✅ Brand "S" logo + "serbisyo" text, notification bell with badge, user avatar, location badge (tappable), greeting ("Good morning, Name!"), headline ("Find a trusted professional instantly"), search bar (tappable to `/search`), category chips row (All, Cleaning, Plumbing, etc.) matching web home layout |
-| 6.2 Map preview card | `home_widget.dart` | ✅ Full-screen Google Map replaced with a compact 180px map preview card with location overlay |
-| 6.3 Active booking banner | `home_widget.dart` | ✅ Inline banner showing current booking with status (Pending/Track) when active booking exists |
-| 6.4 Book a Service CTA | `home_widget.dart` | ✅ Gradient button with "Book a Service" text and handyman icon, tapping opens `ServiceSelectionPanel` |
-| 6.5 Explore Services category grid | `home_widget.dart` | ✅ 3-column grid of `_CategoryTileItem` widgets loading from `CategoriesService`, with `SectionHeader` ("Explore Services") and "See all" link to `/categories` |
-| 6.6 Trending Near You carousel | `home_widget.dart` | ✅ Horizontal scrolling `_ServiceCardItem` cards loading from Supabase `service_listings`, showing image, title, provider, price, rating |
-| 6.7 Pin location card | `home_widget.dart` | ✅ Tokenized card at bottom showing current address, tappable to open location sheet |
-| 6.8 Removed old layout | `home_widget.dart` | ✅ Removed `_buildTopOverlay`, `_buildBottomCard`, `_buildCategoryChip`, `_LiveProgressShortcut` — replaced with scrollable `SingleChildScrollView` layout |
+| 6.1–6.8 Home page redesign | `home_widget.dart` | ⚠️ **REVERTED** — restored to pre-Phase 6 design from commit `8d34b3d`. Retained `GoogleFonts.plusJakartaSans` (replacing `GoogleFonts.poppins`) and `shadowLg` (replacing `shadowElevated`). The web-matching hero/map/grid/carousel layout was replaced with the original FlutterFlow-generated home page. |
 | Total: **1 file** (`home_widget.dart`) | | |
 
 #### ✅ Phase 7 — Provider Verification & KYC (Complete)
@@ -285,9 +278,9 @@ These items have been started in the current session and need completion:
 ### Color Tokens — Implemented ✅
 
 ```dart
-// In lib/theme/app_theme.dart — AppThemeData class (Phase 12 final)
-final Color primary;          // #63CBD6 (teal) — realigned from #368EFF
-final Color onPrimary;        // #0F172A — added
+// In lib/theme/app_theme.dart — AppThemeData class (current state)
+final Color primary;          // #368EFF (blue) — reverted from teal (#63CBD6)
+final Color onPrimary;        // #FFFFFF — reverted from #0F172A
 final Color bgPage;           // #F8FAFC — added
 final Color secondary;        // #39D2C0 (teal)
 final Color tertiary;         // #EE8B60 (orange)
@@ -300,7 +293,7 @@ final Color accent1-4;        // Various
 final Color success;          // #249689
 final Color warning;          // #F9CF58
 final Color error;            // #DC2626 — aligned from #FF5963
-final Color info;             // #63CBD6 — aligned from #FFFFFF
+final Color info;             // #368EFF — reverted from #63CBD6
 final Color star;             // #FFC107 — added
 final Color iconBackground;   // #E6F0FF
 final Color primaryLight;     // #D4F0EF
@@ -440,11 +433,12 @@ static (Color text, Color bg) statusColors(String status) => switch (status) {
 
 | Task | Approach | Status |
 |------|----------|--------|
-| **12.1 Design token realignment** | `lib/theme/app_theme.dart`: change `primary` from `#368EFF` to `#63CBD6` (teal), add `onPrimary: #0F172A`, change `info: #FFFFFF` → `#63CBD6`, change `error: #FF5963` → `#DC2626`, add `bgPage: #F8FAFC`, `shadowMd`, `shadowLg`, `star: #FFC107`; align `textPrimary` → `#0F172A`, `textSecondary` → `#64748B`; update `iconBackground` → `#D4F0EF` | ✅ Done |
+| **12.1 Design token realignment** | `lib/theme/app_theme.dart`: change `primary` from `#368EFF` to `#63CBD6` (teal), add `onPrimary: #0F172A`, change `info: #FFFFFF` → `#63CBD6`, change `error: #FF5963` → `#DC2626`, add `bgPage: #F8FAFC`, `shadowMd`, `shadowLg`, `star: #FFC107`; align `textPrimary` → `#0F172A`, `textSecondary` → `#64748B`; update `iconBackground` → `#D4F0EF` | ⚠️ Partially reverted: `primary` → `#368EFF` (blue), `onPrimary` → `#FFFFFF`, `info` → `#368EFF` (all reverted to pre-teal values). `error`, `bgPage`, text colors, `shadowMd`/`shadowLg`, `star` kept. |
 | **12.2 Page audit after brand color change** | Fixed 7 hardcoded `#368EFF` references across 5 files; replaced `shadowElevated` → `shadowLg` across 5 files | ✅ Done |
 | **12.3 CreateProfilePage** | Already exists at `lib/pages/create_profile/` with routes `/createProfile` and `/pro-profile-setup-form` | ✅ Done (already existed) |
 | **12.4 PaymentController wiring** | Already wired into `booking_payment_screen.dart` — Stripe for cards, Maya for e-wallets, cash and QR options | ✅ Done (already wired) |
 | **12.5 State management migration** | `AuthService` created (`lib/services/auth_service.dart`), `NotificationStore` created (`lib/services/notification_store.dart`); `FavoritesService` and `KycHubService` already existed | ✅ Done |
+| **12.5b Auth provider migration** | Supabase auth → SHPH API auth. `ShphAuthManager` + `ShphUserProvider` replace `SupaFlow`. `AuthProvider.shph` is default. Sign-in/up pages use `AuthService` directly. Google/Apple buttons show "coming soon" snackbar. | ✅ Done |
 | **12.6 Wire notification badge + chat unread** | Home model already fetches notification count; messages model already syncs unread count; `FFAppState` has `notificationCount` + `unreadConversations` | ✅ Done (already wired) |
 | **12.7 Remaining component parity** | Built 10 new components in `lib/components/`: `CallAcceptPermissionSheet`, `ExploreMapView`, `InAppNotification`, `IncomingJobModal`, `InvoiceLineItems`, `OnboardingOverlay`, `PopoverMenu`, `ProviderMapView`, `StepUpPasswordModal`, `WaitingForClientModal` | ✅ Done |
 | **12.8 Font family alignment** | `GoogleFonts.poppins()` → `GoogleFonts.plusJakartaSans()` across 690 occurrences in 90+ files | ✅ Done |
@@ -563,7 +557,7 @@ Rather than a full rewrite, progressively replace and align:
 - [x] On-Demand Booking page (`/on-demand-booking`): urgency + time slots + summary
 - [x] Provider Online/Offline Toggle (`ProviderStatusToggle` widget)
 - [x] Remaining `surfaceTintColor` references cleaned up
-- [x] Home page matches web layout: hero + categories + recommendations
+- [ ] Home page matches web layout: hero + categories + recommendations (⚠️ reverted to pre-Phase 6) 
 - [x] Auth/onboarding theming (Phase 5): splash branding, hardcoded hex colors → theme tokens across 7 auth pages
 - [x] Chat Detail page created (`/chat/:threadId`) with pure SHPH API backend
 - [x] Earnings Chart standalone page created (`/earnings-chart`)
@@ -585,17 +579,18 @@ Rather than a full rewrite, progressively replace and align:
 - [x] Payment integration works end-to-end (Stripe + Maya + Cash + QR via PaymentController)
 - [x] Zero hardcoded old brand references (`#368EFF`, `shadowElevated`, `GoogleFonts.poppins`)
 
-### ✅ Phase 12 — Final Phase: Complete Redesign & Polish
+### ⚠️ Phase 12 — Partially Reverted
 
-- [x] Design tokens realigned: `primary` → `#63CBD6` teal, `onPrimary` added, `info`/`error` fixed, missing tokens (`bgPage`, `shadowMd`, `shadowLg`, `star`) added, text colors aligned
+- [~] Design tokens realigned: `primary`/`onPrimary`/`info` reverted to blue (`#368EFF`/`#FFFFFF`/`#368EFF`); `error`, `bgPage`, `shadowMd`, `shadowLg`, `star`, text color alignment kept
 - [x] All pages audited for broken references after brand color change
 - [x] `CreateProfilePage` exists (post-signup profile setup)
 - [x] PaymentController wired into booking payment screen
 - [x] State management migrated: `AuthService`, `FavoritesService`, `NotificationStore`, `KycStore`
+- [x] Auth provider migrated: Supabase → SHPH API (`ShphAuthManager` + `ShphUserProvider`)
 - [x] Notification badge connected to real data; chat unread synced in real-time
 - [x] Remaining 10 components built and added to `lib/components/`
 - [x] Font family aligned from Poppins to Plus Jakarta Sans
-- [x] Zero hardcoded `#368EFF`, `shadowElevated`, or `GoogleFonts.poppins` references
+- [~] Hardcoded `#368EFF`, `shadowElevated`, or `GoogleFonts.poppins` — mostly zero (home page reverted from pre-Phase 6 may reintroduce some)
 
 ---
 
@@ -769,7 +764,105 @@ Comparison against `C:\Users\Administrator\dev\shph-web` (Vue 3 + Ionic 8).
 | `--shph-shadow-lg` | `0 10px 26px -8px rgba(17,38,74,0.18)` | `shadowLg` = same | ✅ Added |
 | `--shph-star` | `#FFC107` | `AppThemeData.star` = `#FFC107` | ✅ Added |
 | `--shph-error` | `#DC2626` | `AppTheme.of(context).error` = `#DC2626` | ✅ Realigned |
-| `--shph-info` | `#63CBD6` | `AppTheme.of(context).info` = `#63CBD6` | ✅ Realigned |
+| `--shph-info` | `#63CBD6` | `AppTheme.of(context).info` = `#368EFF` | ❌ Mismatch (reverted) |
 | `--shph-text-primary` | `#0F172A` | `AppTheme.of(context).primaryText` = `#0F172A` | ✅ Aligned |
 | `--shph-text-secondary` | `#64748B` | `AppTheme.of(context).secondaryText` = `#64748B` | ✅ Aligned |
 | `--shph-font-family` | `"Plus Jakarta Sans"` | `GoogleFonts.plusJakartaSans()` throughout | ✅ Aligned |
+## 13. Post-Phase 12 Changes — Current Session
+
+### 13.1 Theme Color Revert (Blue → Teal → Blue)
+
+| Change | Before | After |
+|--------|--------|-------|
+| `primary` | `#63CBD6` (teal) | `#368EFF` (blue) |
+| `onPrimary` | `#0F172A` | `#FFFFFF` |
+| `info` | `#63CBD6` | `#368EFF` |
+
+**File:** `lib/theme/app_theme.dart`
+
+### 13.2 Auth Migration: Supabase → SHPH API
+
+| Task | Files | Status |
+|------|-------|--------|
+| `ShphAuthManager` created | `lib/auth/shph_auth/shph_auth_manager.dart` | ✅ Done |
+| `ShphUserProvider` wraps API user | `lib/auth/shph_auth/shph_user_provider.dart` | ✅ Done |
+| `auth_manager_factory.dart` default→`shph` | `lib/auth/auth_manager_factory.dart` | ✅ Done |
+| `main.dart` uses `AuthService` not `SupaFlow` | `lib/main.dart` | ✅ Done |
+| `auth_util.dart` branches for Supabase/SHPH | `lib/auth/auth_util.dart` | ✅ Done |
+| Sign-in/up pages use `AuthService` | `signin_widget.dart`, `signup_widget.dart` | ✅ Done |
+| Google/Apple sign-in → snackbar "coming soon" | `signin_widget.dart` | ✅ Done |
+
+### 13.3 Home Page Revert
+
+| Task | Status |
+|------|--------|
+| Restored from pre-Phase 6 commit `8d34b3d` | ✅ Done |
+| `GoogleFonts.poppins` → `GoogleFonts.plusJakartaSans` | ✅ Done |
+| `shadowElevated` → `shadowLg` | ✅ Done |
+| File was corrupted by `-NoNewline` write; fixed by re-extracting from git | ✅ Done |
+
+### 13.4 Status Page Refactor
+
+| Change | Status |
+|--------|--------|
+| Removed `_movementTimer` and waypoint/route generation (`_generateRouteWaypoints`, `_buildPolyline`, `_updateStatusBasedOnDistance`) | ✅ Done |
+| Added `_mockProgressTimer` ticking every 2.5s through `[confirmed, en_route, on_site, in_progress, completed]` | ✅ Done |
+| On `on_site` status: `_currentProviderLocation` snaps to `clientLocation` | ✅ Done |
+| On `completed` status: timer stops, pulse animation stops | ✅ Done |
+| Cleaned up unused fields (`_movementTimer`, `_statusTimer`, `_routeWaypoints`, `_currentWaypointIndex`) | ✅ Done |
+
+**File:** `lib/pages/booking_funnel/status_page.dart`
+
+### 13.5 Connectivity Banner (Brave-style)
+
+| Task | Status |
+|------|--------|
+| `ConnectivityService` (ChangeNotifier, uses `connectivity_plus`) | ✅ Created |
+| `ConnectivityBanner` widget (red gradient, `wifi_off` icon, "You are offline") | ✅ Created |
+| Wired into `MaterialApp.router.builder` in `main.dart` | ✅ Wired |
+
+### 13.6 Android Build Fixes
+
+| Task | Status |
+|------|--------|
+| Added `<uses-permission android:name="android.permission.INTERNET"/>` | ✅ Done |
+| `desugar_jdk_libs` bumped from `2.0.4` → `2.1.5` in `android/app/build.gradle.kts` | ✅ Done |
+| APK release build succeeds (176.8 MB) | ✅ Done |
+| No release keystore; signed with debug keystore for now | ⚠️ Dev only |
+
+### 13.7 Post-Migration Bugfixes (SHPH API auth)
+
+| Task | Files | Status |
+|------|-------|--------|
+| Re-added `SupaFlow.initialize()` so Supabase DB fallbacks still work | `lib/main.dart` | ✅ Done |
+| Provider messages error fixed: `ProMessagesWidget` now uses `currentUser?.uid` (SHPH auth) instead of `Supabase.auth.currentUser?.id` | `lib/main/pro_dashboard/pro_dashboard_widget.dart` | ✅ Done |
+| Supabase realtime subscription guarded + 30s polling fallback | `lib/main/pro_dashboard/pro_dashboard_widget.dart` | ✅ Done |
+| `ChatService` fallbacks use `currentUser?.uid` | `lib/services/chat_service.dart` | ✅ Done |
+| `ProProfileWidget`/`ProEarningsWidget` use `currentUser?.uid` + `AuthService.logout()` | `lib/main/pro_dashboard/pro_dashboard_widget.dart` | ✅ Done |
+| Provider profile menu spacing aligned to client profile (12px gaps, section card, logout tile styling) | `lib/main/pro_dashboard/pro_dashboard_widget.dart` | ✅ Done |
+
+### 13.8 Supabase Removal (SHPH API only)
+
+Supabase has been removed entirely from the app. The SHPH REST API
+(`https://api.serbisyohub.ph`) is now the sole backend for auth and data.
+Generated row classes remain as pure Dart; features without SHPH endpoints are
+stubbed/no-op.
+
+| Task | Status |
+|------|--------|
+| Removed `supabase_flutter`, `supabase`, `storage_client`, `realtime_client`, `postgrest` from `pubspec.yaml`; `flutter pub get` resolves without them and `pubspec.lock` has zero Supabase packages | ✅ Done |
+| Deleted `lib/backend/supabase/migrations/001_add_face_verification.sql` | ✅ Done |
+| Auth flows SHPH-only: `auth_util.dart`, `auth_manager_factory.dart`, `main.dart`, `token_refresh_manager.dart`, `app_router.dart` (`_fetchUserProfile` via `ShphUsersApi.getMe`) | ✅ Done |
+| Services rewritten SHPH-only: `search_service`, `service_listing_service`, `profiles_service`, `chat_service`, `pro_bookings_service` (`ShphBookingsApi`/`ShphEarningsApi`), `dispatch/dispatch_service` (`ShphOnDemandJobsApi`), `push_notification_service`, `ai_service`, `verification_timer_service` (`currentUser?.uid`) | ✅ Done |
+| Custom actions rewritten: `upload_scanned_to_supabase` (`ShphUsersApi.uploadPhoto`), `insert_profile_with_debug` (`updateMe`) | ✅ Done |
+| Realtime replaced by polling: `chat_page_model.dart` (5s), `my_notifications_widget.dart` (15s), `pro_dashboard_widget.dart`, `dispatch_repository.dart`, `tm_repository.dart` (5s) | ✅ Done |
+| Repos rewritten SHPH-only: `booking_repository.dart`, `dispatch_repository.dart`, `tm_repository.dart`; TM provider geo-matching stubbed (`_findRealProvider` → `null`) | ✅ Done |
+| Pages de-Supabase'd: security_settings (sessions via `ShphSessionsApi`, MFA stubbed), pro_verification (doc scan + face verification via `currentUser?.uid`/`ProfilesService`), profile_widget (uploads via `ProfilesService.uploadProfilePhoto`, update via `updateProfile`), create_profile, booking_details, create_service, reviews_ratings, payment methods | ✅ Done |
+| Full `flutter analyze` passes with **0 errors** | ✅ Done |
+
+**Still-stubbed gaps (no SHPH endpoint yet):** TOTP MFA management, password
+change with current password (reset email used), provider geo-radius fallback
+matching, chat realtime (polling), document/ID bucket uploads, address
+persistence, file deletion.
+
+---

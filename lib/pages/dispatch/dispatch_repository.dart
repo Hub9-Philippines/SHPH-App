@@ -2,8 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
-import '/app_state.dart';
-import '/backend/supabase/supabase.dart';
+import '/api/resources/ondemand_jobs_api.dart';
+import '/api/resources/providers_api.dart';
+import '/auth/base_auth_user_provider.dart';
 import '/models/service_listing.dart';
 import '/pages/tm_flow/tm_models.dart';
 import '/pages/tm_flow/tm_repository.dart';
@@ -89,12 +90,9 @@ class DispatchTMRepository implements TMRepository {
       throw StateError('Failed to create booking for dispatch.');
     }
 
-    // 2. Create a job_request linked to the booking
-    //    The DB trigger `trg_job_request_match` will automatically call
-    //    match_best_provider so matching starts server-side immediately.
+    // 2. Create a job_request linked to the booking via the SHPH on-demand API
     try {
-      final supabase = Supabase.instance.client;
-      final userId = supabase.auth.currentUser?.id;
+      final userId = currentUser?.uid;
 
       if (_clientLatitude == null || _clientLongitude == null) {
         LoggingService.warning(
@@ -104,7 +102,7 @@ class DispatchTMRepository implements TMRepository {
         );
       }
 
-      await supabase.from('job_requests').insert({
+      await ShphOnDemandJobsApi.instance.createJob({
         'client_id': userId,
         'service_type': subCategory.title.toLowerCase(),
         'location_lat': _clientLatitude ?? 14.5995,
@@ -197,7 +195,6 @@ class DispatchTMRepository implements TMRepository {
     }
 
     // Poll the job_request until server matches or times out.
-    final supabase = Supabase.instance.client;
     final timeoutAt = DateTime.now().add(matchTimeout);
     var missingJobRequestCount = 0;
 
@@ -205,13 +202,13 @@ class DispatchTMRepository implements TMRepository {
       await Future<void>.delayed(matchPollInterval);
 
       // Look up the job_request linked to this booking
-      final jobResp = await supabase
-          .from('job_requests')
-          .select('status, assigned_provider_id')
-          .eq('booking_id', requestId)
-          .maybeSingle();
+      final jobResp =
+          await ShphOnDemandJobsApi.instance.getJobStatus(requestId);
 
-      if (jobResp == null) {
+      final status = jobResp['status'] as String?;
+      final providerId = jobResp['assigned_provider_id'] as String?;
+
+      if (jobResp.isEmpty) {
         missingJobRequestCount++;
         if (missingJobRequestCount >= 2) {
           _dispatchJobAvailable = false;
@@ -225,9 +222,6 @@ class DispatchTMRepository implements TMRepository {
         }
         continue;
       }
-
-      final status = jobResp['status'] as String?;
-      final providerId = jobResp['assigned_provider_id'] as String?;
 
       if (status == 'timed_out' || status == 'cancelled') {
         await _persistMetadata(
@@ -384,11 +378,7 @@ class DispatchTMRepository implements TMRepository {
 
     // Also mark job_request as completed
     try {
-      final supabase = Supabase.instance.client;
-      await supabase.from('job_requests').update({
-        'status': 'completed',
-        'completed_at': DateTime.now().toIso8601String(),
-      }).eq('booking_id', requestId);
+      await ShphOnDemandJobsApi.instance.cancelJob(requestId);
     } catch (e) {
       LoggingService.error(
         'Failed to mark job_request completed: $e',
@@ -408,10 +398,7 @@ class DispatchTMRepository implements TMRepository {
   }) async {
     // Cancel the job_request first (which triggers server-side cleanup)
     try {
-      final supabase = Supabase.instance.client;
-      await supabase
-          .from('job_requests')
-          .update({'status': 'cancelled'}).eq('booking_id', requestId);
+      await ShphOnDemandJobsApi.instance.cancelJob(requestId);
     } catch (e) {
       LoggingService.error(
         'Failed to cancel job_request: $e',
@@ -538,42 +525,48 @@ class DispatchTMRepository implements TMRepository {
   }
 
   @override
-  Stream<TMBookingSnapshot?> watchBookingSnapshot(String requestId) =>
-      Supabase.instance.client
-          .from('bookings')
-          .stream(primaryKey: ['id'])
-          .eq('id', requestId)
-          .map((rows) {
-            if (rows.isEmpty) {
-              return null;
-            }
+  Stream<TMBookingSnapshot?> watchBookingSnapshot(String requestId) async* {
+    while (true) {
+      try {
+        final booking = await _bookingsService.getBookingById(requestId);
+        if (booking == null) {
+          yield null;
+        } else {
+          final metadata = _extractMetadata(booking.notes);
+          final providerMap = metadata['provider'] as Map<String, dynamic>?;
+          final hardwareMap =
+              metadata['hardware_request'] as Map<String, dynamic>?;
 
-            final booking = BookingsRow(rows.first);
-            final metadata = _extractMetadata(booking.notes);
-            final providerMap = metadata['provider'] as Map<String, dynamic>?;
-            final hardwareMap =
-                metadata['hardware_request'] as Map<String, dynamic>?;
-
-            return TMBookingSnapshot(
-              requestId: booking.id,
-              status: booking.status,
-              stage: metadata['stage'] as String?,
-              dispatchMode: metadata['dispatch_mode'] as String?,
-              paymentStatus: booking.paymentStatus,
-              totalPrice: booking.totalPrice,
-              provider: _providerFromMap(providerMap),
-              hardwareRequest: hardwareMap == null
-                  ? null
-                  : TMHardwareRequest(
-                      id: hardwareMap['id']?.toString() ?? 'hardware',
-                      title: hardwareMap['title']?.toString() ??
-                          'Hardware Parts Required',
-                      description: hardwareMap['description']?.toString() ?? '',
-                      additionalCost:
-                          _toDouble(hardwareMap['additional_cost']) ?? 0,
-                    ),
-            );
-          });
+          yield TMBookingSnapshot(
+            requestId: booking.id,
+            status: booking.status,
+            stage: metadata['stage'] as String?,
+            dispatchMode: metadata['dispatch_mode'] as String?,
+            paymentStatus: booking.paymentStatus,
+            totalPrice: booking.totalPrice,
+            provider: _providerFromMap(providerMap),
+            hardwareRequest: hardwareMap == null
+                ? null
+                : TMHardwareRequest(
+                    id: hardwareMap['id']?.toString() ?? 'hardware',
+                    title: hardwareMap['title']?.toString() ??
+                        'Hardware Parts Required',
+                    description: hardwareMap['description']?.toString() ?? '',
+                    additionalCost:
+                        _toDouble(hardwareMap['additional_cost']) ?? 0,
+                  ),
+          );
+        }
+      } catch (e) {
+        LoggingService.error(
+          'TM snapshot watch failed: $e',
+          tag: 'DispatchTMRepository',
+        );
+        yield null;
+      }
+      await Future<void>.delayed(matchPollInterval);
+    }
+  }
 
   // ---------------------------------------------------------------
   //  Private helpers
@@ -584,17 +577,12 @@ class DispatchTMRepository implements TMRepository {
     int searchRadiusKm,
   ) async {
     try {
-      final supabase = Supabase.instance.client;
-      final profile = await supabase
-          .from('profiles')
-          .select(
-            'id, display_name, first_name, skill_profession, is_verified, '
-            'location, latitude, longitude',
-          )
-          .eq('id', providerId)
-          .maybeSingle();
+      final data = await ShphProvidersApi.instance.getProvider(providerId);
+      final profile = data['profile'] is Map<String, dynamic>
+          ? data['profile'] as Map<String, dynamic>
+          : data;
 
-      if (profile == null) {
+      if (profile.isEmpty) {
         return null;
       }
 
@@ -739,74 +727,9 @@ class DispatchTMRepository implements TMRepository {
     required int attempt,
   }) async {
     try {
-      final originLat = _clientLatitude ?? GeoUtils.fallbackLat;
-      final originLng = _clientLongitude ?? GeoUtils.fallbackLng;
-
-      final profiles = await Supabase.instance.client
-          .from('profiles')
-          .select(
-            'id, display_name, first_name, skill_profession, latitude, longitude, is_verified',
-          )
-          .eq('role', 'provider')
-          .limit(attempt == 1 ? 25 : 50);
-
-      final candidates = List<Map<String, dynamic>>.from(profiles)
-          .where(_isEligibleProvider)
-          .where((p) {
-        final pLat = (p['latitude'] as num?)?.toDouble();
-        final pLng = (p['longitude'] as num?)?.toDouble();
-        if (pLat == null || pLng == null) return false;
-
-        final dist = GeoUtils.calculateDistance(
-          originLat,
-          originLng,
-          pLat,
-          pLng,
-        );
-        p['_distanceKm'] = dist;
-        return dist <= searchRadiusKm;
-      }).toList()
-        ..sort((a, b) {
-          final distA = a['_distanceKm'] as double;
-          final distB = b['_distanceKm'] as double;
-          final scoreA = _providerScore(
-            a,
-            service: service,
-            subCategory: subCategory,
-            distanceKm: distA,
-          );
-          final scoreB = _providerScore(
-            b,
-            service: service,
-            subCategory: subCategory,
-            distanceKm: distB,
-          );
-          return scoreB.compareTo(scoreA);
-        });
-
-      if (candidates.isEmpty) {
-        return null;
-      }
-
-      final best = candidates.first;
-      final bestDist = best['_distanceKm'] as double;
-      final bestLat = (best['latitude'] as num?)?.toDouble();
-      final bestLng = (best['longitude'] as num?)?.toDouble();
-
-      return TMProviderProfile(
-        id: best['id']?.toString() ?? '',
-        name: (best['display_name'] ?? best['first_name'] ?? 'Provider')
-            .toString(),
-        specialty: (best['skill_profession'] ?? subCategory.title).toString(),
-        rating: best['is_verified'] == true ? 4.9 : 4.7,
-        completedJobs: 120 + _random.nextInt(120),
-        etaMinutes: GeoUtils.calculateETA(bestDist),
-        vehicleLabel: bestDist <= 4
-            ? 'Nearby service unit'
-            : 'Expanded-area service unit',
-        latitude: bestLat,
-        longitude: bestLng,
-      );
+      // No SHPH endpoint lists nearby providers by geo radius; fallback
+      // matching is disabled until one exists.
+      return null;
     } catch (e) {
       LoggingService.error(
         'TM dispatch fallback provider match failed: $e',
@@ -814,43 +737,6 @@ class DispatchTMRepository implements TMRepository {
       );
       return null;
     }
-  }
-
-  bool _isEligibleProvider(Map<String, dynamic> profile) {
-    final id = profile['id']?.toString();
-    if (id == null || id.isEmpty) {
-      return false;
-    }
-    return true;
-  }
-
-  double _providerScore(
-    Map<String, dynamic> profile, {
-    required ServiceListing service,
-    required TMSubCategoryOption subCategory,
-    required double distanceKm,
-  }) {
-    final profession =
-        (profile['skill_profession']?.toString() ?? '').toLowerCase();
-    final serviceTitle = service.title.toLowerCase();
-    final category = (service.categoryName ?? '').toLowerCase();
-    final subCategoryTitle = subCategory.title.toLowerCase();
-
-    double score = 0;
-    if (profession.contains(subCategoryTitle)) {
-      score += 6;
-    }
-    if (profession.contains(serviceTitle)) {
-      score += 4;
-    }
-    if (category.isNotEmpty && profession.contains(category)) {
-      score += 3;
-    }
-    if (profile['is_verified'] == true) {
-      score += 2;
-    }
-    score -= distanceKm * 1.5;
-    return score.clamp(0, double.infinity);
   }
 
   String _buildNotes({

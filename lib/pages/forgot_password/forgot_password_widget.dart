@@ -1,8 +1,8 @@
-﻿import 'package:easy_debounce/easy_debounce.dart';
+import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/auth/supabase_auth/auth_util.dart';
+import '/auth/auth_util.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/components/reset_link_sent/reset_link_sent_widget.dart';
 import '/flutter_flow/custom_functions.dart' as functions;
@@ -10,7 +10,7 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
 import '/theme/app_theme.dart';
-import '../../auth/supabase_auth/supabase_auth_manager.dart';
+import '../../auth/shph_auth/shph_auth_manager.dart';
 import 'forgot_password_model.dart';
 
 export 'forgot_password_model.dart';
@@ -370,7 +370,7 @@ class _ForgotPasswordWidgetState extends State<ForgotPasswordWidget> {
                                     !_model.isEmailvalid)
                                 ? null
                                 : () async {
-                                    await (authManager as SupabaseAuthManager)
+                                    await (authManager as ShphAuthManager)
                                         .resetPassword(
                                       email: _model
                                           .emailTextFieldTextController.text,

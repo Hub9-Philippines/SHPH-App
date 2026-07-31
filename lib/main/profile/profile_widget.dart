@@ -1,9 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
-import '/auth/supabase_auth/auth_util.dart';
+import '/auth/auth_util.dart';
 import '/backend/supabase/supabase.dart';
 import '/components/content_container.dart';
 import '/components/screen_header.dart';
@@ -11,6 +11,7 @@ import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/upload_data.dart';
 import '/index.dart';
+import '/services/profiles_service.dart';
 import '/theme/app_theme.dart';
 import 'profile_model.dart';
 
@@ -590,10 +591,14 @@ class _ProfileWidgetState extends State<ProfileWidget> {
           )
           .toList();
 
-      downloadUrls = await uploadSupabaseStorageFiles(
-        bucketName: 'SHPH',
-        selectedFiles: selectedMedia,
-      );
+      downloadUrls = <String>[];
+      for (final m in selectedMedia) {
+        final url = await ProfilesService.instance
+            .uploadProfilePhoto(m.bytes, m.storagePath.split('/').last);
+        if (url != null) {
+          downloadUrls.add(url);
+        }
+      }
     } finally {
       if (mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -618,10 +623,9 @@ class _ProfileWidgetState extends State<ProfileWidget> {
       _model.uploadedFileUrl_uploadData2mv = downloadUrls.first;
     });
 
-    await ProfilesTable().update(
-      data: {'face_scan_url': downloadUrls.first},
-      matchingRows: (rows) => rows.eq('id', currentUserUid),
-    );
+    await ProfilesService.instance.updateProfile({
+      'face_scan_url': downloadUrls.first,
+    });
 
     if (mounted) {
       showUploadMessage(context, 'Success!');

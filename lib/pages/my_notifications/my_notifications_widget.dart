@@ -1,7 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'dart:async';
+
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/auth/supabase_auth/auth_util.dart';
+import '/auth/auth_util.dart';
 import '/backend/supabase/supabase.dart';
 import '/components/screen_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -25,7 +27,7 @@ class MyNotificationsWidget extends StatefulWidget {
 class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
   late MyNotificationsModel _model;
   late Future<List<NotificationsRow>> _notificationsFuture;
-  RealtimeChannel? _realtimeChannel;
+  Timer? _pollTimer;
   bool _isMarkingAllRead = false;
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -38,53 +40,13 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
   }
 
   void _subscribeRealtime() {
-    final userId = currentUserUid;
-    if (userId.isEmpty) {
-      return;
-    }
-
-    _realtimeChannel = SupaFlow.client
-        .channel('notifications:$userId')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.insert,
-          schema: 'public',
-          table: 'notifications',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'user_id',
-            value: userId,
-          ),
-          callback: (_) {
-            _reloadFromRealtime();
-          },
-        )
-        .onPostgresChanges(
-          event: PostgresChangeEvent.update,
-          schema: 'public',
-          table: 'notifications',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'user_id',
-            value: userId,
-          ),
-          callback: (_) {
-            _reloadFromRealtime();
-          },
-        )
-        .onPostgresChanges(
-          event: PostgresChangeEvent.delete,
-          schema: 'public',
-          table: 'notifications',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'user_id',
-            value: userId,
-          ),
-          callback: (_) {
-            _reloadFromRealtime();
-          },
-        )
-        .subscribe();
+    // Realtime not available via SHPH REST; poll for updates.
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      if (mounted) {
+        _reloadFromRealtime();
+      }
+    });
   }
 
   void _reloadFromRealtime() {
@@ -324,9 +286,8 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
 
   @override
   void dispose() {
-    if (_realtimeChannel != null) {
-      SupaFlow.client.removeChannel(_realtimeChannel!);
-    }
+    _pollTimer?.cancel();
+    _pollTimer = null;
     _model.dispose();
     super.dispose();
   }

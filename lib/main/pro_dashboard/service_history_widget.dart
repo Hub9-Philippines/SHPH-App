@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/components/screen_header.dart';
@@ -499,7 +499,7 @@ class _ServiceHistoryWidgetState extends State<ServiceHistoryWidget> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '$clientName â€¢ $serviceCategory',
+                            '$clientName • $serviceCategory',
                             style: AppTheme.of(context).bodySmall.override(
                                   font: GoogleFonts.plusJakartaSans(),
                                   color: AppTheme.of(context).secondaryText,

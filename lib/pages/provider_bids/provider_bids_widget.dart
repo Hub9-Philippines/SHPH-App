@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/theme/app_theme.dart';
@@ -145,7 +145,7 @@ class _ProviderBidsWidgetState extends State<ProviderBidsWidget> {
               ],
             ),
             const SizedBox(height: 8),
-            Text('â‚±${price.toStringAsFixed(2)}',
+            Text('₱${price.toStringAsFixed(2)}',
                 style: GoogleFonts.plusJakartaSans(
                     color: theme.primary,
                     fontSize: 22,

@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import '/auth/base_auth_user_provider.dart';
 import '/components/screen_header.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
@@ -193,7 +193,7 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
 
     setState(() => isSaving = true);
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
+      final userId = currentUser?.uid;
       if (userId == null) {
         throw Exception('User not authenticated');
       }

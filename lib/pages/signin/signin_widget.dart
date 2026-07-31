@@ -1,18 +1,21 @@
 import 'package:easy_debounce/easy_debounce.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
 
+import '/auth/base_auth_user_provider.dart';
 import '/auth/post_auth_navigation_flow.dart';
-import '/auth/supabase_auth/auth_util.dart';
+import '/auth/auth_util.dart';
+import '/auth/test_auth_user.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/custom_functions.dart' as functions;
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
 import '/theme/app_theme.dart';
-import '../../auth/supabase_auth/supabase_auth_manager.dart';
+import '../../auth/shph_auth/shph_auth_manager.dart';
 import 'signin_model.dart';
 
 export 'signin_model.dart';
@@ -47,7 +50,6 @@ class _SigninWidgetState extends State<SigninWidget>
     _model.phoneFieldTextController ??= TextEditingController();
     _model.phoneFieldFocusNode ??= FocusNode();
     _model.phoneFieldMask = MaskTextInputFormatter(mask: '+63##########');
-    handlePhoneAuthStateChanges(context);
     _model.emailTextFieldTextController ??= TextEditingController();
     _model.emailTextFieldFocusNode ??= FocusNode();
     _model.passwordTextFieldTextController ??= TextEditingController();
@@ -396,30 +398,20 @@ class _SigninWidgetState extends State<SigninWidget>
         _SocialButton(
           icon: Icons.g_mobiledata_rounded,
           label: 'Continue with Google',
-          onTap: () async {
-            final user = await (authManager as SupabaseAuthManager)
-                .signInWithGoogle(context);
-            if (user != null && context.mounted) {
-              await PostAuthNavigationFlow().handlePostAuthNavigation(
-                context: context,
-                userId: user.uid!,
-              );
-            }
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Google sign-in coming soon')),
+            );
           },
         ),
         const SizedBox(height: 10),
         _SocialButton(
           icon: Icons.apple_rounded,
           label: 'Continue with Apple',
-          onTap: () async {
-            final user = await (authManager as SupabaseAuthManager)
-                .signInWithApple(context);
-            if (user != null && context.mounted) {
-              await PostAuthNavigationFlow().handlePostAuthNavigation(
-                context: context,
-                userId: user.uid!,
-              );
-            }
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Apple sign-in coming soon')),
+            );
           },
         ),
         const SizedBox(height: 12),
@@ -438,6 +430,38 @@ class _SigninWidgetState extends State<SigninWidget>
             ),
           ],
         ),
+        if (kDebugMode) ...[
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () async {
+                currentUser = TestAuthUser(
+                  testUid: 'test-phone-user',
+                  testPhone: _model.phoneFieldTextController.text.isNotEmpty
+                      ? _model.phoneFieldTextController.text
+                      : '+639000000000',
+                );
+                if (!context.mounted) return;
+                await PostAuthNavigationFlow().handlePostAuthNavigation(
+                  context: context,
+                  userId: currentUser!.uid!,
+                );
+              },
+              icon: Icon(Icons.developer_mode, size: 18, color: theme.warning),
+              label: Text(
+                'Skip Login (Dev)',
+                style: TextStyle(color: theme.warning),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: theme.warning.withValues(alpha: 0.4)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+        ],
         const Spacer(),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -624,7 +648,7 @@ class _SigninWidgetState extends State<SigninWidget>
                       try {
                         GoRouter.of(context).prepareAuthEvent();
                         final user = await (authManager
-                                as SupabaseAuthManager)
+                                as ShphAuthManager)
                             .signInWithEmail(
                           context,
                           _model.emailTextFieldTextController.text,
@@ -674,30 +698,20 @@ class _SigninWidgetState extends State<SigninWidget>
         _SocialButton(
           icon: Icons.g_mobiledata_rounded,
           label: 'Continue with Google',
-          onTap: () async {
-            final user = await (authManager as SupabaseAuthManager)
-                .signInWithGoogle(context);
-            if (user != null && context.mounted) {
-              await PostAuthNavigationFlow().handlePostAuthNavigation(
-                context: context,
-                userId: user.uid!,
-              );
-            }
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Google sign-in coming soon')),
+            );
           },
         ),
         const SizedBox(height: 10),
         _SocialButton(
           icon: Icons.apple_rounded,
           label: 'Continue with Apple',
-          onTap: () async {
-            final user = await (authManager as SupabaseAuthManager)
-                .signInWithApple(context);
-            if (user != null && context.mounted) {
-              await PostAuthNavigationFlow().handlePostAuthNavigation(
-                context: context,
-                userId: user.uid!,
-              );
-            }
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Apple sign-in coming soon')),
+            );
           },
         ),
         const SizedBox(height: 12),
@@ -716,6 +730,36 @@ class _SigninWidgetState extends State<SigninWidget>
             ),
           ],
         ),
+        if (kDebugMode) ...[
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () async {
+                currentUser = TestAuthUser(
+                  testUid: 'test-email-user',
+                  testPhone: '+639000000001',
+                );
+                if (!context.mounted) return;
+                await PostAuthNavigationFlow().handlePostAuthNavigation(
+                  context: context,
+                  userId: currentUser!.uid!,
+                );
+              },
+              icon: Icon(Icons.developer_mode, size: 18, color: theme.warning),
+              label: Text(
+                'Skip Login (Dev)',
+                style: TextStyle(color: theme.warning),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: theme.warning.withValues(alpha: 0.4)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+        ],
         const Spacer(),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,

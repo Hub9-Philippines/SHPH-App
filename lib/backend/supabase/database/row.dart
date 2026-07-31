@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
-import 'database.dart';
+import '../../../flutter_flow/lat_lng.dart';
+import 'table.dart';
 
 abstract class SupabaseDataRow {
   SupabaseDataRow(this.data);

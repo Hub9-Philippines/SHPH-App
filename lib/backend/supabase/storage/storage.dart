@@ -1,6 +1,12 @@
+import '/api/resources/users_api.dart';
 import '/flutter_flow/upload_data.dart';
-import '../supabase.dart';
+import '/services/logging_service.dart';
 
+/// File upload helpers.
+///
+/// Supabase Storage has been removed. Uploads are routed through the SHPH
+/// API (user profile photo endpoint) where possible; other buckets are stubbed
+/// since no SHPH upload endpoint exists yet.
 Future<List<String>> uploadSupabaseStorageFiles({
   required String bucketName,
   required List<SelectedFile> selectedFiles,
@@ -18,38 +24,27 @@ Future<String> uploadSupabaseStorageFile({
   required String bucketName,
   required SelectedFile selectedFile,
 }) async {
-  final storageBucket = SupaFlow.client.storage.from(bucketName);
-  await storageBucket.uploadBinary(
-    selectedFile.storagePath,
-    selectedFile.bytes,
-    fileOptions: const FileOptions(contentType: null),
-  );
-  return storageBucket.getPublicUrl(selectedFile.storagePath);
+  final fileName = selectedFile.originalFilename.isNotEmpty
+      ? selectedFile.originalFilename
+      : (selectedFile.storagePath.split('/').last);
+  try {
+    if (bucketName == 'profiles' || bucketName == 'profile_photos') {
+      final resp = await ShphUsersApi.instance.uploadPhoto(
+        selectedFile.bytes,
+        fileName,
+      );
+      final url = resp['photo_url'] ?? resp['photo'] ?? resp['url'];
+      if (url != null) {
+        return url.toString();
+      }
+    }
+  } catch (e) {
+    LoggingService.error('SHPH upload failed: $e', tag: 'Storage');
+  }
+  // No SHPH endpoint for this bucket yet - stub with the storage path.
+  return selectedFile.storagePath;
 }
 
 Future deleteSupabaseFileFromPublicUrl(String publicUrl) async {
-  final storagePath = SupaFlow.client.storage.pathFromPublicUrl(publicUrl);
-  if (storagePath == null) {
-    return;
-  }
-
-  final bucketName = storagePath.split('/').first;
-  final filePath = storagePath.split('/').skip(1).join('/');
-  await SupaFlow.client.storage.from(bucketName).remove([filePath]);
-}
-
-extension _SupabaseBucketExtensions on SupabaseStorageClient {
-  String? pathFromPublicUrl(String publicUrl) {
-    final publicUrlPrefix = '$url/object/public/';
-    final urlParts = publicUrl.split(publicUrlPrefix);
-    if (urlParts.length != 2) {
-      return null;
-    }
-    final fullStoragePath = urlParts.last;
-    final storagePathParts = fullStoragePath.split('/');
-    if (storagePathParts.length <= 1) {
-      return null;
-    }
-    return fullStoragePath;
-  }
+  // SHPH API does not expose file deletion; no-op.
 }

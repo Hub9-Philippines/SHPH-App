@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -569,7 +569,7 @@ class _MatchingWaitingSheet extends StatelessWidget {
             const SizedBox(width: 4),
             Expanded(
               child: Text(
-                '${draft.address.label} â€” ${draft.address.line1}, ${draft.address.city}',
+                '${draft.address.label} — ${draft.address.line1}, ${draft.address.city}',
                 style: theme.bodySmall.override(color: theme.secondaryText),
               ),
             ),

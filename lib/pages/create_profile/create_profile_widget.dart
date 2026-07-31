@@ -1,11 +1,12 @@
-﻿import 'package:easy_debounce/easy_debounce.dart';
+import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:provider/provider.dart';
 
-import '/auth/supabase_auth/auth_util.dart';
+import '/auth/auth_util.dart';
+import '/api/resources/users_api.dart';
 import '/backend/supabase/supabase.dart';
 import '/components/password_validation_item/password_validation_item_widget.dart';
 import '/custom_code/actions/index.dart' as actions;
@@ -125,11 +126,20 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
         tag: 'CreateProfile',
       );
 
-      final response = await Supabase.instance.client
-          .from('profiles')
-          .select('first_name, last_name, email, phone_number')
-          .eq('id', userId)
-          .maybeSingle();
+      final response = await ShphUsersApi.instance.getMe();
+      final profile = response['profile'] is Map<String, dynamic>
+          ? response['profile'] as Map<String, dynamic>
+          : response;
+      final first = profile['first_name'] as String?;
+      final last = profile['last_name'] as String?;
+      final email = profile['email'] as String?;
+      final phone = profile['phone_number'] as String?;
+      final responseForUi = <String, dynamic>{
+        'first_name': first,
+        'last_name': last,
+        'email': email,
+        'phone_number': phone,
+      };
 
       if (response == null) {
         LoggingService.debug(
