@@ -865,4 +865,21 @@ change with current password (reset email used), provider geo-radius fallback
 matching, chat realtime (polling), document/ID bucket uploads, address
 persistence, file deletion.
 
----
+### 13.9 Auth Fix (fix-shph-auth)
+
+OpenSpec change: `fix-shph-auth`. Fixed `ShphApiException(null): request failed` on
+sign-in/sign-up and made the Flutter auth client match the working web contract.
+
+| Task | Files | Status |
+|------|-------|--------|
+| Live API host confirmed: `https://serbisyohubph.com` (web `.gitlab-ci.yml` `VITE_API_URL=https://serbisyohubph.com/api`); old default `https://api.serbisyohub.ph` fails TLS | `lib/api/api_config.dart` | ✅ Done |
+| `POST /auth/me/` (was GET), `device_info` sent on login/register, `session_id` persisted + sent on refresh/logout | `lib/api/resources/auth_api.dart`, `lib/api/shph_api_client.dart`, `lib/api/shph_token_storage.dart` | ✅ Done |
+| DRF error envelope unwrap (`{error:true, detail}` / `non_field_errors` / field errors) + friendly connection message | `lib/api/shph_api_exception.dart`, `lib/services/error_handler.dart` | ✅ Done |
+| `DeviceInfoService` mirroring web `deviceInfo.ts` | `lib/services/device_info_service.dart` (new) | ✅ Done |
+| Sign-up rewritten to web `RegisterPage` parity: `register/initiate` → OTP → `register/verify` (phone_number/pin), Supabase duplicate-phone check removed | `lib/auth/auth_manager.dart`, `lib/auth/shph_auth/shph_auth_manager.dart`, `lib/pages/signup/*` | ✅ Done |
+| Phone login via `phone-login/send|verify`; OTP page via `send_otp_pin`/`verify_otp_pin` | `lib/pages/phone_verify_user/*`, `lib/pages/otp_page/otp_page_model.dart`, `lib/api/bridges/shph_auth_bridge.dart` | ✅ Done |
+| `verifyRegistration` for register-vs-login mode in phone verify page | `lib/auth/shph_auth/shph_auth_manager.dart`, `lib/pages/phone_verify_user/phone_verify_user_widget.dart` | ✅ Done |
+| Sign-in error surfacing (server detail / connection message instead of raw exception) | `lib/pages/signin/signin_widget.dart` | ✅ Done |
+| Session state: `_currentUser` from `data['user']`, pending registration state, cold-start restore | `lib/services/auth_service.dart` | ✅ Done |
+| Verification: `flutter analyze` 0 errors; `proximity_scoring_test.dart` 20/20; `booking_funnel_test.dart` 3/4 (1 pre-existing Unsplash-image failure) | — | ✅ Done |
+| Manual device round-trip (sign-up → OTP → verified) | — | ⏳ Pending user |

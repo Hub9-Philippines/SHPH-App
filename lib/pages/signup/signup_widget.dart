@@ -5,12 +5,13 @@ import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
 
 import '/auth/auth_util.dart';
-import '/backend/supabase/supabase.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
+import '/services/error_handler.dart';
 import '/theme/app_theme.dart';
+import '../../auth/shph_auth/shph_auth_manager.dart';
 import 'signup_model.dart';
 
 export 'signup_model.dart';
@@ -38,6 +39,19 @@ class _SignupWidgetState extends State<SignupWidget> {
     _model.phoneFieldTextController ??= TextEditingController();
     _model.phoneFieldFocusNode ??= FocusNode();
     _model.phoneFieldMask = MaskTextInputFormatter(mask: '+63##########');
+
+    _model.firstNameTextController ??= TextEditingController();
+    _model.firstNameFocusNode ??= FocusNode();
+    _model.middleNameTextController ??= TextEditingController();
+    _model.middleNameFocusNode ??= FocusNode();
+    _model.lastNameTextController ??= TextEditingController();
+    _model.lastNameFocusNode ??= FocusNode();
+    _model.emailTextController ??= TextEditingController();
+    _model.emailFocusNode ??= FocusNode();
+    _model.passwordTextController ??= TextEditingController();
+    _model.passwordFocusNode ??= FocusNode();
+    _model.confirmPasswordTextController ??= TextEditingController();
+    _model.confirmPasswordFocusNode ??= FocusNode();
   }
 
   @override
@@ -130,13 +144,48 @@ class _SignupWidgetState extends State<SignupWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Mobile number',
-          style: theme.bodyMedium.copyWith(
-            fontWeight: FontWeight.w500,
-            color: theme.primaryText,
-          ),
+        _fieldLabel(theme, 'First Name'),
+        const SizedBox(height: 8),
+        _inputField(
+          theme,
+          controller: _model.firstNameTextController!,
+          focusNode: _model.firstNameFocusNode,
+          hint: 'Juan',
+          textInputAction: TextInputAction.next,
         ),
+        const SizedBox(height: 16),
+        _fieldLabel(theme, 'Middle Name (optional)'),
+        const SizedBox(height: 8),
+        _inputField(
+          theme,
+          controller: _model.middleNameTextController!,
+          focusNode: _model.middleNameFocusNode,
+          hint: 'Santos',
+          textInputAction: TextInputAction.next,
+        ),
+        const SizedBox(height: 16),
+        _fieldLabel(theme, 'Last Name'),
+        const SizedBox(height: 8),
+        _inputField(
+          theme,
+          controller: _model.lastNameTextController!,
+          focusNode: _model.lastNameFocusNode,
+          hint: 'Dela Cruz',
+          textInputAction: TextInputAction.next,
+        ),
+        const SizedBox(height: 16),
+        _fieldLabel(theme, 'Email'),
+        const SizedBox(height: 8),
+        _inputField(
+          theme,
+          controller: _model.emailTextController!,
+          focusNode: _model.emailFocusNode,
+          hint: 'you@example.com',
+          textInputAction: TextInputAction.next,
+          keyboardType: TextInputType.emailAddress,
+        ),
+        const SizedBox(height: 16),
+        _fieldLabel(theme, 'Mobile number'),
         const SizedBox(height: 8),
         TextFormField(
           controller: _model.phoneFieldTextController,
@@ -144,16 +193,14 @@ class _SignupWidgetState extends State<SignupWidget> {
           onChanged: (_) => EasyDebounce.debounce(
             '_model.phoneFieldTextController',
             const Duration(milliseconds: 100),
-            () async {
+            () {
               _model.isPhoneValid =
                   _model.phoneFieldTextController.text.length == 13;
               safeSetState(() {});
-              FFAppState().phone = _model.phoneFieldTextController.text;
-              safeSetState(() {});
             },
           ),
-          autofocus: true,
-          textInputAction: TextInputAction.go,
+          autofocus: false,
+          textInputAction: TextInputAction.next,
           obscureText: false,
           decoration: InputDecoration(
             labelText: '+63',
@@ -165,14 +212,16 @@ class _SignupWidgetState extends State<SignupWidget> {
             ),
             enabledBorder: OutlineInputBorder(
               borderSide: BorderSide(
-                color: _model.isPhoneValid ? theme.secondaryText : theme.error,
+                color:
+                    _model.isPhoneValid ? theme.secondaryText : theme.error,
                 width: 1,
               ),
               borderRadius: BorderRadius.circular(12),
             ),
             focusedBorder: OutlineInputBorder(
               borderSide: BorderSide(
-                color: _model.isPhoneValid ? theme.secondaryText : theme.error,
+                color:
+                    _model.isPhoneValid ? theme.secondaryText : theme.error,
                 width: 1.5,
               ),
               borderRadius: BorderRadius.circular(12),
@@ -204,6 +253,28 @@ class _SignupWidgetState extends State<SignupWidget> {
               _model.phoneFieldTextControllerValidator.asValidator(context),
           inputFormatters: [_model.phoneFieldMask],
         ),
+        const SizedBox(height: 16),
+        _fieldLabel(theme, 'Password'),
+        const SizedBox(height: 8),
+        _inputField(
+          theme,
+          controller: _model.passwordTextController!,
+          focusNode: _model.passwordFocusNode,
+          hint: 'At least 8 characters',
+          textInputAction: TextInputAction.next,
+          obscure: true,
+        ),
+        const SizedBox(height: 16),
+        _fieldLabel(theme, 'Confirm Password'),
+        const SizedBox(height: 8),
+        _inputField(
+          theme,
+          controller: _model.confirmPasswordTextController!,
+          focusNode: _model.confirmPasswordFocusNode,
+          hint: 'Repeat your password',
+          textInputAction: TextInputAction.done,
+          obscure: true,
+        ),
         if (_model.errorMessage != null)
           Padding(
             padding: const EdgeInsets.only(top: 8),
@@ -221,99 +292,50 @@ class _SignupWidgetState extends State<SignupWidget> {
                   _model.isLoading = true;
                   safeSetState(() {});
 
-                  if (_model.phoneFieldTextController.text != '') {
-                    try {
-                      _model.isPhoneExists =
-                          await ProfilesTable().queryRows(
-                        queryFn: (q) => q.eqOrNull(
-                          'phone_number',
-                          FFAppState().phone,
-                        ),
-                      );
-                      if (_model.isPhoneExists?.firstOrNull?.phoneNumber ==
-                          FFAppState().phone) {
-                        _model.isLoading = false;
-                        _model.errorMessage =
-                            'This phone number is already associated with an account. Please login instead.';
-                        safeSetState(() {});
-                        if (!context.mounted) return;
-                        await showDialog(
-                          context: context,
-                          builder: (alertDialogContext) => AlertDialog(
-                            title: const Text('Account Already Exists'),
-                            content: const Text(
-                                'This phone number is already associated with an account. Please login instead.'),
-                            actions: [
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.pop(alertDialogContext),
-                                child: const Text('Ok'),
-                              ),
-                            ],
-                          ),
-                        );
-                      } else {
-                        final phoneNumberVal =
-                            _model.phoneFieldTextController.text;
-                        if (phoneNumberVal.isEmpty ||
-                            !phoneNumberVal.startsWith('+')) {
-                          _model.isLoading = false;
-                          _model.errorMessage =
-                              'Phone Number is required and has to start with +.';
-                          safeSetState(() {});
-                          if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                  'Phone Number is required and has to start with +.'),
-                            ),
-                          );
-                          return;
-                        }
-                        if (!context.mounted) return;
-                        await beginPhoneAuth(
-                          context: context,
-                          phoneNumber: phoneNumberVal,
-                          onCodeSent: (context) async {
-                            if (!context.mounted) return;
-                            await context.pushNamed(
-                              PhoneVerifyUserWidget.routeName,
-                            );
-                          },
-                        );
-                        _model.isLoading = false;
-                        safeSetState(() {});
-                      }
-                    } catch (e) {
-                      _model.isLoading = false;
-                      _model.errorMessage =
-                          'An error occurred. Please try again.';
-                      safeSetState(() {});
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error: ${e.toString()}')),
-                      );
-                    }
-                  } else {
+                  final phoneNumberVal =
+                      _model.phoneFieldTextController.text;
+                  if (phoneNumberVal.isEmpty ||
+                      !phoneNumberVal.startsWith('+')) {
                     _model.isLoading = false;
                     _model.errorMessage =
-                        'Please input your phone number to continue';
+                        'Phone Number is required and has to start with +.';
+                    safeSetState(() {});
+                    return;
+                  }
+                  if (_model.passwordTextController.text !=
+                      _model.confirmPasswordTextController.text) {
+                    _model.isLoading = false;
+                    _model.errorMessage = 'Passwords do not match.';
+                    safeSetState(() {});
+                    return;
+                  }
+                  try {
+                    FFAppState().phone = phoneNumberVal;
+                    await (authManager as ShphAuthManager)
+                        .createAccountWithEmail(
+                      context,
+                      email: _model.emailTextController.text.trim(),
+                      password: _model.passwordTextController.text,
+                      firstName: _model.firstNameTextController.text.trim(),
+                      middleName:
+                          _model.middleNameTextController.text.trim(),
+                      lastName: _model.lastNameTextController.text.trim(),
+                      phoneNumber: phoneNumberVal,
+                      role: 'client',
+                    );
+                    _model.isLoading = false;
                     safeSetState(() {});
                     if (!context.mounted) return;
-                    await showDialog(
-                      context: context,
-                      builder: (alertDialogContext) => AlertDialog(
-                        title: const Text('Phone number is empty'),
-                        content: const Text(
-                            'Please input your phone number to continue'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(alertDialogContext),
-                            child: const Text('Ok'),
-                          ),
-                        ],
-                      ),
+                    await context.pushNamed(
+                      PhoneVerifyUserWidget.routeName,
                     );
+                  } catch (e) {
+                    _model.isLoading = false;
+                    final message = ErrorHandler.describeError(e);
+                    _model.errorMessage = message;
+                    safeSetState(() {});
+                    if (!context.mounted) return;
+                    ErrorHandler.showError(message);
                   }
                   safeSetState(() {});
                 },
@@ -352,6 +374,59 @@ class _SignupWidgetState extends State<SignupWidget> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _fieldLabel(AppThemeData theme, String text) {
+    return Text(
+      text,
+      style: theme.bodyMedium.copyWith(
+        fontWeight: FontWeight.w500,
+        color: theme.primaryText,
+      ),
+    );
+  }
+
+  Widget _inputField(
+    AppThemeData theme, {
+    required TextEditingController controller,
+    FocusNode? focusNode,
+    required String hint,
+    TextInputAction textInputAction = TextInputAction.next,
+    TextInputType? keyboardType,
+    bool obscure = false,
+  }) {
+    return TextFormField(
+      controller: controller,
+      focusNode: focusNode,
+      autofocus: false,
+      textInputAction: textInputAction,
+      obscureText: obscure,
+      keyboardType: keyboardType,
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: theme.labelMedium.copyWith(color: theme.secondaryText),
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: theme.alternate, width: 1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: theme.alternate, width: 1.5),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: theme.error, width: 1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: theme.error, width: 1.5),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        filled: true,
+        fillColor: theme.secondaryBackground,
+      ),
+      style: theme.bodyMedium.copyWith(fontSize: 16),
+      cursorColor: theme.primaryText,
     );
   }
 }

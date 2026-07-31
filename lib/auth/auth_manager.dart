@@ -18,11 +18,19 @@ mixin EmailSignInManager on AuthManager {
     String password,
   );
 
+  /// Two-step registration: initiates an account with the SHPH API. The
+  /// returned user is null because the session only completes after the
+  /// phone/email OTP verify step.
   Future<BaseAuthUser?> createAccountWithEmail(
-    BuildContext context,
-    String email,
-    String password,
-  );
+    BuildContext context, {
+    required String email,
+    required String password,
+    String? firstName,
+    String? middleName,
+    String? lastName,
+    String? phoneNumber,
+    String role = 'client',
+  });
 }
 
 mixin AnonymousSignInManager on AuthManager {

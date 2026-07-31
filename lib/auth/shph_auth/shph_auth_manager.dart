@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '/services/auth_service.dart';
+import '/services/device_info_service.dart';
 import '/auth/auth_manager.dart';
 import 'shph_user_provider.dart';
 
@@ -41,36 +42,39 @@ class ShphAuthManager extends AuthManager
     String email,
     String password,
   ) async {
-    try {
-      final data = await _authService.login(email: email, password: password);
-      final userMap = data['user'] as Map<String, dynamic>? ?? data;
-      final user = SerbisyoHubPHShphUser(userMap);
-      currentUser = user;
-      return user;
-    } catch (e) {
-      debugPrint('Sign in failed: $e');
-      return null;
-    }
+    final data = await _authService.login(email: email, password: password);
+    final userMap = data['user'] as Map<String, dynamic>? ?? data;
+    final user = SerbisyoHubPHShphUser(userMap);
+    currentUser = user;
+    return user;
   }
 
   @override
   Future<BaseAuthUser?> createAccountWithEmail(
-    BuildContext context,
-    String email,
-    String password,
-  ) async {
-    try {
-      final data = await _authService.authApi.registerInitiate(
-        payload: {'email': email, 'password': password},
-      );
-      final userMap = data['user'] as Map<String, dynamic>? ?? data;
-      final user = SerbisyoHubPHShphUser(userMap);
-      currentUser = user;
-      return user;
-    } catch (e) {
-      debugPrint('Create account failed: $e');
-      return null;
-    }
+    BuildContext context, {
+    required String email,
+    required String password,
+    String? firstName,
+    String? middleName,
+    String? lastName,
+    String? phoneNumber,
+    String role = 'client',
+  }) async {
+    final deviceInfo = await DeviceInfoService.instance.getDeviceInfo();
+    await _authService.registerInitiate(
+      payload: {
+        if (firstName != null) 'first_name': firstName,
+        if (middleName != null && middleName.isNotEmpty) 'middle_name': middleName,
+        if (lastName != null) 'last_name': lastName,
+        'email': email,
+        if (phoneNumber != null) 'phone_number': phoneNumber,
+        'password': password,
+        'role': role,
+        'device_info': deviceInfo,
+      },
+    );
+    // Session completes only after the OTP verify step (registerVerify).
+    return null;
   }
 
   @override
@@ -79,10 +83,24 @@ class ShphAuthManager extends AuthManager
     required String phoneNumber,
     required void Function(BuildContext) onCodeSent,
   }) async {
-    await _authService.authApi.sendOtpPin(
-      payload: {'phone': phoneNumber},
+    await _authService.authApi.phoneLoginSend(
+      phoneNumber: phoneNumber,
     );
     onCodeSent(context);
+  }
+
+  /// Completes the two-step registration by verifying the OTP pin.
+  Future<BaseAuthUser?> verifyRegistration({
+    required String phoneNumber,
+    required String pin,
+  }) async {
+    final data = await _authService.registerVerify(
+      payload: {'phone_number': phoneNumber, 'pin': pin},
+    );
+    final userMap = data['user'] as Map<String, dynamic>? ?? data;
+    final user = SerbisyoHubPHShphUser(userMap);
+    currentUser = user;
+    return user;
   }
 
   @override
@@ -91,20 +109,13 @@ class ShphAuthManager extends AuthManager
     required String smsCode,
     String? phoneNumber,
   }) async {
-    try {
-      final data = await _authService.authApi.verifyOtpPin(
-        payload: {
-          'pin': smsCode,
-          if (phoneNumber != null) 'phone': phoneNumber,
-        },
-      );
-      final userMap = data['user'] as Map<String, dynamic>? ?? data;
-      final user = SerbisyoHubPHShphUser(userMap);
-      currentUser = user;
-      return user;
-    } catch (e) {
-      debugPrint('SMS verify failed: $e');
-      return null;
-    }
+    final data = await _authService.authApi.phoneLoginVerify(
+      phoneNumber: phoneNumber ?? '',
+      pin: smsCode,
+    );
+    final userMap = data['user'] as Map<String, dynamic>? ?? data;
+    final user = SerbisyoHubPHShphUser(userMap);
+    currentUser = user;
+    return user;
   }
 }

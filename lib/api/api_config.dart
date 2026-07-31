@@ -5,9 +5,13 @@
 class ApiConfig {
   ApiConfig._();
 
+  /// Live deployed backend (web build's `VITE_API_URL=https://serbisyohubph.com/api`).
+  /// Overridable via `--dart-define=SHPH_API_BASE_URL=...`.
+  static const String _defaultBaseUrl = 'https://serbisyohubph.com';
+
   static const String _baseUrlFromEnv = String.fromEnvironment(
     'SHPH_API_BASE_URL',
-    defaultValue: 'https://api.serbisyohub.ph',
+    defaultValue: _defaultBaseUrl,
   );
 
   static const bool useShphApi = bool.fromEnvironment(
@@ -18,7 +22,7 @@ class ApiConfig {
   static String get baseUrl {
     final url = _baseUrlFromEnv.trim();
     if (url.isEmpty) {
-      return 'https://api.serbisyohub.ph';
+      return _defaultBaseUrl;
     }
     return url.endsWith('/') ? url.substring(0, url.length - 1) : url;
   }

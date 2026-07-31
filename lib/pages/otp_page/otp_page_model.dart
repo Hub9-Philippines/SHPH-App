@@ -27,7 +27,7 @@ class OtpPageModel extends FlutterFlowModel<OtpPageWidget> {
     error = null;
     try {
       await ShphAuthApi.instance
-          .sendOtpPin(payload: {'phone': phone.trim()});
+          .sendOtpPin(phoneNumber: phone.trim());
       codeSent = true;
       _startCooldown();
     } catch (e) {
@@ -46,7 +46,7 @@ class OtpPageModel extends FlutterFlowModel<OtpPageWidget> {
     error = null;
     try {
       await ShphAuthApi.instance
-          .verifyOtpPin(payload: {'phone': phone.trim(), 'code': code.trim()});
+          .verifyOtpPin(phoneNumber: phone.trim(), pin: code.trim());
       return true;
     } catch (e) {
       error = 'Invalid code.';

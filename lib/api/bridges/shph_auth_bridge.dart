@@ -2,6 +2,7 @@ import '/api/api_config.dart';
 import '/api/resources/auth_api.dart';
 import '/api/shph_api_client.dart';
 import '/api/shph_token_storage.dart';
+import '/services/device_info_service.dart';
 import '/services/logging_service.dart';
 
 /// Bridges Supabase auth flows with SHPH REST API JWT tokens.
@@ -19,7 +20,12 @@ class ShphAuthBridge {
     if (!ApiConfig.preferShphApi) return;
 
     try {
-      await ShphAuthApi.instance.login(email: email, password: password);
+      final deviceInfo = await DeviceInfoService.instance.getDeviceInfo();
+      await ShphAuthApi.instance.login(
+        email: email,
+        password: password,
+        deviceInfo: deviceInfo,
+      );
       LoggingService.info('SHPH API tokens synced after sign-in',
           tag: 'ShphAuthBridge');
     } catch (e) {
@@ -84,7 +90,8 @@ class ShphAuthBridge {
 
     try {
       await ShphAuthApi.instance.verifyOtpPin(
-        payload: {'phone_number': phoneNumber, 'pin': smsCode},
+        phoneNumber: phoneNumber,
+        pin: smsCode,
       );
       LoggingService.info('SHPH API tokens synced after phone sign-in',
           tag: 'ShphAuthBridge');

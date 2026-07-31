@@ -14,6 +14,7 @@ import '/flutter_flow/custom_functions.dart' as functions;
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
+import '/services/error_handler.dart';
 import '/theme/app_theme.dart';
 import '../../auth/shph_auth/shph_auth_manager.dart';
 import 'signin_model.dart';
@@ -368,13 +369,11 @@ class _SigninWidgetState extends State<SigninWidget>
                         );
                       } catch (e) {
                         _model.isPhoneLoginLoading = false;
-                        _model.errorMessage =
-                            'An error occurred. Please try again.';
+                        final message = ErrorHandler.describeError(e);
+                        _model.errorMessage = message;
                         safeSetState(() {});
                         if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error: ${e.toString()}')),
-                        );
+                        ErrorHandler.showError(message);
                       }
                     },
           text: _model.isPhoneLoginLoading ? 'Signing In...' : 'Sign In',
@@ -668,13 +667,11 @@ class _SigninWidgetState extends State<SigninWidget>
                         );
                       } catch (e) {
                         _model.isEmailLoginLoading = false;
-                        _model.errorMessage =
-                            'An error occurred. Please try again.';
+                        final message = ErrorHandler.describeError(e);
+                        _model.errorMessage = message;
                         safeSetState(() {});
                         if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error: ${e.toString()}')),
-                        );
+                        ErrorHandler.showError(message);
                       }
                     },
           text: _model.isEmailLoginLoading ? 'Signing In...' : 'Sign In',

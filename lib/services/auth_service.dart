@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '/api/resources/auth_api.dart';
 import '/api/resources/users_api.dart';
 import '/api/shph_token_storage.dart';
+import '/services/device_info_service.dart';
 import '/services/logging_service.dart';
 
 enum AuthStatus { uninitialized, authenticated, unauthenticated }
@@ -26,6 +27,23 @@ class AuthService extends ChangeNotifier {
   String? get email => _currentUser?['email'] as String?;
   String? get displayName => _currentUser?['display_name'] as String?;
 
+  /// Pending two-step registration state (set by [registerInitiate], consumed
+  /// by the OTP/verify step).
+  String? _pendingDeliveryMethod;
+  String? _pendingPhone;
+  String? _pendingEmail;
+  String? get pendingDeliveryMethod => _pendingDeliveryMethod;
+  String? get pendingPhone => _pendingPhone;
+  String? get pendingEmail => _pendingEmail;
+
+  /// Clears the pending two-step registration state after verification (or
+  /// logout), so later phone-login flows are not mistaken for registration.
+  void clearPendingRegistration() {
+    _pendingDeliveryMethod = null;
+    _pendingPhone = null;
+    _pendingEmail = null;
+  }
+
   Future<void> initialize() async {
     final token = await ShphTokenStorage.getAccessToken();
     if (token == null) {
@@ -46,8 +64,13 @@ class AuthService extends ChangeNotifier {
     required String email,
     required String password,
   }) async {
-    final data = await _authApi.login(email: email, password: password);
-    _currentUser = data;
+    final deviceInfo = await DeviceInfoService.instance.getDeviceInfo();
+    final data = await _authApi.login(
+      email: email,
+      password: password,
+      deviceInfo: deviceInfo,
+    );
+    _currentUser = data['user'] as Map<String, dynamic>? ?? data;
     _status = AuthStatus.authenticated;
     notifyListeners();
     return data;
@@ -55,14 +78,19 @@ class AuthService extends ChangeNotifier {
 
   Future<Map<String, dynamic>> registerInitiate({
     required Map<String, dynamic> payload,
-  }) =>
-      _authApi.registerInitiate(payload: payload);
+  }) async {
+    final data = await _authApi.registerInitiate(payload: payload);
+    _pendingDeliveryMethod = data['delivery_method'] as String?;
+    _pendingPhone = payload['phone_number'] as String?;
+    _pendingEmail = payload['email'] as String?;
+    return data;
+  }
 
   Future<Map<String, dynamic>> registerVerify({
     required Map<String, dynamic> payload,
   }) async {
     final data = await _authApi.registerVerify(payload: payload);
-    _currentUser = data;
+    _currentUser = data['user'] as Map<String, dynamic>? ?? data;
     _status = AuthStatus.authenticated;
     notifyListeners();
     return data;
@@ -76,6 +104,7 @@ class AuthService extends ChangeNotifier {
     }
     _currentUser = null;
     _status = AuthStatus.unauthenticated;
+    clearPendingRegistration();
     notifyListeners();
   }
 
