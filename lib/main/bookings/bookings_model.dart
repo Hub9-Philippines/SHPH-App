@@ -4,6 +4,7 @@ import '/backend/supabase/database/tables/service_listings.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/bookings_service.dart';
 import '/services/logging_service.dart';
+import '/services/service_listing_service.dart';
 import 'bookings_widget.dart' show BookingsWidget;
 
 // 1. Define the model class here or in a separate file
@@ -71,11 +72,29 @@ class BookingsModel extends FlutterFlowModel<BookingsWidget> {
           bookings.map((b) => b.serviceListingId).where((id) => id > 0).toSet();
       if (serviceIds.isNotEmpty) {
         try {
-          final services = await ServiceListingsTable().queryRows(
-            queryFn: (q) => q.inFilter('id', serviceIds.toList()),
-          );
-          for (final service in services) {
-            _serviceListingsCache[service.id] = service;
+          for (final id in serviceIds) {
+            final listing = await ServiceListingService.instance
+                .fetchServiceListingById(id);
+            if (listing != null) {
+              _serviceListingsCache[id] = ServiceListingsRow({
+                'id': listing.id,
+                'category': listing.category,
+                'category_name': listing.categoryName,
+                'provider': listing.provider,
+                'provider_name': listing.providerName,
+                'provider_photo': listing.providerPhoto,
+                'title': listing.title,
+                'description': listing.description,
+                'base_price': listing.basePrice,
+                'price_unit': listing.priceUnit,
+                'status': listing.status,
+                'is_available': listing.isAvailable ?? 'true',
+                'rating': listing.rating,
+                'thumbnail': listing.thumbnail,
+                'review_count': listing.reviewCount ?? 0,
+                'is_time_material': listing.isTimeMaterial,
+              });
+            }
           }
         } catch (e) {
           LoggingService.error(

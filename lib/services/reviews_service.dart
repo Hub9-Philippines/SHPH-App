@@ -40,7 +40,15 @@ class ReviewsService {
   }
 
   Future<List<ReviewsRow>> getUserReviews() async {
-    return [];
+    try {
+      final reviews = await _reviewsApi.listMyReviews();
+      return reviews
+          .map((review) => ApiRowMapper.reviewToRow(review))
+          .toList();
+    } catch (e) {
+      LoggingService.error('getUserReviews failed: $e', tag: 'ReviewsService');
+      return [];
+    }
   }
 
   Future<bool> updateReview(String reviewId,

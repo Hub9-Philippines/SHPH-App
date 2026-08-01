@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/api/bridges/api_row_mapper.dart';
 import '/auth/auth_util.dart';
 import '/backend/supabase/supabase.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
+import '/services/addresses_service.dart';
 import '/theme/app_theme.dart';
 import 'edit_address_model.dart';
 
@@ -40,11 +42,9 @@ class _EditAddressWidgetState extends State<EditAddressWidget> {
       _addressesFuture = Future.value([]);
       return;
     }
-    _addressesFuture = AddressesTable().queryRows(
-      queryFn: (q) => q
-          .eq('user_id', currentUserUid)
-          .order('is_default', ascending: false),
-    );
+    _addressesFuture = AddressesService.instance.getAddresses().then(
+          (addresses) => addresses.map(ApiRowMapper.addressToRow).toList(),
+        );
   }
 
   @override

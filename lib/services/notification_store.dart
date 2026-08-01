@@ -14,6 +14,7 @@ class AppNotification {
     required this.createdAt,
     this.type,
     this.route,
+    this.metadata = const <String, dynamic>{},
   });
 
   final int id;
@@ -23,8 +24,13 @@ class AppNotification {
   final String createdAt;
   final String? type;
   final String? route;
+  final Map<String, dynamic> metadata;
+
+  DateTime? get createdAtDateTime => DateTime.tryParse(createdAt);
 
   factory AppNotification.fromJson(Map<String, dynamic> json) {
+    final data = json['data'];
+    final info = json['info'];
     return AppNotification(
       id: (json['id'] as num).toInt(),
       title: json['title'] as String? ?? '',
@@ -32,7 +38,11 @@ class AppNotification {
       isRead: json['is_read'] as bool? ?? json['read'] as bool? ?? false,
       createdAt: json['created_at'] as String? ?? json['createdAt'] as String? ?? '',
       type: json['type'] as String?,
-      route: json['route'] as String?,
+      route: json['redirect_url'] as String? ?? json['route'] as String?,
+      metadata: {
+        if (data is Map<String, dynamic>) ...data,
+        if (info is Map<String, dynamic>) ...info,
+      },
     );
   }
 }
@@ -87,6 +97,7 @@ class NotificationStore extends ChangeNotifier {
           createdAt: _notifications[idx].createdAt,
           type: _notifications[idx].type,
           route: _notifications[idx].route,
+          metadata: _notifications[idx].metadata,
         );
         notifyListeners();
       }
@@ -107,6 +118,7 @@ class NotificationStore extends ChangeNotifier {
                 createdAt: n.createdAt,
                 type: n.type,
                 route: n.route,
+                metadata: n.metadata,
               ))
           .toList();
       notifyListeners();

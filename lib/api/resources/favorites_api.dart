@@ -53,4 +53,17 @@ class ShphReviewsApi {
       ShphReview.fromJson,
     );
   }
+
+  /// Provider reviews from SHPH API.yaml (`/api/services/reviews/mine/`).
+  /// Returns an empty list for clients (provider-only endpoint).
+  Future<List<ShphReview>> listMyReviews() async {
+    final response = await _client.get<List<dynamic>>(
+      '/api/services/reviews/mine/',
+    );
+    final data = response.data ?? [];
+    return data
+        .whereType<Map<String, dynamic>>()
+        .map(ShphReview.fromJson)
+        .toList();
+  }
 }

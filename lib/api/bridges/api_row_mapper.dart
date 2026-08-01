@@ -1,9 +1,11 @@
 import '/api/api_config.dart';
+import '/api/models/address.dart';
 import '/api/models/booking.dart';
 import '/api/models/category.dart';
 import '/api/models/review.dart';
 import '/api/models/service_listing.dart';
 import '/api/shph_token_storage.dart';
+import '/backend/supabase/database/tables/addresses.dart';
 import '/backend/supabase/database/tables/bookings.dart';
 import '/backend/supabase/database/tables/categories.dart';
 import '/backend/supabase/database/tables/profiles.dart';
@@ -92,6 +94,23 @@ class ApiRowMapper {
       'image_url': category.image,
       'sort_order': category.id,
       'is_active': true,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  static AddressesRow addressToRow(ShphAddress address) {
+    return AddressesRow({
+      'id': address.id,
+      'user_id': '',
+      'address_line1': address.street,
+      'address_line2': address.label,
+      'barangay': address.barangay,
+      'city': address.city,
+      'province': address.province,
+      'postal_code': address.zipCode,
+      'latitude': address.latitude,
+      'longitude': address.longitude,
+      'is_default': address.isDefault,
       'created_at': DateTime.now().toIso8601String(),
     });
   }

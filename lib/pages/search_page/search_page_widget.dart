@@ -15,6 +15,7 @@ import '/index.dart';
 import '/models/service_listing.dart';
 import '/services/bookings_service.dart';
 import '/services/logging_service.dart';
+import '/services/service_listing_service.dart';
 import '/theme/app_theme.dart';
 import '/utils/geo_utils.dart';
 import '../booking_funnel/booking_controller.dart';
@@ -134,11 +135,31 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
     });
 
     try {
-      final services = await ServiceListingsTable().queryRows(
-        queryFn: (q) => q.eq('is_available', 'true').or(
-              'title.ilike.%$normalizedQuery%,category_name.ilike.%$normalizedQuery%,description.ilike.%$normalizedQuery%,provider_name.ilike.%$normalizedQuery%',
-            ),
-      );
+      final apiServices = await ServiceListingService.instance
+          .fetchServiceListings(search: normalizedQuery);
+      final services = apiServices
+          .map(
+            (listing) => ServiceListingsRow({
+              'id': listing.id,
+              'category': listing.category,
+              'category_name': listing.categoryName,
+              'provider': listing.provider,
+              'provider_name': listing.providerName,
+              'provider_photo': listing.providerPhoto,
+              'title': listing.title,
+              'description': listing.description,
+              'base_price': listing.basePrice,
+              'price_unit': listing.priceUnit,
+              'status': listing.status,
+              'is_available': listing.isAvailable ?? 'true',
+              'rating': listing.rating,
+              'thumbnail': listing.thumbnail,
+              'review_count': listing.reviewCount ?? 0,
+              'is_time_material': listing.isTimeMaterial,
+            }),
+          )
+          .where((service) => service.isAvailable == 'true')
+          .toList();
 
       final results = services.where((service) {
         final category = service.categoryName ?? '';

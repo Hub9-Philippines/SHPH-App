@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/auth/auth_util.dart';
-import '/backend/supabase/supabase.dart';
 import '/components/screen_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import '/services/logging_service.dart';
+import '/services/notification_store.dart';
 import '/theme/app_theme.dart';
 import 'my_notifications_model.dart';
 
@@ -26,7 +26,7 @@ class MyNotificationsWidget extends StatefulWidget {
 
 class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
   late MyNotificationsModel _model;
-  late Future<List<NotificationsRow>> _notificationsFuture;
+  late Future<List<AppNotification>> _notificationsFuture;
   Timer? _pollTimer;
   bool _isMarkingAllRead = false;
   final scaffoldKey = GlobalKey<ScaffoldState>();
@@ -66,17 +66,14 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
     }
   }
 
-  Future<List<NotificationsRow>> _fetchNotifications() async {
+  Future<List<AppNotification>> _fetchNotifications() async {
     if (currentUserUid.isEmpty) {
       return [];
     }
 
     try {
-      return await NotificationsTable().queryRows(
-        queryFn: (q) => q
-            .eq('user_id', currentUserUid)
-            .order('created_at', ascending: false),
-      );
+      await NotificationStore.instance.fetchNotifications();
+      return NotificationStore.instance.notifications;
     } catch (e, stackTrace) {
       LoggingService.error(
         'Failed to load notifications',
@@ -89,17 +86,11 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
   }
 
   Future<void> _markAsRead(
-    String notificationId, {
+    int notificationId, {
     bool refresh = true,
   }) async {
     try {
-      await NotificationsTable().update(
-        data: {
-          'is_read': true,
-          'read_at': DateTime.now().toIso8601String(),
-        },
-        matchingRows: (rows) => rows.eq('id', notificationId),
-      );
+      await NotificationStore.instance.markAsRead(notificationId);
       if (refresh) {
         _loadNotifications();
         safeSetState(() {});
@@ -120,15 +111,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
 
     safeSetState(() => _isMarkingAllRead = true);
     try {
-      await NotificationsTable().update(
-        data: {
-          'is_read': true,
-          'read_at': DateTime.now().toIso8601String(),
-        },
-        matchingRows: (rows) => rows
-            .eq('user_id', currentUserUid)
-            .eq('is_read', false),
-      );
+      await NotificationStore.instance.markAllAsRead();
       await _refreshNotifications();
     } catch (e, stackTrace) {
       LoggingService.error(
@@ -151,7 +134,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
     }
   }
 
-  Future<void> _handleNotificationTap(NotificationsRow notification) async {
+  Future<void> _handleNotificationTap(AppNotification notification) async {
     if (!notification.isRead) {
       await _markAsRead(notification.id, refresh: false);
     }
@@ -176,9 +159,9 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
     safeSetState(() {});
   }
 
-  bool _openNotificationDestination(NotificationsRow notification) {
-    final actionUrl = notification.actionUrl?.trim() ?? '';
-    final metadata = notification.metadata ?? const <String, dynamic>{};
+  bool _openNotificationDestination(AppNotification notification) {
+    final actionUrl = notification.route?.trim() ?? '';
+    final metadata = notification.metadata;
 
     final bookingId = _stringFromMap(
       metadata,
@@ -247,7 +230,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
       return true;
     }
 
-    switch (notification.type.toLowerCase()) {
+    switch ((notification.type ?? '').toLowerCase()) {
       case 'booking':
         context.pushNamed(BookingsWidget.routeName);
         return true;
@@ -312,7 +295,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                   ),
                 ),
                 Expanded(
-                  child: FutureBuilder<List<NotificationsRow>>(
+                  child: FutureBuilder<List<AppNotification>>(
                     future: _notificationsFuture,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
@@ -522,7 +505,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
         ),
       );
 
-  Widget _buildNotificationCard(NotificationsRow notification) => GestureDetector(
+  Widget _buildNotificationCard(AppNotification notification) => GestureDetector(
         onTap: () => _handleNotificationTap(notification),
         child: Container(
           padding: const EdgeInsets.all(16),
@@ -597,7 +580,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      _formatTime(notification.createdAt),
+                      _formatTime(notification.createdAtDateTime),
                       style: AppTheme.of(context).labelSmall.override(
                             font: GoogleFonts.plusJakartaSans(),
                             color: AppTheme.of(context).textTertiary,

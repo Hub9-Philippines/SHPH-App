@@ -900,3 +900,26 @@ Material icons keyed to the live API category slugs.
 | Icon preview verified via standalone HTML (`explore_preview.html`); Masonry uses `Icons.layers_rounded` (the `bricks` ligature rendered a stray "s") | — | ✅ Done |
 | Verification: `flutter analyze` 0 errors | — | ✅ Done |
 
+### 13.11 Supabase-Stub → SHPH API Wiring (8 call sites)
+
+Wired the 8 remaining page-level `queryRows`/`update` call sites that still went
+through the no-op Supabase stub tables (which silently returned empty results) to
+the already-built SHPH API services. `flutter analyze` passes with **0 errors**.
+
+| Call site | Before (stub) | After (SHPH API) | Files |
+|-----------|---------------|------------------|-------|
+| Home saved addresses | `AddressesTable().queryRows` | `AddressesService.instance.getAddresses()` mapped via new `ApiRowMapper.addressToRow` (kept `FFAppState().getAddress` cache + selected-address sync) | `lib/main/home/home_widget.dart`, `lib/api/bridges/api_row_mapper.dart` |
+| Home notification count | `NotificationsTable().queryRows` | `NotificationStore.instance.fetchNotifications()` + `unreadCount` | `lib/main/home/home_model.dart` |
+| Edit-address bottom sheet | `AddressesTable().queryRows` | `AddressesService.instance.getAddresses()` → `AddressesRow` | `lib/components/edit_address/edit_address_widget.dart` |
+| My Notifications page | `NotificationsTable()` query/update | `NotificationStore.instance` (`fetchNotifications` / `markAsRead(int)` / `markAllAsRead`); `AppNotification` now parses `redirect_url`→`route`, `data`/`info`→`metadata`, exposes `createdAtDateTime` for the relative-time formatter; deep-link logic unchanged | `lib/pages/my_notifications/my_notifications_widget.dart`, `lib/services/notification_store.dart` |
+| Search page | `ServiceListingsTable().queryRows` (SQL `ilike`) | `ServiceListingService.instance.fetchServiceListings(search:)` mapped back to `ServiceListingsRow`; category/rating/price filtering stays local | `lib/pages/search_page/search_page_widget.dart` |
+| Bookings enrichment | `ServiceListingsTable().queryRows` (`inFilter`) | `ServiceListingService.instance.fetchServiceListingById(id)` per booking | `lib/main/bookings/bookings_model.dart` |
+| Service reviews list | `ReviewsTable().queryRows` | `ReviewsService.instance.getServiceReviews(listingId)` | `lib/pages/reviews/reviews_widget.dart` |
+| My Reviews | `ReviewsTable().queryRows` + `ServiceListingsTable()` | `ReviewsService.instance.getUserReviews()` (now real via new `ShphReviewsApi.listMyReviews()` → `/api/services/reviews/mine/`) + per-id listing lookup | `lib/pages/my_reviews/my_reviews_widget.dart`, `lib/services/reviews_service.dart`, `lib/api/resources/favorites_api.dart` |
+
+**API-gap findings from this pass:**
+- `PaymentMethodsTable` (payment_methods model + add-card/add-ewallet + pro dashboard) — no `/api/payments/methods/` endpoint in `SHPH API.yaml` (still blocked).
+- `my_reviews` client review history — `/api/services/reviews/mine/` is **provider-only**; clients get an honest empty list.
+- `nearby_pro_mock_data.dart` still drives services/booking-controller/live-matching geo-matching (mock data, deferred).
+- `docs/api_gaps.md` is stale (claims `preferShphApi=false`; it's `true`) — should be updated or deleted.
+

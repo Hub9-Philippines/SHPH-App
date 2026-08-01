@@ -8,6 +8,8 @@ import '/backend/supabase/database/tables/service_listings.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/logging_service.dart';
+import '/services/reviews_service.dart';
+import '/services/service_listing_service.dart';
 import '/theme/app_theme.dart';
 import 'my_reviews_model.dart';
 
@@ -46,22 +48,37 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
     }
 
     try {
-      final reviews = await ReviewsTable().queryRows(
-        queryFn: (q) => q
-            .eq('user_id', currentUserUid)
-            .order('created_at', ascending: false),
-      );
+      final reviews = await ReviewsService.instance.getUserReviews();
       if (reviews.isEmpty) {
         return [];
       }
 
       final serviceIds = reviews.map((review) => review.serviceListingId).toSet();
-      final services = await ServiceListingsTable().queryRows(
-        queryFn: (q) => q.inFilter('id', serviceIds.toList()),
-      );
-      final serviceById = {
-        for (final service in services) service.id: service,
-      };
+      final serviceById = <int, ServiceListingsRow>{};
+      for (final id in serviceIds) {
+        final listing = await ServiceListingService.instance
+            .fetchServiceListingById(id);
+        if (listing != null) {
+          serviceById[id] = ServiceListingsRow({
+            'id': listing.id,
+            'category': listing.category,
+            'category_name': listing.categoryName,
+            'provider': listing.provider,
+            'provider_name': listing.providerName,
+            'provider_photo': listing.providerPhoto,
+            'title': listing.title,
+            'description': listing.description,
+            'base_price': listing.basePrice,
+            'price_unit': listing.priceUnit,
+            'status': listing.status,
+            'is_available': listing.isAvailable ?? 'true',
+            'rating': listing.rating,
+            'thumbnail': listing.thumbnail,
+            'review_count': listing.reviewCount ?? 0,
+            'is_time_material': listing.isTimeMaterial,
+          });
+        }
+      }
 
       return reviews
           .map(
