@@ -321,7 +321,9 @@ class _SignupWidgetState extends State<SignupWidget> {
                           _model.middleNameTextController.text.trim(),
                       lastName: _model.lastNameTextController.text.trim(),
                       phoneNumber: phoneNumberVal,
-                      role: 'client',
+                      role: FFAppState().tempsignuprole.isNotEmpty
+                          ? FFAppState().tempsignuprole
+                          : 'client',
                     );
                     _model.isLoading = false;
                     safeSetState(() {});

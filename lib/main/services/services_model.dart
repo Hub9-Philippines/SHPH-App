@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '/backend/supabase/database/tables/service_listings.dart';
+import '/api/resources/services_api.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/logging_service.dart';
 import '/services/nearby_pro_mock_data.dart';
@@ -63,12 +63,11 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
 
   Future<void> _loadServicesFromDatabase() async {
     try {
-      final services = await ServiceListingsTable().queryRows(
-        queryFn: (q) =>
-            q.eq('is_available', 'true').order('rating', ascending: false),
-      );
+      final services = await ShphServicesApi.instance
+          .listListings(ordering: '-rating', pageSize: 100);
+      final listings = services.results;
 
-      allServices = services.map((service) {
+      allServices = listings.map((service) {
         final nearByPros = NearbyProMockData.instance.generateNearbyPros(
           serviceId: service.id,
           category: service.categoryName ?? 'Service',
@@ -94,7 +93,7 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
               nearest?['providerName'] ?? service.providerName ?? 'Provider',
           'providerPhoto':
               nearest?['providerPhoto'] ?? service.providerPhoto ?? '',
-          'isTimeMaterial': service.isTimeMaterial ?? false,
+          'isTimeMaterial': service.isTimeMaterial,
           'distanceKm': nearest?['distanceKm'] ?? 99.0,
           'distanceText': nearest?['distanceText'] ?? 'Unknown',
           'providerLatitude': nearest?['providerLatitude'],
@@ -106,7 +105,7 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
       filteredServices = List.from(allServices);
     } catch (e, stackTrace) {
       LoggingService.error(
-        'Error loading services from database',
+        'Error loading services from API',
         tag: 'ServicesModel',
         error: e,
         stackTrace: stackTrace,

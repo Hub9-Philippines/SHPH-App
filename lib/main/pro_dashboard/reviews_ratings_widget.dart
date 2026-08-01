@@ -688,7 +688,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
                   onPressed: onPressed,
                   style: FilledButton.styleFrom(
                     backgroundColor: accent,
-                    foregroundColor: AppTheme.of(context).secondaryBackground,
+                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -698,7 +698,7 @@ class _ReviewsRatingsWidgetState extends State<ReviewsRatingsWidget> {
                     actionLabel,
                     style: AppTheme.of(context).labelLarge.override(
                           font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
-                          color: AppTheme.of(context).secondaryBackground,
+                          color: Colors.white,
                         ),
                   ),
                 ),

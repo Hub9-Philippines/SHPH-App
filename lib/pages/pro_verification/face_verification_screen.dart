@@ -8,11 +8,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '/api/resources/kyc_api.dart';
 import '/auth/base_auth_user_provider.dart';
 import '/components/screen_header.dart';
-import '/services/profiles_service.dart';
+import '/index.dart';
+import '/services/kyc_submission_service.dart';
 import '/theme/app_theme.dart';
-import '../../services/face_verification/face_verification_service.dart';
 
 enum VerificationState {
   initial,
@@ -22,6 +23,9 @@ enum VerificationState {
   success,
   failed,
 }
+
+/// Default plan used when the server liveness challenge cannot be fetched.
+const List<String> kLocalLivenessPlan = ['centerFace', 'blink', 'smile'];
 
 class FaceVerificationScreen extends StatefulWidget {
   const FaceVerificationScreen({
@@ -54,14 +58,47 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
   bool _faceDetected = false;
   bool _isCapturing = false;
 
-  final FaceVerificationService _faceVerificationService =
-      FaceVerificationService();
+  final KycSubmissionService _kyc = KycSubmissionService.instance;
+
+  // Server-issued liveness challenge state.
+  List<String> _plan = [];
+  String? _nonce;
+  int _completedActions = 0;
+  double? _livenessScore;
+  Map<String, dynamic> _livenessMetadata = {};
 
   @override
   void dispose() {
     _cameraController?.dispose();
     _faceDetector?.close();
     super.dispose();
+  }
+
+  String? get _currentAction =>
+      _completedActions < _plan.length ? _plan[_completedActions] : null;
+
+  bool get _isLivenessComplete =>
+      _plan.isNotEmpty && _completedActions >= _plan.length;
+
+  /// Request the server liveness challenge; fall back to the local plan when
+  /// the API is unavailable (web parity: server plan drives the sequence).
+  Future<void> _loadLivenessPlan() async {
+    try {
+      final challenge = await ShphKycApi.instance.requestLivenessChallenge();
+      final plan = (challenge['plan'] as List?)
+          ?.map((e) => e.toString())
+          .where((e) => e.isNotEmpty)
+          .toList();
+      _nonce = challenge['nonce'] as String?;
+      if (plan != null && plan.isNotEmpty) {
+        _plan = plan;
+        return;
+      }
+    } catch (e) {
+      // Fall through to the local plan.
+    }
+    _plan = List.of(kLocalLivenessPlan);
+    _nonce = null;
   }
 
   Future<void> _startVerification() async {
@@ -77,6 +114,11 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
       }
       await _faceDetector?.close();
       _faceDetector = null;
+
+      await _loadLivenessPlan();
+      _completedActions = 0;
+      _livenessScore = null;
+      _livenessMetadata = {};
 
       await Future.delayed(const Duration(milliseconds: 300));
 
@@ -112,7 +154,7 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
         ),
       );
 
-      _startFaceDetection();
+      _processCameraFrames();
 
       setState(() {
         _isLoading = false;
@@ -124,13 +166,6 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
         _isLoading = false;
       });
     }
-  }
-
-  void _startFaceDetection() {
-    if (_cameraController == null || !_cameraController!.value.isInitialized) {
-      return;
-    }
-    _processCameraFrames();
   }
 
   Future<void> _processCameraFrames() async {
@@ -162,6 +197,31 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
     }
   }
 
+  bool _actionSatisfied(String action, Face face) {
+    final rect = face.boundingBox;
+    switch (action) {
+      case 'centerFace':
+        final horizontalCenter = rect.center.dx;
+        final inMiddleThird = horizontalCenter > 90 && horizontalCenter < 210;
+        final largeEnough = rect.width >= 120;
+        return inMiddleThird && largeEnough;
+      case 'blink':
+        final leftClosed =
+            (face.leftEyeOpenProbability ?? 0.0) < 0.3;
+        final rightClosed =
+            (face.rightEyeOpenProbability ?? 0.0) < 0.3;
+        return leftClosed && rightClosed;
+      case 'smile':
+        return (face.smilingProbability ?? 0.0) > 0.6;
+      case 'turnLeft':
+        return (face.headEulerAngleY ?? 0.0) < -15;
+      case 'turnRight':
+        return (face.headEulerAngleY ?? 0.0) > 15;
+      default:
+        return true;
+    }
+  }
+
   Future<void> _detectFace(String imagePath) async {
     if (_faceDetector == null) return;
 
@@ -169,10 +229,31 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
       final inputImage = InputImage.fromFilePath(imagePath);
       final faces = await _faceDetector!.processImage(inputImage);
 
-      if (mounted) {
+      if (!mounted || _state != VerificationState.preview) return;
+
+      if (faces.isEmpty) {
         setState(() {
-          _faceDetected = faces.isNotEmpty;
+          _faceDetected = false;
         });
+        return;
+      }
+
+      final face = faces.first;
+      setState(() {
+        _faceDetected = true;
+      });
+
+      // Advance through the plan: satisfy the current action to move on.
+      final action = _currentAction;
+      if (action != null && !_isLivenessComplete) {
+        if (_actionSatisfied(action, face)) {
+          _completedActions++;
+          _livenessMetadata['$action'] = true;
+          setState(() {});
+          if (_isLivenessComplete) {
+            _livenessScore = 1.0;
+          }
+        }
       }
     } catch (e) {
       // Ignore detection errors
@@ -208,6 +289,23 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
         await _cameraController?.dispose();
         _cameraController = null;
 
+        // Persist selfie + liveness result only in the in-memory submission
+        // state (never SharedPreferences) — the backend is the source of truth.
+        final bytes = await savedImage.readAsBytes();
+        _kyc.setLivenessResult(
+          nonce: _nonce,
+          plan: _plan,
+          decision: 'pass',
+          score: _livenessScore,
+          metadata: {
+            ..._livenessMetadata,
+            'completed_actions': _plan,
+            'completed_at': DateTime.now().toIso8601String(),
+            'engine': 'google_mlkit_face_detection',
+          },
+          selfie: KycDocumentFile(bytes, 'selfie.jpg'),
+        );
+
         setState(() {
           _capturedImagePath = savedImage.path;
           _state = VerificationState.review;
@@ -239,38 +337,43 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
     setState(() => _state = VerificationState.uploading);
 
     try {
-      final userId = widget.userId ?? currentUser?.uid;
-      if (userId == null) {
-        throw Exception('User not authenticated');
+      if (!_kyc.hasRequiredDocuments) {
+        throw Exception('Missing required documents. Go back and upload them.');
+      }
+      if (_kyc.isLivenessBlocked) {
+        _resetLivenessForRetry();
+        throw Exception('Liveness verification did not pass. Please redo the face check.');
       }
 
-      final file = File(_capturedImagePath!);
-      final fileBytes = await file.readAsBytes();
-      final fileName =
-          '${DateTime.now().millisecondsSinceEpoch}_face_verification.jpg';
-
-      final imageUrl = await ProfilesService.instance
-          .uploadProfilePhoto(fileBytes, fileName);
-
-      await ProfilesService.instance.updateProfile({
-        'face_scan_url': imageUrl,
-        'verification_status': 'reviewing',
-        'face_scan_submitted_at': DateTime.now().toIso8601String(),
-      });
-
-      await _faceVerificationService.markAsVerified(userId);
+      await _kyc.submit();
 
       widget.onVerificationComplete?.call(_capturedImagePath!);
 
       if (mounted) {
-        context.goNamed('VerificationReviewing');
+        context.goNamed(VerificationReviewingWidget.routeName);
       }
     } catch (e) {
+      // A rejected/expired liveness challenge means the stored nonce is dead —
+      // reset liveness and ask the user to redo the face check.
+      final msg = e.toString().toLowerCase();
+      if (msg.contains('liveness') || msg.contains('challenge')) {
+        _resetLivenessForRetry();
+      }
       setState(() {
         _state = VerificationState.failed;
-        _errorMessage = 'Upload failed: $e';
+        _errorMessage = e.toString();
       });
     }
+  }
+
+  void _resetLivenessForRetry() {
+    _kyc.resetLiveness();
+    _plan = [];
+    _nonce = null;
+    _completedActions = 0;
+    _livenessScore = null;
+    _livenessMetadata = {};
+    _capturedImagePath = null;
   }
 
   void _retakePhoto() {
@@ -364,7 +467,7 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Text(
-                'We need to take a photo of your face to verify your identity. Please ensure you are in a well-lit area.',
+                'We need to take a photo of your face to verify your identity. Follow the on-screen actions to complete the liveness check.',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 14,
@@ -386,7 +489,8 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               ),
             ),
           ],
@@ -414,6 +518,23 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
         ],
       ),
     );
+  }
+
+  String get _currentActionLabel {
+    switch (_currentAction) {
+      case 'centerFace':
+        return 'Center your face in the frame';
+      case 'blink':
+        return 'Blink your eyes';
+      case 'smile':
+        return 'Smile';
+      case 'turnLeft':
+        return 'Turn your head to the left';
+      case 'turnRight':
+        return 'Turn your head to the right';
+      default:
+        return 'Position your face within the circle';
+    }
   }
 
   Widget _buildLoadingView() {
@@ -453,7 +574,9 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
                   height: 250,
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: _faceDetected ? theme.success : theme.primaryBackground,
+                      color: _faceDetected
+                          ? theme.success
+                          : theme.primaryBackground,
                       width: 4,
                     ),
                     borderRadius: BorderRadius.circular(125),
@@ -467,7 +590,8 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
                           )
                         : Icon(
                             Icons.face,
-                            color: theme.primaryBackground.withValues(alpha: 0.7),
+                            color:
+                                theme.primaryBackground.withValues(alpha: 0.7),
                             size: 60,
                           ),
                   ),
@@ -485,15 +609,29 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  _faceDetected
-                      ? 'Face detected! Ready to capture'
-                      : 'Position your face within the circle',
+                  _isLivenessComplete
+                      ? 'Liveness check passed! Ready to capture'
+                      : _faceDetected
+                          ? _currentActionLabel
+                          : 'Position your face within the circle',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: _faceDetected ? theme.success : theme.primaryText,
+                    color: _isLivenessComplete
+                        ? theme.success
+                        : theme.primaryText,
                   ),
                 ),
+                if (_plan.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Step ${_completedActions} of ${_plan.length}',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      color: theme.secondaryText,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -510,7 +648,8 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
                     ),
                     const SizedBox(width: 24),
                     ElevatedButton.icon(
-                      onPressed: _isCapturing ? null : _capturePhoto,
+                      onPressed:
+                          _isCapturing || !_isLivenessComplete ? null : _capturePhoto,
                       icon: _isCapturing
                           ? const SizedBox(
                               width: 20,
@@ -522,7 +661,7 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
                       label: Text(_isCapturing ? 'Capturing...' : 'Capture'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
-                            _faceDetected ? theme.success : theme.primary,
+                            _isLivenessComplete ? theme.success : theme.primary,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 32,
@@ -556,7 +695,8 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
               : Center(
                   child: Text(
                     'Image not found',
-                    style: GoogleFonts.plusJakartaSans(color: theme.secondaryText),
+                    style:
+                        GoogleFonts.plusJakartaSans(color: theme.secondaryText),
                   ),
                 ),
         ),
@@ -704,7 +844,8 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
                 child: Text(
                   _errorMessage!,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.plusJakartaSans(color: theme.secondaryText),
+                  style:
+                      GoogleFonts.plusJakartaSans(color: theme.secondaryText),
                 ),
               ),
             const SizedBox(height: 32),
@@ -715,7 +856,8 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
                   onPressed: () => context.pop(),
                   child: Text(
                     'Cancel',
-                    style: GoogleFonts.plusJakartaSans(color: theme.primaryText),
+                    style:
+                        GoogleFonts.plusJakartaSans(color: theme.primaryText),
                   ),
                 ),
                 const SizedBox(width: 16),

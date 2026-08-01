@@ -3,11 +3,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+
 import '/auth/base_auth_user_provider.dart';
+import '/api/resources/kyc_api.dart' show KycDocumentFile;
 import '/components/screen_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
-import '/services/profiles_service.dart';
+import '/services/auth_service.dart';
+import '/services/kyc_submission_service.dart';
 import '/theme/app_theme.dart';
 import 'document_scan_model.dart';
 
@@ -27,11 +30,14 @@ class _DocumentScanWidgetState extends State<DocumentScanWidget> {
   late DocumentScanModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final ImagePicker _imagePicker = ImagePicker();
+  late final KycSubmissionService _kyc = KycSubmissionService.instance;
 
   @override
   void initState() {
     super.initState();
     _model = createModel(context, DocumentScanModel.new);
+    _kyc.submitterRole =
+        AuthService.instance.isProvider ? 'provider' : 'customer';
   }
 
   @override
@@ -40,7 +46,7 @@ class _DocumentScanWidgetState extends State<DocumentScanWidget> {
     super.dispose();
   }
 
-  Future<void> _pickImage(ImageSource source) async {
+  Future<void> _pickImage(KycDocumentField field, ImageSource source) async {
     try {
       final image = await _imagePicker.pickImage(
         source: source,
@@ -49,53 +55,13 @@ class _DocumentScanWidgetState extends State<DocumentScanWidget> {
         maxHeight: 2048,
       );
       if (image != null) {
-        setState(() {
-          _model.selectedImage = File(image.path);
-        });
+        final bytes = await File(image.path).readAsBytes();
+        final name = '${DateTime.now().millisecondsSinceEpoch}_${field.name}.jpg';
+        _kyc.setDocument(field, KycDocumentFile(bytes, name));
+        safeSetState(() {});
       }
     } catch (e) {
       _showError('Failed to pick image: $e');
-    }
-  }
-
-  void _retakePhoto() {
-    setState(() {
-      _model.selectedImage = null;
-      _model.isUploading = false;
-    });
-  }
-
-  Future<void> _submitDocument() async {
-    if (_model.selectedImage == null) {
-      _showError('No image selected');
-      return;
-    }
-
-    setState(() => _model.isUploading = true);
-
-    try {
-      final userId = currentUser?.uid;
-      if (userId == null) {
-        throw Exception('User not authenticated');
-      }
-
-      final file = _model.selectedImage!;
-      final fileBytes = await file.readAsBytes();
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}_document.jpg';
-
-      final resp = await ProfilesService.instance
-          .submitKycDocument(documentBytes: fileBytes, fileName: fileName);
-
-      setState(() => _model.isUploading = false);
-
-      if (resp != null) {
-        if (mounted) _showSuccessAndNavigate();
-      } else {
-        _showError('Upload failed');
-      }
-    } catch (e) {
-      setState(() => _model.isUploading = false);
-      _showError('Upload failed: $e');
     }
   }
 
@@ -111,43 +77,12 @@ class _DocumentScanWidgetState extends State<DocumentScanWidget> {
     }
   }
 
-  void _showSuccessAndNavigate() {
-    final parentContext = context;
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.check_circle, color: AppTheme.of(context).success),
-            const SizedBox(width: 8),
-            const Text('Document Uploaded'),
-          ],
-        ),
-        content: const Text(
-          'Your document has been uploaded successfully. Next, we need to verify your identity with a face scan.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) {
-                  parentContext.pushNamedAuth(
-                    FaceVerificationScreen.routeName,
-                    mounted,
-                    ignoreRedirect: true,
-                  );
-                }
-              });
-            },
-            child: Text(
-              'Continue',
-              style: TextStyle(color: AppTheme.of(context).primary),
-            ),
-          ),
-        ],
-      ),
+  void _continueToLiveness() {
+    if (!_kyc.hasRequiredDocuments) return;
+    context.pushNamedAuth(
+      FaceVerificationScreen.routeName,
+      mounted,
+      ignoreRedirect: true,
     );
   }
 
@@ -170,12 +105,45 @@ class _DocumentScanWidgetState extends State<DocumentScanWidget> {
                   ),
                   _buildProgressIndicator(),
                   _buildHeader(),
-                  _buildDocumentPreview(),
+                  const SizedBox(height: 16),
+                  _buildDocSection(
+                    field: KycDocumentField.idFront,
+                    title: 'ID Front',
+                    subtitle: 'Front side of your government-issued ID',
+                    required: true,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildDocSection(
+                    field: KycDocumentField.idBack,
+                    title: 'ID Back',
+                    subtitle: 'Back side of your government-issued ID',
+                    required: true,
+                  ),
+                  if (_kyc.submitterRole == 'provider') ...[
+                    const SizedBox(height: 12),
+                    _buildDocSection(
+                      field: KycDocumentField.nbiClearance,
+                      title: 'NBI Clearance',
+                      subtitle: 'Required for service providers',
+                      required: true,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildDocSection(
+                      field: KycDocumentField.portfolio,
+                      title: 'Portfolio (optional)',
+                      subtitle: 'Showcase your past work',
+                      required: false,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildDocSection(
+                      field: KycDocumentField.resume,
+                      title: 'Resume (optional)',
+                      subtitle: 'Your professional background',
+                      required: false,
+                    ),
+                  ],
                   const SizedBox(height: 24),
-                  if (_model.selectedImage == null)
-                    _buildCaptureOptions()
-                  else
-                    _buildReviewActions(),
+                  _buildContinueButton(),
                   const SizedBox(height: 32),
                 ],
               ),
@@ -257,137 +225,131 @@ class _DocumentScanWidgetState extends State<DocumentScanWidget> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Please take a clear photo of your valid government-issued ID (Driver\'s License, Passport, or National ID). Ensure all details are visible and readable.',
+              'Please take a clear photo of your valid government-issued ID. Capture both the front and back sides, and ensure all details are visible and readable.',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 14,
                 color: AppTheme.of(context).secondaryText,
               ),
             ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppTheme.of(context)
-                    .primary
-                    .withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildRequirementItem('ID must be valid and not expired'),
-                  _buildRequirementItem('All text must be clearly readable'),
-                  _buildRequirementItem('All four corners must be visible'),
-                  _buildRequirementItem(
-                      'No glare or shadows on the document'),
-                ],
-              ),
-            ),
           ],
         ),
       );
 
-  Widget _buildRequirementItem(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 4),
-        child: Row(
-          children: [
-            Icon(
-              Icons.check_circle,
-              color: AppTheme.of(context).primary,
-              size: 16,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                text,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12,
-                  color: AppTheme.of(context).primary,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
+  Widget _buildDocSection({
+    required KycDocumentField field,
+    required String title,
+    required String subtitle,
+    required bool required,
+  }) {
+    final theme = AppTheme.of(context);
+    final file = _kyc.document(field);
 
-  Widget _buildDocumentPreview() => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-        child: Container(
-          width: double.infinity,
-          height: 240,
-          decoration: BoxDecoration(
-            color: AppTheme.of(context).secondaryBackground,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: _model.selectedImage != null
-                  ? AppTheme.of(context).primary
-                  : AppTheme.of(context).primaryText.withValues(alpha: 0.2),
-              width: 2,
-            ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.secondaryBackground,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: file != null
+                ? theme.success.withValues(alpha: 0.6)
+                : theme.alternate,
+            width: 1.5,
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(14),
-            child: _model.selectedImage != null
-                ? Image.file(
-                    _model.selectedImage!,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
-                  )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        Icons.credit_card,
-                        size: 64,
-                        color: AppTheme.of(context)
-                            .primaryText
-                            .withValues(alpha: 0.3),
+                      Row(
+                        children: [
+                          Text(
+                            title,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                              color: theme.primaryText,
+                            ),
+                          ),
+                          if (required) ...[
+                            const SizedBox(width: 6),
+                            Text(
+                              '*',
+                              style: GoogleFonts.plusJakartaSans(
+                                color: theme.error,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 4),
                       Text(
-                        'ID Card Preview',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 14,
-                          color: AppTheme.of(context).secondaryText,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Select an option below',
+                        subtitle,
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 12,
-                          color: AppTheme.of(context).secondaryText,
+                          color: theme.secondaryText,
                         ),
                       ),
                     ],
                   ),
-          ),
-        ),
-      );
-
-  Widget _buildCaptureOptions() => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Row(
-          children: [
-            Expanded(
-              child: _buildCaptureButton(
-                icon: Icons.camera_alt,
-                label: 'Take Photo',
-                onTap: () => _pickImage(ImageSource.camera),
-              ),
+                ),
+                if (file != null)
+                  Icon(Icons.check_circle, color: theme.success, size: 20),
+              ],
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildCaptureButton(
-                icon: Icons.photo_library,
-                label: 'Gallery',
-                onTap: () => _pickImage(ImageSource.gallery),
+            const SizedBox(height: 12),
+            if (file == null)
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildCaptureButton(
+                      icon: Icons.camera_alt,
+                      label: 'Camera',
+                      onTap: () => _pickImage(field, ImageSource.camera),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildCaptureButton(
+                      icon: Icons.photo_library,
+                      label: 'Gallery',
+                      onTap: () => _pickImage(field, ImageSource.gallery),
+                    ),
+                  ),
+                ],
+              )
+            else
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        _kyc.setDocument(field, null);
+                        safeSetState(() {});
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Retake'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: theme.primaryText,
+                        side: BorderSide(color: theme.alternate),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
           ],
         ),
-      );
+      ),
+    );
+  }
 
   Widget _buildCaptureButton({
     required IconData icon,
@@ -397,32 +359,17 @@ class _DocumentScanWidgetState extends State<DocumentScanWidget> {
       InkWell(
         onTap: onTap,
         child: Container(
-          height: 120,
+          height: 56,
           decoration: BoxDecoration(
-            color: AppTheme.of(context).secondaryBackground,
+            color: AppTheme.of(context).primary.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: AppTheme.of(context).primary,
-              width: 2,
-            ),
+            border: Border.all(color: AppTheme.of(context).primary, width: 1.5),
           ),
-          child: Column(
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppTheme.of(context).primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  icon,
-                  color: AppTheme.of(context).primary,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(height: 12),
+              Icon(icon, color: AppTheme.of(context).primary, size: 20),
+              const SizedBox(width: 8),
               Text(
                 label,
                 style: GoogleFonts.plusJakartaSans(
@@ -436,83 +383,27 @@ class _DocumentScanWidgetState extends State<DocumentScanWidget> {
         ),
       );
 
-  Widget _buildReviewActions() => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppTheme.of(context).accent2,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.visibility,
-                    color: AppTheme.of(context).primary,
-                    size: 16,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Preview Mode',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                      color: AppTheme.of(context).primary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            if (_model.isUploading)
-              Column(
-                children: [
-                  const CircularProgressIndicator(),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Uploading document...',
-                    style: GoogleFonts.plusJakartaSans(
-                      color: AppTheme.of(context).secondaryText,
-                    ),
-                  ),
-                ],
-              )
-            else ...[
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _retakePhoto,
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Retake'),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: BorderSide(
-                            color: AppTheme.of(context).alternate),
-                        foregroundColor: AppTheme.of(context).primaryText,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: _submitDocument,
-                      icon: const Icon(Icons.check),
-                      label: const Text('Submit'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.of(context).primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ],
+  Widget _buildContinueButton() {
+    final theme = AppTheme.of(context);
+    final ready = _kyc.hasRequiredDocuments;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: SizedBox(
+        width: double.infinity,
+        height: 52,
+        child: ElevatedButton.icon(
+          onPressed: ready ? _continueToLiveness : null,
+          icon: const Icon(Icons.arrow_forward),
+          label: Text(ready ? 'Continue to Face Verification' : 'Complete required documents'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: theme.primary,
+            foregroundColor: Colors.white,
+            disabledBackgroundColor: theme.alternate,
+            disabledForegroundColor: theme.secondaryText,
+            elevation: 0,
+          ),
         ),
-      );
+      ),
+    );
+  }
 }

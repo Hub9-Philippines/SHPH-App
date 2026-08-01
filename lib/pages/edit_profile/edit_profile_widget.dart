@@ -318,7 +318,7 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
                           height: 50,
                           color: AppTheme.of(context).primary,
                           textStyle: AppTheme.of(context).titleSmall.override(
-                                color: AppTheme.of(context).secondaryBackground,
+                                color: Colors.white,
                                 font: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.w600),
                               ),

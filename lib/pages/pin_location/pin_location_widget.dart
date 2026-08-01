@@ -128,7 +128,7 @@ class _PinLocationWidgetState extends State<PinLocationWidget> {
                         fillColor: AppTheme.of(context).primary,
                         icon: Icon(
                           Icons.location_pin,
-                          color: AppTheme.of(context).info,
+                          color: AppTheme.of(context).onPrimary,
                           size: 24,
                         ),
                         onPressed: () async {

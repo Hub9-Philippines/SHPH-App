@@ -12,8 +12,11 @@ import '/main.dart';
 import '/models/service_listing.dart';
 import '/pages/booking_funnel/booking_models.dart';
 import '/pages/geographic_selection/geographic_selection_widget.dart';
+import '/services/provider_verification_service.dart';
 
-// Helper function to fetch user profile for role-based routing
+// Helper function to fetch user profile for role-based routing.
+// The /auth/me/ (getMe) response carries the real account capabilities:
+// `is_provider`, `is_client`, `kyc_skipped`, `role`, `display_name`, etc.
 Future<Map<String, dynamic>?> _fetchUserProfile(String userId) async {
   try {
     final data = await ShphUsersApi.instance.getMe();
@@ -25,7 +28,11 @@ Future<Map<String, dynamic>?> _fetchUserProfile(String userId) async {
     }
     return {
       'role': profile['role'],
+      'is_provider': profile['is_provider'],
+      'is_client': profile['is_client'],
+      'kyc_skipped': profile['kyc_skipped'],
       'verification_status': profile['verification_status'],
+      'kyc_status': profile['kyc_status'],
       'email': profile['email'],
       'display_name': profile['display_name'],
       'is_profile_complete': profile['is_profile_complete'],
@@ -37,72 +44,110 @@ Future<Map<String, dynamic>?> _fetchUserProfile(String userId) async {
   }
 }
 
-// Determine pro user verification state based on 4-state lifecycle
-String? _getProUserRedirect(Map<String, dynamic> profile, String currentPath) {
-  final role = profile['role'] as String?;
-  final verificationStatus = profile['verification_status'] as String?;
-  final isVerified = profile['is_verified'] as bool? ?? false;
-  final isFaceVerified = profile['is_face_verified'] as bool? ?? false;
-  final email = profile['email'] as String?;
-  final displayName = profile['display_name'] as String?;
-  final firstName = profile['first_name'] as String?;
-  final lastName = profile['last_name'] as String?;
-  final isProfileComplete = profile['is_profile_complete'] as bool?;
+/// Paths that are part of the KYC lifecycle or onboarding funnel and must not
+/// be lifecycle-redirected (mirrors web's `kycRouteNames` skip list plus the
+/// profile-setup target to avoid redirect loops).
+const List<String> _kycFlowPaths = [
+  '/eKYCBegin',
+  '/iDVerify',
+  '/pro-verify-doc',
+  '/face-verification',
+  '/kyc',
+];
 
-  if (role != 'pro') {
-    return null; // Not a pro user, no special redirect
-  }
-
-  // Allow access to verification-related pages without redirecting
-  final allowedVerificationPaths = [
-    '/pro-unverified-landing',
-    '/pro-verify-face',
-    '/pro-verify-doc',
-    '/pro-verification-progress',
-    '/pro-profile-setup-form',
-    '/face-verification',
-    '/pro-dashboard',
-  ];
-  if (allowedVerificationPaths.any((path) => currentPath.startsWith(path))) {
+/// Provider lifecycle resolution used by the redirect guard. Returns a
+/// redirect path when the provider is not in the expected state for the
+/// requested path, or `null` to allow the navigation.
+Future<String?> _resolveProviderRedirectAsync(
+  Map<String, dynamic> profile,
+  String currentPath,
+) async {
+  if (profile['is_provider'] != true) {
     return null;
   }
-
-  // State 1: incomplete profile - redirect to complete profile
-  // This applies when profile is not marked complete or missing essential fields
-  final hasName = (displayName != null && displayName.isNotEmpty) ||
-      (firstName != null && firstName.isNotEmpty) ||
-      (lastName != null && lastName.isNotEmpty);
-  final isProfileIncomplete =
-      email == null || !hasName || isProfileComplete != true;
-
-  // Redirect to profile setup if incomplete
-  if (isProfileIncomplete) {
-    return '/pro-profile-setup-form';
+  if (_kycFlowPaths.any((path) => currentPath.startsWith(path))) {
+    return null;
   }
+  final redirect =
+      await ProviderVerificationService.instance.resolveProviderRedirect(profile);
+  return redirect == currentPath ? null : redirect;
+}
 
-  // State 2: unverified
-  if (verificationStatus == null || verificationStatus == 'unverified') {
-    return '/pro-unverified-landing';
+/// Route gating requirements (web `beforeEach` meta parity). Keyed by path
+/// prefix so GoRoute definitions stay unchanged.
+class _RouteGates {
+  const _RouteGates({
+    this.requiresProvider = false,
+    this.requiresClient = false,
+    this.requiresKyc = false,
+  });
+
+  final bool requiresProvider;
+  final bool requiresClient;
+  final bool requiresKyc;
+
+  bool get requiresAuth => requiresProvider || requiresClient || requiresKyc;
+}
+
+const _RouteGates _noGates = _RouteGates();
+
+/// Provider-only route prefixes.
+const List<String> _providerPathPrefixes = [
+  '/pro-',
+  '/face-verification',
+  '/iDVerify',
+  '/eKYCBegin',
+  '/kyc',
+];
+
+/// Paths that act as a provider's home (web: Home ↔ ProviderDashboard). The
+/// lifecycle runs on these so a provider can never idle on the client shell.
+const List<String> _providerHomePaths = ['/pro-dashboard', '/', '/home'];
+
+/// Client-only routes (kept minimal — shared shells like home/messages/profile
+/// must remain reachable by providers).
+const List<String> _clientOnlyPaths = [
+  '/booking',
+  '/booking-payment',
+  '/bookings',
+  '/write-review',
+  '/favorites',
+  '/my-reviews',
+  '/client-on-demand-jobs',
+  '/wallet',
+  '/payment-methods',
+  '/addresses',
+];
+
+/// Routes that gate a real action requiring verified KYC (e.g. posting a
+/// service). A KYC-skipped provider is sent to the KYC intro from here.
+const List<String> _requiresKycPaths = [
+  '/create-service',
+  '/my-services',
+  '/earnings',
+  '/provider-analytics',
+  '/provider-bids',
+  '/provider-booking-flow',
+];
+
+_RouteGates _gatesForPath(String path) {
+  var gates = _noGates;
+  if (_providerPathPrefixes.any(path.startsWith)) {
+    gates = _RouteGates(requiresProvider: true);
   }
-
-  // State 3: pending or reviewing
-  if (verificationStatus == 'pending' || verificationStatus == 'reviewing') {
-    return '/pro-verification-progress';
+  if (_clientOnlyPaths.any((p) => path.startsWith(p))) {
+    gates = _RouteGates(
+      requiresClient: true,
+      requiresProvider: gates.requiresProvider,
+    );
   }
-
-  // State 4: fully verified - redirect to pro dashboard
-  // All verification checks must pass
-  if (verificationStatus == 'verified' && isVerified && isFaceVerified) {
-    return '/pro-dashboard';
+  if (_requiresKycPaths.any((p) => path.startsWith(p))) {
+    gates = _RouteGates(
+      requiresProvider: true,
+      requiresKyc: true,
+    );
   }
-
-  // State 5: partially verified - still needs verification
-  if (verificationStatus == 'verified' && (!isVerified || !isFaceVerified)) {
-    return '/pro-unverified-landing';
-  }
-
-  // Default to unverified if status is unknown
-  return '/pro-unverified-landing';
+  return gates;
 }
 
 class AppRouter {
@@ -453,6 +498,11 @@ class AppRouter {
             path: DocumentScanWidget.routePath,
             name: DocumentScanWidget.routeName,
             builder: (context, state) => const DocumentScanWidget(),
+          ),
+          GoRoute(
+            path: IDVerifyWidget.routePath,
+            name: IDVerifyWidget.routeName,
+            builder: (context, state) => const IDVerifyWidget(),
           ),
           GoRoute(
             path: FaceVerificationScreen.routePath,
@@ -907,19 +957,66 @@ class RoleBasedRedirectGuard {
       return redirectLocation;
     }
 
-    // Role-based routing logic with 4-state pro account lifecycle
-    if (appStateNotifier.loggedIn) {
-      final userId = currentUser?.uid;
-      if (userId != null) {
-        final userProfile = await _fetchUserProfile(userId);
-        if (userProfile != null) {
-          final currentPath = state.uri.toString();
-          final proRedirect = _getProUserRedirect(userProfile, currentPath);
+    final currentPath = state.uri.toString();
+    final gates = _gatesForPath(currentPath);
 
-          if (proRedirect != null) {
-            return proRedirect;
-          }
+    // Auth gate: role/kyc-gated routes require a logged-in session (web parity).
+    if (!appStateNotifier.loggedIn) {
+      if (gates.requiresAuth) {
+        return SigninWidget.routePath;
+      }
+      return null;
+    }
+
+    final userId = currentUser?.uid;
+    if (userId == null) {
+      return null;
+    }
+
+    final userProfile = await _fetchUserProfile(userId);
+    if (userProfile == null) {
+      return null;
+    }
+
+    final isProvider = userProfile['is_provider'] == true;
+    final isClient = userProfile['is_client'] == true;
+
+    // Role gates (web `beforeEach` parity).
+    if (gates.requiresProvider && !isProvider) {
+      return HomeWidget.routePath;
+    }
+    if (gates.requiresClient && !isClient) {
+      return HomeWidget.routePath;
+    }
+
+    // Provider 4-state lifecycle.
+    if (gates.requiresProvider && isProvider) {
+      final redirect =
+          await _resolveProviderRedirectAsync(userProfile, currentPath);
+      if (redirect != null) {
+        // A KYC-skipped provider on a KYC-gated route goes to the KYC intro.
+        if (gates.requiresKyc && redirect == '/pro-dashboard') {
+          return EKYCBeginWidget.routePath;
         }
+        return redirect;
+      }
+    }
+
+    // Home-by-mode: a provider on the client shell / provider dashboard is
+    // lifecycle-redirected (web `beforeEach` home↔dashboard parity).
+    if (isProvider && _providerHomePaths.contains(currentPath)) {
+      final redirect =
+          await _resolveProviderRedirectAsync(userProfile, currentPath);
+      if (redirect != null) {
+        // The provider shell at `/`/`/home` IS this app's provider dashboard;
+        // a verified or KYC-skipped provider stays put instead of bouncing to
+        // the standalone /pro-dashboard page.
+        if (redirect == ProDashboardWidget.routePath &&
+            (currentPath == '/' ||
+                currentPath == HomeWidget.routePath)) {
+          return null;
+        }
+        return redirect;
       }
     }
 

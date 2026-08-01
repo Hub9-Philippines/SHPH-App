@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 
-import '../backend/supabase/database/database.dart';
+import '../api/resources/users_api.dart';
 import '../flutter_flow/auth_logger.dart';
 import '../flutter_flow/nav/nav.dart';
 import '../index.dart';
+import '../services/auth_service.dart';
+import '../services/provider_verification_service.dart';
 
-/// Handles post-authentication navigation based on profile completeness and account type
+/// Handles post-authentication navigation based on profile completeness and
+/// account type (web `usePostAuthNavigation` parity).
 ///
-/// This flow handles routing after successful phone verification:
-/// 1. If name not populated → CreateProfile
-/// 2. If name exists and account type is 'pro' or 'both' → EKYCBegin
-/// 3. Otherwise → Home
+/// This flow handles routing after a successful login/verification:
+/// 1. Client account → Home.
+/// 2. Provider account → the 4-state lifecycle resolved by
+///    [ProviderVerificationService]: profile → KYC intro → review → dashboard.
 class PostAuthNavigationFlow {
   factory PostAuthNavigationFlow() => _instance;
 
@@ -18,15 +21,33 @@ class PostAuthNavigationFlow {
   static final PostAuthNavigationFlow _instance =
       PostAuthNavigationFlow._internal();
 
-  /// Check profile completeness and route to appropriate page
+  /// Ensure [AuthService] carries the session user (reads `/auth/me/`).
+  Future<Map<String, dynamic>?> _ensureUser() async {
+    final authService = AuthService.instance;
+    if (authService.currentUser != null) {
+      return authService.currentUser;
+    }
+    try {
+      final data = await ShphUsersApi.instance.getMe();
+      final profile = data['profile'] is Map<String, dynamic>
+          ? data['profile'] as Map<String, dynamic>
+          : data;
+      authService.adoptUser(profile);
+      return profile;
+    } catch (e) {
+      AuthLogger.error(
+        'Failed to load user for post-auth navigation: $e',
+        tag: 'PostAuthNavigationFlow',
+        error: e,
+      );
+      return null;
+    }
+  }
+
+  /// Check profile completeness and route to the appropriate page.
   ///
   /// Returns:
   ///   - Does not return; handles routing internally
-  ///
-  /// Routes to:
-  ///   - CreateProfile: if displayName is not populated
-  ///   - EKYCBegin: if profile complete and account type is pro or both
-  ///   - Home: if profile complete and account type is not pro/both
   Future<void> handlePostAuthNavigation({
     required BuildContext context,
     required String userId,
@@ -37,79 +58,50 @@ class PostAuthNavigationFlow {
         tag: 'PostAuthNavigationFlow',
       );
 
-      // Fetch user profile to check completion status
-      final profiles = await ProfilesTable().queryRows(
-        queryFn: (q) => q.eq('id', userId),
-        limit: 1,
-      );
+      final authService = AuthService.instance;
+      final user = await _ensureUser();
 
-      if (profiles.isEmpty) {
+      if (user == null) {
         AuthLogger.warning(
-          'No profile found for user $userId. Routing to CreateProfile.',
-          tag: 'PostAuthNavigationFlow',
-        );
-        if (context.mounted) {
-          context.goNamed(CreateProfileWidget.routeName);
-        }
-        return;
-      }
-
-      final profile = profiles.first;
-      final displayName = profile.displayName ?? '';
-      final firstName = profile.firstName ?? '';
-      final lastName = profile.lastName ?? '';
-      final accountType = profile.role;
-      final isVerified = profile.isVerified ?? false;
-      final isFaceVerified = profile.isFaceVerified ?? false;
-      final verificationStatus = profile.verificationStatus ?? 'unverified';
-
-      // Check if user has any name set (displayName or firstName/lastName)
-      final hasName = displayName.isNotEmpty ||
-          (firstName.isNotEmpty || lastName.isNotEmpty);
-
-      // If no name set, user needs to create/complete profile
-      if (!hasName) {
-        AuthLogger.info(
-          'No name populated for user $userId. Routing to CreateProfile.',
-          tag: 'PostAuthNavigationFlow',
-        );
-        if (context.mounted) {
-          context.goNamed(CreateProfileWidget.routeName);
-        }
-        return;
-      }
-
-      // Profile name exists, check account type and verification status
-      if (accountType == 'pro' || accountType == 'both') {
-        // Check if fully verified - route to ProDashboard
-        final isFullyVerified =
-            isVerified && isFaceVerified && verificationStatus == 'verified';
-
-        if (isFullyVerified) {
-          AuthLogger.info(
-            'Profile complete and fully verified. Routing to ProDashboard.',
-            tag: 'PostAuthNavigationFlow',
-          );
-          if (context.mounted) {
-            context.goNamed(ProDashboardWidget.routeName);
-          }
-        } else {
-          AuthLogger.info(
-            'Profile complete but not fully verified (verified: $isVerified, face: $isFaceVerified, status: $verificationStatus). Routing to EKYCBegin.',
-            tag: 'PostAuthNavigationFlow',
-          );
-          if (context.mounted) {
-            await context.pushNamed(EKYCBeginWidget.routeName);
-          }
-        }
-      } else {
-        AuthLogger.info(
-          'Profile complete and account type is $accountType. Routing to Home.',
+          'No user profile available. Routing to Home.',
           tag: 'PostAuthNavigationFlow',
         );
         if (context.mounted) {
           context.goNamedAuth(HomeWidget.routeName, context.mounted);
         }
+        return;
+      }
+
+      // Client (and non-provider) accounts land on Home.
+      if (authService.isProvider != true) {
+        AuthLogger.info(
+          'Client account. Routing to Home.',
+          tag: 'PostAuthNavigationFlow',
+        );
+        if (context.mounted) {
+          context.goNamedAuth(HomeWidget.routeName, context.mounted);
+        }
+        return;
+      }
+
+      // Provider: resolve the 4-state lifecycle.
+      final redirect = await ProviderVerificationService.instance
+          .resolveProviderRedirect(user);
+      AuthLogger.info(
+        'Provider verification state resolved to: $redirect',
+        tag: 'PostAuthNavigationFlow',
+      );
+      if (!context.mounted) return;
+
+      switch (redirect) {
+        case '/createProfile':
+          context.goNamed(CreateProfileWidget.routeName);
+        case '/eKYCBegin':
+          context.goNamed(EKYCBeginWidget.routeName);
+        case '/pro-verification-progress':
+          context.goNamed(VerificationReviewingWidget.routeName);
+        default:
+          context.goNamed(ProDashboardWidget.routeName);
       }
     } catch (e) {
       AuthLogger.error(
@@ -131,55 +123,35 @@ class PostAuthNavigationFlow {
     }
   }
 
-  /// Alternative method: Check if profile is complete without routing
+  /// Alternative method: Check if profile is complete without routing.
   ///
-  /// Useful if you want to handle routing elsewhere
+  /// Useful if you want to handle routing elsewhere.
   ///
   /// Returns:
   ///   - 'needs_profile': User needs to complete profile
-  ///   - 'needs_kyc': User profile is complete but needs KYC (pro/both account)
-  ///   - 'ready_pro_dashboard': User is fully verified pro, ready for dashboard
+  ///   - 'needs_kyc': User profile is complete but needs KYC (provider)
+  ///   - 'ready_pro_dashboard': User is a verified (or KYC-skipped) provider
   ///   - 'ready_home': User can proceed to home
   Future<String> checkProfileStatus(String userId) async {
     try {
-      final profiles = await ProfilesTable().queryRows(
-        queryFn: (q) => q.eq('id', userId),
-        limit: 1,
-      );
+      final authService = AuthService.instance;
+      final user = await _ensureUser();
+      if (user == null) return 'needs_profile';
 
-      if (profiles.isEmpty) {
-        return 'needs_profile';
+      if (authService.isProvider != true) {
+        return 'ready_home';
       }
 
-      final profile = profiles.first;
-      final displayName = profile.displayName ?? '';
-      final firstName = profile.firstName ?? '';
-      final lastName = profile.lastName ?? '';
-      final accountType = profile.role;
-      final isVerified = profile.isVerified ?? false;
-      final isFaceVerified = profile.isFaceVerified ?? false;
-      final verificationStatus = profile.verificationStatus ?? 'unverified';
-
-      // Check if user has any name set
-      final hasName = displayName.isNotEmpty ||
-          (firstName.isNotEmpty || lastName.isNotEmpty);
-
-      if (!hasName) {
-        return 'needs_profile';
-      }
-
-      if (accountType == 'pro' || accountType == 'both') {
-        // Check if fully verified
-        final isFullyVerified =
-            isVerified && isFaceVerified && verificationStatus == 'verified';
-
-        if (isFullyVerified) {
+      final redirect = await ProviderVerificationService.instance
+          .resolveProviderRedirect(user);
+      switch (redirect) {
+        case '/createProfile':
+          return 'needs_profile';
+        case '/eKYCBegin':
+          return 'needs_kyc';
+        default:
           return 'ready_pro_dashboard';
-        }
-        return 'needs_kyc';
       }
-
-      return 'ready_home';
     } catch (e) {
       AuthLogger.error(
         'Error checking profile status: $e',

@@ -60,6 +60,7 @@ class ShphAuthManager extends AuthManager
     String? phoneNumber,
     String role = 'client',
   }) async {
+    final mapped = _mapSignupRole(role);
     final deviceInfo = await DeviceInfoService.instance.getDeviceInfo();
     await _authService.registerInitiate(
       payload: {
@@ -69,12 +70,32 @@ class ShphAuthManager extends AuthManager
         'email': email,
         if (phoneNumber != null) 'phone_number': phoneNumber,
         'password': password,
-        'role': role,
+        'role': mapped.role,
+        if (mapped.isProvider != null) 'is_provider': mapped.isProvider,
+        if (mapped.isClient != null) 'is_client': mapped.isClient,
         'device_info': deviceInfo,
       },
     );
     // Session completes only after the OTP verify step (registerVerify).
     return null;
+  }
+
+  /// Maps the SignOptions selection (`client`/`pro`/`provider`/`both`) onto the
+  /// backend register payload, matching web `RegisterPage.vue`:
+  ///   - client   → role: client
+  ///   - provider → role: provider
+  ///   - both     → role: provider + is_provider + is_client flags
+  ({String role, bool? isProvider, bool? isClient}) _mapSignupRole(String raw) {
+    switch (raw.trim().toLowerCase()) {
+      case 'pro':
+      case 'provider':
+        return (role: 'provider', isProvider: null, isClient: null);
+      case 'both':
+        return (role: 'provider', isProvider: true, isClient: true);
+      case 'client':
+      default:
+        return (role: 'client', isProvider: null, isClient: null);
+    }
   }
 
   @override
@@ -114,6 +135,7 @@ class ShphAuthManager extends AuthManager
       pin: smsCode,
     );
     final userMap = data['user'] as Map<String, dynamic>? ?? data;
+    _authService.adoptUser(userMap);
     final user = SerbisyoHubPHShphUser(userMap);
     currentUser = user;
     return user;

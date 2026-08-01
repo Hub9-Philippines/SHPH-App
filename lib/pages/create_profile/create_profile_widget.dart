@@ -17,6 +17,7 @@ import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
 import '/services/error_handler.dart';
 import '/services/logging_service.dart';
+import '/services/auth_service.dart';
 import '/theme/app_theme.dart';
 import 'create_profile_model.dart';
 
@@ -1092,7 +1093,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                             AppTheme.of(context).secondaryText,
                                       ),
                                       activeColor: AppTheme.of(context).primary,
-                                      checkColor: AppTheme.of(context).info,
+                                      checkColor: AppTheme.of(context).onPrimary,
                                     ),
                                   ),
                                   Expanded(
@@ -1209,8 +1210,21 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                                 tag: 'CreateProfile',
                                               );
 
-                                              if (FFAppState().tempsignuprole !=
-                                                  'client') {
+                                              // Refresh the session user so the
+                                              // role getters / provider lifecycle
+                                              // reflect the saved profile.
+                                              await AuthService.instance
+                                                  .refreshCurrentUser();
+                                              if (!context.mounted) return;
+                                              final isProvider =
+                                                  AuthService.instance
+                                                          .isProvider ||
+                                                      FFAppState()
+                                                              .tempsignuprole
+                                                              .toLowerCase() !=
+                                                          'client';
+
+                                              if (isProvider) {
                                                 LoggingService.info(
                                                   'Navigating to EKYCBegin',
                                                   tag: 'CreateProfile',
@@ -1254,7 +1268,8 @@ EdgeInsetsDirectional.zero,
                                                   .titleMedium
                                                   .fontStyle,
                                             ),
-                                            color: AppTheme.of(context).info,
+                                            color:
+                                                AppTheme.of(context).onPrimary,
                                             letterSpacing: 0,
                                             fontWeight: FontWeight.w600,
                                             fontStyle: AppTheme.of(context)

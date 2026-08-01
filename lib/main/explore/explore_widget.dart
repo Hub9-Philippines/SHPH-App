@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '/components/categories_widget/categories_widget.dart';
-import '/components/category_pill.dart';
 import '/components/content_container.dart';
 import '/components/refreshable_page.dart';
 import '/components/screen_header.dart';
@@ -26,17 +25,7 @@ class _ExploreWidgetState extends State<ExploreWidget> with RefreshablePage<Expl
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
-  String? _selectedPill;
   int _refreshKey = 0;
-
-  static const _pills = [
-    'All',
-    'Cleaning',
-    'Plumbing',
-    'Electrical',
-    'Painting',
-    'Gardening',
-  ];
 
   @override
   void initState() {
@@ -77,21 +66,6 @@ class _ExploreWidgetState extends State<ExploreWidget> with RefreshablePage<Expl
                     color: AppTheme.of(context).primary,
                   ),
                 ),
-                SizedBox(
-                  height: 44,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    children: _pills.map((pill) => CategoryPill(
-                      label: pill,
-                      selected: _selectedPill == pill,
-                      onTap: () => setState(() {
-                        _selectedPill = _selectedPill == pill ? null : pill;
-                      }),
-                    )).toList(),
-                  ),
-                ),
-                const SizedBox(height: 8),
                 Expanded(
                   child: ContentContainer(
                     variant: ContentVariant.full,

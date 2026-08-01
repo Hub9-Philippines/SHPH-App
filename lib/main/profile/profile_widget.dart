@@ -49,18 +49,10 @@ class _ProfileWidgetState extends State<ProfileWidget> {
   Widget build(BuildContext context) {
     context.watch<FFAppState>();
 
-    return FutureBuilder<List<ProfilesRow>>(
-      future: FFAppState().checkIfAccountExists(
-        uniqueQueryKey:
-            '$currentUserUid${dateTimeFormat("M/d h:mm a", getCurrentTimestamp)}',
-        requestFn: () => ProfilesTable().querySingleRow(
-          queryFn: (q) => q.or(
-            'phone_number.eq.${FFAppState().phone}, email.eq.${FFAppState().email}, id.eq.$currentUserUid',
-          ),
-        ),
-      ),
+    return FutureBuilder<ProfilesRow?>(
+      future: ProfilesService.instance.getProfile(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
             backgroundColor: const Color(0xFFF5F7FA),
             body: SafeArea(
@@ -90,7 +82,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
           );
         }
 
-        final profile = snapshot.data!.isNotEmpty ? snapshot.data!.first : null;
+        final profile = snapshot.data;
         if (profile == null) {
           return Scaffold(
             key: scaffoldKey,

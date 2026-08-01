@@ -697,7 +697,7 @@ class _NoProviderFoundModal extends StatelessWidget {
                   onPressed: onSearchAgain,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: theme.primary,
-                    foregroundColor: theme.secondaryBackground,
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),

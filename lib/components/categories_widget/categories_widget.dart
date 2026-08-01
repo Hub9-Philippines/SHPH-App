@@ -174,38 +174,63 @@ class _CategoriesWidgetWidgetState extends State<CategoriesWidgetWidget> {
     );
   }
 
-  Widget _buildCategoryArt(CategoriesRow category) {
-    if (category.imageUrl != null && category.imageUrl!.isNotEmpty) {
-      if (category.imageUrl!.startsWith('http')) {
-        return Image.network(
-          category.imageUrl!,
-          fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) => Icon(
-            _fallbackIcon(category.name),
-            color: Colors.white,
-            size: 28,
-          ),
-        );
-      }
-      return Image.asset(
-        category.imageUrl!,
-        fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) => Icon(
-          _fallbackIcon(category.name),
-          color: Colors.white,
-          size: 28,
-        ),
+  Widget _buildCategoryArt(CategoriesRow category) => Icon(
+        _categoryIcon(category),
+        color: Colors.white,
+        size: 28,
       );
-    }
 
-    return Icon(
-      _fallbackIcon(category.name),
-      color: Colors.white,
-      size: 28,
-    );
+  IconData _categoryIcon(CategoriesRow category) {
+    final bySlug = _iconBySlug(category.icon);
+    if (bySlug != null) {
+      return bySlug;
+    }
+    return _iconByName(category.name);
   }
 
-  IconData _fallbackIcon(String name) {
+  IconData? _iconBySlug(String? slug) {
+    if (slug == null) {
+      return null;
+    }
+    switch (slug.trim().toLowerCase()) {
+      case 'key':
+        return Icons.key_rounded;
+      case 'wrench':
+        return Icons.plumbing_rounded;
+      case 'zap':
+        return Icons.bolt_rounded;
+      case 'sparkles':
+        return Icons.cleaning_services_rounded;
+      case 'wind':
+        return Icons.ac_unit_rounded;
+      case 'tool':
+        return Icons.kitchen_rounded;
+      case 'bug':
+        return Icons.bug_report_rounded;
+      case 'car':
+        return Icons.local_car_wash_rounded;
+      case 'hammer':
+        return Icons.handyman_rounded;
+      case 'paint-bucket':
+        return Icons.format_paint_rounded;
+      case 'home':
+        return Icons.roofing_rounded;
+      case 'layers':
+        return Icons.layers_rounded;
+      case 'flame':
+        return Icons.local_fire_department_rounded;
+      case 'tree':
+        return Icons.park_rounded;
+      case 'truck':
+        return Icons.local_shipping_rounded;
+      case 'users':
+        return Icons.engineering_rounded;
+      default:
+        return null;
+    }
+  }
+
+  IconData _iconByName(String name) {
     final normalized = name.toLowerCase();
     if (normalized.contains('clean')) {
       return Icons.cleaning_services_rounded;
@@ -217,9 +242,45 @@ class _CategoriesWidgetWidgetState extends State<CategoriesWidgetWidget> {
       return Icons.format_paint_rounded;
     }
     if (normalized.contains('electric')) {
-      return Icons.electrical_services_rounded;
+      return Icons.bolt_rounded;
     }
-    return Icons.home_repair_service_rounded;
+    if (normalized.contains('aircon') || normalized.contains('hvac')) {
+      return Icons.ac_unit_rounded;
+    }
+    if (normalized.contains('car wash')) {
+      return Icons.local_car_wash_rounded;
+    }
+    if (normalized.contains('carpent') || normalized.contains('wood')) {
+      return Icons.handyman_rounded;
+    }
+    if (normalized.contains('lock')) {
+      return Icons.key_rounded;
+    }
+    if (normalized.contains('appliance')) {
+      return Icons.kitchen_rounded;
+    }
+    if (normalized.contains('pest')) {
+      return Icons.bug_report_rounded;
+    }
+    if (normalized.contains('roof')) {
+      return Icons.roofing_rounded;
+    }
+    if (normalized.contains('mason')) {
+      return Icons.layers_rounded;
+    }
+    if (normalized.contains('weld')) {
+      return Icons.local_fire_department_rounded;
+    }
+    if (normalized.contains('landscap') || normalized.contains('garden')) {
+      return Icons.park_rounded;
+    }
+    if (normalized.contains('mov')) {
+      return Icons.local_shipping_rounded;
+    }
+    if (normalized.contains('labor') || normalized.contains('handyman')) {
+      return Icons.engineering_rounded;
+    }
+    return Icons.category_rounded;
   }
 
   List<Color> _paletteForIndex(int index) {

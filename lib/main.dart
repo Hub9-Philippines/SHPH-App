@@ -122,6 +122,7 @@ class _MyAppState extends State<MyApp> {
 
   void _emitCurrentUser() {
     final svc = AuthService.instance;
+    FFAppState().isProvider = svc.isProvider;
     currentUser = svc.isAuthenticated
         ? SerbisyoHubPHShphUser(svc.currentUser) as BaseAuthUser
         : SerbisyoHubPHShphUser(null);

@@ -27,6 +27,26 @@ class AuthService extends ChangeNotifier {
   String? get email => _currentUser?['email'] as String?;
   String? get displayName => _currentUser?['display_name'] as String?;
 
+  /// Role from the backend (`client`/`provider`/`admin`), matching web
+  /// `auth.user.role`. Prefer [isProvider]/[isClient] for capability checks.
+  String? get role => _currentUser?['role'] as String?;
+
+  /// True when the account holds provider capability (`is_provider`).
+  bool get isProvider => _currentUser?['is_provider'] == true;
+
+  /// True when the account holds client capability (`is_client`).
+  bool get isClient => _currentUser?['is_client'] == true;
+
+  /// Profile completeness mirrors web: a non-empty `display_name` is the
+  /// only required signal for the post-auth flow.
+  bool get isProfileComplete {
+    final displayName = this.displayName;
+    return displayName != null && displayName.trim().isNotEmpty;
+  }
+
+  /// True when the provider chose "I'll do this later" on KYC (server-persisted).
+  bool get kycSkipped => _currentUser?['kyc_skipped'] == true;
+
   /// Pending two-step registration state (set by [registerInitiate], consumed
   /// by the OTP/verify step).
   String? _pendingDeliveryMethod;
@@ -51,12 +71,21 @@ class AuthService extends ChangeNotifier {
       return;
     }
     try {
-      _currentUser = await _authApi.getCurrentUser();
-      _status = AuthStatus.authenticated;
+      final user = await _authApi.getCurrentUser();
+      adoptUser(user);
     } catch (e) {
       await ShphTokenStorage.clear();
-      _status = AuthStatus.unauthenticated;
+      adoptUser(null);
     }
+  }
+
+  /// Adopts a user map returned by any auth step (login, register verify,
+  /// phone-login verify, fetchMe) as the session user. Role getters read from
+  /// this, so every successful auth entry point must route through here.
+  void adoptUser(Map<String, dynamic>? user) {
+    _currentUser = user;
+    _status =
+        user == null ? AuthStatus.unauthenticated : AuthStatus.authenticated;
     notifyListeners();
   }
 
@@ -70,9 +99,7 @@ class AuthService extends ChangeNotifier {
       password: password,
       deviceInfo: deviceInfo,
     );
-    _currentUser = data['user'] as Map<String, dynamic>? ?? data;
-    _status = AuthStatus.authenticated;
-    notifyListeners();
+    adoptUser(data['user'] as Map<String, dynamic>? ?? data);
     return data;
   }
 
@@ -90,9 +117,7 @@ class AuthService extends ChangeNotifier {
     required Map<String, dynamic> payload,
   }) async {
     final data = await _authApi.registerVerify(payload: payload);
-    _currentUser = data['user'] as Map<String, dynamic>? ?? data;
-    _status = AuthStatus.authenticated;
-    notifyListeners();
+    adoptUser(data['user'] as Map<String, dynamic>? ?? data);
     return data;
   }
 
@@ -102,16 +127,13 @@ class AuthService extends ChangeNotifier {
     } catch (e) {
       LoggingService.info('Logout API call failed (may already be logged out): $e');
     }
-    _currentUser = null;
-    _status = AuthStatus.unauthenticated;
     clearPendingRegistration();
-    notifyListeners();
+    adoptUser(null);
   }
 
   Future<void> refreshCurrentUser() async {
     try {
-      _currentUser = await _authApi.getCurrentUser();
-      notifyListeners();
+      adoptUser(await _authApi.getCurrentUser());
     } catch (e) {
       LoggingService.error('Failed to refresh current user: $e');
     }

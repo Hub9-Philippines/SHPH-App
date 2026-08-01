@@ -26,7 +26,10 @@ Future<String> insertProfileWithDebug(
     debugPrint('Phone: $phone');
     debugPrint('Role: $role');
 
-    final roleToUse = role.isEmpty ? 'client' : role;
+    final roleToUse = switch (role.trim().toLowerCase()) {
+      'pro' || 'provider' => 'provider',
+      _ => 'client',
+    };
     debugPrint('Role to use: $roleToUse');
 
     final Map<String, dynamic> data = {

@@ -466,7 +466,7 @@ class _CreateServiceWidgetState extends State<CreateServiceWidget> {
               ),
               child: Icon(
                 Icons.close,
-                color: AppTheme.of(context).secondaryBackground,
+                color: Colors.white,
                 size: 16,
               ),
             ),

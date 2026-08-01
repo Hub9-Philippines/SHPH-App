@@ -337,7 +337,7 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
                             onPressed: isSaving ? null : _saveProfile,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppTheme.of(context).primary,
-                              foregroundColor: AppTheme.of(context).secondaryBackground,
+                              foregroundColor: Colors.white,
                               elevation: 0,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),
@@ -350,7 +350,7 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
                                       valueColor: AlwaysStoppedAnimation<Color>(
-                                        AppTheme.of(context).secondaryBackground,
+                                        Colors.white,
                                       ),
                                     ),
                                   )
@@ -359,7 +359,7 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
                                     style: AppTheme.of(context)
                                         .titleSmall
                                         .override(
-                                          color: AppTheme.of(context).secondaryBackground,
+                                          color: Colors.white,
                                           fontWeight: FontWeight.w700,
                                         ),
                                   ),
@@ -424,7 +424,7 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
                 child: !hasPhoto
                     ? Icon(
                         Icons.person_rounded,
-                        color: AppTheme.of(context).secondaryBackground,
+                        color: Colors.white,
                         size: 52,
                       )
                     : null,
@@ -443,11 +443,11 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
                       decoration: BoxDecoration(
                         color: AppTheme.of(context).primary,
                         shape: BoxShape.circle,
-                        border: Border.all(color: AppTheme.of(context).secondaryBackground, width: 2),
+                        border: Border.all(color: Colors.white, width: 2),
                       ),
                       child: Icon(
                         Icons.camera_alt_rounded,
-                        color: AppTheme.of(context).secondaryBackground,
+                        color: Colors.white,
                         size: 18,
                       ),
                     ),

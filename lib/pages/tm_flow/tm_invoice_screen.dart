@@ -95,7 +95,7 @@ class TMInvoiceScreen extends StatelessWidget {
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: theme.primary,
-                      foregroundColor: theme.secondaryBackground,
+                      foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(18),
                       ),
@@ -103,7 +103,7 @@ class TMInvoiceScreen extends StatelessWidget {
                     child: Text(
                       'Pay Now',
                       style: theme.titleMedium.override(
-                        color: theme.secondaryBackground,
+                        color: Colors.white,
                         fontWeight: FontWeight.w700,
                       ),
                     ),

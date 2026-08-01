@@ -119,17 +119,161 @@ if (controller == null) {      return;    }
 
 await controller.animateCamera(      CameraUpdate.newCameraPosition(        CameraPosition(target: _center, zoom: 15.5),      ),    );  }
 
-Widget _buildTopOverlay() => SafeArea(        bottom: false,        child: DecoratedBox(          decoration: const BoxDecoration(            gradient: LinearGradient(              begin: Alignment.topLeft,              end: Alignment.bottomRight,              colors: [                Color(0xFFFEECE6),                Color(0xFFFFF1E6),                Color(0xFFFEF5E9),                Color(0xFFFBF6EF),                Color(0xFFFFF8F0),              ],            ),          ),          child: Padding(            padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),            child: Column(              mainAxisSize: MainAxisSize.min,              crossAxisAlignment: CrossAxisAlignment.start,              children: [                Row(                  children: [                    Container(                      width: 46,                      height: 46,                      decoration: BoxDecoration(                        color: const Color(0xFF63CBD6).withValues(alpha: 0.2),                        borderRadius: BorderRadius.circular(14),                      ),                      child: IconButton(                        icon: const Icon(Icons.menu_rounded,                            color: Color(0xFF0F172A)),                        onPressed: () => scaffoldKey.currentState?.openDrawer(),                      ),                    ),                    const Spacer(),                    Stack(                      clipBehavior: Clip.none,                      children: [                        InkWell(                          onTap: () => context.pushNamed(                            MyNotificationsWidget.routeName,                          ),                          borderRadius: BorderRadius.circular(18),                          child: Container(                            width: 46,                            height: 46,                            decoration: BoxDecoration(                              color: Colors.white,                              borderRadius: BorderRadius.circular(14),                              boxShadow: AppThemeData.shadowCard,                            ),                            child: const Icon(                              Icons.notifications_none_rounded,                              color: Color(0xFF0F172A),                              size: 24,                            ),                          ),                        ),                        if (FFAppState().notificationCount > 0)                          Positioned(                            top: 0,                            right: -2,                            child: Container(                              padding: const EdgeInsets.symmetric(                                horizontal: 5,                                vertical: 2,                              ),                              decoration: BoxDecoration(                                color: AppTheme.of(context).error,                                borderRadius: BorderRadius.circular(999),                                border: Border.all(                                  color: Colors.white,                                  width: 2,                                ),                              ),                              child: Text(                                FFAppState().notificationCount > 99                                    ? '99+'                                    : FFAppState()                                        .notificationCount                                        .toString(),                                style: const TextStyle(                                  color: Colors.white,                                  fontSize: 9,                                  fontWeight: FontWeight.w700,                                ),                              ),                            ),                          ),                      ],                    ),                  ],                ),                const SizedBox(height: 24),                Text(                  _greeting(),                  style: GoogleFonts.plusJakartaSans(                    fontWeight: FontWeight.w700,                    fontSize: 24,                    color: const Color(0xFF0F172A),                  ),                ),                const SizedBox(height: 4),                Text(                  'Let\'s find the perfect\nservice for you.',                  style: GoogleFonts.plusJakartaSans(                    fontWeight: FontWeight.w400,                    fontSize: 14,                    color: const Color(0xFF64748B),                    height: 1.4,                  ),                ),                const SizedBox(height: 24),                Material(                  color: Colors.transparent,                  child: InkWell(                    onTap: _openSearchPage,                    borderRadius: BorderRadius.circular(28),                    child: Container(                      height: 56,                      padding: const EdgeInsets.symmetric(horizontal: 18),                      decoration: BoxDecoration(                        color: Colors.white,                        borderRadius: BorderRadius.circular(28),                        boxShadow: AppThemeData.shadowLg,                      ),                      child: Row(                        children: [                          const Icon(                            Icons.search_rounded,                            color: Color(0xFF94A3B8),                            size: 24,                          ),                          const SizedBox(width: 12),                          Expanded(                            child: Text(                              'Search services...',                              style: GoogleFonts.plusJakartaSans(                                color: const Color(0xFF94A3B8),                                fontSize: 15,                              ),                            ),                          ),                          Container(                            padding: const EdgeInsets.symmetric(                              horizontal: 10,                              vertical: 6,                            ),                            decoration: BoxDecoration(                              color: const Color(0xFFF1F5F9),                              borderRadius: BorderRadius.circular(8),                            ),                            child: Row(                              mainAxisSize: MainAxisSize.min,                              children: [                                Icon(                                  Icons.my_location_rounded,                                  size: 14,                                  color: AppTheme.of(context).primaryBrandText,                                ),                                const SizedBox(width: 4),                                Text(                                  _locationLabel(),                                  style: GoogleFonts.plusJakartaSans(                                    fontWeight: FontWeight.w500,                                    fontSize: 12,                                    color:                                        AppTheme.of(context).primaryBrandText,                                  ),                                ),                              ],                            ),                          ),                        ],                      ),                    ),                  ),                ),              ],            ),          ),        ),      );
-String _greeting() {    final hour = DateTime.now().hour;
-final prefix = hour < 12        ? 'Good morning'        : hour < 18            ? 'Good afternoon'            : 'Good evening';
-final name = currentUserDisplayName.split(' ').firstOrNull ?? 'there';
-return '$prefix, $name!';  }
-
-String _locationLabel() {    final appState = FFAppState();
-if (appState.selectedAddressLabel.isNotEmpty) {      return appState.selectedAddressLabel;    }
-
-return 'My Location';  }
-
+Widget _buildTopOverlay() => SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Hero(
+                tag: 'searchBarHero',
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: _openSearchPage,
+                    borderRadius: BorderRadius.circular(28),
+                    child: Container(
+                      height: 56,
+                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(28),
+                        boxShadow: AppThemeData.shadowLg,
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.search_rounded,
+                            color: Color(0xFF5F6B76),
+                            size: 24,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Search services...',
+                              style: GoogleFonts.plusJakartaSans(
+                                color: const Color(0xFF6A7681),
+                                fontSize: 15,
+                              ),
+                            ),
+                          ),
+                          Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              InkWell(
+                                onTap: () => context.pushNamed(
+                                  MyNotificationsWidget.routeName,
+                                ),
+                                borderRadius: BorderRadius.circular(18),
+                                child: const Padding(
+                                  padding: EdgeInsets.all(6),
+                                  child: Icon(
+                                    Icons.notifications_none_rounded,
+                                    color: Color(0xFF17212B),
+                                    size: 24,
+                                  ),
+                                ),
+                              ),
+                              if (FFAppState().notificationCount > 0)
+                                Positioned(
+                                  top: 0,
+                                  right: -2,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 5,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.of(context).error,
+                                      borderRadius: BorderRadius.circular(999),
+                                      border: Border.all(
+                                        color: Colors.white,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      FFAppState().notificationCount > 99
+                                          ? '99+'
+                                          : FFAppState()
+                                              .notificationCount
+                                              .toString(),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              SizedBox(
+                height: 40,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  clipBehavior: Clip.none,
+                  children: [
+                    _buildCategoryChip(
+                      icon: Icons.cleaning_services_rounded,
+                      label: 'Cleaning',
+                      onTap: () => context.pushNamed(
+                        ServicesScreen.routeName,
+                        extra: <String, dynamic>{
+                          'initialCategory': 'Cleaning',
+                        },
+                      ),
+                    ),
+                    _buildCategoryChip(
+                      icon: Icons.plumbing_rounded,
+                      label: 'Plumbing',
+                      onTap: () => context.pushNamed(
+                        ServicesScreen.routeName,
+                        extra: <String, dynamic>{
+                          'initialCategory': 'Plumbing',
+                        },
+                      ),
+                    ),
+                    _buildCategoryChip(
+                      icon: Icons.electrical_services_rounded,
+                      label: 'Electrical',
+                      onTap: () => context.pushNamed(
+                        ServicesScreen.routeName,
+                        extra: <String, dynamic>{
+                          'initialCategory': 'Electrical',
+                        },
+                      ),
+                    ),
+                    _buildCategoryChip(
+                      icon: Icons.format_paint_rounded,
+                      label: 'Painting',
+                      onTap: () => context.pushNamed(
+                        ServicesScreen.routeName,
+                        extra: <String, dynamic>{
+                          'initialCategory': 'Painting & Decorating',
+                        },
+                      ),
+                    ),
+                    _buildCategoryChip(
+                      icon: Icons.grid_view_rounded,
+                      label: 'More',
+                      onTap: () => context.pushNamed(CategoriesWidget.routeName),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
 Widget _buildCategoryChip({    required IconData icon,    required String label,    required VoidCallback onTap,  }) =>      Padding(        padding: const EdgeInsets.only(right: 10),        child: Material(          color: Colors.transparent,          child: InkWell(            onTap: onTap,            borderRadius: BorderRadius.circular(999),            child: Container(              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),              decoration: BoxDecoration(                color: Colors.white,                borderRadius: BorderRadius.circular(999),                boxShadow: const [                  BoxShadow(                    color: Color(0x12000000),                    blurRadius: 12,                    offset: Offset(0, 4),                  ),                ],              ),              child: Row(                children: [                  Icon(                    icon,                    size: 13,                    color: const Color(0xFF17212B),                  ),                  const SizedBox(width: 8),                  Text(                    label,                    style: AppTheme.of(context).bodySmall.override(                          font: GoogleFonts.plusJakartaSans(                            fontWeight: FontWeight.w600,                          ),                          color: const Color(0xFF17212B),                        ),                  ),                ],              ),            ),          ),        ),      );
 Widget _buildBottomCard(    FFAppState appState,    List<AddressesRow> addresses,  ) =>      Container(        decoration: const BoxDecoration(          color: Colors.white,          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),          boxShadow: [            BoxShadow(              color: Color(0x17000000),              blurRadius: 24,              offset: Offset(0, -8),            ),          ],        ),        child: SafeArea(          top: false,          child: Padding(            padding: const EdgeInsets.fromLTRB(20, 12, 20, 22),            child: Column(              mainAxisSize: MainAxisSize.min,              children: [                Container(                  width: 40,                  height: 4,                  decoration: BoxDecoration(                    color: const Color(0xFFD6DBE1),                    borderRadius: BorderRadius.circular(999),                  ),                ),                const SizedBox(height: 18),                Container(                  width: double.infinity,                  padding: const EdgeInsets.symmetric(                    horizontal: 12,                    vertical: 8,                  ),                  decoration: BoxDecoration(                    color: AppTheme.of(context).primary.withValues(alpha: 0.08),                    borderRadius: BorderRadius.circular(999),                  ),                  child: Text(                    'Booking starts from your pinned location',                    textAlign: TextAlign.center,                    style: AppTheme.of(context).labelMedium.override(                          font: GoogleFonts.plusJakartaSans(                            fontWeight: FontWeight.w700,                          ),                          color: AppTheme.of(context).primary,                        ),                  ),                ),                const SizedBox(height: 14),                Material(                  color: Colors.transparent,                  child: InkWell(                    onTap: _startBookingProcess,                    borderRadius: BorderRadius.circular(20),                    child: Container(                      width: double.infinity,                      padding: const EdgeInsets.all(18),                      decoration: BoxDecoration(                        color: AppTheme.of(context).primary.withValues(                              alpha: 0.1,                            ),                        borderRadius: BorderRadius.circular(20),                      ),                      child: Row(                        children: [                          Expanded(                            child: Column(                              crossAxisAlignment: CrossAxisAlignment.start,                              children: [                                Text(                                  'Book a Service',                                  style:                                      AppTheme.of(context).titleMedium.override(                                            font: GoogleFonts.plusJakartaSans(                                              fontWeight: FontWeight.w700,                                            ),                                            color: const Color(0xFF16202A),                                          ),                                ),                                const SizedBox(height: 4),                                Text(                                  'Tap here to get a professional to your destination',                                  style:                                      AppTheme.of(context).bodySmall.override(                                            font: GoogleFonts.plusJakartaSans(),                                            color: const Color(0xFF63707C),                                          ),                                ),                              ],                            ),                          ),                          const SizedBox(width: 16),                          Container(                            width: 54,                            height: 54,                            decoration: BoxDecoration(                              color: AppTheme.of(context).primary.withValues(                                    alpha: 0.16,                                  ),                              shape: BoxShape.circle,                            ),                            child: Icon(                              Icons.handyman_rounded,                              color: AppTheme.of(context).primary,                              size: 28,                            ),                          ),                        ],                      ),                    ),                  ),                ),                const SizedBox(height: 14),                Material(                  color: Colors.transparent,                  child: InkWell(                    onTap: () =>                        _openLocationSheet(snapshotAddresses: addresses),                    borderRadius: BorderRadius.circular(16),                    child: Container(                      width: double.infinity,                      padding: const EdgeInsets.symmetric(                        horizontal: 16,                        vertical: 14,                      ),                      decoration: BoxDecoration(                        border: Border.all(color: const Color(0xFFE5E9EE)),                        borderRadius: BorderRadius.circular(16),                      ),                      child: Row(                        children: [                          Container(                            width: 42,                            height: 42,                            decoration: BoxDecoration(                              color: const Color(0xFFF4F7FA),                              borderRadius: BorderRadius.circular(14),                            ),                            child: const Icon(                              Icons.location_history_rounded,                              color: Color(0xFF53606D),                              size: 22,                            ),                          ),                          const SizedBox(width: 14),                          Expanded(                            child: Column(                              crossAxisAlignment: CrossAxisAlignment.start,                              children: [                                Text(                                  'Pin location',                                  style:                                      AppTheme.of(context).bodySmall.override(                                            font: GoogleFonts.plusJakartaSans(),                                            color: const Color(0xFF7A8793),                                          ),                                ),                                const SizedBox(height: 2),                                Text(                                  _addressText(appState),                                  maxLines: 1,                                  overflow: TextOverflow.ellipsis,                                  style:                                      AppTheme.of(context).bodyMedium.override(                                            font: GoogleFonts.plusJakartaSans(                                              fontWeight: FontWeight.w600,                                            ),                                            color: const Color(0xFF16202A),                                          ),                                ),                              ],                            ),                          ),                          const SizedBox(width: 10),                          const Icon(                            Icons.keyboard_arrow_down_rounded,                            color: Color(0xFF53606D),                          ),                        ],                      ),                    ),                  ),                ),              ],            ),          ),        ),      );
 Future<void> _openLocationSheet({    List<AddressesRow>? snapshotAddresses,  }) async {    final addresses = snapshotAddresses ??        await _addressFuture.catchError((_) => <AddressesRow>[]);

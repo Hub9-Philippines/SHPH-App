@@ -6,7 +6,9 @@ import 'package:google_fonts/google_fonts.dart';
 import '/components/screen_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
-import '/services/profiles_service.dart';
+import '/services/auth_service.dart';
+import '/services/kyc_hub_service.dart';
+import '/services/kyc_submission_service.dart';
 import '/services/verification_timer_service.dart';
 import '/theme/app_theme.dart';
 import 'verification_reviewing_model.dart';
@@ -35,6 +37,8 @@ class _VerificationReviewingWidgetState
   // Timer for periodic status checks
   Timer? _statusCheckTimer;
 
+  String? _rejectionReason;
+
   @override
   void initState() {
     super.initState();
@@ -55,18 +59,39 @@ class _VerificationReviewingWidgetState
   /// Check if user is verified and redirect if so
   Future<void> _checkVerificationStatus() async {
     try {
-      final statusResp = await ProfilesService.instance.getKycStatus();
-      final status = statusResp?['verification_status'] as String?;
+      final statusResp = await KycHubService.instance.getStatus(force: true);
+      final status = KycHubService.normalizeStatus(
+        statusResp['status'] ?? statusResp['verification_status'],
+      );
 
-      if (status == 'verified' && mounted) {
+      if (status == 'approved' && mounted) {
         // Stop checking
         _statusCheckTimer?.cancel();
+        // Refresh the session user so the router guard sees the approved KYC.
+        await AuthService.instance.refreshCurrentUser();
+        if (!mounted) return;
         // Redirect to Pro Dashboard
         context.goNamed(ProDashboardWidget.routeName);
+        return;
+      }
+
+      if (status == 'rejected' && mounted) {
+        setState(() {
+          _rejectionReason = statusResp['rejection_reason']?.toString();
+        });
       }
     } catch (e) {
       // Ignore errors, will retry on next check
     }
+  }
+
+  void _goBackToKyc() {
+    _kycReset();
+    context.goNamed(EKYCBeginWidget.routeName);
+  }
+
+  void _kycReset() {
+    KycSubmissionService.instance.reset();
   }
 
   @override
@@ -207,14 +232,74 @@ class _VerificationReviewingWidgetState
                         padding:
                             const EdgeInsetsDirectional.fromSTEB(32, 0, 32, 0),
                         child: Text(
-                          'Your documents have been submitted for review. Our team will verify your information within 24-48 hours. You will receive a notification once your account is approved.',
+                          _rejectionReason != null
+                              ? 'Your verification was rejected. Please review the reason below and resubmit.'
+                              : 'Your documents have been submitted for review. Our team will verify your information within 24-48 hours. You will receive a notification once your account is approved.',
                           textAlign: TextAlign.center,
                           style: AppTheme.of(context).bodyMedium.override(
                                 color: AppTheme.of(context).secondaryText,
                               ),
                         ),
                       ),
-                      const SizedBox(height: 48),
+                      if (_rejectionReason != null) ...[
+                        const SizedBox(height: 16),
+                        Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.symmetric(horizontal: 24),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppTheme.of(context)
+                                .error
+                                .withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppTheme.of(context).error,
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Rejection Reason',
+                                style: AppTheme.of(context)
+                                    .bodyMedium
+                                    .override(
+                                      color: AppTheme.of(context).error,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _rejectionReason!,
+                                style: AppTheme.of(context).bodySmall.override(
+                                      color: AppTheme.of(context).primaryText,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: SizedBox(
+                            width: double.infinity,
+                            height: 52,
+                            child: ElevatedButton.icon(
+                              onPressed: _goBackToKyc,
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('Resubmit Verification'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    AppTheme.of(context).primary,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 32),
                       // Info Cards
                       Padding(
                         padding:
@@ -265,7 +350,7 @@ class _VerificationReviewingWidgetState
                               child: Text(
                                 'Back to Home',
                                 style: AppTheme.of(context).titleSmall.override(
-                                      color: AppTheme.of(context).secondaryBackground,
+                                      color: Colors.white,
                                       fontWeight: FontWeight.w600,
                                     ),
                               ),

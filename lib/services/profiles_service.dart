@@ -14,7 +14,10 @@ class ProfilesService {
   Future<ProfilesRow?> getProfile() async {
     try {
       final data = await _usersApi.getMe();
-      return ApiRowMapper.profileToRow(data);
+      final profile = data['profile'] is Map<String, dynamic>
+          ? data['profile'] as Map<String, dynamic>
+          : data;
+      return ApiRowMapper.profileToRow(profile);
     } catch (e) {
       LoggingService.error('getProfile failed: $e', tag: 'ProfilesService');
       return null;

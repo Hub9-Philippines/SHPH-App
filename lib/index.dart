@@ -21,6 +21,7 @@ export '/pages/edit_profile/edit_profile_widget.dart' show EditProfileWidget;
 export '/pages/favorites/favorites_widget.dart' show FavoritesWidget;
 export '/pages/forgot_password/forgot_password_widget.dart'
     show ForgotPasswordWidget;
+export '/pages/i_d_verify/i_d_verify_widget.dart' show IDVerifyWidget;
 export '/pages/language_settings/language_settings_widget.dart'
     show LanguageSettingsWidget;
 export '/pages/my_notifications/my_notifications_widget.dart'

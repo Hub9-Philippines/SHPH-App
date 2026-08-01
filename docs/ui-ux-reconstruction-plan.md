@@ -883,3 +883,20 @@ sign-in/sign-up and made the Flutter auth client match the working web contract.
 | Session state: `_currentUser` from `data['user']`, pending registration state, cold-start restore | `lib/services/auth_service.dart` | ✅ Done |
 | Verification: `flutter analyze` 0 errors; `proximity_scoring_test.dart` 20/20; `booking_funnel_test.dart` 3/4 (1 pre-existing Unsplash-image failure) | — | ✅ Done |
 | Manual device round-trip (sign-up → OTP → verified) | — | ⏳ Pending user |
+
+### 13.10 Client Home, Explore & Category Icon Cleanup
+
+Rolled the client home top section back to the pre-Phase 6 (main-branch) layout,
+removed a redundant filter row on Explore, and swapped category images for
+Material icons keyed to the live API category slugs.
+
+| Task | Files | Status |
+|------|-------|--------|
+| Home top overlay restored to main design: search capsule with the notification bell **inside** it (`Hero` `searchBarHero`) + in-demand chips below (Cleaning, Plumbing, Electrical, Painting, More → `ServicesScreen` w/ `initialCategory` / `CategoriesWidget`) | `lib/main/home/home_widget.dart` | ✅ Done |
+| Removed warm-gradient panel, drawer menu button, greeting, subtitle, and location pill; deleted now-unused `_greeting()` / `_locationLabel()` | `lib/main/home/home_widget.dart` | ✅ Done |
+| Explore tab: removed redundant `CategoryPill` filter row (only highlighted on tap, never filtered the grid) + dead `_pills` / `_selectedPill` / import | `lib/main/explore/explore_widget.dart` | ✅ Done |
+| Category cards: replaced `Image.asset` artwork with Material icons matched by the API `ShphCategory.icon` slug (16 categories: key, wrench, zap, sparkles, wind, tool, bug, car, hammer, paint-bucket, home, layers, flame, tree, truck, users) with a name-based fallback | `lib/components/categories_widget/categories_widget.dart` | ✅ Done |
+| Dropped `category_assets.dart` import (asset map now unused) | `lib/components/categories_widget/categories_widget.dart` | ✅ Done |
+| Icon preview verified via standalone HTML (`explore_preview.html`); Masonry uses `Icons.layers_rounded` (the `bricks` ligature rendered a stray "s") | — | ✅ Done |
+| Verification: `flutter analyze` 0 errors | — | ✅ Done |
+
