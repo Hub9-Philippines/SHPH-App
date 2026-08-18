@@ -54,10 +54,10 @@ class _CategoriesWidgetWidgetState extends State<CategoriesWidgetWidget> {
               child: GridView.builder(
                 physics: const BouncingScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 14,
-                  mainAxisSpacing: 14,
-                  childAspectRatio: 0.92,
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 0.82,
                 ),
                 itemCount: 6,
                 itemBuilder: (context, index) => const CategoryCardSkeleton(),
@@ -94,10 +94,10 @@ class _CategoriesWidgetWidgetState extends State<CategoriesWidgetWidget> {
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 14,
-              mainAxisSpacing: 14,
-              childAspectRatio: 0.92,
+              crossAxisCount: 3,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 0.82,
             ),
             itemCount: categories.length,
             itemBuilder: (context, index) =>
@@ -112,7 +112,7 @@ class _CategoriesWidgetWidgetState extends State<CategoriesWidgetWidget> {
       color: Colors.transparent,
       child: InkWell(
         onTap: () => context.push('/services?category=${category.name}'),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(22),
         child: Ink(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -120,29 +120,29 @@ class _CategoriesWidgetWidgetState extends State<CategoriesWidgetWidget> {
               end: Alignment.bottomRight,
               colors: palette,
             ),
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(22),
             boxShadow: [
               BoxShadow(
                 color: palette.first.withValues(alpha: 0.16),
-                blurRadius: 20,
-                offset: const Offset(0, 12),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  width: 52,
-                  height: 52,
+                  width: 38,
+                  height: 38,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.16),
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(8),
                     child: _buildCategoryArt(category),
                   ),
                 ),
@@ -151,18 +151,20 @@ class _CategoriesWidgetWidgetState extends State<CategoriesWidgetWidget> {
                   category.name,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTheme.of(context).titleMedium.override(
+                  style: AppTheme.of(context).titleSmall.override(
                         font: GoogleFonts.plusJakartaSans(
                           fontWeight: FontWeight.w700,
                         ),
                         color: Colors.white,
                       ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Text(
                   'Open services',
                   style: AppTheme.of(context).bodySmall.override(
-                        font: GoogleFonts.plusJakartaSans(),
+                        font: GoogleFonts.plusJakartaSans(
+                          fontSize: 11,
+                        ),
                         color: Colors.white.withValues(alpha: 0.82),
                       ),
                 ),
@@ -177,7 +179,7 @@ class _CategoriesWidgetWidgetState extends State<CategoriesWidgetWidget> {
   Widget _buildCategoryArt(CategoriesRow category) => Icon(
         _categoryIcon(category),
         color: Colors.white,
-        size: 28,
+        size: 22,
       );
 
   IconData _categoryIcon(CategoriesRow category) {

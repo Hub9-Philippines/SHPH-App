@@ -1032,7 +1032,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                           font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
-                          color: Colors.white,
+                          color: AppTheme.of(context).onPrimary,
                         ),
                     borderRadius: BorderRadius.circular(18),
                   ),

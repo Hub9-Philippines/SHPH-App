@@ -65,7 +65,7 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: data.primary,
-          foregroundColor: Colors.white,
+          foregroundColor: data.onPrimary,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -125,7 +125,7 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: data.primary,
-          foregroundColor: Colors.white,
+          foregroundColor: data.onPrimary,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -323,10 +323,11 @@ class AppThemeData {
 
   static (Color text, Color bg) statusColors(String status) => switch (status) {
         'confirmed' => (statusConfirmed, statusConfirmedBg),
-        'in_progress' || 'in progress' => (statusActive, statusActiveBg),
+        'en_route' || 'arrived' || 'in_progress' || 'in progress' || 'on_site' =>
+            (statusActive, statusActiveBg),
         'completed' => (statusCompleted, statusCompletedBg),
-        'cancelled' => (statusCancelled, statusCancelledBg),
-        'pending' => (statusPending, statusPendingBg),
+        'cancelled' || 'disputed' => (statusCancelled, statusCancelledBg),
+        'pending' || 'inquiry' || 'searching' => (statusPending, statusPendingBg),
         _ => (statusCompleted, statusCompletedBg),
       };
 
@@ -376,7 +377,7 @@ class AppThemeData {
       success: const Color(0xFF249689),
       warning: const Color(0xFFF9CF58),
       error: const Color(0xFFDC2626),
-      info: const Color(0xFF63CBD6),
+      info: const Color(0xFF368EFF),
       iconBackground: const Color(0xFFF34966),
       primaryLight: const Color(0xFF1A3D3C),
       primaryDark: const Color(0xFF49B8C4),

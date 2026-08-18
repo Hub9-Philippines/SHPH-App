@@ -166,7 +166,7 @@ class _EKYCBeginWidgetState extends State<EKYCBeginWidget> {
                       textStyle: GoogleFonts.plusJakartaSans(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
-                        color: Colors.white,
+                        color: AppTheme.of(context).onPrimary,
                       ),
                       elevation: 0,
                       borderSide: const BorderSide(

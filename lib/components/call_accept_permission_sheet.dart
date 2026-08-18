@@ -138,7 +138,7 @@ class _CallAcceptPermissionSheetState extends State<CallAcceptPermissionSheet> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.primary,
-                foregroundColor: Colors.white,
+                foregroundColor: theme.onPrimary,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),

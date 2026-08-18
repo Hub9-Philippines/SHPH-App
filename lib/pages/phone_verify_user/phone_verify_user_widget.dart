@@ -317,7 +317,7 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                                           .titleSmall
                                           .fontStyle,
                                     ),
-                                    color: Colors.white,
+                                    color: AppTheme.of(context).onPrimary,
                                     letterSpacing: 0,
                                     fontWeight: AppTheme.of(context)
                                         .titleSmall

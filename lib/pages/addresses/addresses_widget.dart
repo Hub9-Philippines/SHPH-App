@@ -148,7 +148,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                                   font: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.w600,
                                   ),
-                                  color: Colors.white,
+                                  color: AppTheme.of(context).onPrimary,
                                   fontSize: 16,
                                 ),
                             elevation: 0,

@@ -235,7 +235,7 @@ class _CallHistoryDetailsPageWidgetState extends State<CallHistoryDetailsPageWid
                             color: AppTheme.of(context).primary,
                             textStyle: AppTheme.of(context).titleSmall.override(
                                   font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
-                                  color: Colors.white,
+                                  color: AppTheme.of(context).onPrimary,
                                 ),
                             borderRadius: BorderRadius.circular(8),
                           ),

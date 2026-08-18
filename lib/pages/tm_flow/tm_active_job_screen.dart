@@ -289,7 +289,7 @@ class HardwareApprovalDialog extends StatelessWidget {
                 },
           style: ElevatedButton.styleFrom(
             backgroundColor: theme.primary,
-            foregroundColor: Colors.white,
+            foregroundColor: theme.onPrimary,
           ),
           child: controller.isUpdatingHardware
               ? SizedBox(
@@ -298,7 +298,7 @@ class HardwareApprovalDialog extends StatelessWidget {
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
                     valueColor:
-                        AlwaysStoppedAnimation<Color>(Colors.white),
+                        AlwaysStoppedAnimation<Color>(theme.onPrimary),
                   ),
                 )
               : const Text('Approve'),
@@ -452,7 +452,7 @@ class _TMTrackingTab extends StatelessWidget {
                       onPressed: controller.isCompletingJob ? null : onComplete,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: theme.primary,
-                          foregroundColor: Colors.white,
+                          foregroundColor: theme.onPrimary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -464,7 +464,7 @@ class _TMTrackingTab extends StatelessWidget {
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white,
+                                    theme.onPrimary,
                                   ),
                                 ),
                               )

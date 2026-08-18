@@ -129,7 +129,7 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
                 ? Text(
                     name.isNotEmpty ? name[0].toUpperCase() : '?',
                     style: GoogleFonts.plusJakartaSans(
-                        color: Colors.white,
+                        color: theme.onPrimary,
                         fontSize: 28,
                         fontWeight: FontWeight.w600),
                   )
@@ -138,7 +138,7 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
           const SizedBox(height: 12),
           Text(name,
               style: GoogleFonts.plusJakartaSans(
-                  color: Colors.white,
+                  color: theme.onPrimary,
                   fontSize: 22,
                   fontWeight: FontWeight.w600)),
           if (bio != null && bio.isNotEmpty) ...[
@@ -146,7 +146,7 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
             Text(bio,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.plusJakartaSans(
-                    color: Colors.white.withValues(alpha: 0.85),
+                    color: theme.onPrimary.withValues(alpha: 0.85),
                     fontSize: 14)),
           ],
         ],

@@ -100,7 +100,7 @@ class _WalletWidgetState extends State<WalletWidget> {
           Text(
             'Available Balance',
             style: GoogleFonts.plusJakartaSans(
-              color: Colors.white.withValues(alpha: 0.8),
+              color: theme.onPrimary.withValues(alpha: 0.8),
               fontSize: 14,
             ),
           ),
@@ -108,7 +108,7 @@ class _WalletWidgetState extends State<WalletWidget> {
           Text(
             '₱${_model.balance.toStringAsFixed(2)}',
             style: GoogleFonts.plusJakartaSans(
-              color: Colors.white,
+              color: theme.onPrimary,
               fontSize: 36,
               fontWeight: FontWeight.w700,
             ),
@@ -142,7 +142,7 @@ class _WalletWidgetState extends State<WalletWidget> {
             Text(
               label,
               style: GoogleFonts.plusJakartaSans(
-                color: Colors.white.withValues(alpha: 0.7),
+                color: theme.onPrimary.withValues(alpha: 0.7),
                 fontSize: 11,
               ),
             ),
@@ -150,7 +150,7 @@ class _WalletWidgetState extends State<WalletWidget> {
             Text(
               '₱${amount.toStringAsFixed(2)}',
               style: GoogleFonts.plusJakartaSans(
-                color: Colors.white,
+                color: theme.onPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),

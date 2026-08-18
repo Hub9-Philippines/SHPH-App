@@ -222,7 +222,7 @@ class _IDVerifyWidgetState extends State<IDVerifyWidget> {
                       textStyle: GoogleFonts.plusJakartaSans(
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
-                        color: Colors.white,
+                        color: AppTheme.of(context).onPrimary,
                       ),
                       elevation: 0,
                       borderSide: const BorderSide(

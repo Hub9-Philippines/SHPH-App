@@ -227,7 +227,7 @@ Use the user's name when addressing them. If asked something you don't know, say
                   icon: const Icon(Icons.send_rounded, size: 20),
                   style: IconButton.styleFrom(
                     backgroundColor: theme.primary,
-                    foregroundColor: Colors.white,
+                    foregroundColor: theme.onPrimary,
                     disabledBackgroundColor: theme.alternate,
                   ),
                 ),

@@ -63,10 +63,10 @@ class _AboutWidgetState extends State<AboutWidget> {
                         ),
                       ],
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.home_repair_service,
                       size: 50,
-                      color: Colors.white,
+                      color: AppTheme.of(context).onPrimary,
                     ),
                   ),
                   const SizedBox(height: 24),

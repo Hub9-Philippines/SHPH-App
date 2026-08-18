@@ -379,12 +379,12 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                               ),
                             ),
                             child: _isChangingPassword
-                                ? const SizedBox(
+                                ? SizedBox(
                                     width: 20,
                                     height: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      color: Colors.white,
+                                      color: AppTheme.of(context).onPrimary,
                                     ),
                                   )
                                 : Text(
@@ -395,7 +395,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                                           font: GoogleFonts.plusJakartaSans(
                                             fontWeight: FontWeight.w700,
                                           ),
-                                          color: Colors.white,
+                                          color: AppTheme.of(context).onPrimary,
                                         ),
                                   ),
                           ),

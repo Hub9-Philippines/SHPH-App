@@ -154,7 +154,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                     ),
                   ),
                   SliverFillRemaining(
-                    hasScrollBody: false,
+                    hasScrollBody: true,
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
                       child: PageView(
@@ -495,7 +495,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                                     font: GoogleFonts.plusJakartaSans(
                                       fontWeight: FontWeight.w700,
                                     ),
-                                    color: Colors.white,
+                                    color: theme.onPrimary,
                                   ),
                             ),
                           ),

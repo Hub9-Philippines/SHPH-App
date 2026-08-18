@@ -423,7 +423,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                         fontWeight: FontWeight.w600,
                       ),
                       color:
-                          isSelected ? Colors.white : const Color(0xFF16202A),
+                          isSelected ? AppTheme.of(context).onPrimary : const Color(0xFF16202A),
                     ),
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 10),

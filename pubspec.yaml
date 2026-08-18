@@ -127,18 +127,18 @@ flutter_launcher_icons:
   android: 'launcher_icon'
   ios: true
   image_path: 'assets/images/app_launcher_icon.png'
-  adaptive_icon_background: '#368eff'
-  adaptive_icon_foreground: 'assets/images/app_launcher_icon.png'
+  adaptive_icon_background: '#0d6d78'
+  adaptive_icon_foreground: 'assets/images/AppIcons/android/adaptive-foreground.png'
   min_sdk_android: 21
   remove_alpha_ios: true
 
 flutter_native_splash:
-  color: "#368eff" # Background color
-  image: assets/images/app_launcher_icon.png # Your logo
+  color: "#368EFF" # Background color
+  image: assets/images/shph-logo.png # Your logo
 
   android_12:
-    image: assets/images/app_launcher_icon.png # Icon for Android 12+
-    color: "#368eff"
+    image: assets/images/AppIcons/android/adaptive-foreground.png # Icon for Android 12+
+    color: "#368EFF"
 
 
 # For information on the generic Dart part of this file, see the

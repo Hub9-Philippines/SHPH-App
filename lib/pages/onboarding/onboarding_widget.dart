@@ -446,7 +446,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                           fontStyle:
                               AppTheme.of(context).titleSmall.fontStyle,
                         ),
-                        color: Colors.white,
+                        color: AppTheme.of(context).onPrimary,
                         letterSpacing: 0,
                         fontWeight:
                             AppTheme.of(context).titleSmall.fontWeight,

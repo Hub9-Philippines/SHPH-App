@@ -141,12 +141,12 @@ class _BiometricSetupWidgetState extends State<BiometricSetupWidget> {
                             backgroundColor: theme.primary,
                           ),
                           child: _model.isRegistering
-                              ? const SizedBox(
+                              ? SizedBox(
                                   width: 20,
                                   height: 20,
                                   child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      color: Colors.white),
+                                      color: theme.onPrimary),
                                 )
                               : const Text(
                                   'Register this device'),

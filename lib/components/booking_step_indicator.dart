@@ -71,7 +71,7 @@ class BookingStepIndicator extends StatelessWidget {
                     child: Icon(
                       isComplete ? Icons.check : steps[stepIndex].icon,
                       size: 14,
-                      color: Colors.white,
+                      color: theme.onPrimary,
                     ),
                   ),
                   const SizedBox(width: 6),

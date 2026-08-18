@@ -455,7 +455,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                           height: 56,
                           color: AppTheme.of(context).primary,
                           textStyle: AppTheme.of(context).titleMedium.override(
-                                color: Colors.white,
+                                color: AppTheme.of(context).onPrimary,
                                 fontWeight: FontWeight.w600,
                               ),
                           borderRadius: BorderRadius.circular(12),

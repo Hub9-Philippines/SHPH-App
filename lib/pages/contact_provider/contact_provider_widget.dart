@@ -387,7 +387,7 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
                                             font: GoogleFonts.plusJakartaSans(
                                               fontWeight: FontWeight.w700,
                                             ),
-                                            color: Colors.white,
+                                            color: AppTheme.of(context).onPrimary,
                                           ),
                                   borderRadius: BorderRadius.circular(16),
                                 ),
@@ -482,12 +482,12 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
                                     textStyle: AppTheme.of(context)
                                         .titleMedium
                                         .override(
-                                          font: GoogleFonts.plusJakartaSans(
-                                            fontWeight: FontWeight.w700,
+font: GoogleFonts.plusJakartaSans(
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                            color: AppTheme.of(context).onPrimary,
                                           ),
-                                          color: Colors.white,
-                                        ),
-                                    borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(16),
                                   ),
                                 ),
                               ],

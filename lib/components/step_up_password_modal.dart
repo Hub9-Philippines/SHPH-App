@@ -137,12 +137,12 @@ class _StepUpPasswordModalState extends State<StepUpPasswordModal> {
               onPressed: _loading ? null : _confirm,
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.primary,
-                foregroundColor: Colors.white,
+                foregroundColor: theme.onPrimary,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
               child: _loading
-                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: theme.onPrimary))
                 : const Text('Confirm', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
             ),
           ),

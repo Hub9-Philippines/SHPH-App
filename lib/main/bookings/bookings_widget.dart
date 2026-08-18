@@ -378,7 +378,7 @@ class _BookingsWidgetState extends State<BookingsWidget> {
                   color: theme.primary,
                   textStyle: theme.titleSmall.override(
                     font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
-                    color: Colors.white,
+                    color: theme.onPrimary,
                   ),
                   elevation: 0,
                   borderRadius: BorderRadius.circular(16),
@@ -521,7 +521,7 @@ class _BookingsWidgetState extends State<BookingsWidget> {
                   height: 44,
                   color: theme.primary,
                   textStyle: theme.bodySmall.override(
-                    color: Colors.white,
+                    color: theme.onPrimary,
                     font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                   ),
                   borderRadius: BorderRadius.circular(12),

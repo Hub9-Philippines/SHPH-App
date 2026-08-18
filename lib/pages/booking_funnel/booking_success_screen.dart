@@ -267,7 +267,7 @@ class _SuccessSheet extends StatelessWidget {
             onPressed: onBackHome,
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.primary,
-              foregroundColor: Colors.white,
+              foregroundColor: theme.onPrimary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(18),
               ),
@@ -275,7 +275,7 @@ class _SuccessSheet extends StatelessWidget {
             child: Text(
               'Back to Home',
               style: theme.titleMedium.override(
-                color: Colors.white,
+                color: theme.onPrimary,
                 fontWeight: FontWeight.w700,
               ),
             ),

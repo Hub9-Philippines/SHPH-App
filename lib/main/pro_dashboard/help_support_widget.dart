@@ -100,7 +100,7 @@ class _HelpSupportWidgetState extends State<HelpSupportWidget> {
                   Text(
                     'Need more help?',
                     style: AppTheme.of(context).titleMedium.override(
-                          color: Colors.white,
+                          color: AppTheme.of(context).onPrimary,
                           fontWeight: FontWeight.bold,
                         ),
                   ),
@@ -108,7 +108,7 @@ class _HelpSupportWidgetState extends State<HelpSupportWidget> {
                   Text(
                     'Our support team is available 24/7 to assist you with any issues or questions.',
                     style: AppTheme.of(context).bodyMedium.override(
-                          color: Colors.white70,
+                          color: AppTheme.of(context).onPrimary.withValues(alpha: 0.7),
                         ),
                   ),
                   const SizedBox(height: 16),

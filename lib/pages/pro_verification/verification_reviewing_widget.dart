@@ -292,7 +292,8 @@ class _VerificationReviewingWidgetState
                               style: ElevatedButton.styleFrom(
                                 backgroundColor:
                                     AppTheme.of(context).primary,
-                                foregroundColor: Colors.white,
+                                foregroundColor:
+                                    AppTheme.of(context).onPrimary,
                                 elevation: 0,
                               ),
                             ),
@@ -350,7 +351,7 @@ class _VerificationReviewingWidgetState
                               child: Text(
                                 'Back to Home',
                                 style: AppTheme.of(context).titleSmall.override(
-                                      color: Colors.white,
+                                      color: AppTheme.of(context).onPrimary,
                                       fontWeight: FontWeight.w600,
                                     ),
                               ),

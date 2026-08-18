@@ -305,7 +305,7 @@ class _AvailabilityCalendarWidgetState
           'Add Time Slot',
           style: GoogleFonts.plusJakartaSans(
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: theme.onPrimary,
           ),
         ),
         style: FilledButton.styleFrom(

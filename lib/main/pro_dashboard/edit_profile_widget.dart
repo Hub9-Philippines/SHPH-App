@@ -337,7 +337,7 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
                             onPressed: isSaving ? null : _saveProfile,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppTheme.of(context).primary,
-                              foregroundColor: Colors.white,
+                              foregroundColor: AppTheme.of(context).onPrimary,
                               elevation: 0,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),
@@ -359,7 +359,7 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
                                     style: AppTheme.of(context)
                                         .titleSmall
                                         .override(
-                                          color: Colors.white,
+                                          color: AppTheme.of(context).onPrimary,
                                           fontWeight: FontWeight.w700,
                                         ),
                                   ),
@@ -424,7 +424,7 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
                 child: !hasPhoto
                     ? Icon(
                         Icons.person_rounded,
-                        color: Colors.white,
+                        color: AppTheme.of(context).onPrimary,
                         size: 52,
                       )
                     : null,
@@ -447,7 +447,7 @@ class _ProEditProfileWidgetState extends State<ProEditProfileWidget> {
                       ),
                       child: Icon(
                         Icons.camera_alt_rounded,
-                        color: Colors.white,
+                        color: AppTheme.of(context).onPrimary,
                         size: 18,
                       ),
                     ),

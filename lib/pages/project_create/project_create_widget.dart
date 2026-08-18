@@ -132,11 +132,11 @@ class _ProjectCreateWidgetState extends State<ProjectCreateWidget> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     child: _model.isSubmitting
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white),
+                                strokeWidth: 2, color: theme.onPrimary),
                           )
                         : const Text('Create Project'),
                   ),

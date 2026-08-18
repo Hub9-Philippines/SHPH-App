@@ -30,7 +30,6 @@ class _SettingsWidgetState extends State<SettingsWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, SettingsModel.new);
-    _model.darkMode = AppTheme.themeMode == ThemeMode.dark;
   }
 
   @override
@@ -120,19 +119,6 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                       subtitle: 'Review booking, message, and payment updates',
                       onTap: () =>
                           context.pushNamed(MyNotificationsWidget.routeName),
-                    ),
-                    _buildToggleTile(
-                      icon: Icons.dark_mode_outlined,
-                      title: 'Dark mode',
-                      subtitle: 'Switch between light and dark appearance',
-                      value: _model.darkMode,
-                      onChanged: (value) {
-                        safeSetState(() => _model.darkMode = value);
-                        setDarkModeSetting(
-                          context,
-                          value ? ThemeMode.dark : ThemeMode.light,
-                        );
-                      },
                     ),
                   ],
                 ),
@@ -361,60 +347,6 @@ class _SettingsWidgetState extends State<SettingsWidget> {
               ],
             ),
           ),
-        ),
-      );
-  }
-
-  Widget _buildToggleTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-  }) {
-    final theme = AppTheme.of(context);
-    return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        child: Row(
-          children: [
-            Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                color: theme.surfaceAlt,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(icon, color: theme.primary),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: theme.titleSmall.override(
-                          font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
-                          color: theme.primaryText,
-                        ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: theme.bodySmall.override(
-                          font: GoogleFonts.plusJakartaSans(),
-                          color: theme.secondaryText,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-            Switch.adaptive(
-              value: value,
-              onChanged: onChanged,
-              activeThumbColor: theme.primary,
-            ),
-          ],
         ),
       );
   }

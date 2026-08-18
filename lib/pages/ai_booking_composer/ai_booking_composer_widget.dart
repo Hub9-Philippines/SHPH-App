@@ -102,12 +102,12 @@ class _AiBookingComposerWidgetState extends State<AiBookingComposerWidget> {
                                   safeSetState(() {});
                                 },
                           icon: _model.isLoading
-                              ? const SizedBox(
+                              ? SizedBox(
                                   width: 20,
                                   height: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: Colors.white,
+                                    color: theme.onPrimary,
                                   ),
                                 )
                               : const Icon(Icons.auto_awesome_rounded),
@@ -115,7 +115,7 @@ class _AiBookingComposerWidgetState extends State<AiBookingComposerWidget> {
                             _model.isLoading ? 'Analyzing...' : 'Compose Booking',
                             style: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: theme.onPrimary,
                             ),
                           ),
                           style: FilledButton.styleFrom(

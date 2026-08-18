@@ -166,9 +166,9 @@ class _DocumentScanWidgetState extends State<DocumentScanWidget> {
                     color: AppTheme.of(context).primary,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.edit_document,
-                    color: Colors.white,
+                    color: AppTheme.of(context).onPrimary,
                     size: 16,
                   ),
                 ),
@@ -397,7 +397,7 @@ class _DocumentScanWidgetState extends State<DocumentScanWidget> {
           label: Text(ready ? 'Continue to Face Verification' : 'Complete required documents'),
           style: ElevatedButton.styleFrom(
             backgroundColor: theme.primary,
-            foregroundColor: Colors.white,
+            foregroundColor: theme.onPrimary,
             disabledBackgroundColor: theme.alternate,
             disabledForegroundColor: theme.secondaryText,
             elevation: 0,

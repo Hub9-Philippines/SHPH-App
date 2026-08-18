@@ -365,7 +365,7 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
                 color: AppTheme.of(context).primary,
                 textStyle: AppTheme.of(context).titleSmall.override(
                       font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
-                      color: Colors.white,
+                      color: AppTheme.of(context).onPrimary,
                     ),
                 borderRadius: BorderRadius.circular(18),
               ),

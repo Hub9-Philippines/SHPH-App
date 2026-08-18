@@ -108,7 +108,7 @@ class _SplashWidgetState extends State<SplashWidget> {
                   textAlign: TextAlign.center,
                   style: GoogleFonts.getFont(
                     'Plus Jakarta Sans',
-                    color: Colors.white,
+                    color: AppTheme.of(context).onPrimary,
                     fontWeight: FontWeight.bold,
                     fontSize: 28,
                   ),
@@ -119,7 +119,7 @@ class _SplashWidgetState extends State<SplashWidget> {
                   textAlign: TextAlign.center,
                   style: GoogleFonts.getFont(
                     'Plus Jakarta Sans',
-                    color: Colors.white.withValues(alpha: 0.85),
+                    color: AppTheme.of(context).onPrimary.withValues(alpha: 0.85),
                     fontWeight: FontWeight.w500,
                     fontSize: 14,
                   ),

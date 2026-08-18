@@ -303,15 +303,15 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                                 if (_model.booking!.status == 'completed')
                                   FFButtonWidget(
                                     onPressed: () {},
-                                    text: 'Leave a Review',
-                                    options: FFButtonOptions(
-                                      width: double.infinity,
-                                      height: 54,
-                                      color: AppTheme.of(context).primary,
-                                      textStyle: AppTheme.of(context)
-                                          .titleSmall
-                                          .override(
-                                            color: Colors.white,
+text: 'Leave a Review',
+                                     options: FFButtonOptions(
+                                       width: double.infinity,
+                                       height: 54,
+                                       color: AppTheme.of(context).primary,
+                                       textStyle: AppTheme.of(context)
+                                           .titleSmall
+                                           .override(
+                                             color: AppTheme.of(context).onPrimary,
                                             font: GoogleFonts.plusJakartaSans(
                                               fontWeight: FontWeight.w700,
                                             ),
@@ -412,7 +412,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                     height: 44,
                     color: AppTheme.of(context).primary,
                     textStyle: AppTheme.of(context).bodySmall.override(
-                          color: Colors.white,
+                          color: AppTheme.of(context).onPrimary,
                           font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                         ),
                     borderRadius: BorderRadius.circular(12),

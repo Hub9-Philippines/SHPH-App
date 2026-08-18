@@ -98,11 +98,11 @@ class _RoomJoinWidgetState extends State<RoomJoinWidget> {
                         backgroundColor: theme.primary,
                       ),
                       child: _model.isLookingUp
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 16,
                               height: 16,
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white),
+                                  strokeWidth: 2, color: theme.onPrimary),
                             )
                           : const Text('Look Up'),
                     ),
@@ -176,11 +176,11 @@ class _RoomJoinWidgetState extends State<RoomJoinWidget> {
                             const EdgeInsets.symmetric(vertical: 14),
                       ),
                       child: _model.isJoining
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white),
+                                  strokeWidth: 2, color: theme.onPrimary),
                             )
                           : Text(canJoin
                               ? 'Join Room'

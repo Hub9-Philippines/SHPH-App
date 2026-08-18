@@ -97,7 +97,7 @@ class _TMRatingScreenState extends State<TMRatingScreen> {
                             },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: theme.primary,
-                        foregroundColor: Colors.white,
+                        foregroundColor: theme.onPrimary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(18),
                         ),
@@ -109,13 +109,13 @@ class _TMRatingScreenState extends State<TMRatingScreen> {
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                                    AlwaysStoppedAnimation<Color>(theme.onPrimary),
                               ),
                             )
                           : Text(
                               'Submit Rating',
                               style: theme.titleMedium.override(
-                                color: Colors.white,
+                                color: theme.onPrimary,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),

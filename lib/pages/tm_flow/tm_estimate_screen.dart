@@ -159,7 +159,7 @@ class TMEstimateScreen extends StatelessWidget {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: theme.primary,
-                    foregroundColor: Colors.white,
+                    foregroundColor: theme.onPrimary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
                     ),
@@ -167,7 +167,7 @@ class TMEstimateScreen extends StatelessWidget {
                   child: Text(
                     'Find Provider',
                     style: theme.titleMedium.override(
-                      color: Colors.white,
+                      color: theme.onPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ),

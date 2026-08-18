@@ -162,7 +162,7 @@ class TimeSelectionPanel extends StatelessWidget {
               onPressed: onNext,
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.primary,
-                foregroundColor: Colors.white,
+                foregroundColor: theme.onPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
                 ),
@@ -170,7 +170,7 @@ class TimeSelectionPanel extends StatelessWidget {
               child: Text(
                 'Continue to setup',
                 style: theme.titleMedium.override(
-                  color: Colors.white,
+                  color: theme.onPrimary,
                   fontWeight: FontWeight.w700,
                 ),
               ),

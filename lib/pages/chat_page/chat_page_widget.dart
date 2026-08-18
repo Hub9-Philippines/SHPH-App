@@ -418,7 +418,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                   ),
                   child: Icon(
                     Icons.send_rounded,
-                    color: Colors.white,
+                    color: AppTheme.of(context).onPrimary,
                     size: 22,
                   ),
                 ),

@@ -154,12 +154,12 @@ class _ReportProblemWidgetState extends State<ReportProblemWidget> {
                                 vertical: 14),
                           ),
                           child: _model.isSubmitting
-                              ? const SizedBox(
+                              ? SizedBox(
                                   width: 20,
                                   height: 20,
                                   child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      color: Colors.white),
+                                      color: theme.onPrimary),
                                 )
                               : const Text('Submit Ticket'),
                         ),

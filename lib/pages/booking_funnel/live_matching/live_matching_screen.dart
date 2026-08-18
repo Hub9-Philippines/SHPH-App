@@ -1863,7 +1863,7 @@ class _GradientBar extends StatelessWidget {
 
   static const _stages = <_GradientStage>[
     _GradientStage(
-      color1: Color(0xFF63CBD6),
+      color1: Color(0xFF368EFF),
       color2: Color(0xFF4FC3F7),
     ),
     _GradientStage(
@@ -2288,7 +2288,7 @@ class _MatchedSheet extends StatelessWidget {
             onPressed: onBackHome,
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.primary,
-              foregroundColor: Colors.white,
+              foregroundColor: theme.onPrimary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(18),
               ),
@@ -2296,7 +2296,7 @@ class _MatchedSheet extends StatelessWidget {
             child: Text(
               'Back to Home',
               style: theme.titleMedium.override(
-                color: Colors.white,
+                color: theme.onPrimary,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -2412,7 +2412,7 @@ class _TimeoutSheet extends StatelessWidget {
               onPressed: onAdjustBooking,
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.primary,
-                foregroundColor: Colors.white,
+                foregroundColor: theme.onPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),

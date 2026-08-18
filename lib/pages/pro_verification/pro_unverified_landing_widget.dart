@@ -174,7 +174,7 @@ class _ProUnverifiedLandingWidgetState
                           const EdgeInsetsDirectional.fromSTEB(0, 0, 8, 0),
                       color: AppTheme.of(context).primary,
                       textStyle: AppTheme.of(context).titleMedium.override(
-                            color: Colors.white,
+                            color: AppTheme.of(context).onPrimary,
                             font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w600),
                           ),

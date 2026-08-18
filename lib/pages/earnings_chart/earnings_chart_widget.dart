@@ -86,7 +86,7 @@ class _EarningsChartWidgetState extends State<EarningsChartWidget> {
           Text(
             'Total Earnings',
             style: GoogleFonts.plusJakartaSans(
-              color: Colors.white.withValues(alpha: 0.8),
+              color: theme.onPrimary.withValues(alpha: 0.8),
               fontSize: 14,
             ),
           ),
@@ -94,7 +94,7 @@ class _EarningsChartWidgetState extends State<EarningsChartWidget> {
           Text(
             '₱${total.toStringAsFixed(2)}',
             style: GoogleFonts.plusJakartaSans(
-              color: Colors.white,
+              color: theme.onPrimary,
               fontSize: 36,
               fontWeight: FontWeight.w700,
             ),
@@ -103,7 +103,7 @@ class _EarningsChartWidgetState extends State<EarningsChartWidget> {
           Text(
             '$jobs completed jobs',
             style: GoogleFonts.plusJakartaSans(
-              color: Colors.white.withValues(alpha: 0.7),
+              color: theme.onPrimary.withValues(alpha: 0.7),
               fontSize: 14,
             ),
           ),

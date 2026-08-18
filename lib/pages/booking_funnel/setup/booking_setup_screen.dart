@@ -130,7 +130,7 @@ class BookingSetupScreen extends StatelessWidget {
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: theme.primary,
-                          foregroundColor: Colors.white,
+                          foregroundColor: theme.onPrimary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -138,7 +138,7 @@ class BookingSetupScreen extends StatelessWidget {
                         child: Text(
                           'Continue to checkout',
                           style: theme.titleMedium.override(
-                            color: Colors.white,
+                            color: theme.onPrimary,
                             fontWeight: FontWeight.w700,
                           ),
                         ),

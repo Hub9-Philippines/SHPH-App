@@ -488,7 +488,7 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
               label: const Text('Start Verification'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.primary,
-                foregroundColor: Colors.white,
+                foregroundColor: theme.onPrimary,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               ),
@@ -872,7 +872,7 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
                   label: const Text('Try Again'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: theme.primary,
-                    foregroundColor: Colors.white,
+                    foregroundColor: theme.onPrimary,
                   ),
                 ),
               ],

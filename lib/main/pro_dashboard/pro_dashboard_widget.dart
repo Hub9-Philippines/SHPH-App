@@ -1056,7 +1056,7 @@ class _ProScheduleWidgetState extends State<ProScheduleWidget> {
                   shape: BoxShape.circle,
                 ),
                 child: clientPhoto == null
-                    ? const Icon(Icons.person, color: Colors.white)
+                    ? Icon(Icons.person, color: AppTheme.of(context).onPrimary)
                     : null,
               ),
               const SizedBox(width: 12),
@@ -2852,7 +2852,7 @@ class _ProMessagesWidgetState extends State<ProMessagesWidget> {
                   unreadCount.toString(),
                   style: AppTheme.of(context).labelSmall.override(
                         font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
-                        color: Colors.white,
+                        color: AppTheme.of(context).onPrimary,
                   ),
                 ),
               ),
@@ -3492,7 +3492,7 @@ class _ProProfileWidgetState extends State<ProProfileWidget> {
                                               font: GoogleFonts.plusJakartaSans(
                                                 fontWeight: FontWeight.w700,
                                               ),
-                                              color: Colors.white,
+                                              color: AppTheme.of(context).onPrimary,
                                             ),
                                       ),
                                     ),
@@ -4082,7 +4082,7 @@ class _DashboardAvatar extends StatelessWidget {
               : null,
         ),
         child: imageUrl == null || imageUrl!.isEmpty
-            ? Icon(Icons.person, color: Colors.white, size: size * 0.48)
+            ? Icon(Icons.person, color: AppTheme.of(context).onPrimary, size: size * 0.48)
             : null,
       );
 }

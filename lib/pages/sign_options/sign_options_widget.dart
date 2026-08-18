@@ -173,7 +173,7 @@ class _SignOptionsWidgetState extends State<SignOptionsWidget> {
                                             .titleMedium
                                             .fontStyle,
                                       ),
-                                      color: Colors.white,
+                                      color: AppTheme.of(context).onPrimary,
                                       letterSpacing: 0,
                                       fontWeight: FontWeight.w600,
                                       fontStyle: AppTheme.of(context)

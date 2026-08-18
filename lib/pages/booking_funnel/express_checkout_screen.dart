@@ -325,24 +325,24 @@ class _ExpressSheet extends StatelessWidget {
             onPressed: controller.isSubmitting ? null : onConfirm,
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.primary,
-              foregroundColor: Colors.white,
+              foregroundColor: theme.onPrimary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(18),
               ),
             ),
             child: controller.isSubmitting
-                ? const SizedBox(
+                ? SizedBox(
                     width: 24,
                     height: 24,
                     child: CircularProgressIndicator(
                       strokeWidth: 2.5,
-                      color: Colors.white,
+                      color: theme.onPrimary,
                     ),
                   )
                 : Text(
                     isScheduled ? 'Confirm & Reserve Slot' : 'Confirm Booking',
                     style: theme.titleMedium.override(
-                      color: Colors.white,
+                      color: theme.onPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -893,7 +893,7 @@ class _ScopeEditSheetState extends State<_ScopeEditSheet> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.primary,
-                foregroundColor: Colors.white,
+                foregroundColor: theme.onPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),

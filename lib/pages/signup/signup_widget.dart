@@ -121,7 +121,7 @@ class _SignupWidgetState extends State<SignupWidget> {
             color: theme.primary,
             borderRadius: BorderRadius.circular(16),
           ),
-          child: Icon(Icons.person_add_rounded, color: Colors.white, size: 28),
+          child: Icon(Icons.person_add_rounded, color: theme.onPrimary, size: 28),
         ),
         const SizedBox(height: 20),
         Text(

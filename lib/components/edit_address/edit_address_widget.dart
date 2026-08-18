@@ -181,7 +181,7 @@ class _EditAddressWidgetState extends State<EditAddressWidget> {
                         EdgeInsetsDirectional.zero,
                     color: AppTheme.of(context).primary,
                     textStyle: AppTheme.of(context).titleMedium.override(
-                          color: Colors.white,
+                          color: AppTheme.of(context).onPrimary,
                           fontWeight: FontWeight.w600,
                         ),
                     elevation: 0,
@@ -253,7 +253,7 @@ class _EditAddressWidgetState extends State<EditAddressWidget> {
                             child: Text(
                               'Default',
                               style: AppTheme.of(context).bodySmall.override(
-                                    color: Colors.white,
+                                    color: AppTheme.of(context).onPrimary,
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
                                   ),

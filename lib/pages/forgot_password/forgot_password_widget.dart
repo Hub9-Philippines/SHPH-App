@@ -415,7 +415,7 @@ class _ForgotPasswordWidgetState extends State<ForgotPasswordWidget> {
                                           .titleMedium
                                           .fontStyle,
                                     ),
-                                    color: Colors.white,
+                                    color: AppTheme.of(context).onPrimary,
                                     letterSpacing: 0,
                                     fontWeight: FontWeight.w600,
                                     fontStyle: AppTheme.of(context)

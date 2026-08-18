@@ -142,7 +142,7 @@ class _TMPaymentScreenState extends State<TMPaymentScreen> {
                         },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: theme.primary,
-                    foregroundColor: Colors.white,
+                    foregroundColor: theme.onPrimary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
                     ),
@@ -154,13 +154,13 @@ class _TMPaymentScreenState extends State<TMPaymentScreen> {
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
                             valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
+                                AlwaysStoppedAnimation<Color>(theme.onPrimary),
                           ),
                         )
                       : Text(
                           'Pay Now',
                           style: theme.titleMedium.override(
-                            color: Colors.white,
+                            color: theme.onPrimary,
                             fontWeight: FontWeight.w700,
                           ),
                         ),

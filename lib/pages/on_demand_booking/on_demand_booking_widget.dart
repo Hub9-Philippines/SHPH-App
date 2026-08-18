@@ -221,7 +221,7 @@ class _OnDemandBookingWidgetState extends State<OnDemandBookingWidget> {
         onPressed: _selectedTimeSlot == null ? null : () {},
         style: FilledButton.styleFrom(
           backgroundColor: theme.primary,
-          foregroundColor: Colors.white,
+          foregroundColor: theme.onPrimary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppThemeData.radiusMd),
           ),

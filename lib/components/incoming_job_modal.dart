@@ -188,7 +188,7 @@ class _IncomingJobModalState extends State<IncomingJobModal> {
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: theme.primary,
-                      foregroundColor: Colors.white,
+                      foregroundColor: theme.onPrimary,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
                     child: const Text('Accept', style: TextStyle(fontWeight: FontWeight.w600)),
