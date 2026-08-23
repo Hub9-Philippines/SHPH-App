@@ -43,9 +43,9 @@ class _SplashWidgetState extends State<SplashWidget> {
 
       if (!mounted) return;
       if (hasCompletedOnboarding) {
-        // Go to sign options if onboarding is done
+        // Go to the merged sign-in screen (welcome absorbed into signin)
         context.goNamed(
-          SignOptionsWidget.routeName,
+          SigninWidget.routeName,
           extra: <String, dynamic>{
             '__transition_info__': const TransitionInfo(
               hasTransition: true,

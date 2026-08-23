@@ -7,10 +7,13 @@ import '/services/logging_service.dart';
 import '/services/service_listing_service.dart';
 import 'bookings_widget.dart' show BookingsWidget;
 
-// 1. Define the model class here or in a separate file
+/// Filter chips shown above the bookings list.
+enum BookingsFilter { all, pending, completed, canceled }
+
 class BookingItem {
   BookingItem({
     required this.id,
+    required this.serviceListingId,
     required this.status,
     required this.title,
     required this.serviceType,
@@ -18,8 +21,10 @@ class BookingItem {
     required this.scheduledExecutionDate,
     required this.price,
     required this.imageUrl,
+    this.providerName,
   });
   final String id;
+  final int serviceListingId;
   final String status;
   final String title;
   final String serviceType;
@@ -27,17 +32,16 @@ class BookingItem {
   final DateTime? scheduledExecutionDate;
   final double price;
   final String imageUrl;
+  final String? providerName;
 }
 
 class BookingsModel extends FlutterFlowModel<BookingsWidget> {
-  // --- STATE FIELDS ---
-  int? selectedTabIndex = 0;
-  PageController? pageViewController;
+  // --- FILTER / SEARCH STATE ---
+  BookingsFilter selectedFilter = BookingsFilter.all;
+  String searchQuery = '';
 
-  // --- DATA LISTS ---
-  // These lists will hold your dynamic production data
-  List<BookingItem> inProgressList = [];
-  List<BookingItem> completedList = [];
+  // --- DATA LIST ---
+  List<BookingItem> bookings = [];
 
   // --- LOADING STATES ---
   bool isLoading = true;
@@ -49,11 +53,81 @@ class BookingsModel extends FlutterFlowModel<BookingsWidget> {
   // Store service listings data
   final Map<int, ServiceListingsRow> _serviceListingsCache = {};
 
-  int get pageViewCurrentIndex => pageViewController != null &&
-          pageViewController!.hasClients &&
-          pageViewController!.page != null
-      ? pageViewController!.page!.round()
-      : 0;
+  /// Bookings scoped by the active chip and narrowed by the search query
+  /// (service title or provider name match).
+  List<BookingItem> get filteredBookings {
+    final query = searchQuery.trim().toLowerCase();
+    return bookings.where((item) {
+      if (!_matchesFilter(item.status)) {
+        return false;
+      }
+      if (query.isEmpty) {
+        return true;
+      }
+      return item.title.toLowerCase().contains(query) ||
+          (item.providerName ?? '').toLowerCase().contains(query);
+    }).toList();
+  }
+
+  bool _matchesFilter(String status) {
+    switch (selectedFilter) {
+      case BookingsFilter.all:
+        return true;
+      case BookingsFilter.pending:
+        // Any non-terminal state is still "pending" user-side.
+        return status.toLowerCase() != 'completed' &&
+            status.toLowerCase() != 'cancelled';
+      case BookingsFilter.completed:
+        return status.toLowerCase() == 'completed';
+      case BookingsFilter.canceled:
+        return status.toLowerCase() == 'cancelled';
+    }
+  }
+
+  /// Context-aware empty-state copy: the active chip decides the pair; an
+  /// active search query takes precedence with its own no-match variant.
+  (String heading, String description) emptyStateCopy({
+    required bool hasSearchQuery,
+  }) {
+    if (hasSearchQuery) {
+      return (
+        'No bookings matched',
+        'Try another keyword or switch the status filter.',
+      );
+    }
+    switch (selectedFilter) {
+      case BookingsFilter.all:
+        return (
+          'No bookings found',
+          "You haven't scheduled any services yet. Find a pro to get started!",
+        );
+      case BookingsFilter.pending:
+        return (
+          'No pending jobs',
+          'Any service requests waiting for provider approval will appear here.',
+        );
+      case BookingsFilter.completed:
+        return (
+          'No completed visits yet',
+          'Once a service technician finishes a job, your history will show up here.',
+        );
+      case BookingsFilter.canceled:
+        return (
+          'No canceled bookings',
+          "Great! You don't have any canceled or interrupted service requests.",
+        );
+    }
+  }
+
+  void setFilter(BookingsFilter filter) {
+    selectedFilter = filter;
+    onStateChanged?.call();
+  }
+
+  void setSearchQuery(String value) {
+    searchQuery = value;
+    onStateChanged?.call();
+  }
 
   @override
   void initState(BuildContext context) {
@@ -66,10 +140,10 @@ class BookingsModel extends FlutterFlowModel<BookingsWidget> {
 
   Future<void> _loadBookings() async {
     try {
-      final bookings = await BookingsService.instance.getUserBookings();
+      final rows = await BookingsService.instance.getUserBookings();
 
       final serviceIds =
-          bookings.map((b) => b.serviceListingId).where((id) => id > 0).toSet();
+          rows.map((b) => b.serviceListingId).where((id) => id > 0).toSet();
       if (serviceIds.isNotEmpty) {
         try {
           for (final id in serviceIds) {
@@ -105,32 +179,26 @@ class BookingsModel extends FlutterFlowModel<BookingsWidget> {
         }
       }
 
-      final inProgress = <BookingItem>[];
-      final completed = <BookingItem>[];
-
-      for (final booking in bookings) {
+      final items = <BookingItem>[];
+      for (final booking in rows) {
         final serviceListing = _serviceListingsCache[booking.serviceListingId];
-        final bookingItem = BookingItem(
-          id: booking.id,
-          status: _formatStatus(booking.status),
-          title: serviceListing?.title ?? 'Unknown Service',
-          serviceType: serviceListing?.categoryName ?? 'Service',
-          date: _formatDate(booking.bookingDate),
-          scheduledExecutionDate: booking.bookingDate,
-          price: booking.totalPrice ?? 0.0,
-          imageUrl: serviceListing?.thumbnail ?? '',
+        items.add(
+          BookingItem(
+            id: booking.id,
+            serviceListingId: booking.serviceListingId,
+            status: _formatStatus(booking.status),
+            title: serviceListing?.title ?? 'Unknown Service',
+            serviceType: serviceListing?.categoryName ?? 'Service',
+            date: _formatDate(booking.bookingDate),
+            scheduledExecutionDate: booking.bookingDate,
+            price: booking.totalPrice ?? 0.0,
+            imageUrl: serviceListing?.thumbnail ?? '',
+            providerName: serviceListing?.providerName,
+          ),
         );
-
-        if (booking.status.toLowerCase() == 'completed' ||
-            booking.status.toLowerCase() == 'cancelled') {
-          completed.add(bookingItem);
-        } else {
-          inProgress.add(bookingItem);
-        }
       }
 
-      inProgressList = inProgress;
-      completedList = completed;
+      bookings = items;
       isLoading = false;
       onStateChanged?.call();
     } catch (e) {
@@ -173,7 +241,5 @@ class BookingsModel extends FlutterFlowModel<BookingsWidget> {
   }
 
   @override
-  void dispose() {
-    pageViewController?.dispose();
-  }
+  void dispose() {}
 }

@@ -93,7 +93,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                       onPressed: () async {
                         // Mark onboarding as completed
                         FFAppState().hasCompletedOnboarding = true;
-                        context.goNamed(SignOptionsWidget.routeName);
+                        context.goNamed(SigninWidget.routeName);
                       },
                       text: 'Skip',
                       options: FFButtonOptions(
@@ -422,7 +422,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                     if (_model.pageViewCurrentIndex.toString() == '2') {
                       // Mark onboarding as completed when navigating from last page
                       FFAppState().hasCompletedOnboarding = true;
-                      await context.pushNamed(SignOptionsWidget.routeName);
+                      await context.pushNamed(SigninWidget.routeName);
                     } else {
                     await _model.pageViewController?.nextPage(
                       duration: const Duration(milliseconds: 300),

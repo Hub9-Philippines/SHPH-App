@@ -4,8 +4,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
+import '/components/instant_dispatch_section.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/pages/geographic_selection/geographic_selection_widget.dart';
 import '/models/service_listing.dart';
+import '/utils/emergency_categories.dart';
 import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
 import '/utils/geo_utils.dart';
@@ -23,11 +26,15 @@ class ServicesScreen extends StatefulWidget {
     this.initialCategory,
     this.initialFilter,
     this.initialSearch,
+    this.emergencyMode = false,
   });
 
   final String? initialCategory;
   final String? initialFilter;
   final String? initialSearch;
+
+  /// Urgent Assistance entry: limits the catalog to emergency domains.
+  final bool emergencyMode;
 
   static String routeName = 'ServicesScreen';
   static String routePath = '/services';
@@ -51,6 +58,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
   void initState() {
     super.initState();
     _model = createModel(context, ServicesModel.new);
+    _model.emergencyMode = widget.emergencyMode;
     _checkDataLoaded();
   }
 
@@ -71,6 +79,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
   Future<void> _refreshServices() async {
     _model.dispose();
     _model = createModel(context, ServicesModel.new);
+    _model.emergencyMode = widget.emergencyMode;
+    _model.emergencyMode = widget.emergencyMode;
     if (widget.initialCategory != null) {
       _model.selectedCategory = widget.initialCategory;
     }
@@ -123,7 +133,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: const Color(0xFFF5F7FA),
+          backgroundColor: AppTheme.of(context).secondaryBackground,
           body: SafeArea(
             child: Column(
               children: [
@@ -145,11 +155,28 @@ class _ServicesScreenState extends State<ServicesScreen> {
                                       const EdgeInsets.fromLTRB(20, 12, 20, 12),
                                   child: Column(
                                     children: [
-                                      _buildSearchBar(context),
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          Expanded(
+                                            child: _buildSearchBar(context),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          _buildLocationPill(context),
+                                        ],
+                                      ),
                                       const SizedBox(height: 16),
                                       _buildHeroSummary(context),
                                       const SizedBox(height: 18),
                                       _buildCategoryRail(context),
+                                      if (_isEmergencySelection) ...[
+                                        InstantDispatchSection(
+                                          categoryName: _model.selectedCategory!,
+                                          onDispatch: (_) =>
+                                              _launchInstantDispatch(context),
+                                        ),
+                                      ],
                                       const SizedBox(height: 14),
                                       _buildSortRow(context),
                                       const SizedBox(height: 18),
@@ -219,8 +246,74 @@ class _ServicesScreenState extends State<ServicesScreen> {
         ),
       );
 
-  Widget _buildSearchBar(BuildContext context) => Container(
-        height: 58,
+  bool get _isEmergencySelection =>
+      _model.selectedCategory != null &&
+      isEmergencyCategory(_model.selectedCategory);
+
+  /// Launches express checkout for the top emergency result in the selected
+  /// category with right-now urgency (the Instant Dispatch guarantee).
+  void _launchInstantDispatch(BuildContext context) {
+    final matches = _model.filteredServices;
+    if (matches.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No dispatch-ready pros nearby yet.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+    final nearest = List<Map<String, dynamic>>.from(matches)
+      ..sort((a, b) => (a['distanceKm'] as double)
+          .compareTo(b['distanceKm'] as double));
+    _openExpressCheckout(context, nearest.first);
+  }
+
+  Widget _buildLocationPill(BuildContext context) {
+    final theme = AppTheme.of(context);
+    final label = FFAppState().selectedAddressLabel.isNotEmpty
+        ? FFAppState().selectedAddressLabel
+        : 'Set location';
+    return Material(
+      color: theme.primary.withValues(alpha: 0.10),
+      borderRadius: BorderRadius.circular(AppThemeData.radiusPill),
+      child: InkWell(
+        onTap: () => context
+            .pushNamed(GeographicSelectionWidget.routeName),
+        borderRadius: BorderRadius.circular(AppThemeData.radiusPill),
+        child: Padding(
+          padding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.place_rounded, size: 16, color: theme.primary),
+              const SizedBox(width: 4),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 84),
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.labelSmall.override(
+                    font: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w700,
+                    ),
+                    color: theme.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 2),
+              Icon(Icons.expand_more_rounded,
+                  size: 16, color: theme.primary),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchBar(BuildContext context) => Container(        height: 58,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -394,7 +487,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
       );
 
   Widget _buildCategoryRail(BuildContext context) => SizedBox(
-        height: 42,
+        height: 46,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
           itemCount: _model.categories.length,
@@ -402,10 +495,26 @@ class _ServicesScreenState extends State<ServicesScreen> {
             final category = _model.categories[index];
             final isSelected = (_model.selectedCategory ?? 'All') == category ||
                 (_model.selectedCategory == null && category == 'All');
+            final isEmergency = isEmergencyCategory(category);
             return Padding(
-              padding: const EdgeInsets.only(right: 10),
+              padding: const EdgeInsets.only(right: AppThemeData.spaceSm),
               child: FilterChip(
-                label: Text(category),
+                label: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (isEmergency) ...[
+                      Icon(
+                        Icons.bolt_rounded,
+                        size: 14,
+                        color: isSelected
+                            ? AppTheme.of(context).onPrimary
+                            : AppTheme.of(context).primary,
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                    Text(category),
+                  ],
+                ),
                 selected: isSelected,
                 onSelected: (_) {
                   setState(() {
@@ -415,7 +524,12 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   });
                 },
                 showCheckmark: false,
-                side: BorderSide.none,
+                side: BorderSide(
+                  color: isEmergency && !isSelected
+                      ? AppTheme.of(context).primary.withValues(alpha: 0.55)
+                      : Colors.transparent,
+                  width: isEmergency && !isSelected ? 1.4 : 0,
+                ),
                 backgroundColor: Colors.white,
                 selectedColor: AppTheme.of(context).primary,
                 labelStyle: AppTheme.of(context).labelMedium.override(
@@ -433,61 +547,59 @@ class _ServicesScreenState extends State<ServicesScreen> {
         ),
       );
 
-  Widget _buildSortRow(BuildContext context) => Row(
-        children: [
-          Expanded(
-            child: Text(
-              '${_model.filteredServices.length} results',
-              style: AppTheme.of(context).titleSmall.override(
-                    font: GoogleFonts.plusJakartaSans(
-                      fontWeight: FontWeight.w700,
-                    ),
-                    color: const Color(0xFF16202A),
-                  ),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: _model.selectedFilter,
-                hint: Text(
-                  'Sort by',
-                  style: AppTheme.of(context).bodySmall.override(
-                        font: GoogleFonts.plusJakartaSans(),
-                      ),
+  Widget _buildSortRow(BuildContext context) {
+    final theme = AppTheme.of(context);
+    const options = <(String?, String)>[
+      (null, 'Default'),
+      ('recommended', 'Recommended'),
+      ('topRated', 'Top rated'),
+      ('lowestPrice', 'Lowest price'),
+      ('nearest', 'Nearest first'),
+    ];
+    return SizedBox(
+      height: 40,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: options.length,
+        separatorBuilder: (_, __) => const SizedBox(width: AppThemeData.spaceSm),
+        itemBuilder: (context, index) {
+          final (value, label) = options[index];
+          final active = _model.selectedFilter == value;
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                _model.selectedFilter = value;
+                _model.applyFilters();
+              });
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color:
+                    active ? theme.primary : theme.primaryBackground,
+                borderRadius:
+                    BorderRadius.circular(AppThemeData.radiusPill),
+                border: Border.all(
+                  color: active ? theme.primary : theme.border,
                 ),
-                items: [
-                  const DropdownMenuItem<String>(
-                    value: 'default',
-                    child: Text('Default'),
+              ),
+              child: Text(
+                label,
+                style: theme.labelMedium.override(
+                  font: GoogleFonts.plusJakartaSans(
+                    fontWeight: active ? FontWeight.w700 : FontWeight.w500,
                   ),
-                  ..._filterLabels.entries.map(
-                    (entry) => DropdownMenuItem<String>(
-                      value: entry.key,
-                      child: Text(entry.value),
-                    ),
-                  ),
-                ],
-                selectedItemBuilder: (context) => [
-                  const Text('Default'),
-                  ..._filterLabels.values.map(Text.new),
-                ],
-                onChanged: (value) {
-                  setState(() {
-                    _model.selectedFilter = value == 'default' ? null : value;
-                    _model.applyFilters();
-                  });
-                },
+                  color: active ? Colors.white : theme.secondaryText,
+                ),
               ),
             ),
-          ),
-        ],
-      );
+          );
+        },
+      ),
+    );
+  }
 
   Widget _buildLoadingState(BuildContext context) => ListView(
         physics: const BouncingScrollPhysics(),
@@ -650,184 +762,245 @@ class _ServicesScreenState extends State<ServicesScreen> {
   Widget _buildServiceCard(
     BuildContext context,
     Map<String, dynamic> service,
-  ) =>
-      RepaintBoundary(
-        child: GestureDetector(
-          onTap: () => _openExpressCheckout(context, service),
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x10000000),
-                  blurRadius: 18,
-                  offset: Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(18),
-                    child: _ServiceCardImage(
-                      imageUrl: service['imageUrl'] as String?,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+  ) {
+    final theme = AppTheme.of(context);
+    final isEmergency = isEmergencyCategory(service['category'] as String?);
+    return RepaintBoundary(
+      child: GestureDetector(
+        onTap: () => _openExpressCheckout(context, service),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: AppThemeData.spaceMd),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
+            border: isEmergency
+                ? Border.all(
+                    color: theme.primary.withValues(alpha: 0.45),
+                    width: 1.2,
+                  )
+                : null,
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x10000000),
+                blurRadius: 18,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Oversized square showcase.
+                    Stack(
                       children: [
-                        Text(
-                          service['title'] as String,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTheme.of(context).titleMedium.override(
-                                font: GoogleFonts.plusJakartaSans(
-                                  fontWeight: FontWeight.w700,
-                                ),
-                                color: const Color(0xFF16202A),
-                              ),
-                        ),
-                        const SizedBox(height: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.of(context)
-                                .primary
-                                .withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(
-                            service['category'] as String,
-                            style: AppTheme.of(context).labelSmall.override(
-                                  font: GoogleFonts.plusJakartaSans(
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                  color: AppTheme.of(context).primary,
-                                ),
+                        ClipRRect(
+                          borderRadius:
+                              BorderRadius.circular(AppThemeData.radiusMd),
+                          child: _ServiceCardImage(
+                            imageUrl: service['imageUrl'] as String?,
                           ),
                         ),
-                        if (_model.selectedFilter == 'nearest' &&
-                            service['distanceText'] != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.location_on_rounded,
-                                  size: 14,
-                                  color: AppTheme.of(context).primary,
-                                ),
-                                const SizedBox(width: 3),
-                                Text(
-                                  service['distanceText'] as String,
-                                  style:
-                                      AppTheme.of(context).labelSmall.override(
-                                            font: GoogleFonts.plusJakartaSans(),
-                                            color: AppTheme.of(context).primary,
-                                          ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.star_rounded,
-                              size: 18,
-                              color: Color(0xFFFFC44D),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              (service['rating'] as double).toStringAsFixed(1),
-                              style: AppTheme.of(context).bodySmall.override(
-                                    font: GoogleFonts.plusJakartaSans(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                    color: const Color(0xFF16202A),
-                                  ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              '${service['reviewCount']} reviews',
-                              style: AppTheme.of(context).bodySmall.override(
-                                    font: GoogleFonts.plusJakartaSans(),
-                                    color: const Color(0xFF6F7B86),
-                                  ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                service['price'] as String,
-                                style: AppTheme.of(context).titleSmall.override(
-                                      font: GoogleFonts.plusJakartaSans(
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                      color: AppTheme.of(context).primary,
-                                    ),
-                              ),
-                            ),
-                            Material(
-                              color: const Color(0xFFF5F7FA),
-                              borderRadius: BorderRadius.circular(14),
-                              child: InkWell(
-                                onTap: () {
-                                  final serviceId = service['id'] as int;
+                        Positioned(
+                          top: 6,
+                          right: 6,
+                          child: Material(
+                            color: Colors.white.withValues(alpha: 0.92),
+                            borderRadius:
+                                BorderRadius.circular(AppThemeData.radiusPill),
+                            child: InkWell(
+                              onTap: () {
+                                final serviceId = service['id'] as int;
+                                setState(() {
                                   if (_model.favorites.contains(serviceId)) {
                                     _model.favorites.remove(serviceId);
                                   } else {
                                     _model.favorites.add(serviceId);
                                   }
-                                  setState(() {});
-                                },
-                                borderRadius: BorderRadius.circular(14),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(10),
-                                  child: Icon(
-                                    _model.favorites
-                                            .contains(service['id'] as int)
-                                        ? Icons.favorite_rounded
-                                        : Icons.favorite_border_rounded,
-                                    color: _model.favorites
-                                            .contains(service['id'] as int)
-                                        ? const Color(0xFFE2557B)
-                                        : const Color(0xFF8A97A4),
-                                    size: 20,
-                                  ),
+                                });
+                              },
+                              borderRadius:
+                                  BorderRadius.circular(AppThemeData.radiusPill),
+                              child: Padding(
+                                padding: const EdgeInsets.all(5),
+                                child: Icon(
+                                  _model.favorites.contains(service['id'] as int)
+                                      ? Icons.favorite_rounded
+                                      : Icons.favorite_border_rounded,
+                                  color: _model.favorites
+                                          .contains(service['id'] as int)
+                                      ? const Color(0xFFE2557B)
+                                      : const Color(0xFF8A97A4),
+                                  size: 16,
                                 ),
                               ),
                             ),
-                          ],
+                          ),
                         ),
                       ],
                     ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  service['title'] as String,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.titleSmall.override(
+                                    font: GoogleFonts.plusJakartaSans(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    color: theme.primaryText,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(Icons.verified_rounded,
+                                  size: 15, color: theme.primary),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(Icons.near_me_rounded,
+                                  size: 13, color: Color(0xFF6F7B86)),
+                              const SizedBox(width: 3),
+                              Text(
+                                service['distanceText'] as String? ??
+                                    'Distance unknown',
+                                style: theme.labelSmall.override(
+                                  font: GoogleFonts.plusJakartaSans(),
+                                  color: theme.secondaryText,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFF4D6),
+                              borderRadius:
+                                  BorderRadius.circular(AppThemeData.radiusPill),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.star_rounded,
+                                    size: 13, color: Color(0xFFF59E0B)),
+                                const SizedBox(width: 3),
+                                Text(
+                                  '${(service['rating'] as double).toStringAsFixed(1)}'
+                                  ' (${service['reviewCount']})',
+                                  style: theme.labelSmall.override(
+                                    font: GoogleFonts.plusJakartaSans(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    color: const Color(0xFF8A6A00),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                if ((service['description'] as String? ?? '').isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Text(
+                      service['description'] as String,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.bodySmall.override(
+                        font: GoogleFonts.plusJakartaSans(),
+                        color: theme.secondaryText,
+                      ),
+                    ),
                   ),
-                ],
-              ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Starting Fee',
+                            style: theme.labelSmall.override(
+                              font: GoogleFonts.plusJakartaSans(),
+                              color: theme.secondaryText,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            service['price'] as String,
+                            style: theme.titleSmall.override(
+                              font: GoogleFonts.plusJakartaSans(
+                                fontWeight: FontWeight.w800,
+                              ),
+                              color: theme.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    FilledButton.icon(
+                      onPressed: () =>
+                          _openExpressCheckout(context, service),
+                      icon: const Icon(Icons.arrow_forward_rounded, size: 16),
+                      label: Text(
+                        'Book Now',
+                        style: theme.labelLarge.override(
+                          font: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.w700,
+                          ),
+                          color: Colors.white,
+                        ),
+                      ),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: theme.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppThemeData.spaceLg,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppThemeData.radiusMd),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
-      );
+      ),
+    );
+  }
 }
 
 class _ServiceCardImage extends StatelessWidget {
   const _ServiceCardImage({required this.imageUrl});
 
-  static const double size = 92;
+  static const double size = 104;
 
   final String? imageUrl;
 

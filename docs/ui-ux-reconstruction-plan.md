@@ -923,3 +923,35 @@ the already-built SHPH API services. `flutter analyze` passes with **0 errors**.
 - `nearby_pro_mock_data.dart` still drives services/booking-controller/live-matching geo-matching (mock data, deferred).
 - `docs/api_gaps.md` is stale (claims `preferShphApi=false`; it's `true`) — should be updated or deleted.
 
+### 13.12 Split Client / Provider Apps (client-only extraction)
+
+OpenSpec change: `split-client-provider-apps`. Separated the former 2-in-1 binary into client (`E:\Dev\SHPH`) and provider (`E:\Dev\shph-provider`).
+
+| Task | Files | Status |
+|------|-------|--------|
+| Fork provider app: copy working tree → `E:\Dev\shph-provider`, rename bundle ids to `com.hub9.serbisyohubph.provider`, add provenance README | `E:\Dev\shph-provider` sibling repo | ✅ Done |
+| Client signup: delete service-provider role option (`SignOptionsWidget` now shows single "Sign Up" button), force `role: client` in `SignupWidget` + `CreateProfileWidget`, simplify `ShphAuthManager._mapSignupRole` to always `client` | `lib/pages/sign_options/*`, `lib/pages/signup/*`, `lib/pages/create_profile/*`, `lib/auth/shph_auth/shph_auth_manager.dart` | ✅ Done |
+| Post-auth: always land on Home; provider-capable accounts get `kProviderAppStoreUrl` notice (`Continue as client` / `Sign out`) | `lib/auth/post_auth_navigation_flow.dart`, `test/client_auth_flow_test.dart` | ✅ Done |
+| Shell: delete provider tabs from `MainNavWidget` (now fixed 5 tabs: Home/Explore/Bookings/Messages/Profile) | `lib/main.dart` | ✅ Done |
+| Router: remove ~15 provider-only GoRoutes (`/pro-dashboard`, `/earnings`, `/my-services`, `/provider-*`, KYC family, etc.), strip `requiresProvider` / `_providerHomePaths` / lifecycle redirect | `lib/router/app_router.dart` | ✅ Done |
+| Pages: delete `lib/main/pro_dashboard`, `lib/pages/{earnings, earnings_chart, my_services, provider_analytics, provider_bids, provider_booking_flow, availability_calendar, kyc_hub, e_k_y_c_begin, i_d_verify, pro_verification}` and `provider_verification_service` | `lib/pages/*`, `lib/services/` | ✅ Done (dispatch + tm_flow kept: still referenced by TM booking flow) |
+| Index exports cleaned | `lib/index.dart` | ✅ Done |
+| Verification: `flutter analyze` 0 errors; `client_auth_flow_test` 3/3; `booking_funnel_test` 3/4 (one pre-existing live-matching timeout) | — | ✅ Done |
+| Docs: README now documents client-only scope and provider fork | `README.md` | ✅ Done |
+
+
+### 13.13 Merged Sign-In Welcome + Explore Discovery Redesign
+
+OpenSpec change: explore-redesign-and-signin-merge.
+
+| Task | Files | Status |
+|------|-------|--------|
+| Auth entry merge: splash + onboarding land on SigninWidget; both Sign-Up links go straight to signup; /signOptions kept as alias route to sign-in; lib/pages/sign_options/ deleted | lib/pages/splash/*, lib/pages/onboarding/*, lib/pages/signin/signin_widget.dart, lib/router/app_router.dart, lib/index.dart | âœ… Done |
+| Compact welcome header on sign-in: rounded welcome-graphic.png (150px) + "Welcome to SerbisyoHub PH" headline above Phone/Email tabs | lib/pages/signin/signin_widget.dart | âœ… Done |
+| Theme marketing constants (promo blues, referral purple, rating-badge green) | lib/theme/app_theme.dart | âœ… Done |
+| Shared category icon mapper extracted | lib/utils/category_icons.dart, lib/components/categories_widget/categories_widget.dart | âœ… Done |
+| New Explore components: HeroOfferBanner, ProviderProximityCard, InviteEarnBanner; SectionHeader gained seeAllLabel ("View All") | lib/components/ | âœ… Done |
+| Data layer: Dart client now maps listing latitude/longitude/distance_km and sends lat/lng query params so the backend computes real distances; new etchTopRatedNear (rating-ordered, distance-sorted, cap 10) | lib/api/models/service_listing.dart, lib/api/resources/services_api.dart, lib/api/bridges/api_row_mapper.dart, lib/backend/supabase/database/tables/service_listings.dart, lib/models/service_listing.dart, lib/services/service_listing_service.dart | âœ… Done |
+| Explore tab = 5-section feed: search+category shortcuts (View All â†’ /categories), hero offer banner (CTA â†’ /services), Top Rated Near You carousel (hidden without location), Recommended for You feed (RecommendationCard â†’ product detail), Invite & Earn footer (clipboard share); full categories grid removed from tab (still on /categories) | lib/main/explore/explore_widget.dart, lib/main/explore/explore_model.dart | âœ… Done |
+| Verification: lutter analyze 0 errors; explore_redesign_test 9/9; signin_merge_test 1/1; device smoke-test pending user | â€" | âœ… Done / â�³ smoke |
+| Follow-up noted: dedicated /api/recommendations/nearby|get-personalized endpoints exist on shph-api main but omit provider name/rating/photo in payload; current sections use /api/services/listings/?lat&lng&ordering=-rating which returns everything needed | â€" | ðŸ"Œ Deferred |

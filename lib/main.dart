@@ -16,7 +16,6 @@ import 'components/connectivity_banner.dart';
 import 'flutter_flow/flutter_flow_util.dart';
 import 'index.dart';
 import 'l10n/app_localizations.dart';
-import 'main/pro_dashboard/pro_dashboard_widget.dart';
 import 'services/auth_service.dart';
 import 'services/connectivity_service.dart';
 import 'services/error_handler.dart';
@@ -237,47 +236,23 @@ class NavBarPage extends StatefulWidget {
 
 /// This is the private State class that goes with NavBarPage.
 class _NavBarPageState extends State<NavBarPage> {
-  String _clientPageName = 'Home';
-  String _providerPageName = 'Jobs';
+  String _currentPageName = 'Home';
   late Widget? _currentPage;
 
   @override
   void initState() {
     super.initState();
-    _clientPageName = widget.initialPage ?? _clientPageName;
+    _currentPageName = widget.initialPage ?? _currentPageName;
     _currentPage = widget.page;
   }
 
-  Map<String, Widget> get _clientTabs => const {
+  Map<String, Widget> get _tabs => const {
         'Home': HomeWidget(),
         'Explore': ExploreWidget(),
         'Bookings': BookingsWidget(),
         'Messages': MessagesWidget(),
         'Profile': ProfileWidget(),
       };
-
-  Map<String, Widget> get _providerTabs => {
-        'Jobs': const ProJobsWidget(),
-        'Schedule': const ProScheduleWidget(),
-        'Earnings': const ProEarningsWidget(),
-        'Messages': const MessagesWidget(),
-        'Profile': const ProfileWidget(),
-      };
-
-  bool get _isProvider => FFAppState().isProvider;
-
-  Map<String, Widget> get _tabs => _isProvider ? _providerTabs : _clientTabs;
-
-  String get _currentPageName =>
-      _isProvider ? _providerPageName : _clientPageName;
-
-  set _currentPageName(String value) {
-    if (_isProvider) {
-      _providerPageName = value;
-    } else {
-      _clientPageName = value;
-    }
-  }
 
   Widget _buildMessagesIcon(BuildContext context) {
     final count = FFAppState().unreadConversations;
@@ -312,7 +287,7 @@ class _NavBarPageState extends State<NavBarPage> {
     );
   }
 
-  List<BottomNavigationBarItem> _buildClientItems(BuildContext context) =>
+  List<BottomNavigationBarItem> _buildNavItems(BuildContext context) =>
       const [
         BottomNavigationBarItem(
           icon: Icon(Icons.home_outlined, size: 24),
@@ -341,40 +316,9 @@ class _NavBarPageState extends State<NavBarPage> {
         ),
       ];
 
-  List<BottomNavigationBarItem> _buildProviderItems(BuildContext context) =>
-      const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.work_outlined, size: 24),
-          label: 'Jobs',
-          tooltip: '',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.calendar_today_outlined, size: 24),
-          label: 'Schedule',
-          tooltip: '',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.account_balance_wallet_outlined, size: 24),
-          label: 'Earnings',
-          tooltip: '',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.chat_outlined, size: 24),
-          label: 'Messages',
-          tooltip: '',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person_outline, size: 24),
-          label: 'Profile',
-          tooltip: '',
-        ),
-      ];
-
   @override
   Widget build(BuildContext context) {
-    final isProvider = _isProvider;
     final tabs = _tabs;
-    final currentIndex = tabs.keys.toList().indexOf(_currentPageName);
 
     return Scaffold(
       resizeToAvoidBottomInset: !widget.disableResizeToAvoidBottomInset,
@@ -382,7 +326,8 @@ class _NavBarPageState extends State<NavBarPage> {
         listenable: FFAppState(),
         builder: (context, _) {
           final currentTabs = _tabs;
-          return _currentPage ?? (currentTabs[_currentPageName] ?? currentTabs.values.first);
+          return _currentPage ??
+              (currentTabs[_currentPageName] ?? currentTabs.values.first);
         },
       ),
       bottomNavigationBar: ListenableBuilder(
@@ -390,9 +335,7 @@ class _NavBarPageState extends State<NavBarPage> {
         builder: (context, _) {
           final currentTabs = _tabs;
           final idx = currentTabs.keys.toList().indexOf(_currentPageName);
-          final items = isProvider
-              ? _buildProviderItems(context)
-              : _buildClientItems(context);
+          final items = _buildNavItems(context);
           return BottomNavigationBar(
             currentIndex: idx.clamp(0, items.length - 1),
             onTap: (i) => safeSetState(() {

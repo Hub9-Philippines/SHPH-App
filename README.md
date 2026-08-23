@@ -1,6 +1,8 @@
-# SerbisyoHub PH 🇵🇭
+# SerbisyoHub PH — Client App 🇵🇭
 
-A service provider marketplace mobile application built for Filipinos. Clients can find and book local service providers for home services, while professionals can list their services and manage their bookings.
+> **Client-only app.** Provider tools now live in the standalone **SerbisyoHub Provider** app (`E:\Dev\shph-provider`). This repository no longer contains provider dashboard, earnings, service management, or KYC verification screens.
+
+A service marketplace mobile application for **clients**: discover services, book providers, track jobs, chat, and review. Provider capabilities (job handling, earnings, KYC) were extracted to `shph-provider` per `openspec/changes/split-client-provider-apps`.
 
 ## Branches
 
@@ -13,14 +15,13 @@ A service provider marketplace mobile application built for Filipinos. Clients c
 
 ## Tech Stack
 
-### Mobile App (Flutter)
+### Mobile App — Client (Flutter)
 - **Framework**: Flutter 3.x (Dart 3.0+, Android, iOS, Web)
-- **State Management**: Provider
-- **Routing**: go_router
-- **Auth**: Supabase Auth (Google Sign-In, Apple Sign-In, email/password)
-- **Backend Client**: Dio (REST), supabase_flutter (Realtime, Storage)
+- **State Management**: Provider + FFAppState
+- **Routing**: go_router (client routes only; provider routes removed)
+- **Auth**: SHPH REST API (`ShphAuthManager` / `AuthService`; `provider` role removed — all signups are clients)
+- **Backend Client**: Dio (REST) against `https://serbisyohubph.com`
 - **Maps**: Google Maps / Google Places
-- **ML Kit**: Face detection, document scanning
 - **UI**: Lottie, Flutter Animate, Smooth Page Indicator, Skeletonizer
 - **Push Notifications**: Firebase Cloud Messaging
 
@@ -179,20 +180,18 @@ flutter build ios --release
 flutter build web --release
 ```
 
-## App Features
+## App Features (client)
 
 - **Onboarding**: Three-screen intro with animated illustrations
-- **Authentication**: Email/password, Google Sign-In, Apple Sign-In
-- **Home**: Service discovery, featured listings, search
-- **Categories**: 10 service categories with sub-listings
-- **Booking**: Full booking flow with date/time selection, address management
-- **Chat**: Real-time messaging between clients and providers
-- **Payments**: Card and e-wallet payment method management
-- **E-KYC**: Identity verification with document scanning and face verification
-- **Pro Dashboard**: Provider profile management, service history, reviews
+- **Authentication**: Email/password, Google/Apple sign-in (client accounts only)
+- **Home / Explore / Categories**: Service discovery, featured listings, search
+- **Booking**: Full client booking flow with date/time selection, address management, payment
+- **Chat**: Real-time messaging with providers
+- **Payments**: Card and e-wallet management, wallet
 - **Notifications**: Real-time booking and chat notifications
-- **Reviews**: Rate and review completed services
-- **Favorites**: Bookmark services for later
+- **Reviews / Favorites**: Rate services, bookmark providers
+
+> Provider features (Jobs, Schedule, Earnings, My Services, Analytics, Bids, KYC) now ship in `shph-provider`.
 
 ## License
 

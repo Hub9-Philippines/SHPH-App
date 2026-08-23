@@ -35,23 +35,20 @@ class ShphBookingsApi {
 
   Future<ShphBooking> createBooking({
     required int listingId,
-    String? scheduledDate,
-    String? scheduledTime,
+    required DateTime scheduledAt,
     String? notes,
-    double? totalPrice,
   }) async {
     final response = await _client.post<Map<String, dynamic>>(
       '/api/services/bookings/',
+      // `scheduled_at` is required by the deployed serializer; total_price is
+      // readOnly and must not be sent.
       data: ShphBooking(
         id: '',
         listing: listingId,
         status: 'pending',
       ).toCreateJson(
-        listingId: listingId,
-        scheduledDate: scheduledDate,
-        scheduledTime: scheduledTime,
+        scheduledAt: scheduledAt,
         notes: notes,
-        totalPrice: totalPrice,
       ),
     );
     return ShphBooking.fromJson(response.data ?? {});

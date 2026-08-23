@@ -10,12 +10,16 @@ class SectionHeader extends StatelessWidget {
     this.seeAllRoute,
     this.onSeeAll,
     this.padding,
+    this.seeAllLabel = 'See all',
   });
 
   final String title;
   final String? seeAllRoute;
   final VoidCallback? onSeeAll;
   final EdgeInsetsGeometry? padding;
+
+  /// Link text for the trailing action (e.g. 'View All').
+  final String seeAllLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +41,7 @@ class SectionHeader extends StatelessWidget {
             GestureDetector(
               onTap: onSeeAll ?? () => Navigator.pushNamed(context, seeAllRoute!),
               child: Text(
-                'See all',
+                seeAllLabel,
                 style: AppTheme.of(context).bodySmall.override(
                       font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                       color: AppTheme.of(context).primaryBrandText,

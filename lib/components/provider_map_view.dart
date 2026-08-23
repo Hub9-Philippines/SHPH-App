@@ -70,7 +70,7 @@ class _ProviderMapViewState extends State<ProviderMapView> {
         Polyline(
           polylineId: const PolylineId('route'),
           points: widget.polylinePoints!,
-          color: const Color(0xFF368EFF),
+          color: AppTheme.of(context).primary,
           width: 4,
           jointType: JointType.round,
         ),

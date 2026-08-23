@@ -1165,7 +1165,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                               tag: 'CreateProfile',
                                             );
                                             LoggingService.debug(
-                                              'Auth - currentUserUid: $currentUserUid, phone: ${FFAppState().phone}, role: ${FFAppState().tempsignuprole}',
+                                              'Auth - currentUserUid: $currentUserUid, phone: ${FFAppState().phone}, role: client',
                                               tag: 'CreateProfile',
                                             );
 
@@ -1196,7 +1196,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                                   .text
                                                   .trim(),
                                               FFAppState().phone,
-                                              FFAppState().tempsignuprole,
+                                              'client',
                                             );
 
                                             if (_model.register == 'success') {
@@ -1206,39 +1206,19 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                                 tag: 'CreateProfile',
                                               );
                                               LoggingService.info(
-                                                'Role: ${FFAppState().tempsignuprole}, navigating...',
+                                                'Role: client, navigating to Home',
                                                 tag: 'CreateProfile',
                                               );
 
-                                              // Refresh the session user so the
-                                              // role getters / provider lifecycle
-                                              // reflect the saved profile.
                                               await AuthService.instance
                                                   .refreshCurrentUser();
                                               if (!context.mounted) return;
-                                              final isProvider =
-                                                  AuthService.instance
-                                                          .isProvider ||
-                                                      FFAppState()
-                                                              .tempsignuprole
-                                                              .toLowerCase() !=
-                                                          'client';
-
-                                              if (isProvider) {
-                                                LoggingService.info(
-                                                  'Navigating to EKYCBegin',
-                                                  tag: 'CreateProfile',
-                                                );
-                                                await context.pushNamed(
-                                                    EKYCBeginWidget.routeName);
-                                              } else {
-                                                LoggingService.info(
-                                                  'Navigating to Home',
-                                                  tag: 'CreateProfile',
-                                                );
-                                                await context.pushNamed(
-                                                    HomeWidget.routeName);
-                                              }
+                                              LoggingService.info(
+                                                'Navigating to Home',
+                                                tag: 'CreateProfile',
+                                              );
+                                              await context.pushNamed(
+                                                  HomeWidget.routeName);
                                             } else {
                                               LoggingService.error(
                                                 'Registration failed: ${_model.register}',

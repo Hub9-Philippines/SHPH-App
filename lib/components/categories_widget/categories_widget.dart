@@ -6,6 +6,8 @@ import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/categories_service.dart';
 import '/theme/app_theme.dart';
+import '/utils/category_icons.dart';
+import '/utils/emergency_categories.dart';
 import 'categories_widget_model.dart';
 
 export 'categories_widget_model.dart';
@@ -108,6 +110,7 @@ class _CategoriesWidgetWidgetState extends State<CategoriesWidgetWidget> {
 
   Widget _buildCategoryCard(CategoriesRow category, int index) {
     final palette = _paletteForIndex(index);
+    final isEmergency = isEmergencyCategory(category.name);
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -121,6 +124,12 @@ class _CategoriesWidgetWidgetState extends State<CategoriesWidgetWidget> {
               colors: palette,
             ),
             borderRadius: BorderRadius.circular(22),
+            border: isEmergency
+                ? Border.all(
+                    color: AppTheme.of(context).primaryBackground,
+                    width: 2,
+                  )
+                : null,
             boxShadow: [
               BoxShadow(
                 color: palette.first.withValues(alpha: 0.16),
@@ -134,17 +143,25 @@ class _CategoriesWidgetWidgetState extends State<CategoriesWidgetWidget> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.16),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: _buildCategoryArt(category),
-                  ),
+                Row(
+                  children: [
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.16),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: _buildCategoryArt(category),
+                      ),
+                    ),
+                    if (isEmergency) ...[
+                      const Spacer(),
+                      _EmergencyBadge(),
+                    ],
+                  ],
                 ),
                 const Spacer(),
                 Text(
@@ -160,7 +177,7 @@ class _CategoriesWidgetWidgetState extends State<CategoriesWidgetWidget> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Open services',
+                  isEmergency ? 'Instant dispatch' : 'Open services',
                   style: AppTheme.of(context).bodySmall.override(
                         font: GoogleFonts.plusJakartaSans(
                           fontSize: 11,
@@ -176,114 +193,36 @@ class _CategoriesWidgetWidgetState extends State<CategoriesWidgetWidget> {
     );
   }
 
+  Widget _EmergencyBadge() => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+        decoration: BoxDecoration(
+          color: AppTheme.of(context).primary,
+          borderRadius: BorderRadius.circular(AppThemeData.radiusPill),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.bolt_rounded, size: 11, color: Colors.white),
+            const SizedBox(width: 2),
+            Text(
+              '24/7',
+              style: AppTheme.of(context).labelSmall.override(
+                    font: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 9,
+                    ),
+                    color: Colors.white,
+                  ),
+            ),
+          ],
+        ),
+      );
+
   Widget _buildCategoryArt(CategoriesRow category) => Icon(
-        _categoryIcon(category),
+        CategoryIcons.resolve(slug: category.icon, name: category.name),
         color: Colors.white,
         size: 22,
       );
-
-  IconData _categoryIcon(CategoriesRow category) {
-    final bySlug = _iconBySlug(category.icon);
-    if (bySlug != null) {
-      return bySlug;
-    }
-    return _iconByName(category.name);
-  }
-
-  IconData? _iconBySlug(String? slug) {
-    if (slug == null) {
-      return null;
-    }
-    switch (slug.trim().toLowerCase()) {
-      case 'key':
-        return Icons.key_rounded;
-      case 'wrench':
-        return Icons.plumbing_rounded;
-      case 'zap':
-        return Icons.bolt_rounded;
-      case 'sparkles':
-        return Icons.cleaning_services_rounded;
-      case 'wind':
-        return Icons.ac_unit_rounded;
-      case 'tool':
-        return Icons.kitchen_rounded;
-      case 'bug':
-        return Icons.bug_report_rounded;
-      case 'car':
-        return Icons.local_car_wash_rounded;
-      case 'hammer':
-        return Icons.handyman_rounded;
-      case 'paint-bucket':
-        return Icons.format_paint_rounded;
-      case 'home':
-        return Icons.roofing_rounded;
-      case 'layers':
-        return Icons.layers_rounded;
-      case 'flame':
-        return Icons.local_fire_department_rounded;
-      case 'tree':
-        return Icons.park_rounded;
-      case 'truck':
-        return Icons.local_shipping_rounded;
-      case 'users':
-        return Icons.engineering_rounded;
-      default:
-        return null;
-    }
-  }
-
-  IconData _iconByName(String name) {
-    final normalized = name.toLowerCase();
-    if (normalized.contains('clean')) {
-      return Icons.cleaning_services_rounded;
-    }
-    if (normalized.contains('plumb')) {
-      return Icons.plumbing_rounded;
-    }
-    if (normalized.contains('paint')) {
-      return Icons.format_paint_rounded;
-    }
-    if (normalized.contains('electric')) {
-      return Icons.bolt_rounded;
-    }
-    if (normalized.contains('aircon') || normalized.contains('hvac')) {
-      return Icons.ac_unit_rounded;
-    }
-    if (normalized.contains('car wash')) {
-      return Icons.local_car_wash_rounded;
-    }
-    if (normalized.contains('carpent') || normalized.contains('wood')) {
-      return Icons.handyman_rounded;
-    }
-    if (normalized.contains('lock')) {
-      return Icons.key_rounded;
-    }
-    if (normalized.contains('appliance')) {
-      return Icons.kitchen_rounded;
-    }
-    if (normalized.contains('pest')) {
-      return Icons.bug_report_rounded;
-    }
-    if (normalized.contains('roof')) {
-      return Icons.roofing_rounded;
-    }
-    if (normalized.contains('mason')) {
-      return Icons.layers_rounded;
-    }
-    if (normalized.contains('weld')) {
-      return Icons.local_fire_department_rounded;
-    }
-    if (normalized.contains('landscap') || normalized.contains('garden')) {
-      return Icons.park_rounded;
-    }
-    if (normalized.contains('mov')) {
-      return Icons.local_shipping_rounded;
-    }
-    if (normalized.contains('labor') || normalized.contains('handyman')) {
-      return Icons.engineering_rounded;
-    }
-    return Icons.category_rounded;
-  }
 
   List<Color> _paletteForIndex(int index) {
     const palettes = [

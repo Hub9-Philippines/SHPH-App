@@ -80,22 +80,10 @@ class ShphAuthManager extends AuthManager
     return null;
   }
 
-  /// Maps the SignOptions selection (`client`/`pro`/`provider`/`both`) onto the
-  /// backend register payload, matching web `RegisterPage.vue`:
-  ///   - client   → role: client
-  ///   - provider → role: provider
-  ///   - both     → role: provider + is_provider + is_client flags
+  /// Client-app only: always creates a client account.
+  /// Provider creation lives in the standalone provider app (shph-provider).
   ({String role, bool? isProvider, bool? isClient}) _mapSignupRole(String raw) {
-    switch (raw.trim().toLowerCase()) {
-      case 'pro':
-      case 'provider':
-        return (role: 'provider', isProvider: null, isClient: null);
-      case 'both':
-        return (role: 'provider', isProvider: true, isClient: true);
-      case 'client':
-      default:
-        return (role: 'client', isProvider: null, isClient: null);
-    }
+    return (role: 'client', isProvider: null, isClient: null);
   }
 
   @override

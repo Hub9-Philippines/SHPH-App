@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/auth/auth_util.dart';
-import '/components/screen_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import '/services/logging_service.dart';
@@ -24,11 +23,16 @@ class MyNotificationsWidget extends StatefulWidget {
   State<MyNotificationsWidget> createState() => _MyNotificationsWidgetState();
 }
 
+enum NotificationFilter { all, bookings, offers, system }
+
+enum _TypeBucket { bookings, offers, system }
+
 class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
   late MyNotificationsModel _model;
   late Future<List<AppNotification>> _notificationsFuture;
   Timer? _pollTimer;
   bool _isMarkingAllRead = false;
+  NotificationFilter _filter = NotificationFilter.all;
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
@@ -276,30 +280,32 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
   }
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
+  Widget build(BuildContext context) {
+    // Strict light theme for this screen.
+    return Theme(
+      data: AppTheme.lightTheme(),
+      child: GestureDetector(
         onTap: () {
           FocusScope.of(context).unfocus();
           FocusManager.instance.primaryFocus?.unfocus();
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: AppTheme.of(context).secondaryBackground,
+          backgroundColor: Colors.white,
           body: SafeArea(
             child: Column(
               children: [
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: ScreenHeader(
-                    title: 'Notifications',
-                    subtitle: 'Updates about bookings, messages, and payments.',
-                  ),
-                ),
+                _buildHeaderBar(context),
+                _buildFilterChips(context),
+                const SizedBox(height: 4),
+                Divider(height: 1, thickness: 0.5, color: theme_divider),
                 Expanded(
                   child: FutureBuilder<List<AppNotification>>(
                     future: _notificationsFuture,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
+                        return const Center(
+                            child: CircularProgressIndicator());
                       }
 
                       if (snapshot.hasError) {
@@ -312,15 +318,26 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                         );
                       }
 
-                      final notifications = snapshot.data ?? [];
-                      final unreadCount =
-                          notifications.where((item) => !item.isRead).length;
+                      final notifications =
+                          _applyFilter(snapshot.data ?? []);
                       if (notifications.isEmpty) {
-                        return _buildMessageState(
-                          context,
-                          icon: Icons.notifications_none_rounded,
-                          title: 'No notifications',
-                          subtitle: 'You are all caught up right now.',
+                        return RefreshIndicator(
+                          color: AppTheme.of(context).primary,
+                          onRefresh: _refreshNotifications,
+                          child: ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            children: [
+                              SizedBox(
+                                height: MediaQuery.sizeOf(context).height * 0.5,
+                                child: _buildMessageState(
+                                  context,
+                                  icon: Icons.notifications_none_rounded,
+                                  title: 'No notifications',
+                                  subtitle: _emptySubtitleFor(_filter),
+                                ),
+                              ),
+                            ],
+                          ),
                         );
                       }
 
@@ -328,23 +345,18 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                         color: AppTheme.of(context).primary,
                         onRefresh: _refreshNotifications,
                         child: ListView.separated(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
-                          itemCount: notifications.length + 1,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 12),
-                          itemBuilder: (context, index) {
-                            if (index == 0) {
-                              return _buildSummaryCard(
-                                context,
-                                totalCount: notifications.length,
-                                unreadCount: unreadCount,
-                              );
-                            }
-                            return _buildNotificationCard(
-                              notifications[index - 1],
-                            );
-                          },
+                          physics: const BouncingScrollPhysics(
+                            parent: AlwaysScrollableScrollPhysics(),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          itemCount: notifications.length,
+                          separatorBuilder: (_, __) => Divider(
+                            height: 1,
+                            thickness: 0.5,
+                            color: theme_divider.withValues(alpha: 0.6),
+                          ),
+                          itemBuilder: (context, index) =>
+                              _buildNotificationRow(notifications[index]),
                         ),
                       );
                     },
@@ -354,100 +366,193 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
             ),
           ),
         ),
-      );
+      ),
+    );
+  }
 
-  Widget _buildSummaryCard(
-    BuildContext context, {
-    required int totalCount,
-    required int unreadCount,
-  }) =>
-      Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [
-              Color(0xFF17212B),
-              Color(0xFF27455F),
-              Color(0xFF4A7C96),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+  Color get theme_divider => Theme.of(context).dividerColor;
+
+  Widget _buildHeaderBar(BuildContext context) {
+    final theme = AppTheme.of(context);
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/');
+              }
+            },
+            icon: const Icon(Icons.chevron_left_rounded, size: 28),
+            color: theme.primaryText,
           ),
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x1A17212B),
-              blurRadius: 20,
-              offset: Offset(0, 12),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Stay on top of every update',
-              style: AppTheme.of(context).titleMedium.override(
-                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
-                    color: Colors.white,
-                  ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              unreadCount == 0
-                  ? 'You are caught up right now.'
-                  : '$unreadCount unread notifications still need your attention.',
-              style: AppTheme.of(context).bodyMedium.override(
-                    font: GoogleFonts.plusJakartaSans(),
-                    color: Colors.white.withValues(alpha: 0.84),
-                  ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _SummaryMetric(
-                    label: 'Unread',
-                    value: '$unreadCount',
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _SummaryMetric(
-                    label: 'Total',
-                    value: '$totalCount',
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed:
-                    unreadCount == 0 || _isMarkingAllRead ? null : _markAllAsRead,
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.34),
-                  ),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                ),
-                child: Text(
-                  _isMarkingAllRead ? 'Marking...' : 'Mark all as read',
-                  style: AppTheme.of(context).labelLarge.override(
-                        font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
-                        color: Colors.white,
-                      ),
+          Expanded(
+            child: Center(
+              child: Text(
+                'Notification',
+                style: theme.titleMedium.override(
+                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
+                  color: theme.primaryText,
                 ),
               ),
             ),
-          ],
+          ),
+          IconButton(
+            onPressed: _openSettingsSheet,
+            icon: const Icon(Icons.settings_outlined),
+            color: theme.primaryText,
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openSettingsSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Notification settings',
+                style: AppTheme.of(sheetContext).titleMedium.override(
+                      font: GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w700),
+                    ),
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                leading: Icon(Icons.done_all_rounded,
+                    color: AppTheme.of(sheetContext).primary),
+                title: Text(
+                  _isMarkingAllRead ? 'Marking...' : 'Mark all as read',
+                  style: AppTheme.of(sheetContext).bodyLarge,
+                ),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _markAllAsRead();
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.tune_rounded,
+                    color: AppTheme.of(sheetContext).primary),
+                title: Text(
+                  'Granular controls live inside each service update.',
+                  style: AppTheme.of(sheetContext).bodyMedium,
+                ),
+              ),
+            ],
+          ),
         ),
-      );
+      ),
+    );
+  }
+
+  Widget _buildFilterChips(BuildContext context) {
+    final theme = AppTheme.of(context);
+    final chips = <(NotificationFilter, String)>[
+      (NotificationFilter.all, 'All'),
+      (NotificationFilter.bookings, 'Bookings'),
+      (NotificationFilter.offers, 'Offers'),
+      (NotificationFilter.system, 'System'),
+    ];
+    return SizedBox(
+      height: 40,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: chips.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final (filter, label) = chips[index];
+          final active = _filter == filter;
+          return GestureDetector(
+            onTap: () => safeSetState(() => _filter = filter),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: active
+                    ? theme.primary
+                    : theme.surfaceAlt,
+                borderRadius:
+                    BorderRadius.circular(AppThemeData.radiusPill),
+              ),
+              child: Text(
+                label,
+                style: theme.labelMedium.override(
+                  font: GoogleFonts.plusJakartaSans(
+                    fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                  ),
+                  color: active ? Colors.white : theme.secondaryText,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  List<AppNotification> _applyFilter(List<AppNotification> source) =>
+      source.where((n) => _matchesFilter(n, _filter)).toList();
+
+  bool _matchesFilter(AppNotification n, NotificationFilter filter) {
+    switch (filter) {
+      case NotificationFilter.all:
+        return true;
+      case NotificationFilter.bookings:
+        return _typeBucket(n) == _TypeBucket.bookings;
+      case NotificationFilter.offers:
+        return _typeBucket(n) == _TypeBucket.offers;
+      case NotificationFilter.system:
+        return _typeBucket(n) == _TypeBucket.system;
+    }
+  }
+
+  /// Heuristic bucketing of server notification types into the three chips.
+  _TypeBucket _typeBucket(AppNotification n) {
+    final haystack =
+        '${n.type ?? ''} ${n.title} ${n.route ?? ''}'.toLowerCase();
+    if (haystack.contains('offer') ||
+        haystack.contains('promo') ||
+        haystack.contains('discount') ||
+        haystack.contains('reward')) {
+      return _TypeBucket.offers;
+    }
+    if (haystack.contains('book') ||
+        haystack.contains('confirm') ||
+        haystack.contains('remind') ||
+        haystack.contains('schedule') ||
+        haystack.contains('arriv') ||
+        haystack.contains('en_route') ||
+        haystack.contains('complete')) {
+      return _TypeBucket.bookings;
+    }
+    return _TypeBucket.system;
+  }
+
+  String _emptySubtitleFor(NotificationFilter filter) => switch (filter) {
+        NotificationFilter.bookings =>
+          'Booking updates will land here as providers respond.',
+        NotificationFilter.offers =>
+          'Promos and special offers will show up here.',
+        NotificationFilter.system =>
+          'System updates will appear here when available.',
+        NotificationFilter.all => 'You are all caught up right now.',
+      };
 
   Widget _buildMessageState(
     BuildContext context, {
@@ -463,11 +568,9 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
             constraints: const BoxConstraints(maxWidth: 420),
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: AppTheme.of(context).primaryBackground,
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(
-                color: AppTheme.of(context).border,
-              ),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
+              border: Border.all(color: theme_divider),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -479,14 +582,16 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                     color: AppTheme.of(context).primary.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Icon(icon, size: 30, color: AppTheme.of(context).primary),
+                  child: Icon(icon,
+                      size: 30, color: AppTheme.of(context).primary),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   title,
                   textAlign: TextAlign.center,
                   style: AppTheme.of(context).titleMedium.override(
-                        font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+                        font: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.w700),
                         color: AppTheme.of(context).primaryText,
                       ),
                 ),
@@ -505,94 +610,114 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
         ),
       );
 
-  Widget _buildNotificationCard(AppNotification notification) => GestureDetector(
-        onTap: () => _handleNotificationTap(notification),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppTheme.of(context).primaryBackground,
-            borderRadius: BorderRadius.circular(24),
-            border: notification.isRead
-                ? null
-                : Border.all(
-                    color: AppTheme.of(context).primary.withValues(alpha: 0.28),
-                    width: 1.4,
-                  ),
-            boxShadow: AppThemeData.shadowCard,
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppTheme.of(context).primary.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(
-                  _getIconForType(notification.type),
-                  color: AppTheme.of(context).primary,
-                  size: 24,
-                ),
+  Widget _buildNotificationRow(AppNotification notification) {
+    final theme = AppTheme.of(context);
+    final code = _badgeCode(notification);
+    return InkWell(
+      onTap: () => _handleNotificationTap(notification),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: theme.primary.withValues(alpha: 0.10),
+                shape: BoxShape.circle,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            notification.title,
-                            style: AppTheme.of(context).titleSmall.override(
-                                  font: GoogleFonts.plusJakartaSans(
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                  color: AppTheme.of(context).primaryText,
-                                ),
+              child: code == null
+                  ? Icon(_getIconForType(notification.type),
+                      size: 20, color: theme.primary)
+                  : Text(
+                      code,
+                      style: theme.labelSmall.override(
+                        font: GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w800,
+                        ),
+                        color: theme.primary,
+                      ),
+                    ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          notification.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.bodyLarge.override(
+                            font: GoogleFonts.plusJakartaSans(
+                              fontWeight: FontWeight.w700,
+                            ),
+                            color: theme.primaryText,
                           ),
                         ),
-                        if (!notification.isRead)
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: AppTheme.of(context).primary,
-                              shape: BoxShape.circle,
-                            ),
+                      ),
+                      const SizedBox(width: 8),
+                      if (!notification.isRead)
+                        Container(
+                          width: 7,
+                          height: 7,
+                          margin: const EdgeInsets.only(top: 5, right: 6),
+                          decoration: BoxDecoration(
+                            color: theme.primary,
+                            shape: BoxShape.circle,
                           ),
-                      ],
+                        ),
+                      Text(
+                        _formatTime(notification.createdAtDateTime),
+                        style: theme.labelSmall.override(
+                          font: GoogleFonts.plusJakartaSans(),
+                          color: theme.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    notification.body.trim().isNotEmpty
+                        ? notification.body
+                        : 'Open this update to see more details.',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.bodySmall.override(
+                      font: GoogleFonts.plusJakartaSans(),
+                      color: theme.secondaryText,
+                      lineHeight: 1.35,
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      (notification.body?.trim().isNotEmpty == true
-                              ? notification.body
-                              : null) ??
-                          'Open this update to see more details.',
-                      style: AppTheme.of(context).bodyMedium.override(
-                            font: GoogleFonts.plusJakartaSans(),
-                            color: AppTheme.of(context).secondaryText,
-                          ),
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      _formatTime(notification.createdAtDateTime),
-                      style: AppTheme.of(context).labelSmall.override(
-                            font: GoogleFonts.plusJakartaSans(),
-                            color: AppTheme.of(context).textTertiary,
-                          ),
-                    ),
-                  ],
-                ),
+                  ),                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      );
+      ),
+    );
+  }
+
+  /// Two-letter service code from the title's initials; null falls back to
+  /// the type icon glyph.
+  String? _badgeCode(AppNotification notification) {
+    final words = notification.title
+        .toUpperCase()
+        .replaceAll(RegExp('[^A-Z ]'), '')
+        .split(' ')
+        .where((w) => w.isNotEmpty)
+        .toList();
+    if (words.isEmpty) return null;
+    if (words.length == 1) {
+      return words.first.substring(0, words.first.length.clamp(1, 2));
+    }
+    return '${words.first[0]}${words[1][0]}';
+  }
 
   IconData _getIconForType(String? type) {
     switch (type?.toLowerCase()) {
@@ -633,41 +758,4 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
     }
     return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
   }
-}
-
-class _SummaryMetric extends StatelessWidget {
-  const _SummaryMetric({
-    required this.label,
-    required this.value,
-  });
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: AppTheme.of(context).titleMedium.override(
-                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
-                    color: Colors.white,
-                  ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: AppTheme.of(context).bodySmall.override(
-                    color: Colors.white.withValues(alpha: 0.8),
-                  ),
-            ),
-          ],
-        ),
-      );
 }

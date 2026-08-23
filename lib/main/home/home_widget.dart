@@ -88,7 +88,7 @@ void _openActiveBooking(_ActiveBookingShortcutData booking) {    final status = 
 if (status == 'confirmation pending') {      Navigator.of(context).push(        buildBookingFlowRoute(          LiveMatchingScreen(            bookingDate: booking.bookingDate,            serviceTitle: booking.serviceTitle,          ),        ),      );
 return;    }
 
-Navigator.of(context).push(      MaterialPageRoute(        builder: (_) => StatusPage(          bookingStatus: booking.status,          bookingDate: booking.bookingDate,          providerName: booking.providerName,          serviceTitle: booking.serviceTitle,        ),      ),    );  }
+Navigator.of(context).push(      MaterialPageRoute(        builder: (_) => StatusPage(          bookingStatus: booking.status,          bookingDate: booking.bookingDate,          providerName: booking.providerName,          serviceTitle: booking.serviceTitle,          bookingReference: booking.id,        ),      ),    );  }
 
 bool _isSameCalendarDay(DateTime a, DateTime b) =>      a.year == b.year && a.month == b.month && a.day == b.day;
 Future<void> _loadDeviceLocation({bool forceUseDevice = false}) async {    try {      final position = await _determineCurrentPosition();

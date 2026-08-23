@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/components/content_container.dart';
 import '/components/screen_header.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/custom_code/widgets/index.dart' as custom_widgets;
 import '/flutter_flow/flutter_flow_util.dart';
-import '/index.dart' show CallHistoryDetailsPageWidget, ChatPageWidget, MyNotificationsWidget;
+import '/index.dart' show CallHistoryDetailsPageWidget, ChatPageWidget;
 import '/theme/app_theme.dart';
 import 'messages_model.dart';
 
@@ -113,18 +112,20 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                           child: _buildSearchField(),
                         ),
+                        const SizedBox(height: AppThemeData.spaceLg),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Container(
                             width: double.infinity,
                             height: 68,
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
                               color: AppTheme.of(context).primaryBackground,
-                              borderRadius: BorderRadius.circular(24),
+                              borderRadius:
+                                  BorderRadius.circular(AppThemeData.radiusLg),
                               boxShadow: AppThemeData.shadowCard,
                             ),
                             child:
@@ -146,7 +147,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                         ),
                         const SizedBox(height: 16),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: _buildSectionLabel(),
                         ),
                         const SizedBox(height: 12),
@@ -156,7 +157,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                   SliverFillRemaining(
                     hasScrollBody: true,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                       child: PageView(
                         controller: _model.pageViewController ??=
                             PageController(
@@ -191,7 +192,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
     return Container(
         decoration: BoxDecoration(
           color: theme.primaryBackground,
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
           boxShadow: AppThemeData.shadowSoft,
         ),
         child: TextFormField(
@@ -210,15 +211,15 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                     icon: const Icon(Icons.close_rounded),
                   ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
               borderSide: BorderSide.none,
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
               borderSide: BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
               borderSide: BorderSide(
                 color: theme.primary.withValues(alpha: 0.22),
                 width: 1.4,
@@ -317,7 +318,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
 
     if (_filteredCallHistory.isEmpty) {
       return _buildEmptyState(
-        icon: Icons.call_outlined,
+        icon: Icons.call_end_rounded,
         title: _searchController.text.isEmpty
             ? 'No call activity yet'
             : 'No calls matched',
@@ -347,10 +348,10 @@ class _MessagesWidgetState extends State<MessagesWidget> {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 28),
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(28),
+            padding: const EdgeInsets.all(AppThemeData.spaceXl),
             decoration: BoxDecoration(
               color: theme.primaryBackground,
-              borderRadius: BorderRadius.circular(28),
+              borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
               border: Border.all(color: theme.border),
             ),
             child: Column(
@@ -360,16 +361,17 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                   width: 68,
                   height: 68,
                   decoration: BoxDecoration(
-                    color: theme.primaryLight,
+                    color:
+                        AppThemeData.successTeal.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(22),
                   ),
                   child: Icon(
                     icon,
                     size: 32,
-                    color: theme.primaryDark,
+                    color: AppThemeData.successTeal,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppThemeData.spaceLg),
                 Text(
                   title,
                   style: theme.titleMedium.override(
@@ -378,7 +380,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                       ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppThemeData.spaceSm),
                 Text(
                   description,
                   style: theme.bodyMedium.override(

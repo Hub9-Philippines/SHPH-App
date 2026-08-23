@@ -4,7 +4,10 @@ enum BookingUrgency { rightNow, laterToday, scheduled }
 
 enum ServiceType { standard, deep, premium }
 
-enum BookingPaymentMethod { gcash, card, cod }
+enum BookingPaymentMethod { gcash, maya, card, qrPh, cod }
+
+/// Checkout step labels for the confirm-booking progress spine.
+const List<String> kCheckoutSteps = ['Services', 'Location', 'Payment'];
 
 @immutable
 class BookingAddress {
@@ -42,6 +45,8 @@ class BookingDraft {
     this.scheduledTime,
     this.liveSearchToken,
     this.reservationToken,
+    this.landmarks = '',
+    this.requireArrivalCode = true,
   });
 
   final int? serviceListingId;
@@ -63,6 +68,12 @@ class BookingDraft {
   final String? liveSearchToken;
   final String? reservationToken;
 
+  /// Optional building/room/floor/landmark context for the provider.
+  final String landmarks;
+
+  /// Client preference: require a start PIN before work begins.
+  final bool requireArrivalCode;
+
   BookingDraft copyWith({
     int? serviceListingId,
     String? serviceTitle,
@@ -82,6 +93,8 @@ class BookingDraft {
     TimeOfDay? scheduledTime,
     String? liveSearchToken,
     String? reservationToken,
+    String? landmarks,
+    bool? requireArrivalCode,
   }) =>
       BookingDraft(
         serviceListingId: serviceListingId ?? this.serviceListingId,
@@ -102,6 +115,8 @@ class BookingDraft {
         scheduledTime: scheduledTime ?? this.scheduledTime,
         liveSearchToken: liveSearchToken ?? this.liveSearchToken,
         reservationToken: reservationToken ?? this.reservationToken,
+        landmarks: landmarks ?? this.landmarks,
+        requireArrivalCode: requireArrivalCode ?? this.requireArrivalCode,
       );
 }
 

@@ -88,6 +88,10 @@ paths:
     post:
       operationId: admin_stats_create
       description: |-
+        DEPRECATED(app-split-phase2): the Vue in-app admin was removed; the
+        Wagtail admin home page is the maintained surface (see
+        shph.erp.dashboard.get_dashboard_context, the shared source below).
+        Remove after phase 4 confirms no callers.
         GET /api/admin/stats/ — dashboard counts for admin (admin only).
 
         The aggregation logic lives in :mod:`shph.erp.dashboard` so the Wagtail
@@ -5579,7 +5583,11 @@ paths:
           description: ''
     post:
       operationId: earnings_admin_payouts_create
-      description: GET /api/earnings/admin/payouts/ — all payout requests (admin only).
+      description: |-
+        DEPRECATED(app-split-phase2): the Vue in-app admin was removed; the
+        Wagtail ERP action views are the maintained surface (see
+        earnings/tests_wagtail_actions.py). Remove after phase 4 confirms no
+        callers. GET /api/earnings/admin/payouts/ — all payout requests (admin only).
       tags:
       - earnings
       requestBody:
@@ -6411,6 +6419,73 @@ paths:
                       detail: Authentication credentials were not provided.
                     status_code: 401
                   summary: Raised exception with a single detail message (403/404/etc.)
+          description: ''
+  /api/kyc/resubmit/:
+    post:
+      operationId: kyc_resubmit_create
+      description: |-
+        Re-upload specific documents that were rejected with a fixable rejection. Only callable when the submission is in rejected_fixable status. Transitions the submission to 'resubmitted' and increments the attempt counter.
+
+        **Frontend:** KycRejectionDetailsPage.vue
+      summary: Re-upload rejected documents
+      tags:
+      - KYC
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/KycResubmitRequestRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KycResubmitRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/KycResubmitRequestRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KycSubmission'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+              examples:
+                FieldValidationError:
+                  value:
+                    error: true
+                    detail:
+                      category:
+                      - Invalid pk "999" - object does not exist.
+                    status_code: 400
+                  summary: Raised ValidationError with field-level messages
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+              examples:
+                SimpleDetailMessage:
+                  value:
+                    error: true
+                    detail:
+                      detail: Authentication credentials were not provided.
+                    status_code: 401
+                  summary: Raised exception with a single detail message (403/404/etc.)
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleDetailError'
           description: ''
   /api/kyc/status/:
     get:
@@ -8235,7 +8310,7 @@ paths:
       description: |-
         Admin-only: refund a confirmed payment. Calls PayMongo refund API when configured, otherwise marks payment as refunded locally. Debits provider earnings.
 
-        **Frontend:** AdminDisputesPage.vue, BookingDetailPage.vue
+        **Frontend:** none — Wagtail refund action (payments/admin_actions.py, payments/tests_wagtail_actions.py)
       summary: Refund a payment (admin)
       parameters:
       - in: path
@@ -8383,6 +8458,86 @@ paths:
                 $ref: '#/components/schemas/SimpleDetailError'
           description: ''
         '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleDetailError'
+          description: ''
+  /api/payments/checkout-session/:
+    post:
+      operationId: payments_checkout_session_create
+      description: Create a PayMongo-hosted Checkout Session for a booking and return
+        its checkout_url. The amount is always derived server-side from the booking,
+        never from the client — see CreateIntentView. No active frontend calls this
+        endpoint yet (a prior revision's docstring credited a Flutter app; no such
+        project exists in this workspace).
+      summary: Create PayMongo checkout session
+      tags:
+      - Payments
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateCheckoutSessionRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCheckoutSessionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateCheckoutSessionRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutSessionCreated'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleDetailError'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+              examples:
+                SimpleDetailMessage:
+                  value:
+                    error: true
+                    detail:
+                      detail: Authentication credentials were not provided.
+                    status_code: 401
+                  summary: Raised exception with a single detail message (403/404/etc.)
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+              examples:
+                SimpleDetailMessage:
+                  value:
+                    error: true
+                    detail:
+                      detail: Authentication credentials were not provided.
+                    status_code: 401
+                  summary: Raised exception with a single detail message (403/404/etc.)
+          description: ''
+        '502':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleDetailError'
+          description: ''
+        '503':
           content:
             application/json:
               schema:
@@ -13686,9 +13841,9 @@ paths:
     post:
       operationId: services_on_demand_expand_radius_create_by_id
       description: |-
-        Client expands the search radius of a searching job (default 8 km). Newly included providers receive a broadcast notification and an updated fee estimate is returned.
+        Client expands the search radius of a searching job. The apps walk a fixed 4 km ladder — 4 → 8 → 12 → 16 → 20 → 24 km, one rung every 30s of an 180s search (see shph-app/src/utils/onDemandRadius.ts); 8 km is only the fallback when radius_km is omitted. This endpoint accepts 4–100 and never narrows an active search. Newly included providers receive a broadcast notification and an updated fee estimate is returned.
 
-        **Frontend:** OnDemandBookingPage.vue
+        **Frontend:** OnDemandBookingPage.vue, useTMFlow.ts
       summary: Expand on-demand job search radius
       parameters:
       - in: path
@@ -16541,17 +16696,26 @@ components:
           minLength: 1
           maxLength: 50
         id_front_url:
-          type: string
-          format: uri
-          default: ''
+          oneOf:
+          - type: string
+            format: uri
+            default: ''
+          - type: string
+            maxLength: 0
         id_back_url:
-          type: string
-          format: uri
-          default: ''
+          oneOf:
+          - type: string
+            format: uri
+            default: ''
+          - type: string
+            maxLength: 0
         selfie_url:
-          type: string
-          format: uri
-          default: ''
+          oneOf:
+          - type: string
+            format: uri
+            default: ''
+          - type: string
+            maxLength: 0
         liveness_score:
           type: number
           format: double
@@ -16559,25 +16723,64 @@ components:
         submitter_role:
           $ref: '#/components/schemas/KycSubmissionRoleEnum'
         nbi_clearance_url:
-          type: string
-          format: uri
-          default: ''
+          oneOf:
+          - type: string
+            format: uri
+            default: ''
+          - type: string
+            maxLength: 0
         portfolio_url:
-          type: string
-          format: uri
-          default: ''
+          oneOf:
+          - type: string
+            format: uri
+            default: ''
+          - type: string
+            maxLength: 0
         resume_url:
+          oneOf:
+          - type: string
+            format: uri
+            default: ''
+          - type: string
+            maxLength: 0
+        selected_services: {}
+        operating_areas: {}
+        credential_urls: {}
+        portfolio_urls: {}
+        terms_accepted_at:
           type: string
-          format: uri
-          default: ''
+          format: date-time
+          nullable: true
         status:
           $ref: '#/components/schemas/KycSubmissionStatusEnum'
         rejection_reason:
           type: string
+        rejection_type:
+          oneOf:
+          - $ref: '#/components/schemas/RejectionTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
         reviewed_at:
           type: string
           format: date-time
           nullable: true
+        ref_id:
+          type: string
+          maxLength: 20
+        submission_attempt:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        document_rejections: {}
+        interview_scheduled_at:
+          type: string
+          format: date-time
+          nullable: true
+        interview_completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        interview_notes:
+          type: string
       required:
       - id_type
     AdminPayoutRequest:
@@ -16693,6 +16896,14 @@ components:
       required:
       - count
       - results
+    AppEnum:
+      enum:
+      - client
+      - provider
+      type: string
+      description: |-
+        * `client` - Client app
+        * `provider` - Provider app
     AuditLogRecentResponse:
       type: object
       properties:
@@ -16880,6 +17091,9 @@ components:
         token:
           type: string
         user: {}
+    BlankEnum:
+      enum:
+      - ''
     BlockUserRequestActionEnum:
       enum:
       - block
@@ -16923,6 +17137,14 @@ components:
           type: string
           readOnly: true
         provider_photo:
+          type: string
+          readOnly: true
+          default: ''
+        client_name:
+          type: string
+          readOnly: true
+          default: ''
+        client_photo:
           type: string
           readOnly: true
           default: ''
@@ -17044,10 +17266,25 @@ components:
           type: number
           format: float
           readOnly: true
-        completion_photo_url:
+        client_address:
           type: string
-          format: uri
-          maxLength: 200
+          description: |-
+            The unit/floor line — released only once the job is actually taken.
+
+            The client owns the data and always sees it. The provider gets it after
+            acceptance, not while the booking is still PENDING: the scheduled path
+            assigns a PENDING booking to the nearest provider before they accept or
+            decline, and handing over an exact unit and gate code at that point
+            breaks the same invariant that keeps this off the broadcast fan-out.
+            Anyone else gets nothing.
+          readOnly: true
+        completion_photo_url:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
         completion_photo_urls:
           readOnly: true
         has_review:
@@ -17070,8 +17307,11 @@ components:
       - agreed_price
       - arrived_at
       - client
+      - client_address
       - client_confirmed_arrival
       - client_id
+      - client_name
+      - client_photo
       - completion_photo_urls
       - created_at
       - fee_breakdown
@@ -17284,9 +17524,12 @@ components:
           exclusiveMinimum: true
           nullable: true
         completion_photo_url:
-          type: string
-          format: uri
-          maxLength: 200
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
       required:
       - listing
     BookingRescheduleRequestRequest:
@@ -17366,9 +17609,12 @@ components:
           exclusiveMinimum: true
           nullable: true
         completion_photo_url:
-          type: string
-          format: uri
-          maxLength: 200
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
         pin:
           type: string
           writeOnly: true
@@ -17491,6 +17737,12 @@ components:
           items:
             type: string
           readOnly: true
+        verification_tier:
+          type: string
+          readOnly: true
+        required_credential_label:
+          type: string
+          readOnly: true
       required:
       - active_provider_ids
       - alias
@@ -17498,7 +17750,9 @@ components:
       - has_subcategories
       - id
       - name
+      - required_credential_label
       - slug
+      - verification_tier
     CategoryEnum:
       enum:
       - booking
@@ -17552,10 +17806,13 @@ components:
         content:
           type: string
         file_attachment:
-          type: string
-          format: uri
           nullable: true
-          maxLength: 2048
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 2048
+          - type: string
+            maxLength: 0
         file_type:
           type: string
           nullable: true
@@ -17659,10 +17916,13 @@ components:
           type: string
           minLength: 1
         file_attachment:
-          type: string
-          format: uri
           nullable: true
-          maxLength: 2048
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 2048
+          - type: string
+            maxLength: 0
         file_type:
           type: string
           nullable: true
@@ -17862,6 +18122,18 @@ components:
             ChatMessageSerializer never N+1s on obj.reply_to / obj.sender —
             regardless of whether the calling view pre-populated context.
           readOnly: true
+        retention_state:
+          type: string
+          description: |-
+            Where this thread sits in the post-completion lifecycle.
+
+            Derived from the booking rather than stored here. A ``read_only_at``
+            column would be a second copy of a fact the booking already holds, and
+            the two drift the moment a completion is corrected.
+
+            A thread with no booking — direct, group, staff — is always OPEN. This
+            lifecycle belongs to booking conversations only.
+          readOnly: true
       required:
       - booking_id
       - created_at
@@ -17874,6 +18146,7 @@ components:
       - messages
       - other_participant
       - participants
+      - retention_state
       - unread_count
       - updated_at
     ChatThreadDetailRequest:
@@ -17908,6 +18181,15 @@ components:
           maxLength: 200
         is_admin_thread:
           type: boolean
+    CheckoutSessionCreated:
+      type: object
+      description: Response with the hosted PayMongo checkout URL.
+      properties:
+        checkout_url:
+          type: string
+          format: uri
+      required:
+      - checkout_url
     ClientLogRequestRequest:
       type: object
       properties:
@@ -17982,6 +18264,21 @@ components:
       - last_published_at
       - slug
       - title
+    CreateCheckoutSessionRequest:
+      type: object
+      description: |-
+        POST /api/payments/checkout-session/
+
+        No client-supplied amount: the charge is always derived server-side from
+        the booking (see correlate-paymongo-checkout-to-booking) — never trusted
+        from the client, mirroring CreatePaymentIntent's booking_id contract.
+      properties:
+        booking_id:
+          type: string
+          minLength: 1
+          description: Booking ID (ObjectId string).
+      required:
+      - booking_id
     CreatePaymentIntentRequest:
       type: object
       description: POST /api/payments/create-intent/
@@ -18400,6 +18697,16 @@ components:
         * `weekly` - Weekly
         * `monthly` - Monthly
         * `custom` - Custom
+    GenderEnum:
+      enum:
+      - male
+      - female
+      - undisclosed
+      type: string
+      description: |-
+        * `male` - Male
+        * `female` - Female
+        * `undisclosed` - Prefer not to say
     GroupAddParticipantsRequestRequest:
       type: object
       properties:
@@ -18491,6 +18798,34 @@ components:
         * `national_id` - national_id
         * `passport` - passport
         * `drivers_license` - drivers_license
+    KycResubmitRequestRequest:
+      type: object
+      properties:
+        id_front:
+          type: string
+          format: binary
+        id_back:
+          type: string
+          format: binary
+        selfie:
+          type: string
+          format: binary
+        nbi_clearance:
+          type: string
+          format: binary
+        credentials:
+          type: array
+          items:
+            type: string
+            format: binary
+        credential_meta:
+          type: string
+          minLength: 1
+        portfolio_photos:
+          type: array
+          items:
+            type: string
+            format: binary
     KycSubmission:
       type: object
       properties:
@@ -18501,17 +18836,26 @@ components:
           type: string
           maxLength: 50
         id_front_url:
-          type: string
-          format: uri
-          default: ''
+          oneOf:
+          - type: string
+            format: uri
+            default: ''
+          - type: string
+            maxLength: 0
         id_back_url:
-          type: string
-          format: uri
-          default: ''
+          oneOf:
+          - type: string
+            format: uri
+            default: ''
+          - type: string
+            maxLength: 0
         selfie_url:
-          type: string
-          format: uri
-          default: ''
+          oneOf:
+          - type: string
+            format: uri
+            default: ''
+          - type: string
+            maxLength: 0
         liveness_score:
           type: number
           format: double
@@ -18528,17 +18872,37 @@ components:
         submitter_role:
           $ref: '#/components/schemas/KycSubmissionRoleEnum'
         nbi_clearance_url:
-          type: string
-          format: uri
-          default: ''
+          oneOf:
+          - type: string
+            format: uri
+            default: ''
+          - type: string
+            maxLength: 0
         portfolio_url:
-          type: string
-          format: uri
-          default: ''
+          oneOf:
+          - type: string
+            format: uri
+            default: ''
+          - type: string
+            maxLength: 0
         resume_url:
+          oneOf:
+          - type: string
+            format: uri
+            default: ''
+          - type: string
+            maxLength: 0
+        selected_services: {}
+        operating_areas: {}
+        credential_urls:
+          readOnly: true
+        portfolio_urls:
+          readOnly: true
+        terms_accepted_at:
           type: string
-          format: uri
-          default: ''
+          format: date-time
+          readOnly: true
+          nullable: true
         status:
           allOf:
           - $ref: '#/components/schemas/KycSubmissionStatusEnum'
@@ -18546,18 +18910,78 @@ components:
         rejection_reason:
           type: string
           readOnly: true
+        rejection_type:
+          allOf:
+          - $ref: '#/components/schemas/RejectionTypeEnum'
+          readOnly: true
+        effective_rejection_type:
+          type: string
+          readOnly: true
+        is_fixably_rejected:
+          type: boolean
+          readOnly: true
+        is_fatally_rejected:
+          type: boolean
+          readOnly: true
+        is_under_review:
+          type: boolean
+          readOnly: true
+        is_interview_stage:
+          type: boolean
+          readOnly: true
         submitted_at:
           type: string
           format: date-time
           readOnly: true
+        ref_id:
+          type: string
+          readOnly: true
+        submission_attempt:
+          type: integer
+          readOnly: true
+        document_rejections:
+          readOnly: true
+        interview_scheduled_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        interview_completed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        interview_notes:
+          type: string
+          readOnly: true
+        timeline:
+          type: array
+          items: {}
+          readOnly: true
       required:
+      - credential_urls
+      - document_rejections
+      - effective_rejection_type
       - id
       - id_type
+      - interview_completed_at
+      - interview_notes
+      - interview_scheduled_at
+      - is_fatally_rejected
+      - is_fixably_rejected
+      - is_interview_stage
+      - is_under_review
       - liveness_decision
+      - portfolio_urls
+      - ref_id
       - rejection_reason
+      - rejection_type
       - review_required
       - status
+      - submission_attempt
       - submitted_at
+      - terms_accepted_at
+      - timeline
     KycSubmissionRequestRequest:
       type: object
       properties:
@@ -18573,26 +18997,65 @@ components:
           type: string
           format: binary
         id_front_url:
-          type: string
-          format: uri
+          oneOf:
+          - type: string
+            format: uri
+          - type: string
+            maxLength: 0
         id_back_url:
-          type: string
-          format: uri
+          oneOf:
+          - type: string
+            format: uri
+          - type: string
+            maxLength: 0
         selfie_url:
-          type: string
-          format: uri
+          oneOf:
+          - type: string
+            format: uri
+          - type: string
+            maxLength: 0
         nbi_clearance_url:
-          type: string
-          format: uri
+          oneOf:
+          - type: string
+            format: uri
+          - type: string
+            maxLength: 0
         portfolio_url:
-          type: string
-          format: uri
+          oneOf:
+          - type: string
+            format: uri
+          - type: string
+            maxLength: 0
         resume_url:
-          type: string
-          format: uri
+          oneOf:
+          - type: string
+            format: uri
+          - type: string
+            maxLength: 0
         submitter_role:
           type: string
           minLength: 1
+        selected_services:
+          type: string
+          minLength: 1
+          description: JSON array of declared trades/skills (step 2).
+        credentials:
+          type: array
+          items:
+            type: string
+            format: binary
+        credential_meta:
+          type: string
+          minLength: 1
+          description: 'JSON array positionally paired with `credentials`: [{label,
+            category_id, required}].'
+        portfolio_photos:
+          type: array
+          items:
+            type: string
+            format: binary
+        terms_accepted:
+          type: boolean
       required:
       - id_type
     KycSubmissionRoleEnum:
@@ -18606,12 +19069,22 @@ components:
     KycSubmissionStatusEnum:
       enum:
       - pending
+      - resubmitted
+      - interview_scheduled
+      - interview_passed
       - approved
+      - rejected_fixable
+      - rejected_fatal
       - rejected
       type: string
       description: |-
         * `pending` - Pending Review
+        * `resubmitted` - Resubmitted
+        * `interview_scheduled` - Interview Scheduled
+        * `interview_passed` - Interview Passed
         * `approved` - Approved
+        * `rejected_fixable` - Rejected (Fixable)
+        * `rejected_fatal` - Rejected (Fatal)
         * `rejected` - Rejected
     LinkPreviewRequestRequest:
       type: object
@@ -18727,6 +19200,10 @@ components:
         password:
           type: string
           minLength: 1
+        app:
+          type: string
+          minLength: 1
+          description: 'Requesting app identity: "client" (default) or "provider"'
       required:
       - email
       - password
@@ -18889,9 +19366,12 @@ components:
           type: string
           maxLength: 300
         redirect_url:
-          type: string
-          format: uri
-          maxLength: 500
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 500
+          - type: string
+            maxLength: 0
         data: {}
         info: {}
         fcm: {}
@@ -19293,9 +19773,12 @@ components:
         description:
           type: string
         photo_url:
-          type: string
-          format: uri
-          maxLength: 200
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
         client_lat:
           type: number
           format: double
@@ -19310,6 +19793,9 @@ components:
           minimum: -1000
           exclusiveMaximum: true
           exclusiveMinimum: true
+        address_detail:
+          type: string
+          maxLength: 255
         radius_km:
           type: integer
           maximum: 2147483647
@@ -19484,9 +19970,12 @@ components:
           type: string
           minLength: 1
         photo_url:
-          type: string
-          format: uri
-          maxLength: 200
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
         client_lat:
           type: number
           format: double
@@ -19501,6 +19990,9 @@ components:
           minimum: -1000
           exclusiveMaximum: true
           exclusiveMinimum: true
+        address_detail:
+          type: string
+          maxLength: 255
         radius_km:
           type: integer
           maximum: 2147483647
@@ -20143,9 +20635,12 @@ components:
           exclusiveMinimum: true
           nullable: true
         completion_photo_url:
-          type: string
-          format: uri
-          maxLength: 200
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
         pin:
           type: string
           writeOnly: true
@@ -20371,6 +20866,14 @@ components:
           maxLength: 150
         bio:
           type: string
+        birthdate:
+          type: string
+          format: date
+          nullable: true
+        gender:
+          oneOf:
+          - $ref: '#/components/schemas/GenderEnum'
+          - $ref: '#/components/schemas/BlankEnum'
         phone_number:
           type: string
           maxLength: 20
@@ -20703,6 +21206,10 @@ components:
         pin:
           type: string
           minLength: 1
+        app:
+          type: string
+          minLength: 1
+          description: 'Requesting app identity: "client" (default) or "provider"'
       required:
       - phone_number
       - pin
@@ -21438,6 +21945,8 @@ components:
         device_name:
           type: string
           maxLength: 100
+        app:
+          $ref: '#/components/schemas/AppEnum'
         is_active:
           type: boolean
         created_at:
@@ -21666,6 +22175,10 @@ components:
           minLength: 1
         device_name:
           type: string
+        app:
+          type: string
+          minLength: 1
+          description: 'Requesting app identity: "client" (default) or "provider"'
       required:
       - platform
       - token
@@ -21701,6 +22214,11 @@ components:
         is_client:
           type: boolean
           writeOnly: true
+        app:
+          type: string
+          writeOnly: true
+          minLength: 1
+          description: 'Requesting app identity: "client" (default) or "provider"'
       required:
       - email
       - first_name
@@ -21733,9 +22251,21 @@ components:
         pin:
           type: string
           minLength: 1
+        app:
+          type: string
+          minLength: 1
+          description: 'Requesting app identity: "client" (default) or "provider"'
       required:
       - phone_number
       - pin
+    RejectionTypeEnum:
+      enum:
+      - fixable
+      - fatal
+      type: string
+      description: |-
+        * `fixable` - Fixable
+        * `fatal` - Fatal
     ReportRequestReasonEnum:
       enum:
       - harassment
@@ -21830,9 +22360,12 @@ components:
         comment:
           type: string
         photo_url:
-          type: string
-          format: uri
-          maxLength: 200
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
         is_anonymous:
           type: boolean
         provider_reply:
@@ -21870,9 +22403,12 @@ components:
         comment:
           type: string
         photo_url:
-          type: string
-          format: uri
-          maxLength: 200
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
         is_anonymous:
           type: boolean
         provider_reply:
@@ -22276,8 +22812,11 @@ components:
         content:
           type: string
         file_attachment:
-          type: string
-          format: uri
+          oneOf:
+          - type: string
+            format: uri
+          - type: string
+            maxLength: 0
         file_type:
           type: string
         reply_to:
@@ -22689,12 +23228,15 @@ components:
           type: string
         refresh:
           type: string
+        session_id:
+          type: string
         is_new_user:
           type: boolean
       required:
       - access
       - is_new_user
       - refresh
+      - session_id
     SocialGoogleLoginRequest:
       type: object
       description: POST /auth/social/google/
@@ -23233,6 +23775,14 @@ components:
           maxLength: 150
         bio:
           type: string
+        birthdate:
+          type: string
+          format: date
+          nullable: true
+        gender:
+          oneOf:
+          - $ref: '#/components/schemas/GenderEnum'
+          - $ref: '#/components/schemas/BlankEnum'
         phone_number:
           type: string
           maxLength: 20

@@ -67,8 +67,7 @@ class DispatchTMRepository implements TMRepository {
     // 1. Create the booking (existing behaviour)
     final booking = await _bookingsService.createBooking(
       serviceListingId: service.id,
-      bookingDate: DateTime.now(),
-      bookingTime: _timeString(DateTime.now()),
+      bookingDateTime: DateTime.now(),
       notes: _buildNotes(
         service: service,
         subCategory: subCategory,
@@ -793,12 +792,6 @@ class DispatchTMRepository implements TMRepository {
         'Sub-category: ${subCategory.title}',
         'Estimate: ${subCategory.estimateLabel}',
       ].join(' | ');
-
-  String _timeString(DateTime dateTime) {
-    final hour = dateTime.hour.toString().padLeft(2, '0');
-    final minute = dateTime.minute.toString().padLeft(2, '0');
-    return '$hour:$minute:00';
-  }
 
   double? _toDouble(Object? value) {
     if (value == null) {

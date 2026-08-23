@@ -59,6 +59,15 @@ class ApiRowMapper {
     if (booking.clientProfile != null) {
       data['profiles'] = booking.clientProfile;
     }
+    if (booking.clientAddress != null) {
+      data['client_address'] = booking.clientAddress;
+    }
+    if (booking.arrivedAt != null) {
+      data['arrived_at'] = booking.arrivedAt;
+    }
+    if (booking.startedAt != null) {
+      data['started_at'] = booking.startedAt;
+    }
 
     return BookingsRow(data);
   }
@@ -82,6 +91,9 @@ class ApiRowMapper {
       'review_count': listing.reviewCount ?? 0,
       'is_time_material': listing.isTimeMaterial,
       'created_at': listing.createdAt ?? DateTime.now().toIso8601String(),
+      'latitude': listing.latitude,
+      'longitude': listing.longitude,
+      'distance_km': listing.distanceKm,
     });
   }
 

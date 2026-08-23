@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '/auth/auth_util.dart';
+import '/auth/post_auth_navigation_flow.dart'
+    show kProviderAppStoreUrl;
 import '/backend/supabase/supabase.dart';
 import '/components/content_container.dart';
-import '/components/screen_header.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/upload_data.dart';
@@ -31,12 +34,12 @@ class _ProfileWidgetState extends State<ProfileWidget> {
   late ProfileModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _providerSwitch = false;
 
   @override
   void initState() {
     super.initState();
     _model = createModel(context, ProfileModel.new);
-    _model.switchValue = AppTheme.themeMode == ThemeMode.dark;
   }
 
   @override
@@ -49,218 +52,29 @@ class _ProfileWidgetState extends State<ProfileWidget> {
   Widget build(BuildContext context) {
     context.watch<FFAppState>();
 
-    return FutureBuilder<ProfilesRow?>(
-      future: ProfilesService.instance.getProfile(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Scaffold(
-            backgroundColor: const Color(0xFFF5F7FA),
-            body: SafeArea(
-              child: Column(
-                children: [
-                  const ScreenHeader(
-                    title: 'Profile Hub',
-                    subtitle: 'Manage your account, saved places, payments, and preferences.',
-                  ),
-                  const Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          ProfileHeaderSkeleton(),
-                          ProfileMenuItemSkeleton(),
-                          ProfileMenuItemSkeleton(),
-                          ProfileMenuItemSkeleton(),
-                          ProfileMenuItemSkeleton(),
-                          ProfileMenuItemSkeleton(),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-
-        final profile = snapshot.data;
-        if (profile == null) {
-          return Scaffold(
-            key: scaffoldKey,
-            backgroundColor: const Color(0xFFF5F7FA),
-            body: SafeArea(
-              child: Column(
-                children: [
-                  const ScreenHeader(
-                    title: 'Profile Hub',
-                    subtitle: 'Manage your account, saved places, payments, and preferences.',
-                  ),
-                  const Expanded(
-                    child: Center(
-                      child: Text('Profile not found'),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-
-        return GestureDetector(
-          onTap: () {
-            FocusScope.of(context).unfocus();
-            FocusManager.instance.primaryFocus?.unfocus();
-          },
-          child: Scaffold(
-            key: scaffoldKey,
-            backgroundColor: const Color(0xFFF5F7FA),
-            body: SafeArea(
-              child: RefreshIndicator(
-                color: AppTheme.of(context).primary,
-                onRefresh: () async => safeSetState(() {}),
-                child: CustomScrollView(
-                  physics: const BouncingScrollPhysics(
-                    parent: AlwaysScrollableScrollPhysics(),
-                  ),
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: ContentContainer(
-                        variant: ContentVariant.wide,
-                        padded: true,
-                        center: true,
+    // Strict light theme: the hub renders identically regardless of any
+    // app-level dark preference.
+    return Theme(
+      data: AppTheme.lightTheme(),
+      child: FutureBuilder<ProfilesRow?>(
+        future: ProfilesService.instance.getProfile(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Scaffold(
+              backgroundColor: Colors.white,
+              body: SafeArea(
+                child: Column(
+                  children: [
+                    const Expanded(
+                      child: SingleChildScrollView(
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildTopBar(),
-                            const SizedBox(height: 18),
-                            _buildProfileHero(profile),
-                            const SizedBox(height: 18),
-                            _buildQuickActions(),
-                            const SizedBox(height: 22),
-                            _ProfileSection(
-                              title: 'Account',
-                              children: [
-                                _ProfileMenuTile(
-                                  icon: Icons.location_on_rounded,
-                                  iconTint: const Color(0xFF129575),
-                                  title: 'My addresses',
-                                  subtitle:
-                                      'Save, edit, and choose service locations',
-                                  onTap: () => context
-                                      .pushNamed(AddressesWidget.routeName),
-                                ),
-                                _ProfileMenuTile(
-                                  icon: Icons.wallet_rounded,
-                                  iconTint: const Color(0xFF1B74E4),
-                                  title: 'Payment methods',
-                                  subtitle:
-                                      'Add cards and manage checkout options',
-                                  onTap: () => context.pushNamed(
-                                      PaymentMethodsWidget.routeName),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 18),
-                            _ProfileSection(
-                              title: 'Preferences',
-                              children: [
-                                _ProfileMenuTile(
-                                  icon: Icons.favorite_rounded,
-                                  iconTint: const Color(0xFFE2557B),
-                                  title: 'Favorites',
-                                  subtitle:
-                                      'Jump back into the services you saved',
-                                  onTap: () => context
-                                      .pushNamed(FavoritesWidget.routeName),
-                                ),
-                                _ProfileMenuTile(
-                                  icon: Icons.notifications_rounded,
-                                  iconTint: const Color(0xFFF59E0B),
-                                  title: 'My notifications',
-                                  subtitle:
-                                      'Review reminders and activity updates',
-                                  onTap: () => context.pushNamed(
-                                      MyNotificationsWidget.routeName),
-                                ),
-                                _ProfileMenuTile(
-                                  icon: Icons.language_rounded,
-                                  iconTint: const Color(0xFF7C5CFC),
-                                  title: 'Language',
-                                  subtitle:
-                                      'Change the language used across the app',
-                                  onTap: () => context.pushNamed(
-                                    LanguageSettingsWidget.routeName,
-                                  ),
-                                ),
-                                _ProfileToggleTile(
-                                  icon: Icons.dark_mode_rounded,
-                                  iconTint: const Color(0xFF17212B),
-                                  title: 'Dark mode',
-                                  subtitle:
-                                      'Switch between light and dark appearance',
-                                  value: _model.switchValue ?? false,
-                                  onChanged: (newValue) async {
-                                    safeSetState(
-                                        () => _model.switchValue = newValue);
-                                    if (newValue) {
-                                      setDarkModeSetting(
-                                        context,
-                                        ThemeMode.dark,
-                                      );
-                                    } else {
-                                      setDarkModeSetting(
-                                        context,
-                                        ThemeMode.light,
-                                      );
-                                    }
-                                  },
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 18),
-                            _ProfileSection(
-                              title: 'Support',
-                              children: [
-                                _ProfileMenuTile(
-                                  icon: Icons.rate_review_rounded,
-                                  iconTint: const Color(0xFFEF6C57),
-                                  title: 'My reviews',
-                                  subtitle: 'See the feedback you have left',
-                                  onTap: () => context
-                                      .pushNamed(MyReviewsWidget.routeName),
-                                ),
-                                _ProfileMenuTile(
-                                  icon: Icons.security_rounded,
-                                  iconTint: const Color(0xFF00A8A8),
-                                  title: 'Security',
-                                  subtitle:
-                                      'Password, login protection, and account safety',
-                                  onTap: () => context.pushNamed(
-                                    SecuritySettingsWidget.routeName,
-                                  ),
-                                ),
-                                _ProfileMenuTile(
-                                  icon: Icons.settings_rounded,
-                                  iconTint: const Color(0xFF5F6B76),
-                                  title: 'Settings',
-                                  subtitle: 'Adjust your app preferences',
-                                  onTap: () => context
-                                      .pushNamed(SettingsWidget.routeName),
-                                ),
-                                const SizedBox(height: 14),
-                                _ProfileMenuTile(
-                                  icon: Icons.help_rounded,
-                                  iconTint: const Color(0xFF1976D2),
-                                  title: 'Help',
-                                  subtitle:
-                                      'FAQs and chat with our support team',
-                                  onTap: () => context
-                                      .pushNamed(HelpPage.routeName),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 18),
-                            _buildLogoutTile(),
-                            const SizedBox(height: 20),
+                            ProfileHeaderSkeleton(),
+                            ProfileMenuItemSkeleton(),
+                            ProfileMenuItemSkeleton(),
+                            ProfileMenuItemSkeleton(),
+                            ProfileMenuItemSkeleton(),
+                            ProfileMenuItemSkeleton(),
                           ],
                         ),
                       ),
@@ -268,226 +82,420 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                   ],
                 ),
               ),
-            ),
-          ),
-        );
-      },
-    );
-  }
+            );
+          }
 
-  Widget _buildTopBar() => ScreenHeader(
-        title: 'Profile Hub',
-        subtitle: 'Manage your account, saved places, payments, and preferences.',
-        action: Icon(
-          Icons.tune_rounded,
-          color: AppTheme.of(context).primary,
-        ),
-      );
+          final profile = snapshot.data;
+          if (profile == null) {
+            return Scaffold(
+              key: scaffoldKey,
+              backgroundColor: Colors.white,
+              body: const SafeArea(
+                child: Center(child: Text('Profile not found')),
+              ),
+            );
+          }
 
-  Widget _buildProfileHero(ProfilesRow profile) {
-    final displayName = valueOrDefault<String>(
-      profile.displayName,
-      'Firstname Lastname',
-    );
-    final email = valueOrDefault<String>(profile.email, currentUserEmail);
-    final phone =
-        valueOrDefault<String>(profile.phoneNumber, FFAppState().phone);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF0D6D78),
-            Color(0xFF63CBD6),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x220D6D78),
-            blurRadius: 24,
-            offset: Offset(0, 16),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              GestureDetector(
-                onTap: () {
-                  _model.showEdit = !_model.showEdit;
-                  safeSetState(() {});
-                },
-                child: SizedBox(
-                  width: 86,
-                  height: 86,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.22),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.8),
-                            width: 2,
-                          ),
-                        ),
-                        child: ClipOval(
-                          child: (profile.faceScanUrl ?? '').trim().isNotEmpty
-                              ? Image.network(
-                                  profile.faceScanUrl!.trim(),
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      Image.asset(
-                                    'assets/images/error_image.png',
-                                    fit: BoxFit.cover,
+          return GestureDetector(
+            onTap: () {
+              FocusScope.of(context).unfocus();
+              FocusManager.instance.primaryFocus?.unfocus();
+            },
+            child: Scaffold(
+              key: scaffoldKey,
+              backgroundColor: Colors.white,
+              body: SafeArea(
+                child: RefreshIndicator(
+                  color: Theme.of(context).colorScheme.primary,
+                  onRefresh: () async => safeSetState(() {}),
+                  child: CustomScrollView(
+                    physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics(),
+                    ),
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: ContentContainer(
+                          variant: ContentVariant.wide,
+                          padded: true,
+                          center: true,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildHeaderBlock(profile),
+                              const SizedBox(height: 24),
+                              _ProfileGroup(
+                                label: 'ACCOUNT',
+                                children: [
+                                  _ProfileRow(
+                                    icon: Icons.calendar_month_rounded,
+                                    tint: themePrimary(context),
+                                    title: 'My Bookings',
+                                    subtitle:
+                                        'View past and upcoming jobs',
+                                    onTap: () => context
+                                        .pushNamed(BookingsWidget.routeName),
                                   ),
-                                )
-                              : Image.asset(
-                                  'assets/images/error_image.png',
-                                  fit: BoxFit.cover,
-                                ),
+                                  _divider(),
+                                  _ProfileRow(
+                                    icon: Icons.receipt_long_rounded,
+                                    tint: themePrimary(context),
+                                    title: 'Payment & Invoices',
+                                    subtitle:
+                                        'View history and download invoices',
+                                    onTap: () => context.pushNamed(
+                                        PaymentMethodsWidget.routeName),
+                                  ),
+                                  _divider(),
+                                  _ProfileRow(
+                                    icon: Icons.translate_rounded,
+                                    tint: themePrimary(context),
+                                    title: 'Language Preference',
+                                    subtitle: 'English, Hindi, Marathi, etc.',
+                                    onTap: () => context.pushNamed(
+                                        LanguageSettingsWidget.routeName),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+                              _ProfileGroup(
+                                label: 'PREFERENCES & UTILITIES',
+                                children: [
+                                  _ProfileRow(
+                                    icon: Icons.favorite_rounded,
+                                    tint: themePrimary(context),
+                                    title: 'Favorites',
+                                    subtitle:
+                                        'Jump back into the services you saved',
+                                    onTap: () => context
+                                        .pushNamed(FavoritesWidget.routeName),
+                                  ),
+                                  _divider(),
+                                  _ProfileRow(
+                                    icon: Icons.star_rounded,
+                                    tint: themePrimary(context),
+                                    title: 'My Reviews',
+                                    subtitle: 'See the feedback you have left',
+                                    onTap: () => context
+                                        .pushNamed(MyReviewsWidget.routeName),
+                                  ),
+                                  _divider(),
+                                  _ProfileRow(
+                                    icon: Icons.card_giftcard_rounded,
+                                    tint: themePrimary(context),
+                                    title: 'Referral Program',
+                                    subtitle: 'Share and earn rewards',
+                                    onTap: _showReferralSheet,
+                                  ),
+                                  _divider(),
+                                  _ProfileRow(
+                                    icon: Icons.notifications_active_rounded,
+                                    tint: themePrimary(context),
+                                    title: 'Notification Settings',
+                                    subtitle: 'Control alerts and reminders',
+                                    onTap: () => context.pushNamed(
+                                        MyNotificationsWidget.routeName),
+                                  ),
+                                  _divider(),
+                                  _ProfileRow(
+                                    icon: Icons.help_outline_rounded,
+                                    tint: themePrimary(context),
+                                    title: 'Help Center',
+                                    subtitle:
+                                        'FAQs and chat with our support team',
+                                    onTap: () =>
+                                        context.pushNamed(HelpPage.routeName),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+                              _ProfileGroup(
+                                label: 'SYSTEM ACCESS',
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 44,
+                                          height: 44,
+                                          decoration: BoxDecoration(
+                                            color: themePrimary(context)
+                                                .withValues(alpha: 0.12),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          child: Icon(
+                                            Icons.swap_horiz_rounded,
+                                            size: 22,
+                                            color: themePrimary(context),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 14),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Are you a service provider?',
+                                                style: AppTheme.of(context)
+                                                    .titleSmall
+                                                    .override(
+                                                      font: GoogleFonts
+                                                          .plusJakartaSans(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w700),
+                                                    ),
+                                              ),
+                                              const SizedBox(height: 3),
+                                              Text(
+                                                'Switch to Provider Account',
+                                                style: AppTheme.of(context)
+                                                    .bodySmall,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Switch.adaptive(
+                                          value: _providerSwitch,
+                                          onChanged: (value) =>
+                                              _handleProviderSwitch(value),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  _divider(),
+                                  _ProfileRow(
+                                    icon: Icons.logout_rounded,
+                                    tint: AppThemeData.destructiveCrimson,
+                                    title: 'Log out',
+                                    titleColor:
+                                        AppThemeData.destructiveCrimson,
+                                    subtitle:
+                                        'Sign out of your account on this device',
+                                    onTap: _handleLogout,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 24),
+                            ],
+                          ),
                         ),
                       ),
-                      if (_model.showEdit)
-                        Positioned.fill(
-                          child: Material(
-                            color: Colors.black.withValues(alpha: 0.34),
-                            shape: const CircleBorder(),
-                            child: InkWell(
-                              customBorder: const CircleBorder(),
-                              onTap: _pickAndUploadPhoto,
-                              child: const Center(
-                                child: FaIcon(
-                                  FontAwesomeIcons.camera,
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      displayName,
-                      style: AppTheme.of(context).headlineSmall.override(
-                            font: GoogleFonts.plusJakartaSans(
-                              fontWeight: FontWeight.w700,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Color themePrimary(BuildContext context) =>
+      Theme.of(context).colorScheme.primary;
+
+  Divider _divider() => Divider(
+        height: 1,
+        thickness: 0.5,
+        color: Theme.of(context).dividerColor.withValues(alpha: 0.35),
+      );
+
+  void _handleProviderSwitch(bool value) {
+    if (!value) {
+      safeSetState(() => _providerSwitch = false);
+      return;
+    }
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.storefront_rounded,
+                    size: 22, color: themePrimary(context)),
+                const SizedBox(width: 10),
+                Text(
+                  'Provider account detected',
+                  style: Theme.of(sheetContext).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Service providers use the dedicated SerbisyoHub PH Provider '
+              'app. Open the store to install it, then sign in with the same '
+              'account.',
+              style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
+                    color: AppTheme.of(sheetContext).secondaryText,
+                  ),
+            ),
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: FilledButton.icon(
+                onPressed: () {
+                  Navigator.pop(sheetContext);
+                  launchUrl(
+                    Uri.parse(kProviderAppStoreUrl),
+                    mode: LaunchMode.externalApplication,
+                  );
+                },
+                icon: const Icon(Icons.download_rounded, size: 18),
+                label: const Text('Open Provider App Store'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ).whenComplete(() {
+      if (mounted) safeSetState(() => _providerSwitch = false);
+    });
+  }
+
+  void _showReferralSheet() {
+    const inviteUrl = 'https://serbisyohubph.com/invite';
+    Clipboard.setData(const ClipboardData(text: inviteUrl));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Invite link copied — share it to earn rewards!'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+  Widget _buildHeaderBlock(ProfilesRow profile) {
+    final theme = Theme.of(context);
+    final displayName = valueOrDefault<String>(
+      profile.displayName,
+      'Rims Client',
+    );
+    final email = valueOrDefault<String>(profile.email, currentUserEmail);
+    final phone = valueOrDefault<String>(
+      profile.phoneNumber,
+      FFAppState().phone,
+    );
+
+    return Padding(
+      padding: const EdgeInsets.only(top: AppThemeData.spaceLg),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Circular photo with a subtle 2px royal-blue ring.
+          GestureDetector(
+            onTap: () {
+              _model.showEdit = !_model.showEdit;
+              safeSetState(() {});
+            },
+            child: SizedBox(
+              width: 78,
+              height: 78,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: theme.colorScheme.primary,
+                        width: 2,
+                      ),
+                    ),
+                    padding: const EdgeInsets.all(3),
+                    child: ClipOval(
+                      child: (profile.faceScanUrl ?? '').trim().isNotEmpty
+                          ? Image.network(
+                              profile.faceScanUrl!.trim(),
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Image.asset(
+                                'assets/images/error_image.png',
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : Image.asset(
+                              'assets/images/error_image.png',
+                              fit: BoxFit.cover,
                             ),
-                            color: Colors.white,
-                          ),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      email.isNotEmpty ? email : phone,
-                      style: AppTheme.of(context).bodyMedium.override(
-                            font: GoogleFonts.plusJakartaSans(),
-                            color: Colors.white.withValues(alpha: 0.88),
-                          ),
-                    ),
-                    const SizedBox(height: 12),
-                    InkWell(
-                      onTap: () =>
-                          context.pushNamed(EditProfileWidget.routeName),
-                      borderRadius: BorderRadius.circular(999),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.18),
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.22),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.edit_outlined,
+                  ),
+                  if (_model.showEdit)
+                    Positioned.fill(
+                      child: Material(
+                        color: Colors.black.withValues(alpha: 0.34),
+                        shape: const CircleBorder(),
+                        child: InkWell(
+                          customBorder: const CircleBorder(),
+                          onTap: _pickAndUploadPhoto,
+                          child: const Center(
+                            child: FaIcon(
+                              FontAwesomeIcons.camera,
                               color: Colors.white,
-                              size: 16,
+                              size: 18,
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Edit profile',
-                              style: AppTheme.of(context).labelLarge.override(
-                                    font: GoogleFonts.plusJakartaSans(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                    color: Colors.white,
-                                  ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.16),
+                ],
               ),
             ),
-            child: Row(
+          ),
+          const SizedBox(width: AppThemeData.spaceLg),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Expanded(
-                  child: _ProfileMetric(
-                    label: 'Account',
-                    value: 'Active',
-                    icon: Icons.verified_user_rounded,
+                Text(
+                  displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.headlineSmall?.override(
+                    font: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w800,
+                    ),
+                    color: theme.textTheme.headlineSmall?.color,
                   ),
                 ),
-                Container(
-                  width: 1,
-                  height: 42,
-                  color: Colors.white.withValues(alpha: 0.22),
-                ),
-                Expanded(
-                  child: _ProfileMetric(
-                    label: 'Places',
-                    value: FFAppState().hasSelectedLocation ? 'Set' : 'Add',
-                    icon: Icons.pin_drop_rounded,
+                if (phone.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    phone,
+                    style: theme.textTheme.bodyMedium?.override(
+                      font: GoogleFonts.plusJakartaSans(),
+                      color: theme.textTheme.bodyMedium?.color,
+                    ),
                   ),
-                ),
-                Container(
-                  width: 1,
-                  height: 42,
-                  color: Colors.white.withValues(alpha: 0.22),
-                ),
-                Expanded(
-                  child: _ProfileMetric(
-                    label: 'Theme',
-                    value: (_model.switchValue ?? false) ? 'Dark' : 'Light',
-                    icon: Icons.palette_outlined,
+                ],
+                if (email.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    email,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelSmall?.override(
+                      font: GoogleFonts.plusJakartaSans(),
+                      color: theme.dividerColor,
+                    ),
                   ),
+                ],
+                const SizedBox(height: 10),
+                _EditProfilePill(
+                  onTap: () =>
+                      context.pushNamed(EditProfileWidget.routeName),
                 ),
               ],
             ),
@@ -497,47 +505,6 @@ class _ProfileWidgetState extends State<ProfileWidget> {
     );
   }
 
-  Widget _buildQuickActions() => Row(
-        children: [
-          Expanded(
-            child: _ProfileQuickAction(
-              icon: Icons.location_city_rounded,
-              label: 'Locations',
-              tint: const Color(0xFF129575),
-              onTap: () => context.pushNamed(AddressesWidget.routeName),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _ProfileQuickAction(
-              icon: Icons.credit_card_rounded,
-              label: 'Payments',
-              tint: const Color(0xFF1B74E4),
-              onTap: () => context.pushNamed(PaymentMethodsWidget.routeName),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _ProfileQuickAction(
-              icon: Icons.support_agent_rounded,
-              label: 'Settings',
-              tint: const Color(0xFFEF6C57),
-              onTap: () => context.pushNamed(SettingsWidget.routeName),
-            ),
-          ),
-        ],
-      );
-
-  Widget _buildLogoutTile() => _ProfileMenuTile(
-        icon: Icons.logout_rounded,
-        iconTint: AppTheme.of(context).error,
-        iconBackground: const Color(0xFFFFEEF0),
-        title: 'Log out',
-        subtitle: 'Sign out of your account on this device',
-        titleColor: AppTheme.of(context).error,
-        onTap: _handleLogout,
-      );
-
   Future<void> _pickAndUploadPhoto() async {
     final selectedMedia = await selectMediaWithSourceBottomSheet(
       context: context,
@@ -546,82 +513,44 @@ class _ProfileWidgetState extends State<ProfileWidget> {
       maxHeight: 1280,
       imageQuality: 80,
       allowPhoto: true,
-      backgroundColor: AppTheme.of(context).primaryBackground,
-      textColor: AppTheme.of(context).primaryText,
-      pickerFontFamily: 'Poppins',
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      textColor: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black,
+      pickerFontFamily: 'Plus Jakarta Sans',
     );
     if (selectedMedia == null ||
         !selectedMedia
             .every((m) => validateFileFormat(m.storagePath, context))) {
       return;
     }
-
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
     safeSetState(() => _model.isDataUploading_uploadData2mv = true);
-    var selectedUploadedFiles = <FFUploadedFile>[];
     var downloadUrls = <String>[];
-
     try {
-      showUploadMessage(
-        context,
-        'Uploading file...',
-        showLoading: true,
-      );
-      selectedUploadedFiles = selectedMedia
-          .map(
-            (m) => FFUploadedFile(
-              name: m.storagePath.split('/').last,
-              bytes: m.bytes,
-              height: m.dimensions?.height,
-              width: m.dimensions?.width,
-              blurHash: m.blurHash,
-              originalFilename: m.originalFilename,
-            ),
-          )
-          .toList();
-
-      downloadUrls = <String>[];
+      showUploadMessage(context, 'Uploading file...', showLoading: true);
       for (final m in selectedMedia) {
         final url = await ProfilesService.instance
             .uploadProfilePhoto(m.bytes, m.storagePath.split('/').last);
-        if (url != null) {
-          downloadUrls.add(url);
-        }
+        if (url != null) downloadUrls.add(url);
       }
     } finally {
-      if (mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      }
+      if (mounted) ScaffoldMessenger.of(context).hideCurrentSnackBar();
       _model.isDataUploading_uploadData2mv = false;
     }
 
-    if (selectedUploadedFiles.length != selectedMedia.length ||
-        downloadUrls.length != selectedMedia.length) {
-      if (mounted) {
-        showUploadMessage(context, 'Failed to upload data');
-      }
+    if (downloadUrls.length != selectedMedia.length) {
+      if (mounted) showUploadMessage(context, 'Failed to upload data');
       return;
     }
-
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
     safeSetState(() {
-      _model.uploadedLocalFile_uploadData2mv = selectedUploadedFiles.first;
       _model.uploadedFileUrl_uploadData2mv = downloadUrls.first;
     });
-
     await ProfilesService.instance.updateProfile({
       'face_scan_url': downloadUrls.first,
     });
-
-    if (mounted) {
-      showUploadMessage(context, 'Success!');
-    }
+    if (mounted) showUploadMessage(context, 'Success!');
   }
 
   Future<void> _handleLogout() async {
@@ -646,163 +575,127 @@ class _ProfileWidgetState extends State<ProfileWidget> {
         ) ??
         false;
 
-    if (!confirm) {
-      return;
-    }
-
-    if (!mounted) {
-      return;
-    }
+    if (!confirm || !mounted) return;
 
     GoRouter.of(context).prepareAuthEvent();
     await authManager.signOut();
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
     GoRouter.of(context).clearRedirectLocation();
-
     context.goNamedAuth(SplashWidget.routeName, context.mounted);
   }
 }
 
-class _ProfileSection extends StatelessWidget {
-  const _ProfileSection({
-    required this.title,
-    required this.children,
-  });
+class _EditProfilePill extends StatelessWidget {
+  const _EditProfilePill({required this.onTap});
 
-  final String title;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
-    return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 10),
-            child: Text(
-              title,
-              style: theme.labelLarge.override(
-                    font: GoogleFonts.plusJakartaSans(
-                      fontWeight: FontWeight.w700,
-                    ),
-                    color: theme.textTertiary,
-                  ),
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              color: theme.primaryBackground,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: theme.border),
-              boxShadow: AppThemeData.shadowCard,
-            ),
-            child: Column(children: children),
-          ),
-        ],
-      );
-  }
-}
-
-class _ProfileQuickAction extends StatelessWidget {
-  const _ProfileQuickAction({
-    required this.icon,
-    required this.label,
-    required this.tint,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final Color tint;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(22),
-        child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-          decoration: BoxDecoration(
-            color: theme.primaryBackground,
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: theme.border),
-          ),
-          child: Column(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: tint.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(icon, color: tint),
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppThemeData.radiusPill),
+      child: Container(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(AppThemeData.radiusPill),
+          border: Border.all(color: theme.colorScheme.primary, width: 1.3),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.edit_rounded, size: 13, color: theme.colorScheme.primary),
+            const SizedBox(width: 5),
+            Text(
+              'Edit Profile',
+              style: theme.textTheme.labelSmall?.override(
+                font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+                color: theme.colorScheme.primary,
               ),
-              const SizedBox(height: 10),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: theme.labelLarge.override(
-                  font: GoogleFonts.plusJakartaSans(
-                    fontWeight: FontWeight.w600,
-                  ),
-                  color: theme.primaryText,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _ProfileMenuTile extends StatelessWidget {
-  const _ProfileMenuTile({
+class _ProfileGroup extends StatelessWidget {
+  const _ProfileGroup({required this.label, required this.children});
+
+  final String label;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 16, bottom: 8),
+          child: Text(
+            label,
+            style: theme.textTheme.labelMedium?.override(
+              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+              letterSpacing: 0.6,
+              color: theme.textTheme.bodySmall?.color,
+            ),
+          ),
+        ),
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8F9FA),
+            borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
+            border: Border.all(color: theme.dividerColor.withValues(alpha: 0.25)),
+          ),
+          child: Column(children: children),
+        ),
+      ],
+    );
+  }
+}
+
+class _ProfileRow extends StatelessWidget {
+  const _ProfileRow({
     required this.icon,
-    required this.iconTint,
+    required this.tint,
     required this.title,
     required this.subtitle,
     required this.onTap,
-    this.iconBackground,
     this.titleColor,
   });
 
   final IconData icon;
-  final Color iconTint;
+  final Color tint;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
-  final Color? iconBackground;
   final Color? titleColor;
 
   @override
   Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
+    final theme = Theme.of(context);
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(24),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: iconBackground ?? iconTint.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(16),
+                  color: tint.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: iconTint, size: 24),
+                child: Icon(icon, size: 22, color: tint),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -811,144 +704,31 @@ class _ProfileMenuTile extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: theme.titleSmall.override(
+                      style: theme.textTheme.titleSmall?.override(
                         font: GoogleFonts.plusJakartaSans(
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                         ),
-                        color: titleColor ?? theme.primaryText,
+                        color: titleColor ?? theme.textTheme.titleSmall?.color,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     Text(
                       subtitle,
-                      style: theme.bodySmall.override(
+                      style: theme.textTheme.bodySmall?.override(
                         font: GoogleFonts.plusJakartaSans(),
-                        color: theme.textTertiary,
+                        color: theme.textTheme.bodySmall?.color,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: theme.textTertiary,
-                size: 16,
-              ),
+              const SizedBox(width: 8),
+              Icon(Icons.chevron_right_rounded,
+                  size: 22, color: theme.textTheme.bodySmall?.color),
             ],
           ),
         ),
       ),
     );
   }
-}
-
-class _ProfileToggleTile extends StatelessWidget {
-  const _ProfileToggleTile({
-    required this.icon,
-    required this.iconTint,
-    required this.title,
-    required this.subtitle,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final IconData icon;
-  final Color iconTint;
-  final String title;
-  final String subtitle;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: iconTint.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(icon, color: iconTint, size: 24),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: theme.titleSmall.override(
-                    font: GoogleFonts.plusJakartaSans(
-                      fontWeight: FontWeight.w600,
-                    ),
-                    color: theme.primaryText,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: theme.bodySmall.override(
-                    font: GoogleFonts.plusJakartaSans(),
-                    color: theme.textTertiary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Switch.adaptive(
-            value: value,
-            onChanged: onChanged,
-            activeThumbColor: theme.primary,
-            activeTrackColor: theme.primary,
-            inactiveTrackColor: theme.alternate,
-            inactiveThumbColor: theme.secondaryBackground,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ProfileMetric extends StatelessWidget {
-  const _ProfileMetric({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
-
-  final String label;
-  final String value;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) => Column(
-        children: [
-          Icon(icon, color: Colors.white.withValues(alpha: 0.92), size: 18),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: AppTheme.of(context).labelLarge.override(
-                  font: GoogleFonts.plusJakartaSans(
-                    fontWeight: FontWeight.w700,
-                  ),
-                  color: Colors.white,
-                ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: AppTheme.of(context).bodySmall.override(
-                  font: GoogleFonts.plusJakartaSans(),
-                  color: Colors.white.withValues(alpha: 0.78),
-                ),
-          ),
-        ],
-      );
 }

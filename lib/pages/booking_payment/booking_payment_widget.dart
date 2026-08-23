@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/api/shph_api_exception.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import '/index.dart';
 import '/services/bookings_service.dart';
 import '/services/payment_controller.dart';
 import '/theme/app_theme.dart';
@@ -80,15 +82,14 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
       if (_selectedPaymentMethod == 'cash') {
         final booking = await BookingsService.instance.createBooking(
           serviceListingId: widget.serviceId!,
-          bookingDate: DateTime.parse(widget.bookingDate!),
-          bookingTime: widget.bookingTime!,
+          bookingDateTime: _resolveBookingDateTime(),
           notes: widget.notes,
           totalPrice: amount,
           paymentStatus: 'pay_on_completion',
         );
         if (mounted) {
           if (booking != null) {
-            context.go('/booking-success');
+            _goToSuccess(booking.id);
           } else {
             _model.isLoading = false;
             _model.errorMessage = 'Failed to create booking.';
@@ -115,14 +116,14 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
           }
           return;
         }
-        await BookingsService.instance.createBooking(
+        final booking = await BookingsService.instance.createBooking(
           serviceListingId: widget.serviceId!,
-          bookingDate: DateTime.parse(widget.bookingDate!),
-          bookingTime: widget.bookingTime!,
+          bookingDateTime: _resolveBookingDateTime(),
           notes: widget.notes,
           totalPrice: amount,
           paymentStatus: 'paid',
         );
+        _goToSuccess(booking?.id);
       } else if (_selectedPaymentMethod == 'ewallet') {
         final result = await controller.processMayaPayment(
           amount: amount,
@@ -136,34 +137,82 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
           }
           return;
         }
-        await BookingsService.instance.createBooking(
+        final booking = await BookingsService.instance.createBooking(
           serviceListingId: widget.serviceId!,
-          bookingDate: DateTime.parse(widget.bookingDate!),
-          bookingTime: widget.bookingTime!,
+          bookingDateTime: _resolveBookingDateTime(),
           notes: widget.notes,
           totalPrice: amount,
           paymentStatus: 'paid',
         );
+        _goToSuccess(booking?.id);
       } else {
-        await BookingsService.instance.createBooking(
+        final booking = await BookingsService.instance.createBooking(
           serviceListingId: widget.serviceId!,
-          bookingDate: DateTime.parse(widget.bookingDate!),
-          bookingTime: widget.bookingTime!,
+          bookingDateTime: _resolveBookingDateTime(),
           notes: widget.notes,
           totalPrice: amount,
           paymentStatus: 'authorized_escrow',
         );
-      }
-
-      if (mounted) {
-        context.go('/booking-success');
+        _goToSuccess(booking?.id);
       }
     } catch (e) {
       if (mounted) {
         _model.isLoading = false;
-        _model.errorMessage = 'Error: ${e.toString()}';
+        _model.errorMessage =
+            'Error: ${e is ShphApiException ? e.message : e.toString()}';
       }
     }
+  }
+
+  /// Navigates to the consolidated confirmation screen with the created
+  /// booking's data so the receipt shows real values.
+  void _goToSuccess(String? bookingId) {
+    if (!mounted) {
+      return;
+    }
+    context.pushNamed(
+      BookingSuccessWidget.routeName,
+      extra: <String, dynamic>{
+        if (bookingId != null) 'bookingId': bookingId,
+        'serviceName': widget.serviceName,
+        'totalLabel': 'PHP ${(widget.price ?? '').trim()}',
+        'scheduledText': _scheduledText(),
+      },
+    );
+  }
+
+  String _scheduledText() {
+    final date = DateTime.tryParse(widget.bookingDate ?? '');
+    if (date == null) {
+      return 'You will confirm a slot shortly';
+    }
+    final time = _resolveBookingDateTime();
+    final hour = time.hour % 12 == 0 ? 12 : time.hour % 12;
+    final minute = time.minute.toString().padLeft(2, '0');
+    final suffix = time.hour >= 12 ? 'PM' : 'AM';
+    return '${date.day}/${date.month}/${date.year} · $hour:$minute $suffix';
+  }
+
+  /// Merges the route's booking date + time-of-day into one DateTime, which
+  /// the API forwards as the required `scheduled_at` field. Accepts both
+  /// 24-hour ('14:30:00') and 12-hour ('2:30 PM') time strings.
+  DateTime _resolveBookingDateTime() {
+    final date =
+        DateTime.tryParse(widget.bookingDate ?? '') ?? DateTime.now();
+    final raw = (widget.bookingTime ?? '').trim().toUpperCase();
+    final isPm = raw.endsWith('PM');
+    final isAm = raw.endsWith('AM');
+    final cleaned = raw.replaceAll(RegExp(r'[AP]M'), '').trim();
+    final parts = cleaned.split(':');
+    var hour = int.tryParse(parts.first) ?? 0;
+    final minute = parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0;
+    if (isPm && hour < 12) {
+      hour += 12;
+    }
+    if (isAm && hour == 12) {
+      hour = 0;
+    }
+    return DateTime(date.year, date.month, date.day, hour, minute);
   }
 
   double? _parsePrice(String? price) {

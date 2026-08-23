@@ -9,7 +9,9 @@ class ScreenHeader extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.action,
-    this.padding = const EdgeInsets.fromLTRB(20, 12, 20, 18),
+    /// Tab-screen grid default: 16px side margins, no bottom padding — the
+    /// element following the header owns its own 16px top gap.
+    this.padding = const EdgeInsets.fromLTRB(16, 12, 16, 0),
   });
 
   final String title;

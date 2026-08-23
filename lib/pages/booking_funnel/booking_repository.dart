@@ -52,12 +52,8 @@ class ShphBookingRepository implements BookingRepository {
     try {
       final booking = await ShphBookingsApi.instance.createBooking(
         listingId: listingId,
-        scheduledDate:
-            scheduledDateTime.toIso8601String().split('T').first,
-        scheduledTime:
-            '${scheduledDateTime.hour.toString().padLeft(2, '0')}:${scheduledDateTime.minute.toString().padLeft(2, '0')}:00',
+        scheduledAt: scheduledDateTime,
         notes: notes,
-        totalPrice: _estimateTotal(draft),
       );
 
       return BookingsRow({

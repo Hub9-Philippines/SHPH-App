@@ -11,101 +11,43 @@ import '/index.dart';
 import '/main.dart';
 import '/models/service_listing.dart';
 import '/pages/booking_funnel/booking_models.dart';
+import '/pages/booking_funnel/booking_success_screen.dart';
 import '/pages/geographic_selection/geographic_selection_widget.dart';
-import '/services/provider_verification_service.dart';
 
-// Helper function to fetch user profile for role-based routing.
-// The /auth/me/ (getMe) response carries the real account capabilities:
-// `is_provider`, `is_client`, `kyc_skipped`, `role`, `display_name`, etc.
+// Helper retained for potential future role checks; provider lifecycle removed.
 Future<Map<String, dynamic>?> _fetchUserProfile(String userId) async {
   try {
     final data = await ShphUsersApi.instance.getMe();
     final profile = data['profile'] is Map<String, dynamic>
         ? data['profile'] as Map<String, dynamic>
         : data;
-    if (profile.isEmpty) {
-      return null;
-    }
+    if (profile.isEmpty) return null;
     return {
       'role': profile['role'],
       'is_provider': profile['is_provider'],
       'is_client': profile['is_client'],
-      'kyc_skipped': profile['kyc_skipped'],
-      'verification_status': profile['verification_status'],
-      'kyc_status': profile['kyc_status'],
       'email': profile['email'],
       'display_name': profile['display_name'],
-      'is_profile_complete': profile['is_profile_complete'],
-      'first_name': profile['first_name'],
-      'last_name': profile['last_name'],
     };
   } catch (e) {
     return null;
   }
 }
 
-/// Paths that are part of the KYC lifecycle or onboarding funnel and must not
-/// be lifecycle-redirected (mirrors web's `kycRouteNames` skip list plus the
-/// profile-setup target to avoid redirect loops).
-const List<String> _kycFlowPaths = [
-  '/eKYCBegin',
-  '/iDVerify',
-  '/pro-verify-doc',
-  '/face-verification',
-  '/kyc',
-];
-
-/// Provider lifecycle resolution used by the redirect guard. Returns a
-/// redirect path when the provider is not in the expected state for the
-/// requested path, or `null` to allow the navigation.
-Future<String?> _resolveProviderRedirectAsync(
-  Map<String, dynamic> profile,
-  String currentPath,
-) async {
-  if (profile['is_provider'] != true) {
-    return null;
-  }
-  if (_kycFlowPaths.any((path) => currentPath.startsWith(path))) {
-    return null;
-  }
-  final redirect =
-      await ProviderVerificationService.instance.resolveProviderRedirect(profile);
-  return redirect == currentPath ? null : redirect;
-}
-
-/// Route gating requirements (web `beforeEach` meta parity). Keyed by path
-/// prefix so GoRoute definitions stay unchanged.
+/// Client-only route gating. No provider routes exist in this app.
 class _RouteGates {
   const _RouteGates({
-    this.requiresProvider = false,
     this.requiresClient = false,
-    this.requiresKyc = false,
   });
 
-  final bool requiresProvider;
   final bool requiresClient;
-  final bool requiresKyc;
 
-  bool get requiresAuth => requiresProvider || requiresClient || requiresKyc;
+  bool get requiresAuth => requiresClient;
 }
 
 const _RouteGates _noGates = _RouteGates();
 
-/// Provider-only route prefixes.
-const List<String> _providerPathPrefixes = [
-  '/pro-',
-  '/face-verification',
-  '/iDVerify',
-  '/eKYCBegin',
-  '/kyc',
-];
-
-/// Paths that act as a provider's home (web: Home ↔ ProviderDashboard). The
-/// lifecycle runs on these so a provider can never idle on the client shell.
-const List<String> _providerHomePaths = ['/pro-dashboard', '/', '/home'];
-
-/// Client-only routes (kept minimal — shared shells like home/messages/profile
-/// must remain reachable by providers).
+/// Paths that require a signed-in client (booking, favorites, etc.).
 const List<String> _clientOnlyPaths = [
   '/booking',
   '/booking-payment',
@@ -119,35 +61,11 @@ const List<String> _clientOnlyPaths = [
   '/addresses',
 ];
 
-/// Routes that gate a real action requiring verified KYC (e.g. posting a
-/// service). A KYC-skipped provider is sent to the KYC intro from here.
-const List<String> _requiresKycPaths = [
-  '/create-service',
-  '/my-services',
-  '/earnings',
-  '/provider-analytics',
-  '/provider-bids',
-  '/provider-booking-flow',
-];
-
 _RouteGates _gatesForPath(String path) {
-  var gates = _noGates;
-  if (_providerPathPrefixes.any(path.startsWith)) {
-    gates = _RouteGates(requiresProvider: true);
-  }
   if (_clientOnlyPaths.any((p) => path.startsWith(p))) {
-    gates = _RouteGates(
-      requiresClient: true,
-      requiresProvider: gates.requiresProvider,
-    );
+    return const _RouteGates(requiresClient: true);
   }
-  if (_requiresKycPaths.any((p) => path.startsWith(p))) {
-    gates = _RouteGates(
-      requiresProvider: true,
-      requiresKyc: true,
-    );
-  }
-  return gates;
+  return _noGates;
 }
 
 class AppRouter {
@@ -197,10 +115,12 @@ class AppRouter {
             name: SigninWidget.routeName,
             builder: (context, state) => const SigninWidget(),
           ),
+          // Legacy welcome route (/signOptions) retired — alias to merged
+          // sign-in so stale deep links land on the auth entry screen.
           GoRoute(
-            path: SignOptionsWidget.routePath,
-            name: SignOptionsWidget.routeName,
-            builder: (context, state) => const SignOptionsWidget(),
+            path: '/signOptions',
+            name: 'SignOptions',
+            builder: (context, state) => const SigninWidget(),
           ),
           GoRoute(
             path: HomeWidget.routePath,
@@ -319,11 +239,6 @@ class AppRouter {
               }
               return const ExploreWidget();
             },
-          ),
-          GoRoute(
-            path: EKYCBeginWidget.routePath,
-            name: EKYCBeginWidget.routeName,
-            builder: (context, state) => const EKYCBeginWidget(),
           ),
           GoRoute(
             path: SearchPageWidget.routePath,
@@ -463,6 +378,7 @@ class AppRouter {
                     state.uri.queryParameters['filter'],
                 initialSearch: extra?['initialSearch'] as String? ??
                     state.uri.queryParameters['search'],
+                emergencyMode: extra?['emergencyMode'] as bool? ?? false,
               );
             },
           ),
@@ -495,69 +411,9 @@ class AppRouter {
             },
           ),
           GoRoute(
-            path: DocumentScanWidget.routePath,
-            name: DocumentScanWidget.routeName,
-            builder: (context, state) => const DocumentScanWidget(),
-          ),
-          GoRoute(
-            path: IDVerifyWidget.routePath,
-            name: IDVerifyWidget.routeName,
-            builder: (context, state) => const IDVerifyWidget(),
-          ),
-          GoRoute(
-            path: FaceVerificationScreen.routePath,
-            name: FaceVerificationScreen.routeName,
-            builder: (context, state) => const FaceVerificationScreen(),
-          ),
-          GoRoute(
-            path: ProUnverifiedLandingWidget.routePath,
-            name: ProUnverifiedLandingWidget.routeName,
-            builder: (context, state) => const ProUnverifiedLandingWidget(),
-          ),
-          GoRoute(
-            path: VerificationReviewingWidget.routePath,
-            name: VerificationReviewingWidget.routeName,
-            builder: (context, state) => const VerificationReviewingWidget(),
-          ),
-          GoRoute(
-            path: ProDashboardWidget.routePath,
-            name: ProDashboardWidget.routeName,
-            builder: (context, state) => const ProDashboardWidget(),
-          ),
-          GoRoute(
-            path: ProEditProfileWidget.routePath,
-            name: ProEditProfileWidget.routeName,
-            builder: (context, state) => const ProEditProfileWidget(),
-          ),
-          GoRoute(
             path: EditProfileWidget.routePath,
             name: EditProfileWidget.routeName,
             builder: (context, state) => const EditProfileWidget(),
-          ),
-          GoRoute(
-            path: ServiceHistoryWidget.routePath,
-            name: ServiceHistoryWidget.routeName,
-            builder: (context, state) => const ServiceHistoryWidget(),
-          ),
-          GoRoute(
-            path: ReviewsRatingsWidget.routePath,
-            name: ReviewsRatingsWidget.routeName,
-            builder: (context, state) => const ReviewsRatingsWidget(),
-          ),
-          GoRoute(
-            path: HelpSupportWidget.routePath,
-            name: HelpSupportWidget.routeName,
-            builder: (context, state) => const HelpSupportWidget(),
-          ),
-          GoRoute(
-            path: AboutWidget.routePath,
-            name: AboutWidget.routeName,
-            builder: (context, state) => const AboutWidget(),
-          ),
-          GoRoute(
-            path: CreateServiceWidget.routePath,
-            name: CreateServiceWidget.routeName,
-            builder: (context, state) => const CreateServiceWidget(),
           ),
           GoRoute(
             path: FavoritesWidget.routePath,
@@ -663,7 +519,18 @@ class AppRouter {
           GoRoute(
             path: BookingSuccessWidget.routePath,
             name: BookingSuccessWidget.routeName,
-            builder: (context, state) => const BookingSuccessWidget(),
+            builder: (context, state) {
+              // Consolidated confirmation surface: the legacy
+              // BookingSuccessWidget is retired; both the payment flow and
+              // funnel land on the shared view.
+              final extra = state.extra as Map<String, dynamic>?;
+              return BookingConfirmationView(
+                bookingId: extra?['bookingId'] as String?,
+                serviceTitle: extra?['serviceName'] as String?,
+                scheduledText: extra?['scheduledText'] as String?,
+                totalLabel: extra?['totalLabel'] as String?,
+              );
+            },
           ),
           GoRoute(
             path: BookingDetailsWidget.routePath,
@@ -771,11 +638,6 @@ class AppRouter {
             builder: (context, state) => const RecommendationsWidget(),
           ),
           GoRoute(
-            path: ProviderBidsWidget.routePath,
-            name: ProviderBidsWidget.routeName,
-            builder: (context, state) => const ProviderBidsWidget(),
-          ),
-          GoRoute(
             path: ClientOnDemandJobsWidget.routePath,
             name: ClientOnDemandJobsWidget.routeName,
             builder: (context, state) => const ClientOnDemandJobsWidget(),
@@ -815,11 +677,6 @@ class AppRouter {
                     '',
               );
             },
-          ),
-          GoRoute(
-            path: KycHubWidget.routePath,
-            name: KycHubWidget.routeName,
-            builder: (context, state) => const KycHubWidget(),
           ),
           GoRoute(
             path: ReportProblemWidget.routePath,
@@ -863,29 +720,6 @@ class AppRouter {
             name: ProjectDetailWidget.routeName,
             builder: (context, state) => ProjectDetailWidget(
               projectId: state.pathParameters['projectId'] ?? '',
-            ),
-          ),
-          GoRoute(
-            path: MyServicesWidget.routePath,
-            name: MyServicesWidget.routeName,
-            builder: (context, state) => const MyServicesWidget(),
-          ),
-          GoRoute(
-            path: EarningsWidget.routePath,
-            name: EarningsWidget.routeName,
-            builder: (context, state) => const EarningsWidget(),
-          ),
-          GoRoute(
-            path: ProviderAnalyticsWidget.routePath,
-            name: ProviderAnalyticsWidget.routeName,
-            builder: (context, state) => const ProviderAnalyticsWidget(),
-          ),
-          GoRoute(
-            path: ProviderBookingFlowWidget.routePath,
-            name: ProviderBookingFlowWidget.routeName,
-            builder: (context, state) => ProviderBookingFlowWidget(
-              bookingId:
-                  state.pathParameters['bookingId'] ?? '',
             ),
           ),
           GoRoute(
@@ -941,12 +775,12 @@ class AppRouter {
       );
 }
 
-// Custom redirect guard for role-based routing
+// Custom redirect guard: client-only app. Provider routes no longer exist;
+// legacy provider deep-links fall back to Home via unknown-route handling.
+// Only client-gated routes require a session.
 class RoleBasedRedirectGuard {
-  // Private constructor to prevent instantiation
   RoleBasedRedirectGuard._();
 
-  /// Check if user needs to be redirected based on their role and verification status
   static Future<String?> checkRedirect(
     dynamic appStateNotifier,
     GoRouterState state,
@@ -960,7 +794,6 @@ class RoleBasedRedirectGuard {
     final currentPath = state.uri.toString();
     final gates = _gatesForPath(currentPath);
 
-    // Auth gate: role/kyc-gated routes require a logged-in session (web parity).
     if (!appStateNotifier.loggedIn) {
       if (gates.requiresAuth) {
         return SigninWidget.routePath;
@@ -968,58 +801,9 @@ class RoleBasedRedirectGuard {
       return null;
     }
 
-    final userId = currentUser?.uid;
-    if (userId == null) {
-      return null;
-    }
-
-    final userProfile = await _fetchUserProfile(userId);
-    if (userProfile == null) {
-      return null;
-    }
-
-    final isProvider = userProfile['is_provider'] == true;
-    final isClient = userProfile['is_client'] == true;
-
-    // Role gates (web `beforeEach` parity).
-    if (gates.requiresProvider && !isProvider) {
-      return HomeWidget.routePath;
-    }
-    if (gates.requiresClient && !isClient) {
-      return HomeWidget.routePath;
-    }
-
-    // Provider 4-state lifecycle.
-    if (gates.requiresProvider && isProvider) {
-      final redirect =
-          await _resolveProviderRedirectAsync(userProfile, currentPath);
-      if (redirect != null) {
-        // A KYC-skipped provider on a KYC-gated route goes to the KYC intro.
-        if (gates.requiresKyc && redirect == '/pro-dashboard') {
-          return EKYCBeginWidget.routePath;
-        }
-        return redirect;
-      }
-    }
-
-    // Home-by-mode: a provider on the client shell / provider dashboard is
-    // lifecycle-redirected (web `beforeEach` home↔dashboard parity).
-    if (isProvider && _providerHomePaths.contains(currentPath)) {
-      final redirect =
-          await _resolveProviderRedirectAsync(userProfile, currentPath);
-      if (redirect != null) {
-        // The provider shell at `/`/`/home` IS this app's provider dashboard;
-        // a verified or KYC-skipped provider stays put instead of bouncing to
-        // the standalone /pro-dashboard page.
-        if (redirect == ProDashboardWidget.routePath &&
-            (currentPath == '/' ||
-                currentPath == HomeWidget.routePath)) {
-          return null;
-        }
-        return redirect;
-      }
-    }
-
+    // No provider branching in the client app: all authenticated users stay
+    // on the client shell. Provider-account notice is handled in
+    // PostAuthNavigationFlow after sign-in.
     return null;
   }
 }

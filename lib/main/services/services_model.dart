@@ -4,6 +4,7 @@ import '/api/resources/services_api.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/logging_service.dart';
 import '/services/nearby_pro_mock_data.dart';
+import '/utils/emergency_categories.dart';
 import 'services_widget.dart' show ServicesScreen;
 
 class ServicesModel extends FlutterFlowModel<ServicesScreen> {
@@ -12,6 +13,10 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
   String searchQuery = '';
   bool isRecommended = false;
   bool isTopService = false;
+
+  /// Urgent Assistance entry: limits categories/results to the core
+  /// emergency domains (spec: service-search-workflow).
+  bool emergencyMode = false;
 
   TextEditingController searchController = TextEditingController();
   FocusNode searchFocusNode = FocusNode();
@@ -28,6 +33,10 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
         .toSet()
         .toList()
       ..sort();
+
+    if (emergencyMode) {
+      uniqueCategories.retainWhere(isEmergencyCategory);
+    }
 
     if (selectedCategory != null && selectedCategory != 'All') {
       uniqueCategories.remove(selectedCategory);
@@ -118,6 +127,16 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
   void applyFilters() {
     _coerceSelectedCategoryToAvailable();
     filteredServices = List.from(allServices);
+
+    if (emergencyMode) {
+      filteredServices = filteredServices
+          .where(
+            (service) => isEmergencyCategory(
+              service['category'] as String? ?? '',
+            ),
+          )
+          .toList();
+    }
 
     if (selectedCategory != null && selectedCategory != 'All') {
       filteredServices = filteredServices

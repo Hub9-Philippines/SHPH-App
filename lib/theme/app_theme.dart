@@ -270,6 +270,16 @@ class AppThemeData {
   static const double radiusCard = 24;
   static const double radiusPill = 9999;
 
+  // Tab-screen layout grid (Explore / Bookings / Messages): 16px horizontal
+  // margins and card insets, 24px between standalone page blocks, 12px
+  // carousel gutters. Use these instead of raw spacing literals so the
+  // screens cannot drift apart again.
+  static const double spaceXs = 4;
+  static const double spaceSm = 8;
+  static const double spaceMd = 12;
+  static const double spaceLg = 16;
+  static const double spaceXl = 24;
+
   static const double containerNarrow = 560;
   static const double containerReadable = 760;
   static const double containerWide = 1100;
@@ -309,6 +319,55 @@ class AppThemeData {
 
   static const Color star = Color(0xFFFFC107);
 
+  // Profile/Settings menu accents (tinted-icon rows). Single source so both
+  // screens share one dual-tone icon system and dark mode stays consistent.
+  static const Color accentPink = Color(0xFFEC4899);
+  static const Color accentOrange = Color(0xFFF97316);
+  static const Color accentSlate = Color(0xFF64748B);
+  static const Color accentBlue = Color(0xFF2563EB);
+  static const Color accentPurple = Color(0xFF7C5CFC);
+  static const Color accentYellow = Color(0xFFF59E0B);
+  static const Color accentTeal = Color(0xFF0D9488);
+  static const Color accentSky = Color(0xFF0EA5E9);
+  static const Color accentNavy = Color(0xFF1E3A8A);
+  static const Color accentBlueGray = Color(0xFF475569);
+  static const Color destructiveCrimson = Color(0xFFE11D48);
+
+  // Booking lifecycle action colors (list cards, tracking, confirmation).
+  // Primary actions use royal blue; success/complete states use brand teal;
+  // destructive/cancel affordances use soft red (distinct from `error`,
+  // which stays reserved for form/validation errors). Pending/warning
+  // highlights reuse [accentYellow] (amber #F59E0B).
+  static const Color actionPrimary = accentNavy;
+  static const Color successTeal = Color(0xFF0D808A);
+  static const Color destructiveSoft = Color(0xFFEF4444);
+
+  // Brand gradients owned by the theme (white text sits on both, identical
+  // across light/dark by design).
+  static const List<Color> profileHeroGradient = [
+    Color(0xFF0D808A),
+    Color(0xFF26C6DA),
+  ];
+  static const List<Color> settingsBannerGradient = [
+    Color(0xFF17212B),
+    Color(0xFF23384D),
+    Color(0xFF2F5368),
+  ];
+
+  // Marketing surface colors (Explore banners/badges) — single source so
+  // dark mode and future campaign swaps stay centralized.
+  static const List<Color> promoGradient = [
+    Color(0xFF1C6DD0),
+    Color(0xFF368EFF),
+  ];
+  static const Color promoCta = Color(0xFF0F3D91);
+  static const List<Color> referralGradient = [
+    Color(0xFF5B2E91),
+    Color(0xFF7C4DBE),
+  ];
+  static const Color ratingBadgeGreen = Color(0xFF16A34A);
+  static const Color ratingBadgeGreenBg = Color(0xFFE7F6EC);
+
   // Status pill colors (matching web --shph-status-* tokens)
   static const Color statusConfirmed = Color(0xFF0D6D78);
   static const Color statusConfirmedBg = Color(0xFFD4F0EF);
@@ -332,7 +391,7 @@ class AppThemeData {
       };
 
   factory AppThemeData.light() => AppThemeData(
-      primary: const Color(0xFF368EFF),
+      primary: const Color(0xFF1E3A8A),
       onPrimary: const Color(0xFFFFFFFF),
       secondary: const Color(0xFF39D2C0),
       tertiary: const Color(0xFFEE8B60),
@@ -349,7 +408,7 @@ class AppThemeData {
       success: const Color(0xFF249689),
       warning: const Color(0xFFF9CF58),
       error: const Color(0xFFDC2626),
-      info: const Color(0xFF368EFF),
+      info: const Color(0xFF1E3A8A),
       iconBackground: const Color(0xFFD4F0EF),
       primaryLight: const Color(0xFFD4F0EF),
       primaryDark: const Color(0xFF49B8C4),
@@ -360,7 +419,7 @@ class AppThemeData {
     );
 
   factory AppThemeData.dark() => AppThemeData(
-      primary: const Color(0xFF368EFF),
+      primary: const Color(0xFF1E3A8A),
       onPrimary: const Color(0xFFFFFFFF),
       secondary: const Color(0xFF39D2C0),
       tertiary: const Color(0xFFEE8B60),
@@ -377,7 +436,7 @@ class AppThemeData {
       success: const Color(0xFF249689),
       warning: const Color(0xFFF9CF58),
       error: const Color(0xFFDC2626),
-      info: const Color(0xFF368EFF),
+      info: const Color(0xFF1E3A8A),
       iconBackground: const Color(0xFFF34966),
       primaryLight: const Color(0xFF1A3D3C),
       primaryDark: const Color(0xFF49B8C4),

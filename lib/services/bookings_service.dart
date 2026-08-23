@@ -11,20 +11,21 @@ class BookingsService {
 
   Future<BookingsRow?> createBooking({
     required int serviceListingId,
-    required DateTime bookingDate,
-    required String bookingTime,
+    required DateTime bookingDateTime,
     int? addressId,
     String? notes,
     double? totalPrice,
+    @Deprecated(
+      'Client-only flag: the documented booking-create contract has no '
+      'payment-status field, so this value is never sent to the server.',
+    )
     String? paymentStatus,
   }) async {
     try {
       final booking = await _bookingsApi.createBooking(
         listingId: serviceListingId,
-        scheduledDate: bookingDate.toIso8601String().split('T').first,
-        scheduledTime: bookingTime,
+        scheduledAt: bookingDateTime,
         notes: notes,
-        totalPrice: totalPrice,
       );
       return ApiRowMapper.bookingToRow(booking);
     } catch (e) {

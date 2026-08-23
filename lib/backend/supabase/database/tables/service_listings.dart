@@ -21,6 +21,15 @@ class ServiceListingsRow extends SupabaseDataRow {
   int? get category => getField<int>('category');
   set category(int? value) => setField<int>('category', value);
 
+  double? get latitude => getField<double>('latitude');
+  set latitude(double? value) => setField<double>('latitude', value);
+
+  double? get longitude => getField<double>('longitude');
+  set longitude(double? value) => setField<double>('longitude', value);
+
+  double? get distanceKm => getField<double>('distance_km');
+  set distanceKm(double? value) => setField<double>('distance_km', value);
+
   String? get categoryName => getField<String>('category_name');
   set categoryName(String? value) => setField<String>('category_name', value);
 

@@ -125,20 +125,21 @@ class _SigninWidgetState extends State<SigninWidget>
 
   Widget _buildHeader(AppThemeData theme) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            color: theme.primary,
-            borderRadius: BorderRadius.circular(16),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Image.asset(
+            'assets/images/welcome-graphic.png',
+            width: double.infinity,
+            height: 150,
+            fit: BoxFit.cover,
           ),
-          child: Icon(Icons.handyman_rounded, color: theme.onPrimary, size: 28),
         ),
         const SizedBox(height: 20),
         Text(
-          'Welcome back!',
+          'Welcome to SerbisyoHub PH',
+          textAlign: TextAlign.center,
           style: theme.headlineLarge.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -146,6 +147,7 @@ class _SigninWidgetState extends State<SigninWidget>
         const SizedBox(height: 8),
         Text(
           'Sign in to continue with your home services.',
+          textAlign: TextAlign.center,
           style: theme.bodyMedium.copyWith(
             color: AppTheme.of(context).secondaryText,
             fontSize: 15,
@@ -702,7 +704,7 @@ class _SigninWidgetState extends State<SigninWidget>
               style: theme.bodyMedium.copyWith(color: theme.secondaryText),
             ),
             GestureDetector(
-              onTap: () => context.goNamed(SignOptionsWidget.routeName),
+              onTap: () => context.goNamed(SignupWidget.routeName),
               child: Text(
                 'Sign Up',
                 style: theme.bodyMedium.copyWith(

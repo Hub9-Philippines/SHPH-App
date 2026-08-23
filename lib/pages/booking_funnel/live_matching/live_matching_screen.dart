@@ -944,6 +944,7 @@ class _AssignedProviderRouteMapState extends State<_AssignedProviderRouteMap> {
           clientLocation: widget.clientLocation,
           providerLocation: widget.providerLocation,
           providerPhoto: widget.pro['providerPhoto'] as String?,
+          bookingReference: widget.referenceId,
           shouldPopToHome: true,
         ),
       ),
@@ -1863,7 +1864,7 @@ class _GradientBar extends StatelessWidget {
 
   static const _stages = <_GradientStage>[
     _GradientStage(
-      color1: Color(0xFF368EFF),
+      color1: Color(0xFF1E3A8A),
       color2: Color(0xFF4FC3F7),
     ),
     _GradientStage(

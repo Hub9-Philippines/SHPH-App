@@ -5,15 +5,16 @@ import '../flutter_flow/auth_logger.dart';
 import '../flutter_flow/nav/nav.dart';
 import '../index.dart';
 import '../services/auth_service.dart';
-import '../services/provider_verification_service.dart';
 
-/// Handles post-authentication navigation based on profile completeness and
-/// account type (web `usePostAuthNavigation` parity).
+/// Placeholder store URL for the standalone Provider app.
+/// Replace with the real Play Store / App Store link once published.
+const String kProviderAppStoreUrl = 'https://serbisyohubph.com/provider-app';
+
+/// Handles post-authentication navigation for the **client-only** app.
 ///
-/// This flow handles routing after a successful login/verification:
-/// 1. Client account → Home.
-/// 2. Provider account → the 4-state lifecycle resolved by
-///    [ProviderVerificationService]: profile → KYC intro → review → dashboard.
+/// All accounts land on Home. Provider-capable accounts receive a notice
+/// directing them to the standalone Provider app (spec: provider sign-in
+/// guidance, mixed-capability continuation).
 class PostAuthNavigationFlow {
   factory PostAuthNavigationFlow() => _instance;
 
@@ -21,7 +22,6 @@ class PostAuthNavigationFlow {
   static final PostAuthNavigationFlow _instance =
       PostAuthNavigationFlow._internal();
 
-  /// Ensure [AuthService] carries the session user (reads `/auth/me/`).
   Future<Map<String, dynamic>?> _ensureUser() async {
     final authService = AuthService.instance;
     if (authService.currentUser != null) {
@@ -44,10 +44,42 @@ class PostAuthNavigationFlow {
     }
   }
 
-  /// Check profile completeness and route to the appropriate page.
-  ///
-  /// Returns:
-  ///   - Does not return; handles routing internally
+  Future<void> _showProviderNotice(BuildContext context) async {
+    final theme = Theme.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Provider account detected'),
+        content: const Text(
+          'Provider tools have moved to the SerbisyoHub Provider app. '
+          'You can continue using this app as a client, or sign out.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              Navigator.of(dialogContext).pop(false);
+              await AuthService.instance.logout();
+              if (!context.mounted) return;
+              context.goNamedAuth(SigninWidget.routeName, context.mounted);
+            },
+            child: const Text('Sign out'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Continue as client'),
+          ),
+        ],
+      ),
+    );
+
+    // If user dismissed without picking, treat as continue.
+    if (confirmed == false) return;
+    if (!context.mounted) return;
+    // Continue as client – land on Home.
+    context.goNamedAuth(HomeWidget.routeName, context.mounted);
+  }
+
   Future<void> handlePostAuthNavigation({
     required BuildContext context,
     required String userId,
@@ -72,36 +104,22 @@ class PostAuthNavigationFlow {
         return;
       }
 
-      // Client (and non-provider) accounts land on Home.
-      if (authService.isProvider != true) {
+      if (authService.isProvider == true) {
         AuthLogger.info(
-          'Client account. Routing to Home.',
+          'Provider-capable account signed in on client app. Showing provider notice.',
           tag: 'PostAuthNavigationFlow',
         );
-        if (context.mounted) {
-          context.goNamedAuth(HomeWidget.routeName, context.mounted);
-        }
+        if (!context.mounted) return;
+        await _showProviderNotice(context);
         return;
       }
 
-      // Provider: resolve the 4-state lifecycle.
-      final redirect = await ProviderVerificationService.instance
-          .resolveProviderRedirect(user);
       AuthLogger.info(
-        'Provider verification state resolved to: $redirect',
+        'Client account. Routing to Home.',
         tag: 'PostAuthNavigationFlow',
       );
-      if (!context.mounted) return;
-
-      switch (redirect) {
-        case '/createProfile':
-          context.goNamed(CreateProfileWidget.routeName);
-        case '/eKYCBegin':
-          context.goNamed(EKYCBeginWidget.routeName);
-        case '/pro-verification-progress':
-          context.goNamed(VerificationReviewingWidget.routeName);
-        default:
-          context.goNamed(ProDashboardWidget.routeName);
+      if (context.mounted) {
+        context.goNamedAuth(HomeWidget.routeName, context.mounted);
       }
     } catch (e) {
       AuthLogger.error(
@@ -109,8 +127,6 @@ class PostAuthNavigationFlow {
         tag: 'PostAuthNavigationFlow',
         error: e,
       );
-
-      // On error, fallback to home
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -123,42 +139,19 @@ class PostAuthNavigationFlow {
     }
   }
 
-  /// Alternative method: Check if profile is complete without routing.
-  ///
-  /// Useful if you want to handle routing elsewhere.
-  ///
-  /// Returns:
-  ///   - 'needs_profile': User needs to complete profile
-  ///   - 'needs_kyc': User profile is complete but needs KYC (provider)
-  ///   - 'ready_pro_dashboard': User is a verified (or KYC-skipped) provider
-  ///   - 'ready_home': User can proceed to home
+  /// Client-only: always ready for Home (provider lifecycle removed).
   Future<String> checkProfileStatus(String userId) async {
     try {
-      final authService = AuthService.instance;
       final user = await _ensureUser();
       if (user == null) return 'needs_profile';
-
-      if (authService.isProvider != true) {
-        return 'ready_home';
-      }
-
-      final redirect = await ProviderVerificationService.instance
-          .resolveProviderRedirect(user);
-      switch (redirect) {
-        case '/createProfile':
-          return 'needs_profile';
-        case '/eKYCBegin':
-          return 'needs_kyc';
-        default:
-          return 'ready_pro_dashboard';
-      }
+      return 'ready_home';
     } catch (e) {
       AuthLogger.error(
         'Error checking profile status: $e',
         tag: 'PostAuthNavigationFlow',
         error: e,
       );
-      return 'ready_home'; // Allow to proceed on error
+      return 'ready_home';
     }
   }
 }

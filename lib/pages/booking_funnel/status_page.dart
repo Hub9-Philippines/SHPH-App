@@ -5,7 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '/flutter_flow/flutter_flow_util.dart' hide LatLng;
+import '/index.dart';
 import '/main.dart';
+import '/components/user_avatar.dart';
 import '/theme/app_theme.dart';
 
 class StatusPage extends StatefulWidget {
@@ -38,14 +41,14 @@ class StatusPage extends StatefulWidget {
 
 class _StatusPageState extends State<StatusPage>
     with TickerProviderStateMixin {
-  static const double _collapsedSheetExtent = 0.30;
-  static const double _expandedSheetExtent = 0.55;
+  /// The bottom card is a fixed, non-collapsible anchor at 45% of the
+  /// viewport height (spec: map-tracking-screen / non-collapsible sheet).
+  static const double _sheetHeightFactor = 0.45;
 
   late final AnimationController _pulseController;
 
   GoogleMapController? _mapController;
   Timer? _mockProgressTimer;
-  double _bottomSheetExtent = _collapsedSheetExtent;
   bool _mapReady = false;
 
   LatLng _currentProviderLocation = const LatLng(14.5995, 120.9842);
@@ -69,6 +72,8 @@ class _StatusPageState extends State<StatusPage>
         s == 'booking cancelled' ||
         s == 'cancelled';
   }
+
+  bool get _isCompleted => _currentStatus.toLowerCase() == 'completed';
 
   int get _activeStageIndex => _stageIndexForStatus(_currentStatus);
 
@@ -146,9 +151,6 @@ class _StatusPageState extends State<StatusPage>
     _currentStatus = widget.bookingStatus;
     _etaSeconds = _etaForStatus(_currentStatus);
 
-    _currentProviderLocation =
-        widget.providerLocation ?? const LatLng(14.5995, 120.9842);
-
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
@@ -191,8 +193,6 @@ class _StatusPageState extends State<StatusPage>
           _pulseController.value = 0;
         }
       });
-
-      _scheduleBoundsUpdate();
     });
   }
 
@@ -258,35 +258,54 @@ class _StatusPageState extends State<StatusPage>
     );
   }
 
-  double _dynamicMaxSheetExtent(double availableHeight) {
-    return _expandedSheetExtent;
+  void _handleBack() {
+    if (widget.shouldPopToHome) {
+      _goHome();
+    } else if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    } else {
+      _goHome();
+    }
   }
 
-  bool _handleSheetNotification(DraggableScrollableNotification n) {
-    if ((n.extent - _bottomSheetExtent).abs() < 0.002) return false;
-    setState(() => _bottomSheetExtent = n.extent);
-    _scheduleBoundsUpdate();
-    return false;
+  void _openContact() {
+    context.pushNamed(
+      ContactProviderWidget.routeName,
+      extra: <String, dynamic>{
+        'providerName': widget.providerName,
+        'providerPhoto': widget.providerPhoto,
+        'isVerified': false,
+      },
+    );
   }
 
-  Widget _buildSheet(ScrollController scrollController) {
-    final theme = AppTheme.of(context);
-    final bottomPadding = MediaQuery.paddingOf(context).bottom;
-    return _StatusSheetContainer(
-      scrollController: scrollController,
-      theme: theme,
-      stages: _stages,
-      activeStageIndex: _activeStageIndex,
-      pulseValue: _pulseController,
-      isTerminal: _isTerminal,
-      providerName: widget.providerName,
-      status: _currentStatus,
-      bookingDate: widget.bookingDate,
-      bookingReference: widget.bookingReference,
-      etaSeconds: _etaSeconds,
-      distanceKm: _distanceToClient(_currentProviderLocation),
-      bottomInset: bottomPadding,
-      onBackToHome: widget.shouldPopToHome ? _goHome : null,
+  void _writeReview() {
+    final reference = widget.bookingReference;
+    if (reference == null || reference.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content:
+              Text('Review will be available once this booking is synced.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+    context.pushNamed(
+      WriteReviewWidget.routeName,
+      pathParameters: {'bookingId': reference},
+      extra: <String, dynamic>{'serviceName': widget.serviceTitle},
+    );
+  }
+
+  void _viewInvoice() {
+    // No invoice surface exists client-side yet (web-only endpoint); degrade
+    // gracefully instead of dead-tapping.
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Your invoice will be available shortly.'),
+        duration: Duration(seconds: 2),
+      ),
     );
   }
 
@@ -294,95 +313,103 @@ class _StatusPageState extends State<StatusPage>
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
+    final sheetHeight =
+        MediaQuery.sizeOf(context).height * _sheetHeightFactor;
 
     final scaffold = Scaffold(
       backgroundColor: theme.primaryBackground,
-      body: Column(
+      body: Stack(
         children: [
-          _StatusTopBar(
-            providerName: widget.providerName,
-            providerPhoto: widget.providerPhoto,
-            status: _currentStatus,
-            serviceTitle: widget.serviceTitle,
-            theme: theme,
-          ),
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final maxSheetExtent =
-                    _dynamicMaxSheetExtent(constraints.maxHeight);
-                final currentSheetExtent = _bottomSheetExtent.clamp(
-                  _collapsedSheetExtent,
-                  maxSheetExtent,
-                );
-                final mapPadding = EdgeInsets.only(
-                  bottom: constraints.maxHeight * currentSheetExtent +
-                      bottomPadding +
-                      24,
-                );
-
-                return NotificationListener<
-                    DraggableScrollableNotification>(
-                  onNotification: _handleSheetNotification,
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
-                        child: GoogleMap(
-                          initialCameraPosition: CameraPosition(
-                            target: _clientLocation,
-                            zoom: 14,
-                          ),
-                          padding: mapPadding,
-                          zoomControlsEnabled: false,
-                          myLocationButtonEnabled: false,
-                          mapToolbarEnabled: false,
-                          markers: {
-                            Marker(
-                              markerId:
-                                  const MarkerId('client_location'),
-                              position: _clientLocation,
-                              anchor: const Offset(0.5, 1),
-                              icon: BitmapDescriptor
-                                  .defaultMarkerWithHue(
-                                BitmapDescriptor.hueAzure,
-                              ),
-                            ),
-                            Marker(
-                              markerId:
-                                  const MarkerId('provider_location'),
-                              position: _currentProviderLocation,
-                              anchor: const Offset(0.5, 1),
-                              icon: BitmapDescriptor
-                                  .defaultMarkerWithHue(
-                                BitmapDescriptor.hueGreen,
-                              ),
-                            ),
-                          },
-                          polylines: _polylines,
-                          onMapCreated: (controller) {
-                            _mapController = controller;
-                            _mapReady = true;
-                            _scheduleBoundsUpdate();
-                          },
-                        ),
-                      ),
-                      Positioned.fill(
-                        child: MediaQuery.removePadding(
-                          context: context,
-                          removeBottom: true,
-                          child: DraggableScrollableSheet(
-                            initialChildSize: _collapsedSheetExtent,
-                            minChildSize: _collapsedSheetExtent,
-                            maxChildSize: maxSheetExtent,
-                            builder: (context, scrollController) =>
-                                _buildSheet(scrollController),
-                          ),
-                        ),
-                      ),
-                    ],
+          // Full-bleed map canvas behind every overlay.
+          Positioned.fill(
+            child: GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: _clientLocation,
+                zoom: 14,
+              ),
+              padding: EdgeInsets.only(bottom: sheetHeight + bottomPadding),
+              zoomControlsEnabled: false,
+              myLocationButtonEnabled: false,
+              mapToolbarEnabled: false,
+              markers: {
+                Marker(
+                  markerId: const MarkerId('client_location'),
+                  position: _clientLocation,
+                  anchor: const Offset(0.5, 1),
+                  icon: BitmapDescriptor.defaultMarkerWithHue(
+                    BitmapDescriptor.hueAzure,
                   ),
-                );
+                ),
+                Marker(
+                  markerId: const MarkerId('provider_location'),
+                  position: _currentProviderLocation,
+                  anchor: const Offset(0.5, 1),
+                  icon: BitmapDescriptor.defaultMarkerWithHue(
+                    BitmapDescriptor.hueGreen,
+                  ),
+                ),
               },
+              polylines: _polylines,
+              onMapCreated: (controller) {
+                _mapController = controller;
+                _mapReady = true;
+                _scheduleBoundsUpdate();
+              },
+            ),
+          ),
+
+          // Floating back button — top-left over the map.
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 16, top: 16),
+              child: _FloatingCircleButton(
+                icon: Icons.chevron_left_rounded,
+                tooltip: 'Back',
+                onTap: _handleBack,
+              ),
+            ),
+          ),
+
+          // Floating provider card — near the top-center of the map.
+          SafeArea(
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(76, 16, 16, 0),
+                child: _ProviderCard(
+                  providerName: widget.providerName,
+                  providerPhoto: widget.providerPhoto,
+                  status: _currentStatus,
+                  serviceTitle: widget.serviceTitle,
+                  onContact: _openContact,
+                ),
+              ),
+            ),
+          ),
+
+          // Fixed, non-collapsible bottom sheet at 45% of the viewport.
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: _TrackingSheet(
+              height: sheetHeight,
+              bottomInset: bottomPadding,
+              theme: theme,
+              stages: _stages,
+              activeStageIndex: _activeStageIndex,
+              pulseValue: _pulseController,
+              isTerminal: _isTerminal,
+              isCompleted: _isCompleted,
+              providerName: widget.providerName,
+              status: _currentStatus,
+              bookingDate: widget.bookingDate,
+              bookingReference: widget.bookingReference,
+              etaSeconds: _etaSeconds,
+              distanceKm: _distanceToClient(_currentProviderLocation),
+              serviceTitle: widget.serviceTitle,
+              onWriteReview: _writeReview,
+              onViewInvoice: _viewInvoice,
             ),
           ),
         ],
@@ -401,306 +428,329 @@ class _StatusPageState extends State<StatusPage>
   }
 }
 
-class _StatusTopBar extends StatelessWidget {
-  const _StatusTopBar({
+class _FloatingCircleButton extends StatelessWidget {
+  const _FloatingCircleButton({
+    required this.icon,
+    required this.tooltip,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: theme.primaryBackground,
+        shape: const CircleBorder(),
+        elevation: 4,
+        shadowColor: Colors.black26,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: SizedBox(
+            width: 44,
+            height: 44,
+            child: Icon(icon, size: 24, color: theme.primaryText),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ProviderCard extends StatelessWidget {
+  const _ProviderCard({
     required this.providerName,
     required this.status,
     required this.serviceTitle,
-    required this.theme,
+    required this.onContact,
     this.providerPhoto,
   });
 
   final String providerName;
-  final String? providerPhoto;
   final String status;
   final String serviceTitle;
-  final AppThemeData theme;
+  final VoidCallback onContact;
+  final String? providerPhoto;
 
   @override
   Widget build(BuildContext context) {
-    final isTerminal = status.toLowerCase() == 'completed' ||
-        status.toLowerCase() == 'booking cancelled' ||
-        status.toLowerCase() == 'cancelled';
-
-    return SafeArea(
-      bottom: false,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
-        decoration: BoxDecoration(
-          color: theme.primaryBackground,
-          border: Border(bottom: BorderSide(color: theme.alternate)),
-        ),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 20,
-              backgroundColor: theme.primary.withValues(alpha: 0.10),
-              backgroundImage:
-                  providerPhoto != null && providerPhoto!.trim().isNotEmpty
-                      ? NetworkImage(providerPhoto!)
-                      : null,
-              child: providerPhoto == null || providerPhoto!.trim().isEmpty
-                  ? Icon(Icons.person_rounded, color: theme.primary)
-                  : null,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          providerName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.titleSmall.override(
-                            font: GoogleFonts.plusJakartaSans(
-                              fontWeight: FontWeight.w700,
-                            ),
+    final theme = AppTheme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: theme.primaryBackground.withValues(alpha: 0.97),
+        borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
+        boxShadow: AppThemeData.shadowCard,
+      ),
+      child: Row(
+        children: [
+          UserAvatar(photoUrl: providerPhoto, name: providerName, size: 40),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        providerName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.labelLarge.override(
+                          font: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.w700,
                           ),
+                          color: theme.primaryText,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      _BookingStatusChip(
-                        status: status,
-                        theme: theme,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    isTerminal
-                        ? 'Booking $status'
-                        : 'Tracking progress of $providerName',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.bodySmall.override(
-                      color: theme.secondaryText,
                     ),
+                    const SizedBox(width: 6),
+                    _BookingStatusChip(status: status, theme: theme),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  serviceTitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.labelSmall.override(
+                    font: GoogleFonts.plusJakartaSans(),
+                    color: theme.secondaryText,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          const SizedBox(width: 8),
+          _MapActionButton(
+            icon: Icons.call_rounded,
+            tooltip: 'Call',
+            onTap: onContact,
+          ),
+          const SizedBox(width: 6),
+          _MapActionButton(
+            icon: Icons.chat_bubble_rounded,
+            tooltip: 'Message',
+            onTap: onContact,
+          ),
+        ],
       ),
     );
   }
 }
 
-class _BookingStatusChip extends StatelessWidget {
-  const _BookingStatusChip({
-    required this.status,
-    required this.theme,
+class _MapActionButton extends StatelessWidget {
+  const _MapActionButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
   });
 
-  final String status;
-  final AppThemeData theme;
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final lower = status.toLowerCase();
-    final Color bg;
-    final Color fg;
-    final String label;
-
-    if (lower == 'completed') {
-      bg = const Color(0xFF16A34A).withValues(alpha: 0.12);
-      fg = const Color(0xFF16A34A);
-      label = 'Completed';
-    } else if (lower == 'en route' || lower == 'booking confirmed') {
-      bg = theme.primary.withValues(alpha: 0.12);
-      fg = theme.primary;
-      label = 'En Route';
-    } else if (lower == 'on site' || lower == 'arrived') {
-      bg = const Color(0xFFE65100).withValues(alpha: 0.12);
-      fg = const Color(0xFFE65100);
-      label = 'On Site';
-    } else if (lower == 'in progress' || lower == 'in_progress') {
-      bg = const Color(0xFF7B1FA2).withValues(alpha: 0.12);
-      fg = const Color(0xFF7B1FA2);
-      label = 'In Progress';
-    } else if (lower == 'cancelled' || lower == 'booking cancelled') {
-      bg = const Color(0xFFDC2626).withValues(alpha: 0.12);
-      fg = const Color(0xFFDC2626);
-      label = 'Cancelled';
-    } else {
-      bg = theme.secondaryText.withValues(alpha: 0.12);
-      fg = theme.secondaryText;
-      label = 'Confirmed';
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: theme.labelSmall.override(
-          color: fg,
-          fontWeight: FontWeight.w700,
-          fontSize: 10,
+    final theme = AppTheme.of(context);
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: theme.primary.withValues(alpha: 0.12),
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: SizedBox(
+            width: 36,
+            height: 36,
+            child: Icon(icon, size: 18, color: theme.primary),
+          ),
         ),
       ),
     );
   }
 }
 
-class _StatusSheetContainer extends StatelessWidget {
-  const _StatusSheetContainer({
-    required this.scrollController,
+// SHEET_PLACEHOLDER
+
+class _TrackingSheet extends StatelessWidget {
+  const _TrackingSheet({
+    required this.height,
+    required this.bottomInset,
     required this.theme,
     required this.stages,
     required this.activeStageIndex,
     required this.pulseValue,
     required this.isTerminal,
+    required this.isCompleted,
     required this.providerName,
     required this.status,
     required this.bookingDate,
     required this.etaSeconds,
     required this.distanceKm,
-    required this.bottomInset,
+    required this.serviceTitle,
+    required this.onWriteReview,
+    required this.onViewInvoice,
     this.bookingReference,
-    this.onBackToHome,
   });
 
-  final ScrollController scrollController;
+  final double height;
+  final double bottomInset;
   final AppThemeData theme;
   final List<_BookingStage> stages;
   final int activeStageIndex;
   final Animation<double> pulseValue;
   final bool isTerminal;
+  final bool isCompleted;
   final String providerName;
   final String status;
   final DateTime bookingDate;
   final int etaSeconds;
   final double distanceKm;
-  final double bottomInset;
+  final String serviceTitle;
   final String? bookingReference;
-  final VoidCallback? onBackToHome;
+  final VoidCallback onWriteReview;
+  final VoidCallback onViewInvoice;
 
   @override
   Widget build(BuildContext context) {
-    final title = _serviceTitleFromStatus(status);
-
     return Container(
-      clipBehavior: Clip.hardEdge,
-      decoration: BoxDecoration(
-        color: theme.primaryBackground.withValues(alpha: 0.98),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      height: height,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: AppThemeData.shadowCard,
       ),
-      child: ListView(
-        controller: scrollController,
-        padding: EdgeInsets.zero,
-        children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(20, 12, 20, 24 + bottomInset),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(20, 14, 20, 20 + bottomInset),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
               children: [
-                Row(
-                  children: [
-                    Icon(Icons.track_changes_rounded,
-                        size: 20, color: theme.primary),
-                    const SizedBox(width: 10),
-                    Text(
-                      title,
-                      style: theme.titleMedium.override(
-                        font: GoogleFonts.plusJakartaSans(
-                            fontWeight: FontWeight.w700),
-                      ),
+                Icon(Icons.track_changes_rounded,
+                    size: 20, color: theme.primary),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    serviceTitle,
+                    style: theme.titleMedium.override(
+                      font: GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w700),
+                      color: theme.primaryText,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                if (!isTerminal) ...[
-                  Text(
-                    '${distanceKm.toStringAsFixed(1)} km away',
-                    style: theme.bodySmall.override(
-                      color: theme.secondaryText,
-                    ),
-                  ),
-                  if (etaSeconds > 0)
-                    Text(
-                      'Approximately ${_formatEta(etaSeconds)}',
-                      style: theme.bodySmall.override(
-                        color: theme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                ] else
-                  Text(
-                    'This booking has been ${status.toLowerCase()}.',
-                    style: theme.bodySmall.override(
-                      color: theme.secondaryText,
-                    ),
-                  ),
-                const SizedBox(height: 16),
-                ...List.generate(stages.length, (i) => _StageRow(
-                  stage: stages[i],
-                  stageCount: stages.length,
-                  index: i,
-                  activeIndex: activeStageIndex,
-                  pulseValue: pulseValue,
-                  isTerminal: isTerminal,
-                  theme: theme,
-                )),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: theme.secondaryBackground,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    children: [
-                      _DetailRow(
-                        theme: theme,
-                        icon: Icons.calendar_today_rounded,
-                        label: 'Booking date',
-                        value:
-                            '${bookingDate.month}/${bookingDate.day}/${bookingDate.year}',
-                      ),
-                      if ((bookingReference ?? '').isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        _DetailRow(
-                          theme: theme,
-                          icon: Icons.tag_rounded,
-                          label: 'Reference',
-                          value: bookingReference!,
-                        ),
-                      ],
-                    ],
                   ),
                 ),
-                if (onBackToHome != null) ...[
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: onBackToHome,
-                      icon: const Icon(Icons.home_rounded, size: 18),
-                      label: const Text('Back to Home'),
-                      style: FilledButton.styleFrom(
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            if (!isTerminal) ...[
+              Text(
+                '${distanceKm.toStringAsFixed(1)} km away',
+                style: theme.bodySmall.override(
+                  color: theme.secondaryText,
+                ),
+              ),
+              if (etaSeconds > 0)
+                Text(
+                  'Approximately ${_formatEta(etaSeconds)}',
+                  style: theme.bodySmall.override(
+                    color: theme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+            ] else
+              Text(
+                'This booking has been ${status.toLowerCase()}.',
+                style: theme.bodySmall.override(
+                  color: theme.secondaryText,
+                ),
+              ),
+            const SizedBox(height: AppThemeData.spaceLg),
+            ...List.generate(stages.length, (i) => _StageRow(
+              stage: stages[i],
+              stageCount: stages.length,
+              index: i,
+              activeIndex: activeStageIndex,
+              pulseValue: pulseValue,
+              isTerminal: isTerminal,
+              theme: theme,
+            )),
+            const SizedBox(height: AppThemeData.spaceLg),
+            Wrap(
+              spacing: AppThemeData.spaceSm,
+              runSpacing: AppThemeData.spaceSm,
+              children: [
+                _InfoBadge(
+                  icon: Icons.calendar_today_rounded,
+                  label: 'Booking date',
+                  value:
+                      '${bookingDate.month}/${bookingDate.day}/${bookingDate.year}',
+                ),
+                if ((bookingReference ?? '').isNotEmpty)
+                  _InfoBadge(
+                    icon: Icons.tag_rounded,
+                    label: 'Reference',
+                    value: bookingReference!.length > 8
+                        ? bookingReference!.substring(0, 8).toUpperCase()
+                        : bookingReference!,
+                  ),
+              ],
+            ),
+            if (isCompleted) ...[
+              const SizedBox(height: AppThemeData.spaceLg),
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: FilledButton.icon(
+                  onPressed: onWriteReview,
+                  icon: const Icon(Icons.rate_review_rounded, size: 19),
+                  label: Text(
+                    'Write a Review',
+                    style: theme.titleSmall.override(
+                      font: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w700,
+                      ),
+                      color: Colors.white,
+                    ),
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppThemeData.successTeal,
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(AppThemeData.radiusMd),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Center(
+                child: TextButton(
+                  onPressed: onViewInvoice,
+                  child: Text(
+                    'View Invoice',
+                    style: theme.labelLarge.override(
+                      font: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w700,
+                      ),
+                      color: theme.primary,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -714,14 +764,51 @@ class _StatusSheetContainer extends StatelessWidget {
     }
     return '${minutes}min';
   }
+}
 
-  String _serviceTitleFromStatus(String s) {
-    final lower = s.toLowerCase();
-    if (lower == 'completed') return 'Service Completed';
-    if (lower == 'booking cancelled' || lower == 'cancelled') {
-      return 'Booking Cancelled';
-    }
-    return 'Service In Progress';
+class _InfoBadge extends StatelessWidget {
+  const _InfoBadge({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: theme.surfaceAlt,
+        borderRadius: BorderRadius.circular(AppThemeData.radiusPill),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: theme.secondaryText),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: theme.labelSmall.override(
+              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
+              color: theme.secondaryText,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            value,
+            style: theme.labelSmall.override(
+              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+              color: theme.primaryText,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -801,6 +888,7 @@ class _StageRow extends StatelessWidget {
                           color: dotColor,
                           shape: BoxShape.circle,
                         ),
+                        // The one and only checkmark for a completed stage.
                         child: _isCompleted
                             ? const Icon(
                                 Icons.check_rounded,
@@ -848,21 +936,12 @@ class _StageRow extends StatelessWidget {
                           minutes: stage.estimatedMinutes!,
                           theme: theme,
                         ),
-                      if (_isCompleted)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8),
-                          child: Icon(
-                            Icons.check_circle_rounded,
-                            size: 16,
-                            color: const Color(0xFF16A34A),
-                          ),
-                        ),
                     ],
                   ),
                   const SizedBox(height: 4),
                   Text(
                     _isActive && !isTerminal
-                        ? '${stage.description}…'
+                        ? '${stage.description}�'
                         : stage.description,
                     style: theme.bodySmall.override(color: descColor),
                   ),
@@ -912,40 +991,64 @@ class _EtaChip extends StatelessWidget {
   }
 }
 
-class _DetailRow extends StatelessWidget {
-  const _DetailRow({
+class _BookingStatusChip extends StatelessWidget {
+  const _BookingStatusChip({
+    required this.status,
     required this.theme,
-    required this.icon,
-    required this.label,
-    required this.value,
   });
 
+  final String status;
   final AppThemeData theme;
-  final IconData icon;
-  final String label;
-  final String value;
 
   @override
-  Widget build(BuildContext context) => Row(
-        children: [
-          Icon(icon, size: 16, color: theme.secondaryText),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: theme.bodySmall.override(
-              color: theme.secondaryText,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const Spacer(),
-          Text(
-            value,
-            style: theme.bodySmall.override(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      );
+  Widget build(BuildContext context) {
+    final lower = status.toLowerCase();
+    final Color bg;
+    final Color fg;
+    final String label;
+
+    if (lower == 'completed') {
+      bg = const Color(0xFF16A34A).withValues(alpha: 0.12);
+      fg = const Color(0xFF16A34A);
+      label = 'Completed';
+    } else if (lower == 'en route' || lower == 'booking confirmed') {
+      bg = theme.primary.withValues(alpha: 0.12);
+      fg = theme.primary;
+      label = 'En Route';
+    } else if (lower == 'on site' || lower == 'arrived') {
+      bg = const Color(0xFFE65100).withValues(alpha: 0.12);
+      fg = const Color(0xFFE65100);
+      label = 'On Site';
+    } else if (lower == 'in progress' || lower == 'in_progress') {
+      bg = const Color(0xFF7B1FA2).withValues(alpha: 0.12);
+      fg = const Color(0xFF7B1FA2);
+      label = 'In Progress';
+    } else if (lower == 'cancelled' || lower == 'booking cancelled') {
+      bg = const Color(0xFFDC2626).withValues(alpha: 0.12);
+      fg = const Color(0xFFDC2626);
+      label = 'Cancelled';
+    } else {
+      bg = theme.secondaryText.withValues(alpha: 0.12);
+      fg = theme.secondaryText;
+      label = 'Confirmed';
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: theme.labelSmall.override(
+          color: fg,
+          fontWeight: FontWeight.w700,
+          fontSize: 10,
+        ),
+      ),
+    );
+  }
 }
 
 class _BookingStage {

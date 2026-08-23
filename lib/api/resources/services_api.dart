@@ -28,6 +28,8 @@ class ShphServicesApi {
     String? ordering,
     int? page,
     int? pageSize,
+    double? latitude,
+    double? longitude,
   }) async {
     final response = await _client.get<Map<String, dynamic>>(
       '/api/services/listings/',
@@ -36,6 +38,9 @@ class ShphServicesApi {
         if (ordering != null) 'ordering': ordering,
         if (page != null) 'page': page,
         if (pageSize != null) 'page_size': pageSize,
+        // Backend computes distance_km when both are supplied.
+        if (latitude != null) 'lat': latitude,
+        if (longitude != null) 'lng': longitude,
       },
     );
     return PaginatedResponse.fromJson(
