@@ -31,7 +31,10 @@ class _HelpPageState extends State<HelpPage> {
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: Icon(
+            Icons.arrow_back_rounded,
+            color: theme.primaryText,
+          ),
           onPressed: () => context.pop(),
         ),
       ),

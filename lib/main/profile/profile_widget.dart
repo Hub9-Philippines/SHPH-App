@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -11,8 +12,8 @@ import '/auth/post_auth_navigation_flow.dart'
 import '/backend/supabase/supabase.dart';
 import '/components/content_container.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
+import '/components/tinted_menu_tile.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/upload_data.dart';
 import '/index.dart';
 import '/services/profiles_service.dart';
 import '/theme/app_theme.dart';
@@ -35,6 +36,15 @@ class _ProfileWidgetState extends State<ProfileWidget> {
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
   bool _providerSwitch = false;
+  bool _isUploading = false;
+
+  // Royal-blue hero gradient — merges the previous card look with the
+  // current brand primary.
+  static const List<Color> _heroGradient = [
+    Color(0xFF1E3A8A),
+    Color(0xFF274FB5),
+    Color(0xFF3B62D9),
+  ];
 
   @override
   void initState() {
@@ -52,8 +62,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
   Widget build(BuildContext context) {
     context.watch<FFAppState>();
 
-    // Strict light theme: the hub renders identically regardless of any
-    // app-level dark preference.
+    // Strict light theme for this screen.
     return Theme(
       data: AppTheme.lightTheme(),
       child: FutureBuilder<ProfilesRow?>(
@@ -63,23 +72,17 @@ class _ProfileWidgetState extends State<ProfileWidget> {
             return Scaffold(
               backgroundColor: Colors.white,
               body: SafeArea(
-                child: Column(
-                  children: [
-                    const Expanded(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            ProfileHeaderSkeleton(),
-                            ProfileMenuItemSkeleton(),
-                            ProfileMenuItemSkeleton(),
-                            ProfileMenuItemSkeleton(),
-                            ProfileMenuItemSkeleton(),
-                            ProfileMenuItemSkeleton(),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: const [
+                      ProfileHeaderSkeleton(),
+                      ProfileMenuItemSkeleton(),
+                      ProfileMenuItemSkeleton(),
+                      ProfileMenuItemSkeleton(),
+                      ProfileMenuItemSkeleton(),
+                      ProfileMenuItemSkeleton(),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -106,7 +109,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
               backgroundColor: Colors.white,
               body: SafeArea(
                 child: RefreshIndicator(
-                  color: Theme.of(context).colorScheme.primary,
+                  color: AppTheme.of(context).primary,
                   onRefresh: () async => safeSetState(() {}),
                   child: CustomScrollView(
                     physics: const BouncingScrollPhysics(
@@ -121,34 +124,34 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildHeaderBlock(profile),
+                              _buildHeroCard(profile),
                               const SizedBox(height: 24),
-                              _ProfileGroup(
+                              _buildGroup(
                                 label: 'ACCOUNT',
-                                children: [
-                                  _ProfileRow(
+                                tiles: [
+                                  _tile(
+                                    context,
                                     icon: Icons.calendar_month_rounded,
-                                    tint: themePrimary(context),
+                                    tint: AppThemeData.accentNavy,
                                     title: 'My Bookings',
-                                    subtitle:
-                                        'View past and upcoming jobs',
+                                    subtitle: 'View past and upcoming jobs',
                                     onTap: () => context
                                         .pushNamed(BookingsWidget.routeName),
                                   ),
-                                  _divider(),
-                                  _ProfileRow(
+                                  _tile(
+                                    context,
                                     icon: Icons.receipt_long_rounded,
-                                    tint: themePrimary(context),
+                                    tint: AppThemeData.accentSky,
                                     title: 'Payment & Invoices',
                                     subtitle:
                                         'View history and download invoices',
                                     onTap: () => context.pushNamed(
                                         PaymentMethodsWidget.routeName),
                                   ),
-                                  _divider(),
-                                  _ProfileRow(
+                                  _tile(
+                                    context,
                                     icon: Icons.translate_rounded,
-                                    tint: themePrimary(context),
+                                    tint: AppThemeData.accentPurple,
                                     title: 'Language Preference',
                                     subtitle: 'English, Hindi, Marathi, etc.',
                                     onTap: () => context.pushNamed(
@@ -157,48 +160,49 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                 ],
                               ),
                               const SizedBox(height: 20),
-                              _ProfileGroup(
+                              _buildGroup(
                                 label: 'PREFERENCES & UTILITIES',
-                                children: [
-                                  _ProfileRow(
+                                tiles: [
+                                  _tile(
+                                    context,
                                     icon: Icons.favorite_rounded,
-                                    tint: themePrimary(context),
+                                    tint: AppThemeData.accentPink,
                                     title: 'Favorites',
                                     subtitle:
                                         'Jump back into the services you saved',
                                     onTap: () => context
                                         .pushNamed(FavoritesWidget.routeName),
                                   ),
-                                  _divider(),
-                                  _ProfileRow(
+                                  _tile(
+                                    context,
                                     icon: Icons.star_rounded,
-                                    tint: themePrimary(context),
+                                    tint: AppThemeData.accentOrange,
                                     title: 'My Reviews',
                                     subtitle: 'See the feedback you have left',
                                     onTap: () => context
                                         .pushNamed(MyReviewsWidget.routeName),
                                   ),
-                                  _divider(),
-                                  _ProfileRow(
+                                  _tile(
+                                    context,
                                     icon: Icons.card_giftcard_rounded,
-                                    tint: themePrimary(context),
+                                    tint: AppThemeData.accentTeal,
                                     title: 'Referral Program',
                                     subtitle: 'Share and earn rewards',
                                     onTap: _showReferralSheet,
                                   ),
-                                  _divider(),
-                                  _ProfileRow(
+                                  _tile(
+                                    context,
                                     icon: Icons.notifications_active_rounded,
-                                    tint: themePrimary(context),
+                                    tint: AppThemeData.accentYellow,
                                     title: 'Notification Settings',
                                     subtitle: 'Control alerts and reminders',
                                     onTap: () => context.pushNamed(
                                         MyNotificationsWidget.routeName),
                                   ),
-                                  _divider(),
-                                  _ProfileRow(
+                                  _tile(
+                                    context,
                                     icon: Icons.help_outline_rounded,
-                                    tint: themePrimary(context),
+                                    tint: AppThemeData.accentBlue,
                                     title: 'Help Center',
                                     subtitle:
                                         'FAQs and chat with our support team',
@@ -208,75 +212,29 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                 ],
                               ),
                               const SizedBox(height: 20),
-                              _ProfileGroup(
+                              _buildGroup(
                                 label: 'SYSTEM ACCESS',
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 12,
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          width: 44,
-                                          height: 44,
-                                          decoration: BoxDecoration(
-                                            color: themePrimary(context)
-                                                .withValues(alpha: 0.12),
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                          ),
-                                          child: Icon(
-                                            Icons.swap_horiz_rounded,
-                                            size: 22,
-                                            color: themePrimary(context),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 14),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                'Are you a service provider?',
-                                                style: AppTheme.of(context)
-                                                    .titleSmall
-                                                    .override(
-                                                      font: GoogleFonts
-                                                          .plusJakartaSans(
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w700),
-                                                    ),
-                                              ),
-                                              const SizedBox(height: 3),
-                                              Text(
-                                                'Switch to Provider Account',
-                                                style: AppTheme.of(context)
-                                                    .bodySmall,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Switch.adaptive(
-                                          value: _providerSwitch,
-                                          onChanged: (value) =>
-                                              _handleProviderSwitch(value),
-                                        ),
-                                      ],
-                                    ),
+                                tiles: [
+                                  _tile(
+                                    context,
+                                    icon: Icons.shield_rounded,
+                                    tint: AppThemeData.accentNavy,
+                                    title: 'Security',
+                                    subtitle:
+                                        'Password, login protection, and app security',
+                                    onTap: () => context.pushNamed(
+                                        SecuritySettingsWidget.routeName),
                                   ),
-                                  _divider(),
-                                  _ProfileRow(
+                                  _providerSwitchTile(context),
+                                  _tile(
+                                    context,
                                     icon: Icons.logout_rounded,
                                     tint: AppThemeData.destructiveCrimson,
                                     title: 'Log out',
-                                    titleColor:
-                                        AppThemeData.destructiveCrimson,
                                     subtitle:
                                         'Sign out of your account on this device',
+                                    titleColor:
+                                        AppThemeData.destructiveCrimson,
                                     onTap: _handleLogout,
                                   ),
                                 ],
@@ -297,14 +255,323 @@ class _ProfileWidgetState extends State<ProfileWidget> {
     );
   }
 
-  Color themePrimary(BuildContext context) =>
-      Theme.of(context).colorScheme.primary;
+  // -------------------------------------------------------------------
+  // Hero card — previous design language on the royal-blue brand gradient
+  // -------------------------------------------------------------------
+  Widget _buildHeroCard(ProfilesRow profile) {
+    final displayName =
+        valueOrDefault<String>(profile.displayName, 'Rims Client');
+    final email = valueOrDefault<String>(profile.email, currentUserEmail);
+    final phone = valueOrDefault<String>(
+      profile.phoneNumber,
+      FFAppState().phone,
+    );
 
-  Divider _divider() => Divider(
-        height: 1,
-        thickness: 0.5,
-        color: Theme.of(context).dividerColor.withValues(alpha: 0.35),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: _heroGradient,
+        ),
+        borderRadius: BorderRadius.circular(AppThemeData.radiusCard),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x2E1E3A8A),
+            blurRadius: 24,
+            offset: Offset(0, 14),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Crisp circular photo with a subtle ring + camera affordance.
+              Stack(
+                children: [
+                  Container(
+                    width: 76,
+                    height: 76,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.85),
+                        width: 2,
+                      ),
+                    ),
+                    padding: const EdgeInsets.all(3),
+                    child: ClipOval(
+                      child: (profile.faceScanUrl ?? '')
+                              .trim()
+                              .isNotEmpty
+                          ? CachedNetworkImage(
+                              imageUrl: profile.faceScanUrl!.trim(),
+                              fit: BoxFit.cover,
+                              placeholder: (_, __) => Container(
+                                color: Colors.white.withValues(alpha: 0.15),
+                              ),
+                              errorWidget: (_, __, ___) => Image.asset(
+                                'assets/images/error_image.png',
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : Image.asset(
+                              'assets/images/error_image.png',
+                              fit: BoxFit.cover,
+                            ),
+                    ),
+                  ),
+                  // Add / edit photo affordance.
+                  Positioned(
+                    right: -2,
+                    bottom: -2,
+                    child: Material(
+                      color: Colors.white,
+                      shape: const CircleBorder(),
+                      elevation: 2,
+                      shadowColor: Colors.black26,
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: _isUploading
+                            ? null
+                            : _showAvatarSourceSheet,
+                        child: SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: _isUploading
+                              ? Padding(
+                                  padding: const EdgeInsets.all(7),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .primary,
+                                  ),
+                                )
+                              : Icon(
+                                  Icons.photo_camera_rounded,
+                                  size: 15,
+                                  color:
+                                      Theme.of(context).colorScheme.primary,
+                                ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: AppThemeData.spaceLg),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Large bold username — high contrast on the gradient.
+                    Text(
+                      displayName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTheme.of(context).headlineSmall.override(
+                            font: GoogleFonts.plusJakartaSans(
+                              fontWeight: FontWeight.w800,
+                            ),
+                            color: Colors.white,
+                          ),
+                    ),
+                    if (phone.isNotEmpty) ...[
+                      const SizedBox(height: 5),
+                      Text(
+                        phone,
+                        style: AppTheme.of(context).bodyMedium.override(
+                              font: GoogleFonts.plusJakartaSans(),
+                              color: Colors.white.withValues(alpha: 0.95),
+                            ),
+                      ),
+                    ],
+                    if (email.isNotEmpty) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        email,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        // Brighter than the old muted gray — readable on
+                        // the gradient.
+                        style: AppTheme.of(context).bodySmall.override(
+                              font: GoogleFonts.plusJakartaSans(),
+                              color: Colors.white.withValues(alpha: 0.88),
+                            ),
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    // Previous-design outlined pill button.
+                    _EditPill(
+                      onTap: () =>
+                          context.pushNamed(EditProfileWidget.routeName),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          // Metric footer strip from the previous hero.
+          Container(
+            width: double.infinity,
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.14),
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _HeroMetric(
+                    icon: Icons.verified_user_outlined,
+                    label: 'Account Status',
+                    value: 'Active',
+                  ),
+                ),
+                Container(
+                  width: 1,
+                  height: 40,
+                  color: Colors.white.withValues(alpha: 0.16),
+                ),
+                Expanded(
+                  child: _HeroMetric(
+                    icon: Icons.pin_drop_outlined,
+                    label: 'Saved Places',
+                    value: FFAppState().hasSelectedLocation ? 'Set' : 'Add',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ],
+        ),
+        // Verification badge — top-right of the hero card.
+        Positioned(
+          top: 14,
+          right: 14,
+          child: _VerificationBadge(
+            isVerified: profile.isVerified == true ||
+                (profile.verificationStatus ?? '').toLowerCase() ==
+                    'verified',
+          ),
+        ),
+      ],
+      ),
+    );
+  }
+
+  Widget _buildGroup({
+    required String label,
+    required List<Widget> tiles,
+  }) {
+    final theme = AppTheme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 16, bottom: 8),
+          child: Text(
+            label,
+            style: theme.labelMedium.override(
+              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+              letterSpacing: 0.6,
+              color: theme.secondaryText,
+            ),
+          ),
+        ),
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: theme.primaryBackground,
+            borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
+            border: Border.all(color: theme.border),
+            boxShadow: AppThemeData.shadowSoft,
+          ),
+          child: Column(children: tiles),
+        ),
+      ],
+    );
+  }
+
+  Widget _tile(
+    BuildContext context, {
+    required IconData icon,
+    required Color tint,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+    Color? titleColor,
+  }) =>
+      TintedMenuTile(
+        icon: icon,
+        tint: tint,
+        title: title,
+        subtitle: subtitle,
+        titleColor: titleColor,
+        onTap: onTap,
       );
+
+  Widget _providerSwitchTile(BuildContext context) {
+    final theme = AppTheme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: theme.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child:
+                Icon(Icons.swap_horiz_rounded, size: 22, color: theme.primary),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Are you a service provider?',
+                  style: theme.titleSmall.override(
+                    font:
+                        GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+                    color: theme.primaryText,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'Switch to Provider Account',
+                  style: theme.bodySmall.override(
+                    font: GoogleFonts.plusJakartaSans(),
+                    color: theme.secondaryText,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch.adaptive(
+            value: _providerSwitch,
+            onChanged: (value) => _handleProviderSwitch(value),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _handleProviderSwitch(bool value) {
     if (!value) {
@@ -325,11 +592,11 @@ class _ProfileWidgetState extends State<ProfileWidget> {
             Row(
               children: [
                 Icon(Icons.storefront_rounded,
-                    size: 22, color: themePrimary(context)),
+                    size: 22, color: AppTheme.of(sheetContext).primary),
                 const SizedBox(width: 10),
                 Text(
                   'Provider account detected',
-                  style: Theme.of(sheetContext).textTheme.titleMedium?.copyWith(
+                  style: AppTheme.of(sheetContext).titleMedium.override(
                         fontWeight: FontWeight.w700,
                       ),
                 ),
@@ -340,7 +607,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
               'Service providers use the dedicated SerbisyoHub PH Provider '
               'app. Open the store to install it, then sign in with the same '
               'account.',
-              style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
+              style: AppTheme.of(sheetContext).bodyMedium.override(
                     color: AppTheme.of(sheetContext).secondaryText,
                   ),
             ),
@@ -378,179 +645,116 @@ class _ProfileWidgetState extends State<ProfileWidget> {
       ),
     );
   }
-  Widget _buildHeaderBlock(ProfilesRow profile) {
-    final theme = Theme.of(context);
-    final displayName = valueOrDefault<String>(
-      profile.displayName,
-      'Rims Client',
-    );
-    final email = valueOrDefault<String>(profile.email, currentUserEmail);
-    final phone = valueOrDefault<String>(
-      profile.phoneNumber,
-      FFAppState().phone,
-    );
 
-    return Padding(
-      padding: const EdgeInsets.only(top: AppThemeData.spaceLg),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // Circular photo with a subtle 2px royal-blue ring.
-          GestureDetector(
-            onTap: () {
-              _model.showEdit = !_model.showEdit;
-              safeSetState(() {});
-            },
-            child: SizedBox(
-              width: 78,
-              height: 78,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: theme.colorScheme.primary,
-                        width: 2,
-                      ),
-                    ),
-                    padding: const EdgeInsets.all(3),
-                    child: ClipOval(
-                      child: (profile.faceScanUrl ?? '').trim().isNotEmpty
-                          ? Image.network(
-                              profile.faceScanUrl!.trim(),
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Image.asset(
-                                'assets/images/error_image.png',
-                                fit: BoxFit.cover,
-                              ),
-                            )
-                          : Image.asset(
-                              'assets/images/error_image.png',
-                              fit: BoxFit.cover,
-                            ),
-                    ),
-                  ),
-                  if (_model.showEdit)
-                    Positioned.fill(
-                      child: Material(
-                        color: Colors.black.withValues(alpha: 0.34),
-                        shape: const CircleBorder(),
-                        child: InkWell(
-                          customBorder: const CircleBorder(),
-                          onTap: _pickAndUploadPhoto,
-                          child: const Center(
-                            child: FaIcon(
-                              FontAwesomeIcons.camera,
-                              color: Colors.white,
-                              size: 18,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(width: AppThemeData.spaceLg),
-          Expanded(
+  Future<void> _pickAndUploadPhoto(XFile file) async {
+    if (!mounted) return;
+    safeSetState(() => _isUploading = true);
+
+    // Blocking progress dialog so the user can't double-tap.
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(
+        child: Card(
+          child: Padding(
+            padding: EdgeInsets.all(20),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  displayName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.headlineSmall?.override(
-                    font: GoogleFonts.plusJakartaSans(
-                      fontWeight: FontWeight.w800,
-                    ),
-                    color: theme.textTheme.headlineSmall?.color,
-                  ),
-                ),
-                if (phone.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    phone,
-                    style: theme.textTheme.bodyMedium?.override(
-                      font: GoogleFonts.plusJakartaSans(),
-                      color: theme.textTheme.bodyMedium?.color,
-                    ),
-                  ),
-                ],
-                if (email.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    email,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelSmall?.override(
-                      font: GoogleFonts.plusJakartaSans(),
-                      color: theme.dividerColor,
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 10),
-                _EditProfilePill(
-                  onTap: () =>
-                      context.pushNamed(EditProfileWidget.routeName),
-                ),
+                CircularProgressIndicator(),
+                SizedBox(height: 14),
+                Text('Uploading photo…'),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
+
+    try {
+      final bytes = await file.readAsBytes();
+      final ext = file.name.contains('.')
+          ? file.name.split('.').last.toLowerCase()
+          : 'jpg';
+      final name =
+          'profile_${DateTime.now().millisecondsSinceEpoch}.$ext';
+
+      final url = await ProfilesService.instance
+          .uploadProfilePhoto(bytes, name);
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop(); // close dialog
+
+      if (url == null || url.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Could not upload photo. Please try again.')),
+        );
+        return;
+      }
+
+      await ProfilesService.instance.updateProfile({
+        'face_scan_url': url,
+      });
+      if (mounted) {
+        safeSetState(() {});
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile photo updated!')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop(); // close dialog
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Upload failed: $e')),
+      );
+    } finally {
+      if (mounted) safeSetState(() => _isUploading = false);
+    }
   }
 
-  Future<void> _pickAndUploadPhoto() async {
-    final selectedMedia = await selectMediaWithSourceBottomSheet(
+  void _showAvatarSourceSheet() {
+    final picker = ImagePicker();
+    showModalBottomSheet<void>(
       context: context,
-      storageFolderPath: 'profiles',
-      maxWidth: 720,
-      maxHeight: 1280,
-      imageQuality: 80,
-      allowPhoto: true,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      textColor: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black,
-      pickerFontFamily: 'Plus Jakarta Sans',
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library_rounded),
+              title: const Text('Choose from gallery'),
+              onTap: () async {
+                Navigator.pop(sheetContext);
+                final file = await picker.pickImage(
+                  source: ImageSource.gallery,
+                  maxWidth: 1024,
+                  maxHeight: 1024,
+                  imageQuality: 85,
+                );
+                if (file != null) await _pickAndUploadPhoto(file);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_camera_rounded),
+              title: const Text('Take a photo'),
+              onTap: () async {
+                Navigator.pop(sheetContext);
+                final file = await picker.pickImage(
+                  source: ImageSource.camera,
+                  maxWidth: 1024,
+                  maxHeight: 1024,
+                  imageQuality: 85,
+                );
+                if (file != null) await _pickAndUploadPhoto(file);
+              },
+            ),
+          ],
+        ),
+      ),
     );
-    if (selectedMedia == null ||
-        !selectedMedia
-            .every((m) => validateFileFormat(m.storagePath, context))) {
-      return;
-    }
-    if (!mounted) return;
-
-    safeSetState(() => _model.isDataUploading_uploadData2mv = true);
-    var downloadUrls = <String>[];
-    try {
-      showUploadMessage(context, 'Uploading file...', showLoading: true);
-      for (final m in selectedMedia) {
-        final url = await ProfilesService.instance
-            .uploadProfilePhoto(m.bytes, m.storagePath.split('/').last);
-        if (url != null) downloadUrls.add(url);
-      }
-    } finally {
-      if (mounted) ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      _model.isDataUploading_uploadData2mv = false;
-    }
-
-    if (downloadUrls.length != selectedMedia.length) {
-      if (mounted) showUploadMessage(context, 'Failed to upload data');
-      return;
-    }
-    if (!mounted) return;
-
-    safeSetState(() {
-      _model.uploadedFileUrl_uploadData2mv = downloadUrls.first;
-    });
-    await ProfilesService.instance.updateProfile({
-      'face_scan_url': downloadUrls.first,
-    });
-    if (mounted) showUploadMessage(context, 'Success!');
   }
 
   Future<void> _handleLogout() async {
@@ -585,8 +789,8 @@ class _ProfileWidgetState extends State<ProfileWidget> {
   }
 }
 
-class _EditProfilePill extends StatelessWidget {
-  const _EditProfilePill({required this.onTap});
+class _EditPill extends StatelessWidget {
+  const _EditPill({required this.onTap});
 
   final VoidCallback onTap;
 
@@ -602,18 +806,22 @@ class _EditProfilePill extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(AppThemeData.radiusPill),
-          border: Border.all(color: theme.colorScheme.primary, width: 1.3),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.65),
+            width: 1.3,
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.edit_rounded, size: 13, color: theme.colorScheme.primary),
+            const Icon(Icons.edit_rounded,
+                size: 13, color: Colors.white),
             const SizedBox(width: 5),
             Text(
               'Edit Profile',
               style: theme.textTheme.labelSmall?.override(
                 font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
-                color: theme.colorScheme.primary,
+                color: Colors.white,
               ),
             ),
           ],
@@ -623,111 +831,85 @@ class _EditProfilePill extends StatelessWidget {
   }
 }
 
-class _ProfileGroup extends StatelessWidget {
-  const _ProfileGroup({required this.label, required this.children});
-
-  final String label;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 16, bottom: 8),
-          child: Text(
-            label,
-            style: theme.textTheme.labelMedium?.override(
-              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
-              letterSpacing: 0.6,
-              color: theme.textTheme.bodySmall?.color,
-            ),
-          ),
-        ),
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8F9FA),
-            borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
-            border: Border.all(color: theme.dividerColor.withValues(alpha: 0.25)),
-          ),
-          child: Column(children: children),
-        ),
-      ],
-    );
-  }
-}
-
-class _ProfileRow extends StatelessWidget {
-  const _ProfileRow({
+class _HeroMetric extends StatelessWidget {
+  const _HeroMetric({
     required this.icon,
-    required this.tint,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-    this.titleColor,
+    required this.label,
+    required this.value,
   });
 
   final IconData icon;
-  final Color tint;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-  final Color? titleColor;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) => Column(
+        children: [
+          Icon(icon, color: Colors.white.withValues(alpha: 0.92), size: 18),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.labelLarge?.override(
+                  font: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.w700,
+                  ),
+                  color: Colors.white,
+                ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.labelSmall?.override(
+                  font: GoogleFonts.plusJakartaSans(),
+                  color: Colors.white.withValues(alpha: 0.8),
+                ),
+          ),
+        ],
+      );
+}
+class _VerificationBadge extends StatelessWidget {
+  const _VerificationBadge({required this.isVerified});
+
+  final bool isVerified;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: tint.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, size: 22, color: tint),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.titleSmall?.override(
-                        font: GoogleFonts.plusJakartaSans(
-                          fontWeight: FontWeight.w700,
-                        ),
-                        color: titleColor ?? theme.textTheme.titleSmall?.color,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      subtitle,
-                      style: theme.textTheme.bodySmall?.override(
-                        font: GoogleFonts.plusJakartaSans(),
-                        color: theme.textTheme.bodySmall?.color,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Icon(Icons.chevron_right_rounded,
-                  size: 22, color: theme.textTheme.bodySmall?.color),
-            ],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(AppThemeData.radiusPill),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x22000000),
+            blurRadius: 8,
+            offset: Offset(0, 3),
           ),
-        ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isVerified
+                ? Icons.verified_rounded
+                : Icons.gpp_maybe_rounded,
+            size: 15,
+            color:
+                isVerified ? theme.colorScheme.primary : AppThemeData.accentYellow,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            isVerified ? 'Verified' : 'Unverified',
+            style: theme.textTheme.labelSmall?.override(
+              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
+              color: theme.textTheme.labelSmall?.color,
+            ),
+          ),
+        ],
       ),
     );
   }

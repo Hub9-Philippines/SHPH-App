@@ -59,9 +59,57 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
               future: _paymentMethodsFuture,
               builder: (context, snapshot) => Column(
                 children: [
-                  const ScreenHeader(
-                    title: 'Payment Methods',
-                    subtitle: 'Manage how you pay for bookings.',
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: Row(
+                      children: [
+                        Material(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          elevation: 2,
+                          shadowColor: Colors.black26,
+                          child: InkWell(
+                            onTap: () {
+                              if (context.canPop()) {
+                                context.pop();
+                              } else {
+                                context.go('/');
+                              }
+                            },
+                            borderRadius: BorderRadius.circular(16),
+                            child: const SizedBox(
+                              width: 44,
+                              height: 44,
+                              child: Icon(Icons.arrow_back_rounded),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Payment Methods',
+                                style:
+                                    AppTheme.of(context).titleLarge.override(
+                                          font: GoogleFonts.plusJakartaSans(
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                              ),
+                              Text(
+                                'Manage how you pay for bookings.',
+                                style:
+                                    AppTheme.of(context).bodySmall.override(
+                                          font: GoogleFonts.plusJakartaSans(),
+                                        ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   Expanded(
                     child: RefreshIndicator(
