@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/auth/supabase_auth/auth_util.dart';
-import '/backend/supabase/supabase.dart';
+import '/api/models/address.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
+import '/services/addresses_service.dart';
 import '/theme/app_theme.dart';
 import 'addresses_model.dart';
 
@@ -24,7 +24,7 @@ class AddressesWidget extends StatefulWidget {
 
 class _AddressesWidgetState extends State<AddressesWidget> {
   late AddressesModel _model;
-  late Future<List<AddressesRow>> _addressesFuture;
+  late Future<List<ShphAddress>> _addressesFuture;
   bool _didLoadOnce = false;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
@@ -39,22 +39,14 @@ class _AddressesWidgetState extends State<AddressesWidget> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_didLoadOnce && currentUserUid.isNotEmpty) {
+    if (!_didLoadOnce) {
       _didLoadOnce = true;
       _loadAddresses();
     }
   }
 
   void _loadAddresses() {
-    if (currentUserUid.isEmpty) {
-      _addressesFuture = Future.value([]);
-      return;
-    }
-    _addressesFuture = AddressesTable().queryRows(
-      queryFn: (q) => q
-          .eq('user_id', currentUserUid)
-          .order('is_default', ascending: false),
-    );
+    _addressesFuture = AddressesService.instance.getAddresses();
   }
 
   @override
@@ -64,12 +56,13 @@ class _AddressesWidgetState extends State<AddressesWidget> {
   }
 
   @override
-  Widget build(BuildContext context) => FutureBuilder<List<AddressesRow>>(
+  Widget build(BuildContext context) => FutureBuilder<List<ShphAddress>>(
         future: _addressesFuture,
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
+            final loadingTheme = AppTheme.of(context);
             return Scaffold(
-              backgroundColor: const Color(0xFFF5F7FA),
+              backgroundColor: loadingTheme.secondaryBackground,
               appBar: _buildAppBar(),
               body: const Center(
                 child: CircularProgressIndicator(),
@@ -86,7 +79,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
             },
             child: Scaffold(
               key: scaffoldKey,
-              backgroundColor: const Color(0xFFF5F7FA),
+              backgroundColor: AppTheme.of(context).secondaryBackground,
               appBar: _buildAppBar(),
               body: SafeArea(
                 top: false,
@@ -119,17 +112,11 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                     ),
                     Container(
                       padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
+                      decoration: BoxDecoration(
+                        color: AppTheme.of(context).primaryBackground,
                         borderRadius:
-                            BorderRadius.vertical(top: Radius.circular(28)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Color(0x12000000),
-                            blurRadius: 20,
-                            offset: Offset(0, -8),
-                          ),
-                        ],
+                            const BorderRadius.vertical(top: Radius.circular(28)),
+                        boxShadow: AppThemeData.shadowCard,
                       ),
                       child: SafeArea(
                         top: false,
@@ -158,10 +145,10 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                             iconPadding: EdgeInsetsDirectional.zero,
                             color: AppTheme.of(context).primary,
                             textStyle: AppTheme.of(context).titleSmall.override(
-                                  font: GoogleFonts.poppins(
+                                  font: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.w600,
                                   ),
-                                  color: Colors.white,
+                                  color: AppTheme.of(context).onPrimary,
                                   fontSize: 16,
                                 ),
                             elevation: 0,
@@ -179,7 +166,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
       );
 
   PreferredSizeWidget _buildAppBar() => AppBar(
-        backgroundColor: const Color(0xFFF5F7FA),
+        backgroundColor: AppTheme.of(context).secondaryBackground,
         automaticallyImplyLeading: false,
         leading: wrapWithModel(
           model: _model.backButtonModel,
@@ -189,19 +176,19 @@ class _AddressesWidgetState extends State<AddressesWidget> {
         title: Text(
           'Addresses',
           style: AppTheme.of(context).titleLarge.override(
-                font: GoogleFonts.poppins(
+                font: GoogleFonts.plusJakartaSans(
                   fontWeight: FontWeight.w700,
                 ),
-                color: const Color(0xFF16202A),
+                color: AppTheme.of(context).primaryText,
               ),
         ),
         centerTitle: true,
         elevation: 0,
       );
 
-  Widget _buildHeader(List<AddressesRow> addresses) {
+  Widget _buildHeader(List<ShphAddress> addresses) {
     final defaultAddressCount =
-        addresses.where((address) => address.isDefault == true).length;
+        addresses.where((address) => address.isDefault).length;
 
     return Container(
       width: double.infinity,
@@ -251,7 +238,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                     Text(
                       'Saved places',
                       style: AppTheme.of(context).titleLarge.override(
-                            font: GoogleFonts.poppins(
+                            font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w700,
                             ),
                             color: Colors.white,
@@ -261,7 +248,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                     Text(
                       'Keep your booking flow fast by storing your key locations.',
                       style: AppTheme.of(context).bodySmall.override(
-                            font: GoogleFonts.poppins(),
+                            font: GoogleFonts.plusJakartaSans(),
                             color: Colors.white.withValues(alpha: 0.82),
                           ),
                     ),
@@ -302,19 +289,15 @@ class _AddressesWidgetState extends State<AddressesWidget> {
     );
   }
 
-  Widget _buildEmptyState() => Container(
+  Widget _buildEmptyState() {
+    final theme = AppTheme.of(context);
+    return Container(
         width: double.infinity,
         padding: const EdgeInsets.all(26),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.primaryBackground,
           borderRadius: BorderRadius.circular(28),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x10000000),
-              blurRadius: 18,
-              offset: Offset(0, 8),
-            ),
-          ],
+          border: Border.all(color: theme.border),
         ),
         child: Column(
           children: [
@@ -335,10 +318,10 @@ class _AddressesWidgetState extends State<AddressesWidget> {
             Text(
               'No addresses yet',
               style: AppTheme.of(context).titleMedium.override(
-                    font: GoogleFonts.poppins(
+                    font: GoogleFonts.plusJakartaSans(
                       fontWeight: FontWeight.w700,
                     ),
-                    color: const Color(0xFF16202A),
+                    color: AppTheme.of(context).primaryText,
                   ),
             ),
             const SizedBox(height: 8),
@@ -346,39 +329,34 @@ class _AddressesWidgetState extends State<AddressesWidget> {
               'Add your home, work, or favorite places so future bookings are quicker.',
               textAlign: TextAlign.center,
               style: AppTheme.of(context).bodySmall.override(
-                    font: GoogleFonts.poppins(),
-                    color: const Color(0xFF6F7B86),
+                    font: GoogleFonts.plusJakartaSans(),
+                    color: AppTheme.of(context).secondaryText,
                   ),
             ),
           ],
         ),
       );
+  }
 
-  Widget _buildAddressCard(AddressesRow address) {
-    final isDefault = address.isDefault == true;
+  Widget _buildAddressCard(ShphAddress address) {
+    final isDefault = address.isDefault;
     final isSelected = FFAppState().selectedLocationMode == 'saved' &&
         FFAppState().selectedAddressId == address.id;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.of(context).primaryBackground,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: isSelected
               ? AppTheme.of(context).primary
               : isDefault
-                  ? const Color(0xFFCBD5DF)
+                  ? AppTheme.of(context).border
                   : Colors.transparent,
           width: isSelected ? 1.6 : 1,
         ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x10000000),
-            blurRadius: 18,
-            offset: Offset(0, 8),
-          ),
-        ],
+        boxShadow: AppThemeData.shadowCard,
       ),
       child: Material(
         color: Colors.transparent,
@@ -403,7 +381,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Icon(
-                        _getIconForLabel(address.addressLine2),
+                        _getIconForLabel(address.label),
                         color: AppTheme.of(context).primary,
                         size: 26,
                       ),
@@ -417,25 +395,24 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                             children: [
                               Expanded(
                                 child: Text(
-                                  address.addressLine2?.trim().isNotEmpty ==
-                                          true
-                                      ? address.addressLine2!.trim()
+                                  address.label?.trim().isNotEmpty == true
+                                      ? address.label!.trim()
                                       : 'Saved address',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style:
                                       AppTheme.of(context).titleMedium.override(
-                                            font: GoogleFonts.poppins(
+                                            font: GoogleFonts.plusJakartaSans(
                                               fontWeight: FontWeight.w700,
                                             ),
-                                            color: const Color(0xFF16202A),
+                                            color: AppTheme.of(context).primaryText,
                                           ),
                                 ),
                               ),
                               PopupMenuButton<String>(
-                                icon: const Icon(
+                                icon: Icon(
                                   Icons.more_horiz_rounded,
-                                  color: Color(0xFF7C8793),
+                                  color: AppTheme.of(context).textTertiary,
                                 ),
                                 onSelected: (value) async {
                                   switch (value) {
@@ -509,7 +486,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                             runSpacing: 8,
                             children: [
                               if (isDefault)
-                                _buildPill('Default', const Color(0xFF0F8A6C)),
+                                _buildPill('Default', AppTheme.of(context).primaryBrandText),
                               if (isSelected)
                                 _buildPill(
                                     'Selected', AppTheme.of(context).primary),
@@ -524,8 +501,8 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                 Text(
                   _formatAddress(address),
                   style: AppTheme.of(context).bodyMedium.override(
-                        font: GoogleFonts.poppins(),
-                        color: const Color(0xFF5F6B76),
+                        font: GoogleFonts.plusJakartaSans(),
+                        color: AppTheme.of(context).secondaryText,
                         fontSize: 13,
                       ),
                 ),
@@ -538,23 +515,23 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                       vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF6F8FB),
+                      color: AppTheme.of(context).surfaceAlt,
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.map_outlined,
                           size: 18,
-                          color: Color(0xFF6F7B86),
+                          color: AppTheme.of(context).secondaryText,
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             '${address.latitude!.toStringAsFixed(5)}, ${address.longitude!.toStringAsFixed(5)}',
                             style: AppTheme.of(context).bodySmall.override(
-                                  font: GoogleFonts.poppins(),
-                                  color: const Color(0xFF6F7B86),
+                                  font: GoogleFonts.plusJakartaSans(),
+                                  color: AppTheme.of(context).secondaryText,
                                 ),
                           ),
                         ),
@@ -579,7 +556,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
         child: Text(
           text,
           style: AppTheme.of(context).labelSmall.override(
-                font: GoogleFonts.poppins(
+                font: GoogleFonts.plusJakartaSans(
                   fontWeight: FontWeight.w700,
                 ),
                 color: color,
@@ -587,9 +564,9 @@ class _AddressesWidgetState extends State<AddressesWidget> {
         ),
       );
 
-  String _formatAddress(AddressesRow address) {
+  String _formatAddress(ShphAddress address) {
     return [
-      address.addressLine1,
+      address.street,
       address.barangay,
       address.city,
     ].whereType<String>().where((part) => part.trim().isNotEmpty).join(', ');
@@ -597,15 +574,19 @@ class _AddressesWidgetState extends State<AddressesWidget> {
 
   Future<void> _setDefaultAddress(String addressId) async {
     try {
-      await AddressesTable().update(
-        data: {'is_default': false},
-        matchingRows: (q) => q.eq('user_id', currentUserUid),
-      );
-
-      await AddressesTable().update(
-        data: {'is_default': true},
-        matchingRows: (q) => q.eq('id', addressId),
-      );
+      final id = int.tryParse(addressId);
+      if (id == null) {
+        return;
+      }
+      final updated = await AddressesService.instance.setDefault(id);
+      if (updated == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error setting default address')),
+          );
+        }
+        return;
+      }
 
       FFAppState().clearGetAddressCache();
       _loadAddresses();
@@ -624,13 +605,13 @@ class _AddressesWidgetState extends State<AddressesWidget> {
     }
   }
 
-  Future<void> _showDeleteConfirmation(AddressesRow address) async {
+  Future<void> _showDeleteConfirmation(ShphAddress address) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete address'),
         content: Text(
-          'Are you sure you want to delete ${address.addressLine2 ?? 'this address'}?',
+          'Are you sure you want to delete ${address.label ?? 'this address'}?',
         ),
         actions: [
           TextButton(
@@ -639,9 +620,9 @@ class _AddressesWidgetState extends State<AddressesWidget> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text(
+            child: Text(
               'Delete',
-              style: TextStyle(color: Colors.red),
+              style: TextStyle(color: AppTheme.of(context).error),
             ),
           ),
         ],
@@ -655,19 +636,15 @@ class _AddressesWidgetState extends State<AddressesWidget> {
     try {
       final deletedSelectedAddress = FFAppState().selectedLocationMode == 'saved' &&
           FFAppState().selectedAddressId == address.id;
-      await AddressesTable().delete(
-        matchingRows: (q) => q.eq('id', address.id),
-      );
+      await AddressesService.instance.deleteAddress(address.id);
       FFAppState().clearGetAddressCache();
 
-      final remainingAddresses = await AddressesTable().queryRows(
-        queryFn: (q) => q
-            .eq('user_id', currentUserUid)
-            .order('is_default', ascending: false),
-      );
+      final remainingAddresses = await AddressesService.instance.getAddresses();
+      final remainingMaps =
+          remainingAddresses.map((a) => a.toSelectedMap()).toList();
       if (deletedSelectedAddress) {
-        final nextAddress =
-            FFAppState().syncSelectedSavedAddress(remainingAddresses);
+        final nextAddress = FFAppState()
+            .syncSelectedSavedAddressFromMap(remainingMaps);
         if (nextAddress == null) {
           FFAppState().clearSelectedAddress();
         }
@@ -689,12 +666,12 @@ class _AddressesWidgetState extends State<AddressesWidget> {
     }
   }
 
-  void _selectAddress(AddressesRow address) {
-    FFAppState().setSelectedAddressFromRow(address);
+  void _selectAddress(ShphAddress address) {
+    FFAppState().setSelectedAddressFromMap(address.toSelectedMap());
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          '${address.addressLine2?.trim().isNotEmpty == true ? address.addressLine2!.trim() : 'Saved address'} selected for bookings',
+          '${address.label?.trim().isNotEmpty == true ? address.label!.trim() : 'Saved address'} selected for bookings',
         ),
       ),
     );
@@ -738,7 +715,7 @@ class _AddressHeaderMetric extends StatelessWidget {
           Text(
             value,
             style: AppTheme.of(context).titleMedium.override(
-                  font: GoogleFonts.poppins(
+                  font: GoogleFonts.plusJakartaSans(
                     fontWeight: FontWeight.w700,
                   ),
                   color: Colors.white,
@@ -748,7 +725,7 @@ class _AddressHeaderMetric extends StatelessWidget {
           Text(
             label,
             style: AppTheme.of(context).bodySmall.override(
-                  font: GoogleFonts.poppins(),
+                  font: GoogleFonts.plusJakartaSans(),
                   color: Colors.white.withValues(alpha: 0.78),
                 ),
           ),

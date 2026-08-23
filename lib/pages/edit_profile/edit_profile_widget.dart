@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '/auth/supabase_auth/auth_util.dart';
+import '/auth/auth_util.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -144,7 +144,7 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
             title: Text(
               'Edit Profile',
               style: AppTheme.of(context).titleLarge.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
                   ),
             ),
             centerTitle: true,
@@ -165,7 +165,7 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
                       Text(
                         'Personal Information',
                         style: AppTheme.of(context).titleMedium.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                   fontWeight: FontWeight.bold),
                             ),
                       ),
@@ -318,8 +318,8 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
                           height: 50,
                           color: AppTheme.of(context).primary,
                           textStyle: AppTheme.of(context).titleSmall.override(
-                                color: Colors.white,
-                                font: GoogleFonts.poppins(
+                                color: AppTheme.of(context).onPrimary,
+                                font: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.w600),
                               ),
                           borderRadius: BorderRadius.circular(8),

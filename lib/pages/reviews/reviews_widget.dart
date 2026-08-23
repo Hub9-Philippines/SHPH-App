@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '/backend/supabase/database/tables/reviews.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/services/logging_service.dart';
+import '/services/reviews_service.dart';
 import '/theme/app_theme.dart';
 import 'reviews_model.dart';
 
@@ -45,11 +47,8 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
       _hasError = false;
     });
     try {
-      final response = await ReviewsTable().queryRows(
-        queryFn: (q) => q
-            .eq('service_listing_id', widget.serviceId)
-            .order('created_at', ascending: false),
-      );
+      final response =
+          await ReviewsService.instance.getServiceReviews(widget.serviceId);
       if (mounted) {
         setState(() {
           _reviews = response;
@@ -57,6 +56,11 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
         });
       }
     } catch (e) {
+      LoggingService.error(
+        'Failed to load reviews',
+        tag: 'Reviews',
+        error: e,
+      );
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -112,7 +116,7 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
             title: Text(
               'Reviews',
               style: AppTheme.of(context).titleLarge.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
                   ),
             ),
             actions: const [],
@@ -205,7 +209,7 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
                     style: AppTheme.of(context)
                         .bodyMedium
                         .override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -222,7 +226,7 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
                       style: AppTheme.of(context)
                           .bodyMedium
                           .override(
-                            font: GoogleFonts.poppins(
+                            font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w600,
                             ),
                           ),

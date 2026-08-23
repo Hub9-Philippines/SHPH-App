@@ -4,15 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/auth/supabase_auth/auth_util.dart';
-import '/backend/supabase/supabase.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
+import '/services/addresses_service.dart';
+import '/theme/app_theme.dart';
 import '/pages/geographic_selection/geographic_selection_widget.dart';
 import '/services/psgc_service.dart';
-import '/theme/app_theme.dart';
 import 'address_form_model.dart';
 
 export 'address_form_model.dart';
@@ -110,33 +109,36 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
 
   Future<void> _loadAddressData(String addressId) async {
     try {
-      final addresses = await AddressesTable().queryRows(
-        queryFn: (q) => q.eq('id', addressId),
-      );
-      if (addresses.isNotEmpty) {
-        final address = addresses.first;
+      final addressIdNum = int.tryParse(addressId);
+      if (addressIdNum == null) {
+        return;
+      }
+      final address =
+          await AddressesService.instance.getAddress(addressIdNum);
+      if (address != null) {
         setState(() {
-          _model.fullNameTextFieldTextController?.text = address.fullName ?? '';
-          _model.mobileNumberTextFieldTextController?.text =
-              address.phoneNumber ?? '';
+          _model.fullNameTextFieldTextController?.text =
+              address.label ?? '';
+          _model.labelTextFieldTextController?.text = address.label ?? '';
           _model.streetAddressTextFieldTextController?.text =
-              address.addressLine1 ?? '';
-          _model.barangayTextFieldTextController?.text = address.barangay ?? '';
+              address.street ?? '';
+          _model.barangayTextFieldTextController?.text =
+              address.barangay ?? '';
           _model.cityTextFieldTextController?.text = address.city ?? '';
-          _model.provinceTextFieldTextController?.text = address.province ?? '';
-          _model.regionTextFieldTextController?.text = address.region ?? '';
+          _model.provinceTextFieldTextController?.text =
+              address.province ?? '';
           _model.postalCodeTextFieldTextController?.text =
-              address.postalCode ?? '';
+              address.zipCode ?? '';
           _model.latitude = address.latitude;
           _model.longitude = address.longitude;
           if (_model.latitude != null && _model.longitude != null) {
-            _model.selectedAddress = address.addressLine1;
+            _model.selectedAddress = address.street;
           }
-          _model.isDefault = address.isDefault ?? false;
-          _model.selectedRegionCode = address.regionCode;
-          _model.selectedProvinceCode = address.provinceCode;
-          _model.selectedCityMunicipalityCode = address.cityMunicipalityCode;
-          _model.selectedBarangayCode = address.barangayCode;
+          _model.isDefault = address.isDefault;
+          _model.selectedRegionCode = null;
+          _model.selectedProvinceCode = null;
+          _model.selectedCityMunicipalityCode = null;
+          _model.selectedBarangayCode = null;
         });
         _hasLoadedAddressData = true;
         await _restoreGeographicSelectionFromCodes();
@@ -247,74 +249,65 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
     }
 
     try {
-      if (_model.isDefault) {
-        await AddressesTable().update(
-          data: {'is_default': false},
-          matchingRows: (q) => q.eq('user_id', currentUserUid),
-        );
-      }
+      final editingId =
+          int.tryParse(_model.editingAddressId ?? '');
+
+      final labelValue =
+          _model.labelTextFieldTextController?.text.trim().isNotEmpty == true
+              ? _model.labelTextFieldTextController!.text.trim()
+              : _model.fullNameTextFieldTextController?.text.trim() ?? '';
+      final streetValue =
+          _model.streetAddressTextFieldTextController?.text.trim() ?? '';
 
       final addressData = {
-        'user_id': currentUserUid,
-        'full_name': _model.fullNameTextFieldTextController?.text,
-        'phone_number': _model.mobileNumberTextFieldTextController?.text,
-        'address_line1': _model.streetAddressTextFieldTextController?.text,
-        'address_line2': _model.labelTextFieldTextController?.text,
+        'label': labelValue,
+        'street': streetValue,
         'barangay': _model.barangayTextFieldTextController?.text,
-        'barangay_code': _model.selectedBarangayCode,
         'city': _model.cityTextFieldTextController?.text,
-        'city_municipality_code': _model.selectedCityMunicipalityCode,
         'province': _model.provinceTextFieldTextController?.text,
-        'province_code': _model.selectedProvinceCode,
-        'region': _model.regionTextFieldTextController?.text,
-        'region_code': _model.selectedRegionCode,
-        'postal_code': _model.postalCodeTextFieldTextController?.text,
+        'zip_code': _model.postalCodeTextFieldTextController?.text,
         'latitude': _model.latitude,
         'longitude': _model.longitude,
         'is_default': _model.isDefault,
       };
 
-      if (_model.editingAddressId != null) {
-        final updatedRows = await AddressesTable().update(
-          data: addressData,
-          matchingRows: (q) => q.eq('id', _model.editingAddressId!),
-          returnRows: true,
-        );
-        final updatedAddress =
-            updatedRows.isNotEmpty ? updatedRows.first : null;
-
-        final editingId = int.tryParse(_model.editingAddressId ?? '');
-        final shouldRefreshSelectedAddress =
-            updatedAddress != null &&
-                ((editingId != null &&
-                        FFAppState().selectedAddressId == editingId) ||
-                    (_model.isDefault &&
-                        FFAppState().selectedLocationMode == 'saved'));
-        if (shouldRefreshSelectedAddress) {
-          FFAppState().setSelectedAddressFromRow(updatedAddress);
-        }
-
+      final savedAddress = await AddressesService.instance.saveAddress(
+        addressData,
+        editingId: editingId,
+      );
+      if (savedAddress == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Address updated successfully')),
+            const SnackBar(content: Text('Error saving address')),
           );
         }
-      } else {
-        final insertedAddress = await AddressesTable().insert(addressData);
-        if (_model.isDefault || !FFAppState().hasSelectedLocation) {
-          FFAppState().setSelectedAddressFromRow(insertedAddress);
-        }
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Address added successfully')),
-          );
-        }
+        return;
+      }
+
+      final shouldRefreshSelectedAddress =
+          editingId != null &&
+                  ((FFAppState().selectedAddressId == editingId) ||
+                      (_model.isDefault &&
+                          FFAppState().selectedLocationMode == 'saved')) ||
+              _model.isDefault ||
+              !FFAppState().hasSelectedLocation;
+      if (shouldRefreshSelectedAddress) {
+        FFAppState().setSelectedAddressFromMap(savedAddress.toSelectedMap());
       }
 
       // Clear the address cache to ensure changes are fetched fresh
       FFAppState().clearGetAddressCache();
 
       if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              editingId != null
+                  ? 'Address updated successfully'
+                  : 'Address added successfully',
+            ),
+          ),
+        );
         context.pop();
       }
     } catch (e) {
@@ -346,7 +339,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
             title: Text(
               _model.editingAddressId != null ? 'Edit address' : 'New address',
               style: AppTheme.of(context).titleLarge.override(
-                    font: GoogleFonts.poppins(
+                    font: GoogleFonts.plusJakartaSans(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -462,7 +455,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                           height: 56,
                           color: AppTheme.of(context).primary,
                           textStyle: AppTheme.of(context).titleMedium.override(
-                                color: Colors.white,
+                                color: AppTheme.of(context).onPrimary,
                                 fontWeight: FontWeight.w600,
                               ),
                           borderRadius: BorderRadius.circular(12),
@@ -482,7 +475,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
         child: Text(
           title,
           style: AppTheme.of(context).bodyLarge.override(
-                font: GoogleFonts.poppins(
+                font: GoogleFonts.plusJakartaSans(
                   fontWeight: FontWeight.w600,
                 ),
                 color: AppTheme.of(context).primaryText,
@@ -931,7 +924,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                       Text(
                         'Select Barangay',
                         style: AppTheme.of(context).titleLarge.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -1274,19 +1267,19 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                         editingId != null &&
                         FFAppState().selectedAddressId == editingId;
 
-                await AddressesTable().delete(
-                  matchingRows: (q) => q.eq('id', _model.editingAddressId!),
-                );
+                if (editingId == null) {
+                  return;
+                }
+                await AddressesService.instance.deleteAddress(editingId);
                 FFAppState().clearGetAddressCache();
 
                 if (deletedSelectedAddress) {
-                  final remainingAddresses = await AddressesTable().queryRows(
-                    queryFn: (q) => q
-                        .eq('user_id', currentUserUid)
-                        .order('is_default', ascending: false),
-                  );
-                  final nextAddress =
-                      FFAppState().syncSelectedSavedAddress(remainingAddresses);
+                  final remainingAddresses =
+                      await AddressesService.instance.getAddresses();
+                  final remainingMaps =
+                      remainingAddresses.map((a) => a.toSelectedMap()).toList();
+                  final nextAddress = FFAppState()
+                      .syncSelectedSavedAddressFromMap(remainingMaps);
                   if (nextAddress == null) {
                     FFAppState().clearSelectedAddress();
                   }
@@ -1307,7 +1300,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                 );
               }
             },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: Text('Delete', style: TextStyle(color: AppTheme.of(context).error)),
           ),
         ],
       ),

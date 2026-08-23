@@ -29,6 +29,9 @@ class ServiceListingService {
       rating: row.rating,
       thumbnail: row.thumbnail,
       reviewCount: row.reviewCount,
+      latitude: row.latitude,
+      longitude: row.longitude,
+      distanceKm: row.distanceKm,
       isTimeMaterial: row.isTimeMaterial ?? false,
     );
   }
@@ -40,32 +43,14 @@ class ServiceListingService {
 
   Future<List<ServiceListing>> fetchRecommendedServices(
       {int limit = 10}) async {
-    if (await ApiRowMapper.canUseApi()) {
-      try {
-        final page = await _servicesApi.listListings(
-          ordering: '-rating',
-          pageSize: limit,
-        );
-        return page.results.map(_apiToServiceListing).toList();
-      } catch (e) {
-        LoggingService.error(
-          'SHPH API fetchRecommendedServices failed, falling back to Supabase: $e',
-          tag: 'ServiceListingService',
-        );
-      }
-    }
-
     try {
-      final services = await ServiceListingsTable().queryRows(
-        queryFn: (q) => q
-            .order('rating', ascending: false)
-            .order('review_count', ascending: false)
-            .limit(limit),
+      final page = await _servicesApi.listListings(
+        ordering: '-rating',
+        pageSize: limit,
       );
-
-      return services.map(_rowToServiceListing).toList();
+      return page.results.map(_apiToServiceListing).toList();
     } catch (e) {
-      LoggingService.error('Error fetching recommended services: $e',
+      LoggingService.error('fetchRecommendedServices failed: $e',
           tag: 'ServiceListingService');
       return [];
     }
@@ -77,93 +62,77 @@ class ServiceListingService {
     int? page,
     int? pageSize,
   }) async {
-    if (await ApiRowMapper.canUseApi()) {
-      try {
-        final pageResult = await _servicesApi.listListings(
-          search: search,
-          ordering: ordering,
-          page: page,
-          pageSize: pageSize,
-        );
-        return pageResult.results.map(_apiToServiceListing).toList();
-      } catch (e) {
-        LoggingService.error(
-          'SHPH API fetchServiceListings failed, falling back to Supabase: $e',
-          tag: 'ServiceListingService',
-        );
-      }
-    }
-
     try {
-      final services = await ServiceListingsTable().queryRows(
-        queryFn: (q) {
-          var query = q as dynamic;
-
-          if (search != null && search.isNotEmpty) {
-            query = query.ilike('title', '%$search%');
-          }
-
-          if (ordering != null) {
-            final isAscending = !ordering.startsWith('-');
-            final field = isAscending ? ordering : ordering.substring(1);
-            query = query.order(field, ascending: isAscending);
-          }
-
-          return query;
-        },
-        limit: pageSize,
+      final pageResult = await _servicesApi.listListings(
+        search: search,
+        ordering: ordering,
+        page: page,
+        pageSize: pageSize,
       );
-
-      return services.map(_rowToServiceListing).toList();
+      return pageResult.results.map(_apiToServiceListing).toList();
     } catch (e) {
-      LoggingService.error('Error fetching service listings: $e',
+      LoggingService.error('fetchServiceListings failed: $e',
           tag: 'ServiceListingService');
       return [];
     }
   }
 
   Future<ServiceListing?> fetchServiceListingById(int id) async {
-    if (await ApiRowMapper.canUseApi()) {
-      try {
-        final listing = await _servicesApi.getListing(id);
-        return _apiToServiceListing(listing);
-      } catch (e) {
-        LoggingService.error(
-          'SHPH API fetchServiceListingById failed, falling back to Supabase: $e',
-          tag: 'ServiceListingService',
-        );
-      }
-    }
-
     try {
-      final services = await ServiceListingsTable().querySingleRow(
-        queryFn: (q) => q.eq('id', id),
-      );
-
-      if (services.isNotEmpty) {
-        return _rowToServiceListing(services.first);
-      }
-      return null;
+      final listing = await _servicesApi.getListing(id);
+      return _apiToServiceListing(listing);
     } catch (e) {
-      LoggingService.error('Error fetching service listing: $e',
+      LoggingService.error('fetchServiceListingById failed: $e',
           tag: 'ServiceListingService');
       return null;
     }
   }
 
-  Future<List<ServiceListing>> fetchFavoriteServices() async {
-    if (await ApiRowMapper.canUseApi()) {
-      try {
-        final favorites = await ShphFavoritesApi.instance.listFavorites();
-        return favorites.map(_apiToServiceListing).toList();
-      } catch (e) {
-        LoggingService.error(
-          'SHPH API fetchFavoriteServices failed: $e',
-          tag: 'ServiceListingService',
-        );
-      }
+  /// Top-rated listings for the Explore carousel. When [latitude] and
+  /// [longitude] are supplied the backend computes `distance_km` per listing.
+  /// Results arrive rating-ordered; listings without coordinates simply have
+  /// a null distance.
+  Future<List<ServiceListing>> fetchTopRatedNear({
+    required double? latitude,
+    required double? longitude,
+    int limit = 10,
+  }) async {
+    try {
+      final hasLocation = latitude != null && longitude != null;
+      final pageResult = await _servicesApi.listListings(
+        ordering: '-rating',
+        pageSize: limit,
+        latitude: hasLocation ? latitude : null,
+        longitude: hasLocation ? longitude : null,
+      );
+      final listings = pageResult.results.map(_apiToServiceListing).toList();
+      // Keep only rated listings; sort by rating desc, then distance asc when
+      // known so the closest best-rated pros lead the carousel.
+      double? ratingOf(ServiceListing l) => l.ratingValue;
+      listings.sort((a, b) {
+        final ra = ratingOf(a) ?? -1;
+        final rb = ratingOf(b) ?? -1;
+        if (ra != rb) return rb.compareTo(ra);
+        final da = a.distanceKm ?? double.infinity;
+        final db = b.distanceKm ?? double.infinity;
+        return da.compareTo(db);
+      });
+      return listings;
+    } catch (e) {
+      LoggingService.error('fetchTopRatedNear failed: $e',
+          tag: 'ServiceListingService');
+      return [];
     }
+  }
 
-    return [];
+  Future<List<ServiceListing>> fetchFavoriteServices() async {
+    try {
+      final favorites = await ShphFavoritesApi.instance.listFavorites();
+      return favorites.map(_apiToServiceListing).toList();
+    } catch (e) {
+      LoggingService.error('fetchFavoriteServices failed: $e',
+          tag: 'ServiceListingService');
+      return [];
+    }
   }
 }

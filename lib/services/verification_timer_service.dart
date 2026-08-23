@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '/auth/base_auth_user_provider.dart';
 import '/backend/supabase/supabase.dart';
 import '/services/logging_service.dart';
 
@@ -67,7 +68,7 @@ class VerificationTimerService {
 
   Future<void> _performVerificationApprovalSync() async {
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
+      final userId = currentUser?.uid;
       if (userId == null) {
         return;
       }

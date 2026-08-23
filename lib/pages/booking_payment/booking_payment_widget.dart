@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/api/shph_api_exception.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import '/index.dart';
 import '/services/bookings_service.dart';
+import '/services/payment_controller.dart';
 import '/theme/app_theme.dart';
 import 'booking_payment_model.dart';
 
@@ -59,50 +62,157 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
   Future<void> _confirmPayment() async {
     if (_selectedPaymentMethod == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a payment method'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Text('Please select a payment method'),
+          backgroundColor: AppTheme.of(context).error,
         ),
       );
+      return;
+    }
+
+    if (widget.serviceId == null) {
       return;
     }
 
     setState(() => _model.isLoading = true);
 
     try {
-      final paymentStatus = _selectedPaymentMethod == 'cash'
-          ? 'pay_on_completion'
-          : 'authorized_escrow';
+      final amount = _parsePrice(widget.price) ?? 0;
 
-      final booking = await BookingsService.instance.createBooking(
-        serviceListingId: widget.serviceId!,
-        bookingDate: DateTime.parse(widget.bookingDate!),
-        bookingTime: widget.bookingTime!,
-        notes: widget.notes,
-        totalPrice: _parsePrice(widget.price),
-        paymentStatus: paymentStatus,
-      );
-
-      if (!mounted) {
+      if (_selectedPaymentMethod == 'cash') {
+        final booking = await BookingsService.instance.createBooking(
+          serviceListingId: widget.serviceId!,
+          bookingDateTime: _resolveBookingDateTime(),
+          notes: widget.notes,
+          totalPrice: amount,
+          paymentStatus: 'pay_on_completion',
+        );
+        if (mounted) {
+          if (booking != null) {
+            _goToSuccess(booking.id);
+          } else {
+            _model.isLoading = false;
+            _model.errorMessage = 'Failed to create booking.';
+          }
+        }
         return;
       }
 
-      if (booking != null) {
-        context.go('/booking-success');
+      final controller = PaymentController.instance;
+      if (_selectedPaymentMethod == 'card') {
+        await controller.initializeStripe(
+          const String.fromEnvironment('STRIPE_PUBLISHABLE_KEY',
+              defaultValue: 'pk_test_placeholder'),
+        );
+        final result = await controller.processStripePayment(
+          amount: amount,
+          currency: 'PHP',
+          description: widget.serviceName ?? 'Service Booking',
+        );
+        if (result.status != PaymentStatus.success) {
+          if (mounted) {
+            _model.isLoading = false;
+            _model.errorMessage = result.errorMessage ?? 'Payment failed';
+          }
+          return;
+        }
+        final booking = await BookingsService.instance.createBooking(
+          serviceListingId: widget.serviceId!,
+          bookingDateTime: _resolveBookingDateTime(),
+          notes: widget.notes,
+          totalPrice: amount,
+          paymentStatus: 'paid',
+        );
+        _goToSuccess(booking?.id);
+      } else if (_selectedPaymentMethod == 'ewallet') {
+        final result = await controller.processMayaPayment(
+          amount: amount,
+          currency: 'PHP',
+          description: widget.serviceName ?? 'Service Booking',
+        );
+        if (result.status != PaymentStatus.success) {
+          if (mounted) {
+            _model.isLoading = false;
+            _model.errorMessage = result.errorMessage ?? 'Payment failed';
+          }
+          return;
+        }
+        final booking = await BookingsService.instance.createBooking(
+          serviceListingId: widget.serviceId!,
+          bookingDateTime: _resolveBookingDateTime(),
+          notes: widget.notes,
+          totalPrice: amount,
+          paymentStatus: 'paid',
+        );
+        _goToSuccess(booking?.id);
       } else {
-        setState(() {
-          _model.isLoading = false;
-          _model.errorMessage = 'Failed to create booking. Please try again.';
-        });
+        final booking = await BookingsService.instance.createBooking(
+          serviceListingId: widget.serviceId!,
+          bookingDateTime: _resolveBookingDateTime(),
+          notes: widget.notes,
+          totalPrice: amount,
+          paymentStatus: 'authorized_escrow',
+        );
+        _goToSuccess(booking?.id);
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _model.isLoading = false;
-          _model.errorMessage = 'Error: ${e.toString()}';
-        });
+        _model.isLoading = false;
+        _model.errorMessage =
+            'Error: ${e is ShphApiException ? e.message : e.toString()}';
       }
     }
+  }
+
+  /// Navigates to the consolidated confirmation screen with the created
+  /// booking's data so the receipt shows real values.
+  void _goToSuccess(String? bookingId) {
+    if (!mounted) {
+      return;
+    }
+    context.pushNamed(
+      BookingSuccessWidget.routeName,
+      extra: <String, dynamic>{
+        if (bookingId != null) 'bookingId': bookingId,
+        'serviceName': widget.serviceName,
+        'totalLabel': 'PHP ${(widget.price ?? '').trim()}',
+        'scheduledText': _scheduledText(),
+      },
+    );
+  }
+
+  String _scheduledText() {
+    final date = DateTime.tryParse(widget.bookingDate ?? '');
+    if (date == null) {
+      return 'You will confirm a slot shortly';
+    }
+    final time = _resolveBookingDateTime();
+    final hour = time.hour % 12 == 0 ? 12 : time.hour % 12;
+    final minute = time.minute.toString().padLeft(2, '0');
+    final suffix = time.hour >= 12 ? 'PM' : 'AM';
+    return '${date.day}/${date.month}/${date.year} · $hour:$minute $suffix';
+  }
+
+  /// Merges the route's booking date + time-of-day into one DateTime, which
+  /// the API forwards as the required `scheduled_at` field. Accepts both
+  /// 24-hour ('14:30:00') and 12-hour ('2:30 PM') time strings.
+  DateTime _resolveBookingDateTime() {
+    final date =
+        DateTime.tryParse(widget.bookingDate ?? '') ?? DateTime.now();
+    final raw = (widget.bookingTime ?? '').trim().toUpperCase();
+    final isPm = raw.endsWith('PM');
+    final isAm = raw.endsWith('AM');
+    final cleaned = raw.replaceAll(RegExp(r'[AP]M'), '').trim();
+    final parts = cleaned.split(':');
+    var hour = int.tryParse(parts.first) ?? 0;
+    final minute = parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0;
+    if (isPm && hour < 12) {
+      hour += 12;
+    }
+    if (isAm && hour == 12) {
+      hour = 0;
+    }
+    return DateTime(date.year, date.month, date.day, hour, minute);
   }
 
   double? _parsePrice(String? price) {
@@ -121,7 +231,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: const Color(0xFFF4F7FB),
+          backgroundColor: AppTheme.of(context).secondaryBackground,
           body: CustomScrollView(
             physics: const BouncingScrollPhysics(),
             slivers: [
@@ -133,7 +243,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                     child: Row(
                       children: [
                         Material(
-                          color: Colors.white,
+                          color: AppTheme.of(context).primaryBackground,
                           borderRadius: BorderRadius.circular(18),
                           child: wrapWithModel(
                             model: _model.backButtonModel,
@@ -149,17 +259,17 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                               Text(
                                 'Select Payment',
                                 style: AppTheme.of(context).titleLarge.override(
-                                      font: GoogleFonts.poppins(
+                                      font: GoogleFonts.plusJakartaSans(
                                         fontWeight: FontWeight.w700,
                                       ),
-                                      color: const Color(0xFF14213D),
+                                      color: AppTheme.of(context).primaryText,
                                     ),
                               ),
                               Text(
                                 'Review the booking and choose how you want to pay.',
                                 style: AppTheme.of(context).bodySmall.override(
-                                      font: GoogleFonts.poppins(),
-                                      color: const Color(0xFF64748B),
+                                      font: GoogleFonts.plusJakartaSans(),
+                                      color: AppTheme.of(context).secondaryText,
                                     ),
                               ),
                             ],
@@ -184,19 +294,19 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                       const SizedBox(height: 18),
                       Text(
                         'Choose how you want to pay',
-                        style: AppTheme.of(context).titleMedium.override(
-                              font: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w700,
+                                style: AppTheme.of(context).titleMedium.override(
+                                      font: GoogleFonts.plusJakartaSans(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                      color: AppTheme.of(context).primaryText,
+                                    ),
                               ),
-                              color: const Color(0xFF14213D),
-                            ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Card, wallet, and QR payments are protected through escrow until the job is completed.',
-                        style: AppTheme.of(context).bodySmall.override(
-                              font: GoogleFonts.poppins(),
-                              color: const Color(0xFF64748B),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Card, wallet, and QR payments are protected through escrow until the job is completed.',
+                                style: AppTheme.of(context).bodySmall.override(
+                                      font: GoogleFonts.plusJakartaSans(),
+                                      color: AppTheme.of(context).secondaryText,
                             ),
                       ),
                       const SizedBox(height: 16),
@@ -205,7 +315,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                         icon: Icons.credit_card_rounded,
                         label: 'Credit / Debit Card',
                         sublabel: 'Visa, Mastercard',
-                        tint: const Color(0xFF1B74E4),
+                        tint: AppTheme.of(context).primary,
                       ),
                       const SizedBox(height: 12),
                       _buildPaymentOption(
@@ -213,7 +323,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                         icon: Icons.account_balance_wallet_rounded,
                         label: 'E-Wallets',
                         sublabel: 'GCash, Maya',
-                        tint: const Color(0xFF0F8A6C),
+                        tint: AppTheme.of(context).success,
                       ),
                       const SizedBox(height: 12),
                       _buildPaymentOption(
@@ -221,7 +331,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                         icon: Icons.qr_code_rounded,
                         label: 'QR Ph Code',
                         sublabel: 'Standard Philippine digital QR',
-                        tint: const Color(0xFF7C5CFC),
+                        tint: AppTheme.of(context).tertiary,
                       ),
                       const SizedBox(height: 12),
                       _buildPaymentOption(
@@ -229,7 +339,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                         icon: Icons.payments_rounded,
                         label: 'Cash on Completion',
                         sublabel: 'Pay the pro directly after the job',
-                        tint: const Color(0xFFEF6C57),
+                        tint: AppTheme.of(context).error,
                       ),
                     ],
                   ),
@@ -245,23 +355,17 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF17212B),
-              Color(0xFF23384D),
-              Color(0xFF2F5368),
+              AppTheme.of(context).primaryText,
+              AppTheme.of(context).primary.withValues(alpha: 0.7),
+              AppTheme.of(context).primary,
             ],
           ),
           borderRadius: BorderRadius.circular(30),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x1A17212B),
-              blurRadius: 24,
-              offset: Offset(0, 14),
-            ),
-          ],
+          boxShadow: AppThemeData.shadowLg,
         ),
         child: Row(
           children: [
@@ -293,7 +397,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                     child: Text(
                       widget.category ?? 'Service',
                       style: AppTheme.of(context).labelMedium.override(
-                            font: GoogleFonts.poppins(
+                            font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w700,
                             ),
                             color: Colors.white,
@@ -304,7 +408,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                   Text(
                     widget.serviceName ?? 'Service',
                     style: AppTheme.of(context).titleLarge.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
                           color: Colors.white,
@@ -314,7 +418,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                   Text(
                     widget.price ?? 'PHP 0',
                     style: AppTheme.of(context).headlineSmall.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
                           color: Colors.white,
@@ -331,15 +435,9 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.of(context).primaryBackground,
           borderRadius: BorderRadius.circular(28),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x12000000),
-              blurRadius: 20,
-              offset: Offset(0, 10),
-            ),
-          ],
+          boxShadow: AppThemeData.shadowCard,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -347,8 +445,8 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
             Text(
               'Booking summary',
               style: AppTheme.of(context).titleMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                    color: const Color(0xFF14213D),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+                    color: AppTheme.of(context).primaryText,
                   ),
             ),
             const SizedBox(height: 14),
@@ -387,7 +485,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: const Color(0xFFF3F7FA),
+              color: AppTheme.of(context).surfaceAlt,
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(icon, color: const Color(0xFF334155)),
@@ -400,18 +498,18 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                 Text(
                   label,
                   style: AppTheme.of(context).bodySmall.override(
-                        font: GoogleFonts.poppins(),
-                        color: const Color(0xFF64748B),
+                        font: GoogleFonts.plusJakartaSans(),
+                        color: AppTheme.of(context).secondaryText,
                       ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   value,
                   style: AppTheme.of(context).bodyMedium.override(
-                        font: GoogleFonts.poppins(
+                        font: GoogleFonts.plusJakartaSans(
                           fontWeight: FontWeight.w700,
                         ),
-                        color: const Color(0xFF14213D),
+                        color: AppTheme.of(context).primaryText,
                       ),
                 ),
               ],
@@ -447,7 +545,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
               child: Text(
                 'Card, e-wallet, and QR payments are held in escrow. The provider receives the funds only after you confirm the work is done from your bookings page.',
                 style: AppTheme.of(context).bodySmall.override(
-                      font: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                      font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w500),
                       color: const Color(0xFF17426E),
                     ),
               ),
@@ -478,19 +576,13 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isSelected ? tint.withValues(alpha: 0.08) : Colors.white,
+            color: isSelected ? tint.withValues(alpha: 0.08) : AppTheme.of(context).primaryBackground,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: isSelected ? tint : const Color(0xFFE5E9EE),
               width: isSelected ? 1.6 : 1,
             ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x10000000),
-                blurRadius: 16,
-                offset: Offset(0, 8),
-              ),
-            ],
+            boxShadow: AppThemeData.shadowCard,
           ),
           child: Row(
             children: [
@@ -511,18 +603,18 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                     Text(
                       label,
                       style: AppTheme.of(context).titleSmall.override(
-                            font: GoogleFonts.poppins(
+                            font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w700,
                             ),
-                            color: const Color(0xFF14213D),
+                            color: AppTheme.of(context).primaryText,
                           ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       sublabel,
                       style: AppTheme.of(context).bodySmall.override(
-                            font: GoogleFonts.poppins(),
-                            color: const Color(0xFF64748B),
+                            font: GoogleFonts.plusJakartaSans(),
+                            color: AppTheme.of(context).secondaryText,
                           ),
                     ),
                   ],
@@ -536,7 +628,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isSelected ? tint : const Color(0xFFCBD5E1),
+                    color: isSelected ? tint : AppTheme.of(context).border,
                     width: 2,
                   ),
                 ),
@@ -573,9 +665,9 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
 
   Widget _buildBottomBar() => Container(
         padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        decoration: BoxDecoration(
+          color: AppTheme.of(context).primaryBackground,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           boxShadow: [
             BoxShadow(
               color: Color(0x12000000),
@@ -598,15 +690,15 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                         Text(
                           'Total',
                           style: AppTheme.of(context).bodySmall.override(
-                                font: GoogleFonts.poppins(),
-                                color: const Color(0xFF64748B),
+                                font: GoogleFonts.plusJakartaSans(),
+                                color: AppTheme.of(context).secondaryText,
                               ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           widget.price ?? 'PHP 0',
                           style: AppTheme.of(context).titleLarge.override(
-                                font: GoogleFonts.poppins(
+                                font: GoogleFonts.plusJakartaSans(
                                   fontWeight: FontWeight.w700,
                                 ),
                                 color: AppTheme.of(context).primary,
@@ -628,7 +720,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                             ? AppTheme.of(context).alternate
                             : AppTheme.of(context).primary,
                         textStyle: AppTheme.of(context).titleSmall.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,
                               ),
                               color: Colors.white,
@@ -644,7 +736,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                 Text(
                   _model.errorMessage!,
                   style: AppTheme.of(context).bodySmall.override(
-                        font: GoogleFonts.poppins(
+                        font: GoogleFonts.plusJakartaSans(
                           fontWeight: FontWeight.w600,
                         ),
                         color: AppTheme.of(context).error,

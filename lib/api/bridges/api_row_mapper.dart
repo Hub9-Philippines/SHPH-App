@@ -1,9 +1,11 @@
 import '/api/api_config.dart';
+import '/api/models/address.dart';
 import '/api/models/booking.dart';
 import '/api/models/category.dart';
 import '/api/models/review.dart';
 import '/api/models/service_listing.dart';
 import '/api/shph_token_storage.dart';
+import '/backend/supabase/database/tables/addresses.dart';
 import '/backend/supabase/database/tables/bookings.dart';
 import '/backend/supabase/database/tables/categories.dart';
 import '/backend/supabase/database/tables/profiles.dart';
@@ -57,6 +59,15 @@ class ApiRowMapper {
     if (booking.clientProfile != null) {
       data['profiles'] = booking.clientProfile;
     }
+    if (booking.clientAddress != null) {
+      data['client_address'] = booking.clientAddress;
+    }
+    if (booking.arrivedAt != null) {
+      data['arrived_at'] = booking.arrivedAt;
+    }
+    if (booking.startedAt != null) {
+      data['started_at'] = booking.startedAt;
+    }
 
     return BookingsRow(data);
   }
@@ -80,6 +91,9 @@ class ApiRowMapper {
       'review_count': listing.reviewCount ?? 0,
       'is_time_material': listing.isTimeMaterial,
       'created_at': listing.createdAt ?? DateTime.now().toIso8601String(),
+      'latitude': listing.latitude,
+      'longitude': listing.longitude,
+      'distance_km': listing.distanceKm,
     });
   }
 
@@ -92,6 +106,23 @@ class ApiRowMapper {
       'image_url': category.image,
       'sort_order': category.id,
       'is_active': true,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  static AddressesRow addressToRow(ShphAddress address) {
+    return AddressesRow({
+      'id': address.id,
+      'user_id': '',
+      'address_line1': address.street,
+      'address_line2': address.label,
+      'barangay': address.barangay,
+      'city': address.city,
+      'province': address.province,
+      'postal_code': address.zipCode,
+      'latitude': address.latitude,
+      'longitude': address.longitude,
+      'is_default': address.isDefault,
       'created_at': DateTime.now().toIso8601String(),
     });
   }
@@ -121,8 +152,9 @@ class ApiRowMapper {
       'role': data['role']?.toString() ?? 'client',
       'display_name': data['display_name'],
       'email': data['email'],
-      'phone_number': data['phone_number'],
+      'phone_number': data['phone_number'] ?? data['phone'],
       'photo_url': data['photo_url'] ?? data['photo'],
+      'face_scan_url': data['face_scan_url'] ?? data['photo_url'] ?? data['photo'],
       'bio_details': data['bio_details'] ?? data['bio'],
       'first_name': data['first_name'],
       'last_name': data['last_name'],

@@ -9,46 +9,53 @@ allprojects {
     }
 }
 
-val newBuildDir: Directory =
-    rootProject.layout.buildDirectory
-        .dir("../../build")
-        .get()
-rootProject.layout.buildDirectory.value(newBuildDir)
+// Relocate build directory outputs cleanly outside the android folder
+val relocatedBuildDir = rootProject.layout.buildDirectory.dir("../../build").get()
+rootProject.layout.buildDirectory.value(relocatedBuildDir)
 
 subprojects {
-    val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
-    project.layout.buildDirectory.value(newSubprojectBuildDir)
-}
-subprojects {
-    project.evaluationDependsOn(":app")
-}
+    // Dynamically isolate each subproject's build directory
+    project.layout.buildDirectory.value(relocatedBuildDir.dir(project.name))
+    
+    // Decoupled subproject configuration using plugin and lifecycle hooks
+    when (name) {
+        "file_picker" -> {
+            pluginManager.apply("org.jetbrains.kotlin.android")
 
-subprojects {
-    if (name == "file_picker") {
-        pluginManager.apply("org.jetbrains.kotlin.android")
+            tasks.withType<KotlinJvmCompile>().configureEach {
+                compilerOptions.jvmTarget.set(JvmTarget.JVM_17)
+            }
 
-        tasks.withType<KotlinJvmCompile>().configureEach {
-            compilerOptions.jvmTarget.set(JvmTarget.JVM_17)
+            // Prevents Windows file-locking issues during release builds
+            tasks.configureEach {
+                if (name == "lintVitalAnalyzeRelease") {
+                    enabled = false
+                }
+            }
         }
 
-        // Work around Windows file-lock issues in AGP lint cache during release builds.
-        tasks.matching { it.name == "lintVitalAnalyzeRelease" }.configureEach {
-            enabled = false
-        }
-    }
+        "google_api_headers" -> {
+            tasks.withType<JavaCompile>().configureEach {
+                sourceCompatibility = "11"
+                targetCompatibility = "11"
+            }
 
-    if (name == "google_api_headers") {
-        tasks.withType<JavaCompile>().configureEach {
-            sourceCompatibility = JavaVersion.VERSION_1_8.toString()
-            targetCompatibility = JavaVersion.VERSION_1_8.toString()
-        }
+            tasks.withType<KotlinJvmCompile>().configureEach {
+                compilerOptions.jvmTarget.set(JvmTarget.JVM_11)
+            }
 
-        tasks.withType<KotlinJvmCompile>().configureEach {
-            compilerOptions.jvmTarget.set(JvmTarget.JVM_1_8)
+            // Safe Android extension targeting without using 'afterEvaluate'
+            plugins.withId("com.android.library") {
+                val android = project.extensions.findByType(com.android.build.gradle.LibraryExtension::class.java)
+                android?.compileOptions {
+                    sourceCompatibility = JavaVersion.VERSION_11
+                    targetCompatibility = JavaVersion.VERSION_11
+                }
+            }
         }
     }
 }
 
 tasks.register<Delete>("clean") {
-    delete(rootProject.layout.buildDirectory)
+    delete(relocatedBuildDir)
 }

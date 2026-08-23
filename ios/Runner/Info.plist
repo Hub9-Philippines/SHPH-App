@@ -47,7 +47,6 @@
 		<true/>
 		<key>UIStatusBarHidden</key>
 		<false/>
-		
 		<!-- Mandatory Apple UIScene Lifecycle Support -->
 		<key>UIApplicationSceneManifest</key>
 		<dict>
@@ -56,7 +55,6 @@
 			<key>UISceneConfigurations</key>
 			<dict/>
 		</dict>
-
 		<!-- Camera and Photo Library permissions for image picker and camera capture -->
 		<key>NSCameraUsageDescription</key>
 		<string>This app needs camera access to capture your ID document and face selfie for provider verification.</string>

@@ -150,6 +150,13 @@ class FFAppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _isProvider = false;
+  bool get isProvider => _isProvider;
+  set isProvider(bool value) {
+    _isProvider = value;
+    notifyListeners();
+  }
+
   bool get hasSelectedLocation =>
       (_selectedLatitude != null && _selectedLongitude != null) ||
       _selectedAddressLine1.isNotEmpty ||
@@ -205,6 +212,57 @@ class FFAppState extends ChangeNotifier {
       longitude: address.longitude,
       locationMode: 'saved',
     );
+  }
+
+  void setSelectedAddressFromMap(Map<String, dynamic> address) {
+    setSelectedAddress(
+      id: address['id'] as int?,
+      label: address['label']?.toString() ?? '',
+      line1: address['street']?.toString() ?? '',
+      city: address['city']?.toString() ?? '',
+      latitude: _toDoubleOrNull(address['latitude'] ?? address['lat']),
+      longitude: _toDoubleOrNull(address['longitude'] ?? address['lng']),
+      locationMode: 'saved',
+    );
+  }
+
+  Map<String, dynamic>? syncSelectedSavedAddressFromMap(
+      List<Map<String, dynamic>> addresses) {
+    final selected = resolveSelectedSavedAddressFromMap(addresses);
+    if (selected != null) {
+      setSelectedAddressFromMap(selected);
+    }
+    return selected;
+  }
+
+  Map<String, dynamic>? resolveSelectedSavedAddressFromMap(
+      List<Map<String, dynamic>> addresses) {
+    if (addresses.isEmpty) {
+      return null;
+    }
+
+    final selectedId = _selectedAddressId;
+    if (selectedId != null) {
+      for (final address in addresses) {
+        if (address['id'] == selectedId) {
+          return address;
+        }
+      }
+    }
+
+    for (final address in addresses) {
+      if (address['is_default'] == true) {
+        return address;
+      }
+    }
+
+    return addresses.first;
+  }
+
+  static double? _toDoubleOrNull(Object? value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString());
   }
 
   void setSelectedDeviceLocation({

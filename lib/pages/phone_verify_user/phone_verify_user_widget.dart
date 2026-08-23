@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -5,11 +6,14 @@ import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:provider/provider.dart';
 
 import '/auth/post_auth_navigation_flow.dart';
-import '/auth/supabase_auth/auth_util.dart';
-import '/components/back_button/back_button_widget.dart';
+import '/auth/auth_util.dart';
+import '/auth/test_auth_user.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import '/services/auth_service.dart';
+import '/services/error_handler.dart';
 import '/theme/app_theme.dart';
+import '../../auth/shph_auth/shph_auth_manager.dart';
 import 'phone_verify_user_model.dart';
 
 export 'phone_verify_user_model.dart';
@@ -33,8 +37,6 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, PhoneVerifyUserModel.new);
-
-    handlePhoneAuthStateChanges(context);
   }
 
   @override
@@ -59,15 +61,14 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
         appBar: AppBar(
           backgroundColor: AppTheme.of(context).primaryBackground,
           automaticallyImplyLeading: false,
-          leading: wrapWithModel(
-            model: _model.backButtonModel,
-            updateCallback: () => safeSetState(() {}),
-            child: const BackButtonWidget(),
+          leading: IconButton(
+            onPressed: () => context.pop(),
+            icon: const Icon(Icons.arrow_back_rounded),
           ),
           title: Text(
             'Phone Verification',
             style: AppTheme.of(context).titleLarge.override(
-                  font: GoogleFonts.poppins(
+                  font: GoogleFonts.plusJakartaSans(
                     fontWeight:
                         AppTheme.of(context).titleLarge.fontWeight,
                     fontStyle:
@@ -103,7 +104,7 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                         style: AppTheme.of(context)
                             .headlineMedium
                             .override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: AppTheme.of(context)
                                     .headlineMedium
                                     .fontWeight,
@@ -128,7 +129,7 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                         'We\'ve sent a 6-digit code to your phone number. Please enter it below.',
                         textAlign: TextAlign.center,
                         style: AppTheme.of(context).bodyMedium.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: AppTheme.of(context)
                                     .bodyMedium
                                     .fontWeight,
@@ -147,6 +148,17 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                             ),
                       ),
                     ),
+                    if (kDebugMode)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Text(
+                          'Debug: use 000000 to bypass',
+                          textAlign: TextAlign.center,
+                          style: AppTheme.of(context).bodySmall.override(
+                                color: AppTheme.of(context).textTertiary,
+                              ),
+                        ),
+                      ),
                     Padding(
                       padding:
                           const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 20),
@@ -182,7 +194,7 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                               textStyle: AppTheme.of(context)
                                   .bodyLarge
                                   .override(
-                                    font: GoogleFonts.poppins(
+                                    font: GoogleFonts.plusJakartaSans(
                                       fontWeight: AppTheme.of(context)
                                           .bodyLarge
                                           .fontWeight,
@@ -225,12 +237,57 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                             );
                             return;
                           }
-                          final phoneVerifiedUser = await verifySmsCode(
-                            context: context,
-                            smsCode: smsCodeVal,
-                            phoneNumber: FFAppState().phone,
-                          );
-                          if (phoneVerifiedUser == null) {
+                          if (kDebugMode && smsCodeVal == '000000') {
+                            final testUser = TestAuthUser(
+                              testUid: 'test-user-id',
+                              testPhone: FFAppState().phone.isNotEmpty
+                                  ? FFAppState().phone
+                                  : '+639000000000',
+                            );
+                            currentUser = testUser;
+                            if (!context.mounted) return;
+                            await PostAuthNavigationFlow()
+                                .handlePostAuthNavigation(
+                              context: context,
+                              userId: testUser.uid!,
+                            );
+                            return;
+                          }
+                          final authService = AuthService.instance;
+                          final isRegister =
+                              authService.pendingDeliveryMethod != null;
+                          final phone = authService.pendingPhone != null &&
+                                  authService.pendingPhone!.isNotEmpty
+                              ? authService.pendingPhone!
+                              : FFAppState().phone;
+
+                          final dynamic verifiedUser;
+                          try {
+                            if (isRegister) {
+                              verifiedUser =
+                                  await (authManager as ShphAuthManager)
+                                      .verifyRegistration(
+                                phoneNumber: phone,
+                                pin: smsCodeVal,
+                              );
+                              authService.clearPendingRegistration();
+                            } else {
+                              verifiedUser = await verifySmsCode(
+                                context: context,
+                                smsCode: smsCodeVal,
+                                phoneNumber: phone,
+                              );
+                            }
+                          } catch (e) {
+                            final message = ErrorHandler.describeError(e);
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(message)),
+                            );
+                            _model.pinCodeController.triggerError();
+                            return;
+                          }
+                          if (verifiedUser == null) {
                             _model.pinCodeController.triggerError();
                             return;
                           }
@@ -240,7 +297,7 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                           await PostAuthNavigationFlow()
                               .handlePostAuthNavigation(
                             context: context,
-                            userId: phoneVerifiedUser.uid,
+                            userId: verifiedUser.uid,
                           );
                         },
                         text: 'Verify',
@@ -252,7 +309,7 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                           color: AppTheme.of(context).primary,
                           textStyle:
                               AppTheme.of(context).titleSmall.override(
-                                    font: GoogleFonts.poppins(
+                                    font: GoogleFonts.plusJakartaSans(
                                       fontWeight: AppTheme.of(context)
                                           .titleSmall
                                           .fontWeight,
@@ -260,7 +317,7 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                                           .titleSmall
                                           .fontStyle,
                                     ),
-                                    color: Colors.white,
+                                    color: AppTheme.of(context).onPrimary,
                                     letterSpacing: 0,
                                     fontWeight: AppTheme.of(context)
                                         .titleSmall
@@ -284,7 +341,7 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                       child: Text(
                         'Didn\'t receive the code?',
                         style: AppTheme.of(context).bodySmall.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: AppTheme.of(context)
                                     .bodySmall
                                     .fontWeight,
@@ -309,7 +366,14 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                       hoverColor: Colors.transparent,
                       highlightColor: Colors.transparent,
                       onTap: () async {
-                        final phoneNumberVal = FFAppState().phone;
+                        final authService = AuthService.instance;
+                        final isRegister =
+                            authService.pendingDeliveryMethod != null;
+                        final phoneNumberVal =
+                            authService.pendingPhone != null &&
+                                    authService.pendingPhone!.isNotEmpty
+                                ? authService.pendingPhone!
+                                : FFAppState().phone;
                         if (phoneNumberVal.isEmpty ||
                             !phoneNumberVal.startsWith('+')) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -325,21 +389,34 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                         _model.pinCodeController.clearError();
                         _model.pinCodeValue = '';
                         safeSetState(() {});
-                        
-                        await beginPhoneAuth(
-                          context: context,
-                          phoneNumber: phoneNumberVal,
-                          onCodeSent: (context) async {
-                            context.replaceNamed(
-                              PhoneVerifyUserWidget.routeName,
+
+                        try {
+                          if (isRegister) {
+                            await authService.authApi
+                                .registerResend(phoneNumber: phoneNumberVal);
+                          } else {
+                            await beginPhoneAuth(
+                              context: context,
+                              phoneNumber: phoneNumberVal,
+                              onCodeSent: (context) async {
+                                context.replaceNamed(
+                                  PhoneVerifyUserWidget.routeName,
+                                );
+                              },
                             );
-                          },
-                        );
+                          }
+                        } catch (e) {
+                          final message = ErrorHandler.describeError(e);
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(message)),
+                          );
+                        }
                       },
                       child: Text(
                         'Resend Code',
                         style: AppTheme.of(context).bodySmall.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w600,
                                 fontStyle: AppTheme.of(context)
                                     .bodySmall

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/backend/supabase/database/tables/reviews.dart';
+import '/api/models/review.dart';
+import '/api/resources/favorites_api.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -58,7 +59,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isFavorite = false;
   bool _isLoadingFavorite = false;
-  List<ReviewsRow> _reviews = [];
+  List<ShphReview> _reviews = [];
   bool _isLoadingReviews = false;
 
   @override
@@ -128,18 +129,14 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
 
     setState(() => _isLoadingReviews = true);
     try {
-      final response = await ReviewsTable().queryRows(
-        queryFn: (q) => q
-            .eq('service_listing_id', widget.serviceId!)
-            .order('created_at', ascending: false),
-        limit: 3,
-      );
+      final response = await ShphReviewsApi.instance
+          .listListingReviews(widget.serviceId!);
       if (!mounted) {
         return;
       }
 
       setState(() {
-        _reviews = response;
+        _reviews = response.results.take(3).toList();
         _isLoadingReviews = false;
       });
     } catch (e, stackTrace) {
@@ -194,8 +191,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                 pinned: true,
                 stretch: true,
                 elevation: 0,
-                surfaceTintColor: Colors.transparent,
-                backgroundColor: const Color(0xFFF4F7FB),
+                backgroundColor: AppTheme.of(context).primaryBackground,
                 leadingWidth: 72,
                 leading: Padding(
                   padding: const EdgeInsets.only(left: 16, top: 8, bottom: 8),
@@ -276,7 +272,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                                   child: Text(
                                     widget.category,
                                     style: AppTheme.of(context).labelMedium.override(
-                                          font: GoogleFonts.poppins(
+                                          font: GoogleFonts.plusJakartaSans(
                                             fontWeight: FontWeight.w700,
                                           ),
                                           color: Colors.white,
@@ -287,7 +283,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                                 Text(
                                   widget.serviceName,
                                   style: AppTheme.of(context).headlineMedium.override(
-                                        font: GoogleFonts.poppins(
+                                        font: GoogleFonts.plusJakartaSans(
                                           fontWeight: FontWeight.w700,
                                         ),
                                         color: Colors.white,
@@ -341,7 +337,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                           style: AppTheme.of(context)
                               .bodyMedium
                               .override(
-                                font: GoogleFonts.poppins(),
+                                font: GoogleFonts.plusJakartaSans(),
                                 color: const Color(0xFF64748B),
                               )
                               .copyWith(height: 1.5),
@@ -425,7 +421,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
             Text(
               label,
               style: AppTheme.of(context).labelMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                     color: Colors.white,
                   ),
             ),
@@ -456,7 +452,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                   child: Text(
                     widget.price,
                     style: AppTheme.of(context).headlineSmall.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
                           color: AppTheme.of(context).primary,
@@ -482,7 +478,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                       Text(
                         '${widget.rating.toStringAsFixed(1)} • ${widget.reviewCount} reviews',
                         style: AppTheme.of(context).labelMedium.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,
                               ),
                               color: const Color(0xFF8A6116),
@@ -534,7 +530,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
             Text(
               label,
               style: AppTheme.of(context).labelMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                     color: const Color(0xFF334155),
                   ),
             ),
@@ -594,7 +590,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                         child: Text(
                           widget.providerName,
                           style: AppTheme.of(context).titleMedium.override(
-                                font: GoogleFonts.poppins(
+                                font: GoogleFonts.plusJakartaSans(
                                   fontWeight: FontWeight.w700,
                                 ),
                                 color: const Color(0xFF14213D),
@@ -623,7 +619,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                               Text(
                                 'Verified',
                                 style: AppTheme.of(context).labelSmall.override(
-                                      font: GoogleFonts.poppins(
+                                      font: GoogleFonts.plusJakartaSans(
                                         fontWeight: FontWeight.w700,
                                       ),
                                       color: const Color(0xFF027A48),
@@ -638,7 +634,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                   Text(
                     widget.providerCategory,
                     style: AppTheme.of(context).bodySmall.override(
-                          font: GoogleFonts.poppins(),
+                          font: GoogleFonts.plusJakartaSans(),
                           color: const Color(0xFF64748B),
                         ),
                   ),
@@ -706,7 +702,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
             Text(
               title,
               style: AppTheme.of(context).titleMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: const Color(0xFF14213D),
                   ),
             ),
@@ -714,7 +710,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
             Text(
               subtitle,
               style: AppTheme.of(context).bodySmall.override(
-                    font: GoogleFonts.poppins(),
+                    font: GoogleFonts.plusJakartaSans(),
                     color: const Color(0xFF64748B),
                   ),
             ),
@@ -777,7 +773,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                 Text(
                   title,
                   style: AppTheme.of(context).titleSmall.override(
-                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                         color: const Color(0xFF14213D),
                       ),
                 ),
@@ -785,7 +781,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                 Text(
                   description,
                   style: AppTheme.of(context).bodySmall.override(
-                        font: GoogleFonts.poppins(),
+                        font: GoogleFonts.plusJakartaSans(),
                         color: const Color(0xFF64748B),
                       ),
                 ),
@@ -821,7 +817,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                       Text(
                         'Recent reviews',
                         style: AppTheme.of(context).titleMedium.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,
                               ),
                               color: const Color(0xFF14213D),
@@ -831,7 +827,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                       Text(
                         'Recent customer feedback for this listing.',
                         style: AppTheme.of(context).bodySmall.override(
-                              font: GoogleFonts.poppins(),
+                              font: GoogleFonts.plusJakartaSans(),
                               color: const Color(0xFF64748B),
                             ),
                       ),
@@ -865,7 +861,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
         ),
       );
 
-  Widget _buildReviewCard(BuildContext context, ReviewsRow review) => Container(
+  Widget _buildReviewCard(BuildContext context, ShphReview review) => Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: const Color(0xFFF7FAFC),
@@ -885,9 +881,9 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                   ),
                   child: Center(
                     child: Text(
-                      review.userId.substring(0, 2).toUpperCase(),
+                      _reviewInitials(review.reviewerName),
                       style: AppTheme.of(context).bodyMedium.override(
-                            font: GoogleFonts.poppins(
+                            font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w700,
                             ),
                             color: AppTheme.of(context).primary,
@@ -901,9 +897,11 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Customer',
+                        review.reviewerName?.trim().isNotEmpty == true
+                            ? review.reviewerName!.trim()
+                            : 'Customer',
                         style: AppTheme.of(context).bodyMedium.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,
                               ),
                               color: const Color(0xFF14213D),
@@ -912,7 +910,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                       const SizedBox(height: 4),
                       Row(
                         children: List.generate(
-                          review.rating,
+                          review.rating.clamp(0, 5),
                           (index) => const Padding(
                             padding: EdgeInsets.only(right: 3),
                             child: FaIcon(
@@ -927,9 +925,12 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                   ),
                 ),
                 Text(
-                  _formatDate(review.createdAt),
+                  _formatDate(
+                    DateTime.tryParse(review.createdAt ?? '') ??
+                        DateTime.now(),
+                  ),
                   style: AppTheme.of(context).labelSmall.override(
-                        font: GoogleFonts.poppins(),
+                        font: GoogleFonts.plusJakartaSans(),
                         color: const Color(0xFF94A3B8),
                       ),
                 ),
@@ -942,7 +943,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                 style: AppTheme.of(context)
                     .bodyMedium
                     .override(
-                      font: GoogleFonts.poppins(),
+                      font: GoogleFonts.plusJakartaSans(),
                       color: const Color(0xFF64748B),
                     )
                     .copyWith(height: 1.45),
@@ -951,6 +952,19 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
           ],
         ),
       );
+
+  String _reviewInitials(String? name) {
+    final trimmed = name?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      return 'C';
+    }
+    final parts = trimmed.split(RegExp(r'\s+')).where((p) => p.isNotEmpty);
+    final first = parts.first.substring(0, 1).toUpperCase();
+    if (parts.length > 1) {
+      return '$first${parts.elementAt(1).substring(0, 1).toUpperCase()}';
+    }
+    return first;
+  }
 
   Widget _buildReviewPlaceholder(String label) => Container(
         width: double.infinity,
@@ -963,7 +977,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
           label,
           textAlign: TextAlign.center,
           style: AppTheme.of(context).bodyMedium.override(
-                font: GoogleFonts.poppins(),
+                font: GoogleFonts.plusJakartaSans(),
                 color: const Color(0xFF64748B),
               ),
         ),
@@ -994,7 +1008,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                     height: 54,
                     color: const Color(0xFFF3F7FA),
                     textStyle: AppTheme.of(context).titleSmall.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
                           color: const Color(0xFF17212B),
@@ -1015,10 +1029,10 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                     height: 54,
                     color: AppTheme.of(context).primary,
                     textStyle: AppTheme.of(context).titleSmall.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
-                          color: Colors.white,
+                          color: AppTheme.of(context).onPrimary,
                         ),
                     borderRadius: BorderRadius.circular(18),
                   ),

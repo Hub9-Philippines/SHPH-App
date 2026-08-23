@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/auth/supabase_auth/auth_util.dart';
+import '/api/bridges/api_row_mapper.dart';
+import '/auth/auth_util.dart';
 import '/backend/supabase/supabase.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
+import '/services/addresses_service.dart';
 import '/theme/app_theme.dart';
 import 'edit_address_model.dart';
 
@@ -40,11 +42,9 @@ class _EditAddressWidgetState extends State<EditAddressWidget> {
       _addressesFuture = Future.value([]);
       return;
     }
-    _addressesFuture = AddressesTable().queryRows(
-      queryFn: (q) => q
-          .eq('user_id', currentUserUid)
-          .order('is_default', ascending: false),
-    );
+    _addressesFuture = AddressesService.instance.getAddresses().then(
+          (addresses) => addresses.map(ApiRowMapper.addressToRow).toList(),
+        );
   }
 
   @override
@@ -107,7 +107,7 @@ class _EditAddressWidgetState extends State<EditAddressWidget> {
                     Text(
                       'Select address',
                       style: AppTheme.of(context).headlineSmall.override(
-                            font: GoogleFonts.poppins(
+                            font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -181,7 +181,7 @@ class _EditAddressWidgetState extends State<EditAddressWidget> {
                         EdgeInsetsDirectional.zero,
                     color: AppTheme.of(context).primary,
                     textStyle: AppTheme.of(context).titleMedium.override(
-                          color: Colors.white,
+                          color: AppTheme.of(context).onPrimary,
                           fontWeight: FontWeight.w600,
                         ),
                     elevation: 0,
@@ -217,7 +217,7 @@ class _EditAddressWidgetState extends State<EditAddressWidget> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0x1A368EFF),
+                  color: AppTheme.of(context).primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -253,7 +253,7 @@ class _EditAddressWidgetState extends State<EditAddressWidget> {
                             child: Text(
                               'Default',
                               style: AppTheme.of(context).bodySmall.override(
-                                    color: Colors.white,
+                                    color: AppTheme.of(context).onPrimary,
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
                                   ),

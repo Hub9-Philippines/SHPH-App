@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '/api/resources/bookings_api.dart';
 import '/backend/supabase/supabase.dart';
 import '/services/logging_service.dart';
 import 'booking_models.dart';
@@ -37,12 +38,6 @@ class ShphBookingRepository implements BookingRepository {
     required String notesPrefix,
     required String bookingStatus,
   }) async {
-    final supabase = Supabase.instance.client;
-    final userId = supabase.auth.currentUser?.id;
-    if (userId == null) {
-      throw StateError('You must be signed in to create a booking.');
-    }
-
     final listingId = await _resolveServiceListingId(draft);
     final scheduledDateTime = _resolveScheduledDateTime(draft);
     final notes = [
@@ -55,26 +50,23 @@ class ShphBookingRepository implements BookingRepository {
     ].join(' | ');
 
     try {
-      final response = await supabase
-          .from('bookings')
-          .insert({
-            'user_id': userId,
-            'service_listing_id': listingId,
-            'booking_date':
-                scheduledDateTime.toIso8601String().split('T').first,
-            'booking_time':
-                '${scheduledDateTime.hour.toString().padLeft(2, '0')}:${scheduledDateTime.minute.toString().padLeft(2, '0')}:00',
-            'notes': notes,
-            'status': bookingStatus,
-            'total_price': _estimateTotal(draft),
-          })
-          .select()
-          .single();
+      final booking = await ShphBookingsApi.instance.createBooking(
+        listingId: listingId,
+        scheduledAt: scheduledDateTime,
+        notes: notes,
+      );
 
-      return BookingsRow(response);
+      return BookingsRow({
+        'id': booking.id,
+        'listing_id': listingId,
+        'scheduled_date': scheduledDateTime.toIso8601String(),
+        'notes': notes,
+        'status': bookingStatus,
+        'total_price': _estimateTotal(draft),
+      });
     } catch (e) {
       LoggingService.error(
-        'Supabase booking insert failed: $e',
+        'SHPH booking creation failed: $e',
         tag: 'BookingRepository',
         error: e,
       );

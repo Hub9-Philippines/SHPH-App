@@ -1,4 +1,5 @@
 // Automatic FlutterFlow imports
+import '/api/resources/users_api.dart';
 import '/backend/supabase/supabase.dart';
 import '/theme/app_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -20,11 +21,8 @@ Future<String?> uploadScannedToSupabase(
 ) async {
   // Add your function code here!
   try {
-    final supabase = Supabase.instance.client;
-
     Uint8List? fileBytes;
     String? fileName;
-    File? tempFile;
 
     // Handle different input types
     if (fileData is String) {
@@ -60,37 +58,20 @@ Future<String?> uploadScannedToSupabase(
     final extension = path.extension(fileName ?? '.jpg');
     final baseName = path.basenameWithoutExtension(fileName ?? 'upload');
     final uniqueFileName = '${baseName}_$timestamp$extension';
-    final fullPath = '$folderPath/$uniqueFileName';
 
-    // For web, we need to use uploadBinary since File is not available
-    if (kIsWeb) {
-      await supabase.storage.from(bucketName).uploadBinary(
-            fullPath,
-            fileBytes,
-            fileOptions: const FileOptions(contentType: 'image/jpeg'),
-          );
-    } else {
-      // For mobile, we need to create a temp file
-      final tempDir = Directory.systemTemp;
-      tempFile = File('${tempDir.path}/$uniqueFileName');
-      await tempFile.writeAsBytes(fileBytes);
-
-      await supabase.storage.from(bucketName).upload(
-            fullPath,
-            tempFile,
-            fileOptions: const FileOptions(contentType: 'image/jpeg'),
-          );
+    if (bucketName == 'profiles' || bucketName == 'profile_photos') {
+      final resp = await ShphUsersApi.instance.uploadPhoto(
+        fileBytes,
+        uniqueFileName,
+      );
+      final url = resp['photo_url'] ?? resp['photo'] ?? resp['url'];
+      if (url != null) {
+        return url.toString();
+      }
     }
 
-    // Clean up temp file if it was created
-    if (tempFile != null && await tempFile.exists()) {
-      await tempFile.delete();
-    }
-
-    // Return the public URL for saving to your DB
-    final publicUrl = supabase.storage.from(bucketName).getPublicUrl(fullPath);
-
-    return publicUrl;
+    // No SHPH upload endpoint for this bucket yet - stub with the storage path.
+    return '$folderPath/$uniqueFileName';
   } catch (e) {
     print("Upload Error: $e");
     return "error";

@@ -93,7 +93,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                       onPressed: () async {
                         // Mark onboarding as completed
                         FFAppState().hasCompletedOnboarding = true;
-                        context.goNamed(SignOptionsWidget.routeName);
+                        context.goNamed(SigninWidget.routeName);
                       },
                       text: 'Skip',
                       options: FFButtonOptions(
@@ -102,10 +102,12 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                             20, 0, 20, 0),
                         iconPadding:
                             EdgeInsetsDirectional.zero,
-                        color: const Color(0x1E368EFF),
+                        color: AppTheme.of(context)
+                            .primary
+                            .withValues(alpha: 0.12),
                         textStyle:
                             AppTheme.of(context).titleSmall.override(
-                                  font: GoogleFonts.poppins(
+                                  font: GoogleFonts.plusJakartaSans(
                                     fontWeight: AppTheme.of(context)
                                         .titleSmall
                                         .fontWeight,
@@ -124,7 +126,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                                 ),
                         elevation: 0,
                         borderRadius: BorderRadius.circular(24),
-                        hoverColor: const Color(0xFF7C7C7C),
+                        hoverColor: AppTheme.of(context).alternate,
                       ),
                     ),
                   ],
@@ -171,7 +173,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                                     style: AppTheme.of(context)
                                         .headlineMedium
                                         .override(
-                                          font: GoogleFonts.poppins(
+                                          font: GoogleFonts.plusJakartaSans(
                                             fontWeight:
                                                 AppTheme.of(context)
                                                     .headlineMedium
@@ -198,7 +200,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                                     style: AppTheme.of(context)
                                         .bodyMedium
                                         .override(
-                                          font: GoogleFonts.poppins(
+                                          font: GoogleFonts.plusJakartaSans(
                                             fontWeight:
                                                 AppTheme.of(context)
                                                     .bodyMedium
@@ -245,7 +247,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                                     style: AppTheme.of(context)
                                         .headlineMedium
                                         .override(
-                                          font: GoogleFonts.poppins(
+                                          font: GoogleFonts.plusJakartaSans(
                                             fontWeight:
                                                 AppTheme.of(context)
                                                     .headlineMedium
@@ -272,7 +274,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                                     style: AppTheme.of(context)
                                         .bodyMedium
                                         .override(
-                                          font: GoogleFonts.poppins(
+                                          font: GoogleFonts.plusJakartaSans(
                                             fontWeight:
                                                 AppTheme.of(context)
                                                     .bodyMedium
@@ -319,7 +321,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                                     style: AppTheme.of(context)
                                         .headlineMedium
                                         .override(
-                                          font: GoogleFonts.poppins(
+                                          font: GoogleFonts.plusJakartaSans(
                                             fontWeight:
                                                 AppTheme.of(context)
                                                     .headlineMedium
@@ -346,7 +348,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                                     style: AppTheme.of(context)
                                         .bodyMedium
                                         .override(
-                                          font: GoogleFonts.poppins(
+                                          font: GoogleFonts.plusJakartaSans(
                                             fontWeight:
                                                 AppTheme.of(context)
                                                     .bodyMedium
@@ -397,7 +399,9 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                               radius: 3,
                               dotWidth: 15,
                               dotHeight: 5,
-                              dotColor: const Color(0x13368EFF),
+                              dotColor: AppTheme.of(context)
+                                  .primary
+                                  .withValues(alpha: 0.08),
                               activeDotColor:
                                   AppTheme.of(context).primary,
                               paintStyle: PaintingStyle.fill,
@@ -418,7 +422,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                     if (_model.pageViewCurrentIndex.toString() == '2') {
                       // Mark onboarding as completed when navigating from last page
                       FFAppState().hasCompletedOnboarding = true;
-                      await context.pushNamed(SignOptionsWidget.routeName);
+                      await context.pushNamed(SigninWidget.routeName);
                     } else {
                     await _model.pageViewController?.nextPage(
                       duration: const Duration(milliseconds: 300),
@@ -435,21 +439,21 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                       EdgeInsetsDirectional.zero,
                   color: AppTheme.of(context).primary,
                   textStyle: AppTheme.of(context).titleSmall.override(
-                        font: GoogleFonts.poppins(
+                        font: GoogleFonts.plusJakartaSans(
                           fontWeight: AppTheme.of(context)
                               .titleSmall
                               .fontWeight,
                           fontStyle:
                               AppTheme.of(context).titleSmall.fontStyle,
                         ),
-                        color: Colors.white,
+                        color: AppTheme.of(context).onPrimary,
                         letterSpacing: 0,
                         fontWeight:
                             AppTheme.of(context).titleSmall.fontWeight,
                         fontStyle:
                             AppTheme.of(context).titleSmall.fontStyle,
                       ),
-                  elevation: 0,
+                  elevation: 2,
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),

@@ -51,7 +51,7 @@ class _UploadingWidgetState extends State<UploadingWidget> {
           Text(
             'Uploading ID...',
             style: AppTheme.of(context).bodyMedium.override(
-                  font: GoogleFonts.poppins(
+                  font: GoogleFonts.plusJakartaSans(
                     fontWeight: FontWeight.w600,
                     fontStyle:
                         AppTheme.of(context).bodyMedium.fontStyle,

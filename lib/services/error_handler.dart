@@ -1,4 +1,7 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+
+import '/api/shph_api_exception.dart';
 import 'logging_service.dart';
 
 /// Centralized error handling for the application
@@ -9,6 +12,10 @@ class ErrorHandler {
 
   ErrorHandler._internal();
   static final ErrorHandler _instance = ErrorHandler._internal();
+
+  /// Message shown when a request never reaches the server.
+  static const String connectionErrorMessage =
+      'Cannot reach the server. Check your internet connection and try again.';
 
   /// Global scaffold messenger key for showing snackbars
   static GlobalKey<ScaffoldMessengerState>? scaffoldMessengerKey;
@@ -175,5 +182,36 @@ class ErrorHandler {
     } else {
       return exception.toString();
     }
+  }
+
+  /// Map an exception to a user-facing message.
+  ///
+  /// Connection-level failures (no HTTP response ever received) map to
+  /// [connectionErrorMessage]; `ShphApiException` surfaces its (already
+  /// DRF-unwrapped) message; anything else falls back to a generic message.
+  static String describeError(Object exception) {
+    if (exception is ShphApiException) {
+      if (exception.statusCode == null) {
+        return connectionErrorMessage;
+      }
+      final message = exception.message.trim();
+      return message.isEmpty
+          ? 'Something went wrong. Please try again.'
+          : message;
+    }
+    if (exception is DioException) {
+      final isConnectionFailure = exception.type == DioExceptionType
+              .connectionError ||
+          exception.type == DioExceptionType.connectionTimeout ||
+          exception.type == DioExceptionType.receiveTimeout ||
+          exception.type == DioExceptionType.sendTimeout ||
+          (exception.response == null &&
+              exception.type == DioExceptionType.unknown);
+      if (isConnectionFailure) {
+        return connectionErrorMessage;
+      }
+      return 'Something went wrong. Please try again.';
+    }
+    return 'Something went wrong. Please try again.';
   }
 }

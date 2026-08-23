@@ -18,6 +18,9 @@ class ShphServiceListing {
     this.createdAt,
     this.city,
     this.province,
+    this.latitude,
+    this.longitude,
+    this.distanceKm,
     this.isTimeMaterial = false,
   });
 
@@ -39,6 +42,15 @@ class ShphServiceListing {
   final String? createdAt;
   final String? city;
   final String? province;
+
+  /// Coarsened listing coordinates (public precision ~3 decimals). Null when
+  /// the provider has no address on file.
+  final double? latitude;
+  final double? longitude;
+
+  /// Server-computed distance in km; populated when the request carries
+  /// lat/lng query params. Null otherwise — never fabricate client-side.
+  final double? distanceKm;
   final bool isTimeMaterial;
 
   factory ShphServiceListing.fromJson(Map<String, dynamic> json) {
@@ -61,9 +73,37 @@ class ShphServiceListing {
       createdAt: json['created_at'] as String?,
       city: json['city'] as String?,
       province: json['province'] as String?,
+      latitude: _toDouble(json['latitude']),
+      longitude: _toDouble(json['longitude']),
+      distanceKm: _toDouble(json['distance_km']),
       isTimeMaterial: json['is_time_material'] as bool? ?? false,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'category': category,
+        'category_name': categoryName,
+        'provider': provider,
+        'provider_name': providerName,
+        'provider_photo': providerPhoto,
+        'description': description,
+        'base_price': basePrice,
+        'price_unit': priceUnit,
+        'status': status,
+        'is_available': isAvailable,
+        'rating': rating,
+        'thumbnail': thumbnail,
+        'review_count': reviewCount,
+        'created_at': createdAt,
+        'city': city,
+        'province': province,
+        'latitude': latitude,
+        'longitude': longitude,
+        'distance_km': distanceKm,
+        'is_time_material': isTimeMaterial,
+      };
 
   static double? _toDouble(Object? value) {
     if (value == null) return null;

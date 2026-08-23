@@ -2,7 +2,7 @@ import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/auth/supabase_auth/auth_util.dart';
+import '/auth/auth_util.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/components/reset_link_sent/reset_link_sent_widget.dart';
 import '/flutter_flow/custom_functions.dart' as functions;
@@ -10,7 +10,7 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
 import '/theme/app_theme.dart';
-import '../../auth/supabase_auth/supabase_auth_manager.dart';
+import '../../auth/shph_auth/shph_auth_manager.dart';
 import 'forgot_password_model.dart';
 
 export 'forgot_password_model.dart';
@@ -67,7 +67,7 @@ class _ForgotPasswordWidgetState extends State<ForgotPasswordWidget> {
           title: Text(
             'Forgot Password',
             style: AppTheme.of(context).titleLarge.override(
-                  font: GoogleFonts.poppins(
+                  font: GoogleFonts.plusJakartaSans(
                     fontWeight:
                         AppTheme.of(context).titleLarge.fontWeight,
                     fontStyle:
@@ -104,7 +104,7 @@ class _ForgotPasswordWidgetState extends State<ForgotPasswordWidget> {
                           style: AppTheme.of(context)
                               .displaySmall
                               .override(
-                                font: GoogleFonts.poppins(
+                                font: GoogleFonts.plusJakartaSans(
                                   fontWeight: AppTheme.of(context)
                                       .displaySmall
                                       .fontWeight,
@@ -130,7 +130,7 @@ class _ForgotPasswordWidgetState extends State<ForgotPasswordWidget> {
                           style: AppTheme.of(context)
                               .bodyMedium
                               .override(
-                                font: GoogleFonts.poppins(
+                                font: GoogleFonts.plusJakartaSans(
                                   fontWeight: AppTheme.of(context)
                                       .bodyMedium
                                       .fontWeight,
@@ -189,7 +189,7 @@ class _ForgotPasswordWidgetState extends State<ForgotPasswordWidget> {
                                       labelStyle: AppTheme.of(context)
                                           .bodyLarge
                                           .override(
-                                            font: GoogleFonts.poppins(
+                                            font: GoogleFonts.plusJakartaSans(
                                               fontWeight:
                                                   AppTheme.of(context)
                                                       .bodyLarge
@@ -214,7 +214,7 @@ class _ForgotPasswordWidgetState extends State<ForgotPasswordWidget> {
                                       hintStyle: AppTheme.of(context)
                                           .bodyLarge
                                           .override(
-                                            font: GoogleFonts.poppins(
+                                            font: GoogleFonts.plusJakartaSans(
                                               fontWeight:
                                                   AppTheme.of(context)
                                                       .bodyLarge
@@ -298,7 +298,7 @@ class _ForgotPasswordWidgetState extends State<ForgotPasswordWidget> {
                                     style: AppTheme.of(context)
                                         .bodyLarge
                                         .override(
-                                          font: GoogleFonts.poppins(
+                                          font: GoogleFonts.plusJakartaSans(
                                             fontWeight:
                                                 AppTheme.of(context)
                                                     .bodyLarge
@@ -331,7 +331,7 @@ class _ForgotPasswordWidgetState extends State<ForgotPasswordWidget> {
                                     style: AppTheme.of(context)
                                         .bodySmall
                                         .override(
-                                          font: GoogleFonts.poppins(
+                                          font: GoogleFonts.plusJakartaSans(
                                             fontWeight:
                                                 AppTheme.of(context)
                                                     .bodySmall
@@ -370,7 +370,7 @@ class _ForgotPasswordWidgetState extends State<ForgotPasswordWidget> {
                                     !_model.isEmailvalid)
                                 ? null
                                 : () async {
-                                    await (authManager as SupabaseAuthManager)
+                                    await (authManager as ShphAuthManager)
                                         .resetPassword(
                                       email: _model
                                           .emailTextFieldTextController.text,
@@ -409,13 +409,13 @@ class _ForgotPasswordWidgetState extends State<ForgotPasswordWidget> {
                               textStyle: AppTheme.of(context)
                                   .titleMedium
                                   .override(
-                                    font: GoogleFonts.poppins(
+                                    font: GoogleFonts.plusJakartaSans(
                                       fontWeight: FontWeight.w600,
                                       fontStyle: AppTheme.of(context)
                                           .titleMedium
                                           .fontStyle,
                                     ),
-                                    color: Colors.white,
+                                    color: AppTheme.of(context).onPrimary,
                                     letterSpacing: 0,
                                     fontWeight: FontWeight.w600,
                                     fontStyle: AppTheme.of(context)
@@ -444,7 +444,7 @@ class _ForgotPasswordWidgetState extends State<ForgotPasswordWidget> {
                               style: AppTheme.of(context)
                                   .bodyMedium
                                   .override(
-                                    font: GoogleFonts.poppins(
+                                    font: GoogleFonts.plusJakartaSans(
                                       fontWeight: AppTheme.of(context)
                                           .bodyMedium
                                           .fontWeight,
@@ -476,7 +476,7 @@ class _ForgotPasswordWidgetState extends State<ForgotPasswordWidget> {
                                 style: AppTheme.of(context)
                                     .bodyMedium
                                     .override(
-                                      font: GoogleFonts.poppins(
+                                      font: GoogleFonts.plusJakartaSans(
                                         fontWeight: FontWeight.w600,
                                         fontStyle: AppTheme.of(context)
                                             .bodyMedium

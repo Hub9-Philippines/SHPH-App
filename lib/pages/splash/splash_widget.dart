@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
@@ -42,9 +43,9 @@ class _SplashWidgetState extends State<SplashWidget> {
 
       if (!mounted) return;
       if (hasCompletedOnboarding) {
-        // Go to sign options if onboarding is done
+        // Go to the merged sign-in screen (welcome absorbed into signin)
         context.goNamed(
-          SignOptionsWidget.routeName,
+          SigninWidget.routeName,
           extra: <String, dynamic>{
             '__transition_info__': const TransitionInfo(
               hasTransition: true,
@@ -89,34 +90,50 @@ class _SplashWidgetState extends State<SplashWidget> {
         backgroundColor: AppTheme.of(context).primary,
         body: SafeArea(
           top: true,
-          child: Column(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Flexible(
-                child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Lottie.network(
-                      'https://lottie.host/602e7112-9c2a-44bc-b6c5-4701c93ed1ca/QNoV3E7bwP.json',
-                      width: 200,
-                      height: 200,
-                      fit: BoxFit.contain,
-                      animate: true,
-                    ),
-                  ],
+          child: SizedBox.expand(
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Lottie.network(
+                  'https://lottie.host/602e7112-9c2a-44bc-b6c5-4701c93ed1ca/QNoV3E7bwP.json',
+                  width: 200,
+                  height: 200,
+                  fit: BoxFit.contain,
+                  animate: true,
                 ),
-              ),
-              Lottie.network(
-                'https://lottie.host/b5fab63a-5e7f-44c8-81ba-c0ed419a96d5/xrUd8E401V.json',
-                width: 200,
-                height: 200,
-                fit: BoxFit.contain,
-                animate: true,
-              ),
-            ],
+                const SizedBox(height: 8),
+                Text(
+                  'SerbisyoHub PH',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.getFont(
+                    'Plus Jakarta Sans',
+                    color: AppTheme.of(context).onPrimary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 28,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Connecting Local Needs with Trusted Providers',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.getFont(
+                    'Plus Jakarta Sans',
+                    color: AppTheme.of(context).onPrimary.withValues(alpha: 0.85),
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 40),
+                Lottie.network(
+                  'https://lottie.host/b5fab63a-5e7f-44c8-81ba-c0ed419a96d5/xrUd8E401V.json',
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.contain,
+                  animate: true,
+                ),
+              ],
+            ),
           ),
         ),
       ),

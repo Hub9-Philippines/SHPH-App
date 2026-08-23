@@ -84,7 +84,7 @@ class _CallHistoryDetailsPageWidgetState extends State<CallHistoryDetailsPageWid
           title: Text(
             'Call Details',
             style: AppTheme.of(context).titleLarge.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
                 ),
           ),
           elevation: 0,
@@ -130,7 +130,7 @@ class _CallHistoryDetailsPageWidgetState extends State<CallHistoryDetailsPageWid
                       Text(
                         widget.providerName ?? 'Unknown Provider',
                         style: AppTheme.of(context).headlineMedium.override(
-                              font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
                             ),
                       ),
                       const SizedBox(height: 8),
@@ -179,7 +179,7 @@ class _CallHistoryDetailsPageWidgetState extends State<CallHistoryDetailsPageWid
                         Text(
                           'Call Information',
                           style: AppTheme.of(context).titleMedium.override(
-                                font: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                                font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
                               ),
                         ),
                         const SizedBox(height: 16),
@@ -188,10 +188,10 @@ class _CallHistoryDetailsPageWidgetState extends State<CallHistoryDetailsPageWid
                           'Status',
                           widget.callStatus?.toUpperCase() ?? 'UNKNOWN',
                           statusColor: widget.callStatus == 'missed'
-                              ? Colors.red
+                              ? AppTheme.of(context).error
                               : widget.callStatus == 'incoming'
-                                  ? Colors.green
-                                  : Colors.blue,
+                                  ? AppTheme.of(context).success
+                                  : AppTheme.of(context).primary,
                         ),
                         const SizedBox(height: 12),
                         _buildDetailRow(
@@ -234,8 +234,8 @@ class _CallHistoryDetailsPageWidgetState extends State<CallHistoryDetailsPageWid
                             iconPadding: EdgeInsetsDirectional.zero,
                             color: AppTheme.of(context).primary,
                             textStyle: AppTheme.of(context).titleSmall.override(
-                                  font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                                  color: Colors.white,
+                                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
+                                  color: AppTheme.of(context).onPrimary,
                                 ),
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -260,7 +260,7 @@ class _CallHistoryDetailsPageWidgetState extends State<CallHistoryDetailsPageWid
                             iconPadding: EdgeInsetsDirectional.zero,
                             color: AppTheme.of(context).secondaryBackground,
                             textStyle: AppTheme.of(context).titleSmall.override(
-                                  font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                                   color: AppTheme.of(context).primaryText,
                                 ),
                             borderSide: BorderSide(

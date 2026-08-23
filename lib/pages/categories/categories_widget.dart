@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/components/back_button/back_button_widget.dart';
+import '/components/quick_book_bar.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/index.dart' show ServicesScreen;
 import '/theme/app_theme.dart';
 import '../../components/categories_widget/categories_widget.dart';
 import 'categories_model.dart';
@@ -43,9 +45,20 @@ class _CategoriesWidgetState extends State<CategoriesWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: const Color(0xFFF4F7FB),
+          backgroundColor: AppTheme.of(context).secondaryBackground,
+          bottomNavigationBar: QuickBookBar(
+            onUrgentAssistance: () => context.pushNamed(
+              ServicesScreen.routeName,
+              extra: <String, dynamic>{'emergencyMode': true},
+            ),
+          ),
           body: SafeArea(
-            child: Column(
+            child: RefreshIndicator(
+              color: AppTheme.of(context).primary,
+              onRefresh: () async {
+                safeSetState(() {});
+              },
+              child: Column(
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -68,7 +81,7 @@ class _CategoriesWidgetState extends State<CategoriesWidget> {
                             Text(
                               'All Categories',
                               style: AppTheme.of(context).titleLarge.override(
-                                    font: GoogleFonts.poppins(
+                                    font: GoogleFonts.plusJakartaSans(
                                       fontWeight: FontWeight.w700,
                                     ),
                                     color: const Color(0xFF14213D),
@@ -77,7 +90,7 @@ class _CategoriesWidgetState extends State<CategoriesWidget> {
                             Text(
                               'Browse every service category in one place.',
                               style: AppTheme.of(context).bodySmall.override(
-                                    font: GoogleFonts.poppins(),
+                                    font: GoogleFonts.plusJakartaSans(),
                                     color: const Color(0xFF64748B),
                                   ),
                             ),
@@ -118,5 +131,6 @@ class _CategoriesWidgetState extends State<CategoriesWidget> {
             ),
           ),
         ),
-      );
+      ),
+    );
 }

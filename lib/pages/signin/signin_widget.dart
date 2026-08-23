@@ -4,15 +4,17 @@ import 'package:flutter/services.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
 
+import '/auth/base_auth_user_provider.dart';
 import '/auth/post_auth_navigation_flow.dart';
-import '/auth/supabase_auth/auth_util.dart';
+import '/auth/auth_util.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/custom_functions.dart' as functions;
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
+import '/services/error_handler.dart';
 import '/theme/app_theme.dart';
-import '../../auth/supabase_auth/supabase_auth_manager.dart';
+import '../../auth/shph_auth/shph_auth_manager.dart';
 import 'signin_model.dart';
 
 export 'signin_model.dart';
@@ -47,7 +49,6 @@ class _SigninWidgetState extends State<SigninWidget>
     _model.phoneFieldTextController ??= TextEditingController();
     _model.phoneFieldFocusNode ??= FocusNode();
     _model.phoneFieldMask = MaskTextInputFormatter(mask: '+63##########');
-    handlePhoneAuthStateChanges(context);
     _model.emailTextFieldTextController ??= TextEditingController();
     _model.emailTextFieldFocusNode ??= FocusNode();
     _model.passwordTextFieldTextController ??= TextEditingController();
@@ -103,7 +104,7 @@ class _SigninWidgetState extends State<SigninWidget>
                     _buildTabBar(theme),
                     const SizedBox(height: 24),
                     SizedBox(
-                      height: 440,
+                      height: 520,
                       child: TabBarView(
                         controller: _model.tabBarController,
                         children: [
@@ -124,20 +125,21 @@ class _SigninWidgetState extends State<SigninWidget>
 
   Widget _buildHeader(AppThemeData theme) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            color: theme.primary,
-            borderRadius: BorderRadius.circular(16),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Image.asset(
+            'assets/images/welcome-graphic.png',
+            width: double.infinity,
+            height: 150,
+            fit: BoxFit.cover,
           ),
-          child: Icon(Icons.handyman_rounded, color: Colors.white, size: 28),
         ),
         const SizedBox(height: 20),
         Text(
-          'Welcome back!',
+          'Welcome to SerbisyoHub PH',
+          textAlign: TextAlign.center,
           style: theme.headlineLarge.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -145,8 +147,9 @@ class _SigninWidgetState extends State<SigninWidget>
         const SizedBox(height: 8),
         Text(
           'Sign in to continue with your home services.',
+          textAlign: TextAlign.center,
           style: theme.bodyMedium.copyWith(
-            color: const Color(0xFF889096),
+            color: AppTheme.of(context).secondaryText,
             fontSize: 15,
           ),
         ),
@@ -366,13 +369,11 @@ class _SigninWidgetState extends State<SigninWidget>
                         );
                       } catch (e) {
                         _model.isPhoneLoginLoading = false;
-                        _model.errorMessage =
-                            'An error occurred. Please try again.';
+                        final message = ErrorHandler.describeError(e);
+                        _model.errorMessage = message;
                         safeSetState(() {});
                         if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error: ${e.toString()}')),
-                        );
+                        ErrorHandler.showError(message);
                       }
                     },
           text: _model.isPhoneLoginLoading ? 'Signing In...' : 'Sign In',
@@ -387,7 +388,7 @@ class _SigninWidgetState extends State<SigninWidget>
             elevation: 0,
             borderRadius: BorderRadius.circular(12),
             disabledColor: theme.alternate,
-            disabledTextColor: theme.secondaryBackground,
+            disabledTextColor: theme.secondaryText,
           ),
         ),
         const SizedBox(height: 16),
@@ -396,30 +397,20 @@ class _SigninWidgetState extends State<SigninWidget>
         _SocialButton(
           icon: Icons.g_mobiledata_rounded,
           label: 'Continue with Google',
-          onTap: () async {
-            final user = await (authManager as SupabaseAuthManager)
-                .signInWithGoogle(context);
-            if (user != null && context.mounted) {
-              await PostAuthNavigationFlow().handlePostAuthNavigation(
-                context: context,
-                userId: user.uid!,
-              );
-            }
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Google sign-in coming soon')),
+            );
           },
         ),
         const SizedBox(height: 10),
         _SocialButton(
           icon: Icons.apple_rounded,
           label: 'Continue with Apple',
-          onTap: () async {
-            final user = await (authManager as SupabaseAuthManager)
-                .signInWithApple(context);
-            if (user != null && context.mounted) {
-              await PostAuthNavigationFlow().handlePostAuthNavigation(
-                context: context,
-                userId: user.uid!,
-              );
-            }
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Apple sign-in coming soon')),
+            );
           },
         ),
         const SizedBox(height: 12),
@@ -624,7 +615,7 @@ class _SigninWidgetState extends State<SigninWidget>
                       try {
                         GoRouter.of(context).prepareAuthEvent();
                         final user = await (authManager
-                                as SupabaseAuthManager)
+                                as ShphAuthManager)
                             .signInWithEmail(
                           context,
                           _model.emailTextFieldTextController.text,
@@ -644,13 +635,11 @@ class _SigninWidgetState extends State<SigninWidget>
                         );
                       } catch (e) {
                         _model.isEmailLoginLoading = false;
-                        _model.errorMessage =
-                            'An error occurred. Please try again.';
+                        final message = ErrorHandler.describeError(e);
+                        _model.errorMessage = message;
                         safeSetState(() {});
                         if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error: ${e.toString()}')),
-                        );
+                        ErrorHandler.showError(message);
                       }
                     },
           text: _model.isEmailLoginLoading ? 'Signing In...' : 'Sign In',
@@ -665,7 +654,7 @@ class _SigninWidgetState extends State<SigninWidget>
             elevation: 0,
             borderRadius: BorderRadius.circular(12),
             disabledColor: theme.alternate,
-            disabledTextColor: theme.secondaryBackground,
+            disabledTextColor: theme.secondaryText,
           ),
         ),
         const SizedBox(height: 16),
@@ -674,30 +663,20 @@ class _SigninWidgetState extends State<SigninWidget>
         _SocialButton(
           icon: Icons.g_mobiledata_rounded,
           label: 'Continue with Google',
-          onTap: () async {
-            final user = await (authManager as SupabaseAuthManager)
-                .signInWithGoogle(context);
-            if (user != null && context.mounted) {
-              await PostAuthNavigationFlow().handlePostAuthNavigation(
-                context: context,
-                userId: user.uid!,
-              );
-            }
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Google sign-in coming soon')),
+            );
           },
         ),
         const SizedBox(height: 10),
         _SocialButton(
           icon: Icons.apple_rounded,
           label: 'Continue with Apple',
-          onTap: () async {
-            final user = await (authManager as SupabaseAuthManager)
-                .signInWithApple(context);
-            if (user != null && context.mounted) {
-              await PostAuthNavigationFlow().handlePostAuthNavigation(
-                context: context,
-                userId: user.uid!,
-              );
-            }
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Apple sign-in coming soon')),
+            );
           },
         ),
         const SizedBox(height: 12),
@@ -725,7 +704,7 @@ class _SigninWidgetState extends State<SigninWidget>
               style: theme.bodyMedium.copyWith(color: theme.secondaryText),
             ),
             GestureDetector(
-              onTap: () => context.goNamed(SignOptionsWidget.routeName),
+              onTap: () => context.goNamed(SignupWidget.routeName),
               child: Text(
                 'Sign Up',
                 style: theme.bodyMedium.copyWith(

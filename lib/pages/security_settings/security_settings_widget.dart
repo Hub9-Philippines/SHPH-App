@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/backend/supabase/supabase.dart';
+import '/api/resources/auth_api.dart';
+import '/api/resources/sessions_api.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/logging_service.dart';
@@ -26,15 +27,12 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _mfaCodeController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  List<UserIdentity> _sessions = [];
+  List<Map<String, dynamic>> _sessions = [];
   bool _isLoadingSessions = true;
   bool _isChangingPassword = false;
   bool _isProcessingMfa = false;
-  String? _mfaQRCode;
-  String? _mfaFactorId;
 
   @override
   void initState() {
@@ -50,7 +48,6 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
     _currentPasswordController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
-    _mfaCodeController.dispose();
     super.dispose();
   }
 
@@ -61,13 +58,20 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
 
     setState(() => _isChangingPassword = true);
     try {
-      final response = await SupaFlow.client.auth.updateUser(
-        UserAttributes(password: _newPasswordController.text.trim()),
-      );
+      // SHPH API does not expose a change-password-with-current-password
+      // endpoint; trigger a password reset email instead.
+      final email = await _getUserEmail();
+      if (email.isEmpty) {
+        throw Exception('Unable to determine account email');
+      }
+      await ShphAuthApi.instance.requestPasswordReset(email: email);
 
-      if (response.user != null && mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Password changed successfully')),
+          const SnackBar(
+            content: Text(
+                'Password reset link sent to your email. Use it to set a new password.'),
+          ),
         );
         _currentPasswordController.clear();
         _newPasswordController.clear();
@@ -92,15 +96,32 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
     }
   }
 
+  Future<String> _getUserEmail() async {
+    try {
+      final data = await ShphAuthApi.instance.getCurrentUser();
+      final user = data['user'] is Map<String, dynamic>
+          ? data['user'] as Map<String, dynamic>
+          : data;
+      return (user['email'] ?? data['email'] ?? '').toString();
+    } catch (e) {
+      return '';
+    }
+  }
+
   Future<void> _loadSessions() async {
     try {
-      final response = await SupaFlow.client.auth.getUser();
+      final response = await ShphSessionsApi.instance.listSessions();
       if (!mounted) {
         return;
       }
 
+      final sessions = response['sessions'] as List? ?? response['results'] as List?;
       setState(() {
-        _sessions = response.user?.identities ?? [];
+        _sessions = sessions == null
+            ? const []
+            : List<Map<String, dynamic>>.from(
+                sessions.whereType<Map<String, dynamic>>(),
+              );
         _isLoadingSessions = false;
       });
     } catch (e, stackTrace) {
@@ -117,22 +138,9 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
   }
 
   Future<void> _checkMFAStatus() async {
-    try {
-      final response = await SupaFlow.client.auth.mfa.listFactors();
-      final hasTotpFactor = response.all.any((f) => f.factorType == 'totp');
-      if (mounted) {
-        setState(() => _model.twoFactorEnabled = hasTotpFactor);
-      }
-    } catch (e, stackTrace) {
-      LoggingService.error(
-        'Error checking MFA status',
-        tag: 'SecuritySettings',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      if (mounted) {
-        setState(() => _model.twoFactorEnabled = false);
-      }
+    // SHPH API has no TOTP MFA management endpoint; leave disabled.
+    if (mounted) {
+      setState(() => _model.twoFactorEnabled = false);
     }
   }
 
@@ -143,29 +151,14 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
 
     setState(() => _isProcessingMfa = true);
     try {
-      final user = SupaFlow.client.auth.currentUser;
-      if (user == null) {
-        throw Exception('User not authenticated');
+      // SHPH API does not expose TOTP MFA enrollment; notify user.
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('2FA enrollment is not available yet.'),
+          ),
+        );
       }
-
-      final response = await SupaFlow.client.auth.mfa.enroll(
-        factorType: FactorType.totp,
-        issuer: 'SerbisyoHubPH',
-      );
-
-      if (response.totp?.qrCode == null) {
-        throw Exception('Unable to generate QR code for 2FA setup');
-      }
-
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        _mfaQRCode = response.totp?.qrCode;
-        _mfaFactorId = response.id;
-      });
-      _showMFAEnrollmentDialog();
     } catch (e, stackTrace) {
       LoggingService.error(
         'Error enrolling MFA',
@@ -186,64 +179,6 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
     }
   }
 
-  Future<void> _verifyAndEnableMFA() async {
-    final factorId = _mfaFactorId;
-    final code = _mfaCodeController.text.trim();
-    if (factorId == null) {
-      return;
-    }
-    if (code.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter the verification code')),
-      );
-      return;
-    }
-
-    setState(() => _isProcessingMfa = true);
-    try {
-      final challenge = await SupaFlow.client.auth.mfa.challenge(
-        factorId: factorId,
-      );
-
-      await SupaFlow.client.auth.mfa.verify(
-        factorId: factorId,
-        challengeId: challenge.id,
-        code: code,
-      );
-
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        _model.twoFactorEnabled = true;
-        _mfaQRCode = null;
-        _mfaFactorId = null;
-      });
-      _mfaCodeController.clear();
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('2FA enabled successfully')),
-      );
-    } catch (e, stackTrace) {
-      LoggingService.error(
-        'Error verifying MFA',
-        tag: 'SecuritySettings',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Invalid verification code: $e')),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isProcessingMfa = false);
-      }
-    }
-  }
-
   Future<void> _disableMFA() async {
     if (_isProcessingMfa) {
       return;
@@ -251,18 +186,12 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
 
     setState(() => _isProcessingMfa = true);
     try {
-      final response = await SupaFlow.client.auth.mfa.listFactors();
-      final totpFactor = response.all.firstWhere(
-        (f) => f.factorType == 'totp',
-        orElse: () => throw Exception('No TOTP factor found'),
-      );
-
-      await SupaFlow.client.auth.mfa.unenroll(totpFactor.id);
-
+      // SHPH API does not expose TOTP MFA management.
       if (mounted) {
-        setState(() => _model.twoFactorEnabled = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('2FA disabled successfully')),
+          const SnackBar(
+            content: Text('2FA management is not available yet.'),
+          ),
         );
       }
     } catch (e, stackTrace) {
@@ -290,97 +219,6 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
     } else {
       await _disableMFA();
     }
-  }
-
-  void _showMFAEnrollmentDialog() {
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text(
-          'Setup 2FA',
-          style: AppTheme.of(context).titleMedium.override(
-                font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                color: const Color(0xFF14213D),
-              ),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Scan this QR code with your authenticator app, then enter the 6-digit code to finish setup.',
-                textAlign: TextAlign.center,
-                style: AppTheme.of(context).bodyMedium.override(
-                      font: GoogleFonts.poppins(),
-                      color: const Color(0xFF64748B),
-                    ),
-              ),
-              const SizedBox(height: 16),
-              if (_mfaQRCode != null)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: Image.network(
-                    _mfaQRCode!,
-                    width: 220,
-                    height: 220,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              const SizedBox(height: 18),
-              TextField(
-                controller: _mfaCodeController,
-                keyboardType: TextInputType.number,
-                maxLength: 6,
-                decoration: InputDecoration(
-                  labelText: 'Verification code',
-                  hintText: '123456',
-                  filled: true,
-                  fillColor: const Color(0xFFF8FAFC),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(18),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(18),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(18),
-                    borderSide: BorderSide(color: AppTheme.of(context).primary),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: _isProcessingMfa
-                ? null
-                : () {
-                    _mfaCodeController.clear();
-                    setState(() {
-                      _mfaQRCode = null;
-                      _mfaFactorId = null;
-                    });
-                    Navigator.of(dialogContext).pop();
-                  },
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: _isProcessingMfa ? null : _verifyAndEnableMFA,
-            child: _isProcessingMfa
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('Verify & Enable'),
-          ),
-        ],
-      ),
-    );
   }
 
   String _formatDate(String dateString) {
@@ -417,16 +255,16 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: const Color(0xFFF4F7FB),
+          backgroundColor: AppTheme.of(context).secondaryBackground,
           body: SafeArea(
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               children: [
                 Row(
                   children: [
-                    Material(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(18),
+                      Material(
+                        color: AppTheme.of(context).primaryBackground,
+                        borderRadius: BorderRadius.circular(18),
                       child: wrapWithModel(
                         model: _model.backButtonModel,
                         updateCallback: () => safeSetState(() {}),
@@ -441,17 +279,17 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                           Text(
                             'Security',
                             style: AppTheme.of(context).titleLarge.override(
-                                  font: GoogleFonts.poppins(
+                                  font: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.w700,
                                   ),
-                                  color: const Color(0xFF14213D),
+                                  color: AppTheme.of(context).primaryText,
                                 ),
                           ),
                           Text(
                             'Protect your account, password, and sign-in access.',
                             style: AppTheme.of(context).bodySmall.override(
-                                  font: GoogleFonts.poppins(),
-                                  color: const Color(0xFF64748B),
+                                  font: GoogleFonts.plusJakartaSans(),
+                                  color: AppTheme.of(context).secondaryText,
                                 ),
                           ),
                         ],
@@ -541,12 +379,12 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                               ),
                             ),
                             child: _isChangingPassword
-                                ? const SizedBox(
+                                ? SizedBox(
                                     width: 20,
                                     height: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      color: Colors.white,
+                                      color: AppTheme.of(context).onPrimary,
                                     ),
                                   )
                                 : Text(
@@ -554,10 +392,10 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                                     style: AppTheme.of(context)
                                         .titleSmall
                                         .override(
-                                          font: GoogleFonts.poppins(
+                                          font: GoogleFonts.plusJakartaSans(
                                             fontWeight: FontWeight.w700,
                                           ),
-                                          color: Colors.white,
+                                          color: AppTheme.of(context).onPrimary,
                                         ),
                                   ),
                           ),
@@ -660,7 +498,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                   Text(
                     'Keep your account protected',
                     style: AppTheme.of(context).titleMedium.override(
-                          font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                          font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                           color: Colors.white,
                         ),
                   ),
@@ -668,7 +506,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                   Text(
                     'Manage password strength, 2FA, and recent account access in one place.',
                     style: AppTheme.of(context).bodySmall.override(
-                          font: GoogleFonts.poppins(),
+                          font: GoogleFonts.plusJakartaSans(),
                           color: Colors.white.withValues(alpha: 0.84),
                         ),
                   ),
@@ -691,8 +529,8 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
             child: Text(
               title,
               style: AppTheme.of(context).labelLarge.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                    color: const Color(0xFF64748B),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+                    color: AppTheme.of(context).secondaryText,
                   ),
             ),
           ),
@@ -700,15 +538,9 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
             width: double.infinity,
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppTheme.of(context).primaryBackground,
               borderRadius: BorderRadius.circular(26),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x12000000),
-                  blurRadius: 18,
-                  offset: Offset(0, 10),
-                ),
-              ],
+              boxShadow: AppThemeData.shadowCard,
             ),
             child: child,
           ),
@@ -732,14 +564,14 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
           labelText: label,
           hintText: hint,
           filled: true,
-          fillColor: const Color(0xFFF8FAFC),
+          fillColor: AppTheme.of(context).surfaceAlt,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(18),
-            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            borderSide: BorderSide(color: AppTheme.of(context).border),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(18),
-            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            borderSide: BorderSide(color: AppTheme.of(context).border),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(18),
@@ -787,57 +619,57 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: AppTheme.of(context).titleSmall.override(
-                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                        color: const Color(0xFF14213D),
-                      ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: AppTheme.of(context).bodySmall.override(
-                        font: GoogleFonts.poppins(),
-                        color: const Color(0xFF64748B),
-                      ),
-                ),
-              ],
+                  Text(
+                    title,
+                    style: AppTheme.of(context).titleSmall.override(
+                          font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+                          color: AppTheme.of(context).primaryText,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: AppTheme.of(context).bodySmall.override(
+                          font: GoogleFonts.plusJakartaSans(),
+                          color: AppTheme.of(context).secondaryText,
+                        ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          if (trailing != null) trailing,
+            if (trailing != null) trailing,
         ],
       );
 
   Widget _buildEmptySessions() => Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
+          color: AppTheme.of(context).surfaceAlt,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          border: Border.all(color: AppTheme.of(context).border),
         ),
         child: Text(
           'No active sessions were returned for this account yet.',
           style: AppTheme.of(context).bodyMedium.override(
-                font: GoogleFonts.poppins(),
-                color: const Color(0xFF64748B),
+                font: GoogleFonts.plusJakartaSans(),
+                color: AppTheme.of(context).secondaryText,
               ),
         ),
       );
 
   Widget _buildSessionCard({
-    required UserIdentity session,
+    required Map<String, dynamic> session,
     required bool isCurrent,
   }) =>
       Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
+          color: AppTheme.of(context).surfaceAlt,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isCurrent
                 ? AppTheme.of(context).primary.withValues(alpha: 0.20)
-                : const Color(0xFFE2E8F0),
+                : AppTheme.of(context).border,
           ),
         ),
         child: Row(
@@ -849,7 +681,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
               decoration: BoxDecoration(
                 color: isCurrent
                     ? AppTheme.of(context).primary.withValues(alpha: 0.12)
-                    : Colors.white,
+                    : AppTheme.of(context).primaryBackground,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(
@@ -868,10 +700,10 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                         child: Text(
                           isCurrent ? 'Current device' : 'Other sign-in',
                           style: AppTheme.of(context).titleSmall.override(
-                                font: GoogleFonts.poppins(
+                                font: GoogleFonts.plusJakartaSans(
                                   fontWeight: FontWeight.w700,
                                 ),
-                                color: const Color(0xFF14213D),
+                                color: AppTheme.of(context).primaryText,
                               ),
                         ),
                       ),
@@ -888,7 +720,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                           child: Text(
                             'Active now',
                             style: AppTheme.of(context).labelSmall.override(
-                                  font: GoogleFonts.poppins(
+                                  font: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.w700,
                                   ),
                                   color: const Color(0xFF0F9D58),
@@ -899,19 +731,24 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    session.provider,
+                    session['provider']?.toString() ??
+                        session['device_name']?.toString() ??
+                        'Unknown device',
                     style: AppTheme.of(context).bodyMedium.override(
-                          font: GoogleFonts.poppins(),
+                          font: GoogleFonts.plusJakartaSans(),
                           color: const Color(0xFF334155),
                         ),
                   ),
-                  if ((session.createdAt ?? '').isNotEmpty) ...[
+                  if ((session['created_at']?.toString() ??
+                              session['createdAt']?.toString() ??
+                              '')
+                          .isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(
-                      'Last active ${_formatDate(session.createdAt!)}',
+                      'Last active ${_formatDate(session['created_at']?.toString() ?? session['createdAt']?.toString() ?? '')}',
                       style: AppTheme.of(context).bodySmall.override(
-                            font: GoogleFonts.poppins(),
-                            color: const Color(0xFF64748B),
+                            font: GoogleFonts.plusJakartaSans(),
+                            color: AppTheme.of(context).secondaryText,
                           ),
                     ),
                   ],

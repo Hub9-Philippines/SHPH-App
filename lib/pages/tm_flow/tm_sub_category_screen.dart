@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import '/components/screen_header.dart';
 import '/models/service_listing.dart';
 import '/theme/app_theme.dart';
 import '../booking_funnel/widgets/booking_flow_route.dart';
@@ -37,86 +38,78 @@ class _TMSubCategoryView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
-      appBar: AppBar(
-        backgroundColor: theme.primaryBackground,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.arrow_back_rounded),
-        ),
-        title: Text(
-          'Choose a Job Type',
-          style: theme.titleLarge.override(
-            font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-          ),
-        ),
-      ),
       body: SafeArea(
         top: false,
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: theme.secondaryBackground,
-                  borderRadius: BorderRadius.circular(28),
-                  border: Border.all(color: theme.alternate),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: theme.primary.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        'Time-Material flow',
-                        style: theme.labelMedium.override(
-                          color: theme.primary,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Text(
-                      controller.selectedServiceLabel,
-                      style: theme.headlineSmall.override(
-                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Pick the closest job type so we can give a tighter estimate before searching for nearby providers.',
-                      style: theme.bodyMedium.override(
-                        color: theme.secondaryText,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
+            const ScreenHeader(title: 'Choose a Job Type'),
             Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                itemCount: controller.subCategories.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final option = controller.subCategories[index];
-                  return _TMSubCategoryCard(
-                    option: option,
-                    onTap: () => _openEstimate(context, controller, option),
-                  );
-                },
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: theme.secondaryBackground,
+                        borderRadius: BorderRadius.circular(28),
+                        border: Border.all(color: theme.alternate),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: theme.primary.withValues(alpha: 0.10),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              'Time-Material flow',
+                              style: theme.labelMedium.override(
+                                color: theme.primary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          Text(
+                            controller.selectedServiceLabel,
+                            style: theme.headlineSmall.override(
+                              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Pick the closest job type so we can give a tighter estimate before searching for nearby providers.',
+                            style: theme.bodyMedium.override(
+                              color: theme.secondaryText,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Expanded(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                      itemCount: controller.subCategories.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final option = controller.subCategories[index];
+                        return _TMSubCategoryCard(
+                          option: option,
+                          onTap: () => _openEstimate(context, controller, option),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -206,7 +199,7 @@ class _TMSubCategoryCard extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF6FBFF),
+                        color: theme.surfaceAlt,
                         borderRadius: BorderRadius.circular(999),
                         border: Border.all(
                           color: theme.primary.withValues(alpha: 0.16),

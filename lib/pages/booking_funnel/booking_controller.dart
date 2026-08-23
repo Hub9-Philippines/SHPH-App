@@ -107,6 +107,37 @@ class BookingFlowController extends ChangeNotifier {
     notifyListeners();
   }
 
+  // --- Checkout spine (spec: service-search-workflow) ---
+
+  int checkoutStep = 0;
+
+  static const int checkoutStepCount = 3;
+
+  void goToStep(int step) {
+    checkoutStep = step.clamp(0, checkoutStepCount - 1);
+    notifyListeners();
+  }
+
+  bool get onFirstCheckoutStep => checkoutStep == 0;
+
+  void setLandmarks(String value) {
+    _draft = _draft.copyWith(
+      address: BookingAddress(
+        label: _draft.address.label,
+        line1: _draft.address.line1,
+        city: _draft.address.city,
+        instructions: value.trim().isEmpty ? null : value.trim(),
+      ),
+      landmarks: value,
+    );
+    notifyListeners();
+  }
+
+  void setRequireArrivalCode(bool value) {
+    _draft = _draft.copyWith(requireArrivalCode: value);
+    notifyListeners();
+  }
+
   void setAddress(BookingAddress address) {
     _draft = _draft.copyWith(address: address);
     notifyListeners();
@@ -155,7 +186,9 @@ class BookingFlowController extends ChangeNotifier {
   String get paymentLabel => switch (_draft.paymentMethod) {
         BookingPaymentMethod.gcash => 'GCash',
         BookingPaymentMethod.card => 'Card',
-        BookingPaymentMethod.cod => 'COD',
+        BookingPaymentMethod.maya => 'Maya',
+        BookingPaymentMethod.qrPh => 'QR Ph',
+        BookingPaymentMethod.cod => 'Cash',
       };
 
   String get cleaningTypeLabel => switch (_draft.cleaningType) {

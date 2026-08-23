@@ -357,7 +357,7 @@ class _CheckoutSheet extends StatelessWidget {
                   Text(
                     title,
                     style: theme.titleMedium.override(
-                      font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                      font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -475,7 +475,7 @@ class _CheckoutSheet extends StatelessWidget {
                   },
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.primary,
-              foregroundColor: Colors.white,
+              foregroundColor: theme.onPrimary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(18),
               ),
@@ -483,7 +483,7 @@ class _CheckoutSheet extends StatelessWidget {
             child: Text(
               buttonLabel,
               style: theme.titleMedium.override(
-                color: Colors.white,
+                color: theme.onPrimary,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -558,7 +558,7 @@ class _MatchingWaitingSheet extends StatelessWidget {
         Text(
           draft.serviceTitle ?? 'Service request',
           style: theme.titleMedium.override(
-            font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+            font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
           ),
         ),
         const SizedBox(height: 6),
@@ -620,7 +620,7 @@ class _MatchingWaitingSheet extends StatelessWidget {
               'Return to live matching',
               style: theme.titleSmall.override(
                 fontWeight: FontWeight.w700,
-                color: Colors.white,
+                color: theme.onPrimary,
               ),
             ),
           ),

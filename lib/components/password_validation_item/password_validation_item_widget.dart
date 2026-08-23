@@ -78,7 +78,7 @@ class _PasswordValidationItemWidgetState
           Expanded(
             child: AnimatedDefaultTextStyle(
               style: AppTheme.of(context).bodySmall.override(
-                    font: GoogleFonts.poppins(
+                    font: GoogleFonts.plusJakartaSans(
                       fontWeight:
                           AppTheme.of(context).bodySmall.fontWeight,
                       fontStyle:

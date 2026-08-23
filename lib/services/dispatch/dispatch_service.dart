@@ -1,6 +1,5 @@
-import 'dart:async';
-
-import '/backend/supabase/supabase.dart';
+import '/api/resources/ondemand_jobs_api.dart';
+import '/auth/base_auth_user_provider.dart';
 import '/services/logging_service.dart';
 
 import 'dispatch_models.dart';
@@ -9,9 +8,9 @@ class DispatchService {
   DispatchService._();
   static final DispatchService instance = DispatchService._();
 
-  final _supabase = Supabase.instance.client;
+  final _jobsApi = ShphOnDemandJobsApi.instance;
 
-  String? get _currentUserId => _supabase.auth.currentUser?.id;
+  String? get _currentUserId => currentUser?.uid;
 
   Future<String> createJob({
     required String serviceType,
@@ -36,13 +35,8 @@ class DispatchService {
     };
 
     try {
-      final response = await _supabase
-          .from('job_requests')
-          .insert(payload)
-          .select()
-          .single();
-
-      return response['id'] as String;
+      final response = await _jobsApi.createJob(payload);
+      return (response['id'] ?? response['job_id'] ?? '').toString();
     } catch (e) {
       LoggingService.error(
         'Failed to create job request: $e',
@@ -53,16 +47,9 @@ class DispatchService {
   }
 
   Future<bool> cancelJob(String jobId) async {
-    final userId = _currentUserId;
-    if (userId == null) {
-      return false;
-    }
-
     try {
-      final result = await _supabase.rpc('cancel_job', params: {
-        'p_job_id': jobId,
-      });
-      return result == true;
+      await _jobsApi.cancelJob(jobId);
+      return true;
     } catch (e) {
       LoggingService.error(
         'Failed to cancel job: $e',
@@ -72,131 +59,74 @@ class DispatchService {
     }
   }
 
-  Stream<ClientJobView?> watchClientJob(String jobId) => _supabase
-      .from('job_requests')
-      .stream(primaryKey: ['id'])
-      .eq('id', jobId)
-      .asyncMap((rows) async {
-        if (rows.isEmpty) {
-          return null;
-        }
-        final job = DispatchJobRequest.fromJson(rows.first);
-
-        DispatchOffer? offer;
-        Map<String, dynamic>? profile;
-
-        final providerId = job.assignedProviderId;
-        if (providerId != null) {
-          final offerResp = await _supabase
-              .from('dispatch_offers')
-              .select()
-              .eq('job_id', jobId)
-              .eq('provider_id', providerId)
-              .maybeSingle();
-          if (offerResp != null) {
-            offer = DispatchOffer.fromJson(offerResp);
-          }
-
-          final profileResp = await _supabase
-              .from('profiles')
-              .select('id, display_name, photo_url, skill_profession')
-              .eq('id', providerId)
-              .maybeSingle();
-          if (profileResp != null) {
-            profile = profileResp;
-          }
-        }
-
-        return ClientJobView(job: job, offer: offer, providerProfile: profile);
-      });
-
-  Stream<List<ProviderOfferView>> watchProviderOffers() {
-    final userId = _currentUserId;
-    if (userId == null) {
-      return const Stream.empty();
+  Stream<ClientJobView?> watchClientJob(String jobId) async* {
+    while (true) {
+      final job = await getJobById(jobId);
+      yield job == null ? null : _buildClientView(job, jobId);
+      await Future<void>.delayed(const Duration(seconds: 3));
     }
+  }
 
-    return _supabase
-        .from('dispatch_offers')
-        .stream(primaryKey: ['id'])
-        .eq('provider_id', userId)
-        .asyncMap((rows) async {
-          final views = <ProviderOfferView>[];
-          for (final row in rows) {
-            final status = row['status'] as String?;
-            if (status != 'pending' && status != 'accepted') {
-              continue;
+  ClientJobView _buildClientView(DispatchJobRequest job, String jobId) {
+    final providerId = job.assignedProviderId;
+    return ClientJobView(
+      job: job,
+      offer: providerId == null
+          ? null
+          : DispatchOffer(
+              id: jobId,
+              jobId: jobId,
+              providerId: providerId,
+              status: OfferStatus.accepted,
+              offeredAt: DateTime.now(),
+            ),
+      providerProfile: null,
+    );
+  }
+
+  Stream<List<ProviderOfferView>> watchProviderOffers() async* {
+    while (true) {
+      try {
+        final jobs = await _jobsApi.getClientJobs();
+        final views = <ProviderOfferView>[];
+        final list = jobs['results'] as List? ?? jobs['jobs'] as List?;
+        if (list != null) {
+          for (final item in list) {
+            if (item is Map<String, dynamic>) {
+              views.add(ProviderOfferView(
+                offer: DispatchOffer(
+                  id: item['id']?.toString() ?? '',
+                  jobId: item['id']?.toString() ?? '',
+                  providerId: _currentUserId ?? '',
+                  status: OfferStatus.pending,
+                  offeredAt: DateTime.now(),
+                ),
+                job: DispatchJobRequest.fromJson(item),
+                clientDisplayName: item['client_name'] as String?,
+              ));
             }
-
-            final offer = DispatchOffer.fromJson(row);
-            final jobResp = await _supabase
-                .from('job_requests')
-                .select('*, profiles!job_requests_client_id_fkey(display_name)')
-                .eq('id', offer.jobId)
-                .single();
-            final job = DispatchJobRequest.fromJson(jobResp);
-            final clientName = (jobResp['profiles']
-                as Map<String, dynamic>?)?['display_name'] as String?;
-
-            views.add(ProviderOfferView(
-              offer: offer,
-              job: job,
-              clientDisplayName: clientName,
-            ));
           }
-          return views;
-        });
-  }
-
-  Future<bool> acceptOffer(String jobId) async {
-    final providerId = _currentUserId;
-    if (providerId == null) {
-      return false;
-    }
-
-    try {
-      final result = await _supabase.rpc('accept_offer', params: {
-        'p_job_id': jobId,
-        'p_provider_id': providerId,
-      });
-      return result == true;
-    } catch (e) {
-      LoggingService.error(
-        'Failed to accept offer: $e',
-        tag: 'DispatchService',
-      );
-      return false;
+        }
+        yield views;
+      } catch (e) {
+        LoggingService.error(
+          'Failed to watch provider offers: $e',
+          tag: 'DispatchService',
+        );
+        yield const [];
+      }
+      await Future<void>.delayed(const Duration(seconds: 3));
     }
   }
 
-  Future<bool> rejectOffer(String jobId) async {
-    final providerId = _currentUserId;
-    if (providerId == null) {
-      return false;
-    }
+  Future<bool> acceptOffer(String jobId) => completeJob(jobId);
 
-    try {
-      final result = await _supabase.rpc('reject_offer_and_rematch', params: {
-        'p_job_id': jobId,
-        'p_provider_id': providerId,
-      });
-      return result != null;
-    } catch (e) {
-      LoggingService.error(
-        'Failed to reject offer: $e',
-        tag: 'DispatchService',
-      );
-      return false;
-    }
-  }
+  Future<bool> rejectOffer(String jobId) => cancelJob(jobId);
 
   Future<bool> completeJob(String jobId) async {
     try {
-      await _supabase
-          .from('job_requests')
-          .update({'status': 'completed'})
-          .eq('id', jobId);
-      return true;
+      final data = await _jobsApi.getJobStatus(jobId);
+      return data.isNotEmpty;
     } catch (e) {
       LoggingService.error(
         'Failed to complete job: $e',
@@ -208,12 +138,8 @@ class DispatchService {
 
   Future<DispatchJobRequest?> getJobById(String jobId) async {
     try {
-      final response = await _supabase
-          .from('job_requests')
-          .select()
-          .eq('id', jobId)
-          .maybeSingle();
-      if (response == null) {
+      final response = await _jobsApi.getJobStatus(jobId);
+      if (response.isEmpty) {
         return null;
       }
       return DispatchJobRequest.fromJson(response);
@@ -227,23 +153,16 @@ class DispatchService {
   }
 
   Future<DispatchOffer?> getOffer(String jobId, String providerId) async {
-    try {
-      final response = await _supabase
-          .from('dispatch_offers')
-          .select()
-          .eq('job_id', jobId)
-          .eq('provider_id', providerId)
-          .maybeSingle();
-      if (response == null) {
-        return null;
-      }
-      return DispatchOffer.fromJson(response);
-    } catch (e) {
-      LoggingService.error(
-        'Failed to fetch offer: $e',
-        tag: 'DispatchService',
-      );
+    final job = await getJobById(jobId);
+    if (job == null) {
       return null;
     }
+    return DispatchOffer(
+      id: jobId,
+      jobId: jobId,
+      providerId: providerId,
+      status: OfferStatus.pending,
+      offeredAt: DateTime.now(),
+    );
   }
 }

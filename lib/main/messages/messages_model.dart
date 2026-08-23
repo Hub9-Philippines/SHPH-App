@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '/app_state.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/chat_service.dart';
 import 'messages_widget.dart' show MessagesWidget;

@@ -2,97 +2,70 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/api/resources/users_api.dart';
+import '/auth/base_auth_user_provider.dart';
 import '/backend/supabase/database/tables/payment_methods.dart';
 import '/flutter_flow/lat_lng.dart';
 import '/index.dart';
 import '/main.dart';
 import '/models/service_listing.dart';
 import '/pages/booking_funnel/booking_models.dart';
+import '/pages/booking_funnel/booking_success_screen.dart';
 import '/pages/geographic_selection/geographic_selection_widget.dart';
 
-// Helper function to fetch user profile for role-based routing
+// Helper retained for potential future role checks; provider lifecycle removed.
 Future<Map<String, dynamic>?> _fetchUserProfile(String userId) async {
   try {
-    final response = await Supabase.instance.client
-        .from('profiles')
-        .select(
-            'role, verification_status, email, display_name, is_profile_complete, first_name, last_name')
-        .eq('id', userId)
-        .single();
-    return response;
+    final data = await ShphUsersApi.instance.getMe();
+    final profile = data['profile'] is Map<String, dynamic>
+        ? data['profile'] as Map<String, dynamic>
+        : data;
+    if (profile.isEmpty) return null;
+    return {
+      'role': profile['role'],
+      'is_provider': profile['is_provider'],
+      'is_client': profile['is_client'],
+      'email': profile['email'],
+      'display_name': profile['display_name'],
+    };
   } catch (e) {
     return null;
   }
 }
 
-// Determine pro user verification state based on 4-state lifecycle
-String? _getProUserRedirect(Map<String, dynamic> profile, String currentPath) {
-  final role = profile['role'] as String?;
-  final verificationStatus = profile['verification_status'] as String?;
-  final isVerified = profile['is_verified'] as bool? ?? false;
-  final isFaceVerified = profile['is_face_verified'] as bool? ?? false;
-  final email = profile['email'] as String?;
-  final displayName = profile['display_name'] as String?;
-  final firstName = profile['first_name'] as String?;
-  final lastName = profile['last_name'] as String?;
-  final isProfileComplete = profile['is_profile_complete'] as bool?;
+/// Client-only route gating. No provider routes exist in this app.
+class _RouteGates {
+  const _RouteGates({
+    this.requiresClient = false,
+  });
 
-  if (role != 'pro') {
-    return null; // Not a pro user, no special redirect
+  final bool requiresClient;
+
+  bool get requiresAuth => requiresClient;
+}
+
+const _RouteGates _noGates = _RouteGates();
+
+/// Paths that require a signed-in client (booking, favorites, etc.).
+const List<String> _clientOnlyPaths = [
+  '/booking',
+  '/booking-payment',
+  '/bookings',
+  '/write-review',
+  '/favorites',
+  '/my-reviews',
+  '/client-on-demand-jobs',
+  '/wallet',
+  '/payment-methods',
+  '/addresses',
+];
+
+_RouteGates _gatesForPath(String path) {
+  if (_clientOnlyPaths.any((p) => path.startsWith(p))) {
+    return const _RouteGates(requiresClient: true);
   }
-
-  // Allow access to verification-related pages without redirecting
-  final allowedVerificationPaths = [
-    '/pro-unverified-landing',
-    '/pro-verify-face',
-    '/pro-verify-doc',
-    '/pro-verification-progress',
-    '/pro-profile-setup-form',
-    '/face-verification',
-    '/pro-dashboard',
-  ];
-  if (allowedVerificationPaths.any((path) => currentPath.startsWith(path))) {
-    return null;
-  }
-
-  // State 1: incomplete profile - redirect to complete profile
-  // This applies when profile is not marked complete or missing essential fields
-  final hasName = (displayName != null && displayName.isNotEmpty) ||
-      (firstName != null && firstName.isNotEmpty) ||
-      (lastName != null && lastName.isNotEmpty);
-  final isProfileIncomplete =
-      email == null || !hasName || isProfileComplete != true;
-
-  // Redirect to profile setup if incomplete
-  if (isProfileIncomplete) {
-    return '/pro-profile-setup-form';
-  }
-
-  // State 2: unverified
-  if (verificationStatus == null || verificationStatus == 'unverified') {
-    return '/pro-unverified-landing';
-  }
-
-  // State 3: pending or reviewing
-  if (verificationStatus == 'pending' || verificationStatus == 'reviewing') {
-    return '/pro-verification-progress';
-  }
-
-  // State 4: fully verified - redirect to pro dashboard
-  // All verification checks must pass
-  if (verificationStatus == 'verified' && isVerified && isFaceVerified) {
-    return '/pro-dashboard';
-  }
-
-  // State 5: partially verified - still needs verification
-  if (verificationStatus == 'verified' && (!isVerified || !isFaceVerified)) {
-    return '/pro-unverified-landing';
-  }
-
-  // Default to unverified if status is unknown
-  return '/pro-unverified-landing';
+  return _noGates;
 }
 
 class AppRouter {
@@ -142,10 +115,12 @@ class AppRouter {
             name: SigninWidget.routeName,
             builder: (context, state) => const SigninWidget(),
           ),
+          // Legacy welcome route (/signOptions) retired — alias to merged
+          // sign-in so stale deep links land on the auth entry screen.
           GoRoute(
-            path: SignOptionsWidget.routePath,
-            name: SignOptionsWidget.routeName,
-            builder: (context, state) => const SignOptionsWidget(),
+            path: '/signOptions',
+            name: 'SignOptions',
+            builder: (context, state) => const SigninWidget(),
           ),
           GoRoute(
             path: HomeWidget.routePath,
@@ -255,9 +230,15 @@ class AppRouter {
             },
           ),
           GoRoute(
-            path: EKYCBeginWidget.routePath,
-            name: EKYCBeginWidget.routeName,
-            builder: (context, state) => const EKYCBeginWidget(),
+            path: ExploreWidget.routePath,
+            name: ExploreWidget.routeName,
+            builder: (context, state) {
+              final queryParams = state.uri.queryParameters;
+              if (queryParams.isEmpty) {
+                return const NavBarPage(initialPage: 'Explore');
+              }
+              return const ExploreWidget();
+            },
           ),
           GoRoute(
             path: SearchPageWidget.routePath,
@@ -397,6 +378,7 @@ class AppRouter {
                     state.uri.queryParameters['filter'],
                 initialSearch: extra?['initialSearch'] as String? ??
                     state.uri.queryParameters['search'],
+                emergencyMode: extra?['emergencyMode'] as bool? ?? false,
               );
             },
           ),
@@ -429,64 +411,9 @@ class AppRouter {
             },
           ),
           GoRoute(
-            path: DocumentScanWidget.routePath,
-            name: DocumentScanWidget.routeName,
-            builder: (context, state) => const DocumentScanWidget(),
-          ),
-          GoRoute(
-            path: FaceVerificationScreen.routePath,
-            name: FaceVerificationScreen.routeName,
-            builder: (context, state) => const FaceVerificationScreen(),
-          ),
-          GoRoute(
-            path: ProUnverifiedLandingWidget.routePath,
-            name: ProUnverifiedLandingWidget.routeName,
-            builder: (context, state) => const ProUnverifiedLandingWidget(),
-          ),
-          GoRoute(
-            path: VerificationReviewingWidget.routePath,
-            name: VerificationReviewingWidget.routeName,
-            builder: (context, state) => const VerificationReviewingWidget(),
-          ),
-          GoRoute(
-            path: ProDashboardWidget.routePath,
-            name: ProDashboardWidget.routeName,
-            builder: (context, state) => const ProDashboardWidget(),
-          ),
-          GoRoute(
-            path: ProEditProfileWidget.routePath,
-            name: ProEditProfileWidget.routeName,
-            builder: (context, state) => const ProEditProfileWidget(),
-          ),
-          GoRoute(
             path: EditProfileWidget.routePath,
             name: EditProfileWidget.routeName,
             builder: (context, state) => const EditProfileWidget(),
-          ),
-          GoRoute(
-            path: ServiceHistoryWidget.routePath,
-            name: ServiceHistoryWidget.routeName,
-            builder: (context, state) => const ServiceHistoryWidget(),
-          ),
-          GoRoute(
-            path: ReviewsRatingsWidget.routePath,
-            name: ReviewsRatingsWidget.routeName,
-            builder: (context, state) => const ReviewsRatingsWidget(),
-          ),
-          GoRoute(
-            path: HelpSupportWidget.routePath,
-            name: HelpSupportWidget.routeName,
-            builder: (context, state) => const HelpSupportWidget(),
-          ),
-          GoRoute(
-            path: AboutWidget.routePath,
-            name: AboutWidget.routeName,
-            builder: (context, state) => const AboutWidget(),
-          ),
-          GoRoute(
-            path: CreateServiceWidget.routePath,
-            name: CreateServiceWidget.routeName,
-            builder: (context, state) => const CreateServiceWidget(),
           ),
           GoRoute(
             path: FavoritesWidget.routePath,
@@ -527,6 +454,16 @@ class AppRouter {
                 paymentMethod: extra?['paymentMethod'] as PaymentMethodsRow?,
               );
             },
+          ),
+          GoRoute(
+            path: WalletWidget.routePath,
+            name: WalletWidget.routeName,
+            builder: (context, state) => const WalletWidget(),
+          ),
+          GoRoute(
+            path: OnDemandBookingWidget.routePath,
+            name: OnDemandBookingWidget.routeName,
+            builder: (context, state) => const OnDemandBookingWidget(),
           ),
           GoRoute(
             path: LanguageSettingsWidget.routePath,
@@ -582,7 +519,18 @@ class AppRouter {
           GoRoute(
             path: BookingSuccessWidget.routePath,
             name: BookingSuccessWidget.routeName,
-            builder: (context, state) => const BookingSuccessWidget(),
+            builder: (context, state) {
+              // Consolidated confirmation surface: the legacy
+              // BookingSuccessWidget is retired; both the payment flow and
+              // funnel land on the shared view.
+              final extra = state.extra as Map<String, dynamic>?;
+              return BookingConfirmationView(
+                bookingId: extra?['bookingId'] as String?,
+                serviceTitle: extra?['serviceName'] as String?,
+                scheduledText: extra?['scheduledText'] as String?,
+                totalLabel: extra?['totalLabel'] as String?,
+              );
+            },
           ),
           GoRoute(
             path: BookingDetailsWidget.routePath,
@@ -662,16 +610,177 @@ class AppRouter {
               );
             },
           ),
+          GoRoute(
+            path: ProviderProfileWidget.routePath,
+            name: ProviderProfileWidget.routeName,
+            builder: (context, state) => ProviderProfileWidget(
+              providerId: state.pathParameters['providerId'],
+            ),
+          ),
+          GoRoute(
+            path: CategoryDetailWidget.routePath,
+            name: CategoryDetailWidget.routeName,
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return CategoryDetailWidget(
+                categoryId: int.tryParse(
+                      state.pathParameters['categoryId'] ?? '') ??
+                  0,
+                categoryName: extra?['categoryName'] as String? ??
+                    state.uri.queryParameters['categoryName'] ??
+                    '',
+              );
+            },
+          ),
+          GoRoute(
+            path: RecommendationsWidget.routePath,
+            name: RecommendationsWidget.routeName,
+            builder: (context, state) => const RecommendationsWidget(),
+          ),
+          GoRoute(
+            path: ClientOnDemandJobsWidget.routePath,
+            name: ClientOnDemandJobsWidget.routeName,
+            builder: (context, state) => const ClientOnDemandJobsWidget(),
+          ),
+          GoRoute(
+            path: DisputesWidget.routePath,
+            name: DisputesWidget.routeName,
+            builder: (context, state) => const DisputesWidget(),
+          ),
+          GoRoute(
+            path: NotificationPreferencesWidget.routePath,
+            name: NotificationPreferencesWidget.routeName,
+            builder: (context, state) =>
+                const NotificationPreferencesWidget(),
+          ),
+          GoRoute(
+            path: ThemeSettingsWidget.routePath,
+            name: ThemeSettingsWidget.routeName,
+            builder: (context, state) => const ThemeSettingsWidget(),
+          ),
+          GoRoute(
+            path: SessionsWidget.routePath,
+            name: SessionsWidget.routeName,
+            builder: (context, state) => const SessionsWidget(),
+          ),
+          GoRoute(
+            path: SubcategoryWidget.routePath,
+            name: SubcategoryWidget.routeName,
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return SubcategoryWidget(
+                categoryId: int.tryParse(
+                      state.pathParameters['categoryId'] ?? '') ??
+                  0,
+                categoryName: extra?['categoryName'] as String? ??
+                    state.uri.queryParameters['categoryName'] ??
+                    '',
+              );
+            },
+          ),
+          GoRoute(
+            path: ReportProblemWidget.routePath,
+            name: ReportProblemWidget.routeName,
+            builder: (context, state) => const ReportProblemWidget(),
+          ),
+          GoRoute(
+            path: RoomListWidget.routePath,
+            name: RoomListWidget.routeName,
+            builder: (context, state) => const RoomListWidget(),
+          ),
+          GoRoute(
+            path: RoomCreateWidget.routePath,
+            name: RoomCreateWidget.routeName,
+            builder: (context, state) => const RoomCreateWidget(),
+          ),
+          GoRoute(
+            path: RoomJoinWidget.routePath,
+            name: RoomJoinWidget.routeName,
+            builder: (context, state) => const RoomJoinWidget(),
+          ),
+          GoRoute(
+            path: RoomDetailWidget.routePath,
+            name: RoomDetailWidget.routeName,
+            builder: (context, state) => RoomDetailWidget(
+              roomId: state.pathParameters['roomId'] ?? '',
+            ),
+          ),
+          GoRoute(
+            path: ProjectListWidget.routePath,
+            name: ProjectListWidget.routeName,
+            builder: (context, state) => const ProjectListWidget(),
+          ),
+          GoRoute(
+            path: ProjectCreateWidget.routePath,
+            name: ProjectCreateWidget.routeName,
+            builder: (context, state) => const ProjectCreateWidget(),
+          ),
+          GoRoute(
+            path: ProjectDetailWidget.routePath,
+            name: ProjectDetailWidget.routeName,
+            builder: (context, state) => ProjectDetailWidget(
+              projectId: state.pathParameters['projectId'] ?? '',
+            ),
+          ),
+          GoRoute(
+            path: WriteReviewWidget.routePath,
+            name: WriteReviewWidget.routeName,
+            builder: (context, state) => WriteReviewWidget(
+              bookingId:
+                  state.pathParameters['bookingId'] ?? '',
+              serviceName: state.extra != null
+                  ? (state.extra as Map)['serviceName'] as String?
+                  : state.uri.queryParameters['serviceName'],
+            ),
+          ),
+          GoRoute(
+            path: OtpPageWidget.routePath,
+            name: OtpPageWidget.routeName,
+            builder: (context, state) => OtpPageWidget(
+              initialPhone: state.uri.queryParameters['phone'],
+            ),
+          ),
+          GoRoute(
+            path: NotFoundWidget.routePath,
+            name: NotFoundWidget.routeName,
+            builder: (context, state) => const NotFoundWidget(),
+          ),
+          GoRoute(
+            path: EtaTrackingWidget.routePath,
+            name: EtaTrackingWidget.routeName,
+            builder: (context, state) => EtaTrackingWidget(
+              token: state.pathParameters['token'] ?? '',
+            ),
+          ),
+          GoRoute(
+            path: BiometricSetupWidget.routePath,
+            name: BiometricSetupWidget.routeName,
+            builder: (context, state) => const BiometricSetupWidget(),
+          ),
+          GoRoute(
+            path: CallPermissionWidget.routePath,
+            name: CallPermissionWidget.routeName,
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return CallPermissionWidget(
+                mediaType: extra?['mediaType'] as String? ??
+                    state.uri.queryParameters['mediaType'] ??
+                    'audio',
+                participantName: extra?['participantName'] as String? ??
+                    state.uri.queryParameters['participantName'],
+              );
+            },
+          ),
         ],
       );
 }
 
-// Custom redirect guard for role-based routing
+// Custom redirect guard: client-only app. Provider routes no longer exist;
+// legacy provider deep-links fall back to Home via unknown-route handling.
+// Only client-gated routes require a session.
 class RoleBasedRedirectGuard {
-  // Private constructor to prevent instantiation
   RoleBasedRedirectGuard._();
 
-  /// Check if user needs to be redirected based on their role and verification status
   static Future<String?> checkRedirect(
     dynamic appStateNotifier,
     GoRouterState state,
@@ -682,22 +791,19 @@ class RoleBasedRedirectGuard {
       return redirectLocation;
     }
 
-    // Role-based routing logic with 4-state pro account lifecycle
-    if (appStateNotifier.loggedIn) {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId != null) {
-        final userProfile = await _fetchUserProfile(userId);
-        if (userProfile != null) {
-          final currentPath = state.uri.toString();
-          final proRedirect = _getProUserRedirect(userProfile, currentPath);
+    final currentPath = state.uri.toString();
+    final gates = _gatesForPath(currentPath);
 
-          if (proRedirect != null) {
-            return proRedirect;
-          }
-        }
+    if (!appStateNotifier.loggedIn) {
+      if (gates.requiresAuth) {
+        return SigninWidget.routePath;
       }
+      return null;
     }
 
+    // No provider branching in the client app: all authenticated users stay
+    // on the client shell. Provider-account notice is handled in
+    // PostAuthNavigationFlow after sign-in.
     return null;
   }
 }

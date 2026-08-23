@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/auth/base_auth_user_provider.dart';
 import '/backend/supabase/database/tables/payment_methods.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -61,7 +61,7 @@ class _AddCardPaymentWidgetState extends State<AddCardPaymentWidget> {
       return;
     }
 
-    final userId = Supabase.instance.client.auth.currentUser?.id;
+    final userId = currentUser?.uid;
     if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('User not authenticated')),
@@ -149,7 +149,7 @@ class _AddCardPaymentWidgetState extends State<AddCardPaymentWidget> {
             title: Text(
               'Add Card',
               style: AppTheme.of(context).titleLarge.override(
-                    font: GoogleFonts.poppins(
+                    font: GoogleFonts.plusJakartaSans(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -171,7 +171,7 @@ class _AddCardPaymentWidgetState extends State<AddCardPaymentWidget> {
                       Text(
                         'Card Information',
                         style: AppTheme.of(context).titleMedium.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -331,7 +331,7 @@ class _AddCardPaymentWidgetState extends State<AddCardPaymentWidget> {
                           width: double.infinity,
                           color: AppTheme.of(context).primary,
                           textStyle: AppTheme.of(context).titleMedium.override(
-                                font: GoogleFonts.poppins(
+                                font: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.w600),
                                 color: AppTheme.of(context).primaryText,
                               ),

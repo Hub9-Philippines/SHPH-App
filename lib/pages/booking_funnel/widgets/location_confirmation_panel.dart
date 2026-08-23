@@ -70,7 +70,7 @@ class LocationConfirmationPanel extends StatelessWidget {
           Text(
             'Confirm service location',
             style: theme.titleMedium.override(
-              font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(height: 4),
@@ -159,7 +159,7 @@ class LocationConfirmationPanel extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size.fromHeight(56),
                     backgroundColor: theme.primary,
-                    foregroundColor: Colors.white,
+                    foregroundColor: theme.onPrimary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
                     ),
@@ -167,7 +167,7 @@ class LocationConfirmationPanel extends StatelessWidget {
                   child: Text(
                     'Continue',
                     style: theme.titleSmall.override(
-                      color: Colors.white,
+                      color: theme.onPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ),

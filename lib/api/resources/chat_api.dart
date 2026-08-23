@@ -43,6 +43,14 @@ class ShphChatApi {
     await _client.post('/api/chat/threads/$threadId/read/');
   }
 
+  Future<Map<String, dynamic>> initiateCall(Map<String, dynamic> payload) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/api/chat/calls/initiate/',
+      data: payload,
+    );
+    return response.data ?? {};
+  }
+
   Future<Map<String, dynamic>> getOrCreateThreadForBooking(
       String bookingId) async {
     final response = await _client.post<Map<String, dynamic>>(

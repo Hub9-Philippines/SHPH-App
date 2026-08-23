@@ -1,4 +1,3 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
 
 plugins {
@@ -7,6 +6,7 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Load properties cleanly using local scoping variables
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
@@ -21,8 +21,14 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    // Force Kotlin tasks to match your Java toolchain target compatibility
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
     defaultConfig {
@@ -36,10 +42,14 @@ android {
     signingConfigs {
         create("release") {
             if (keystorePropertiesFile.exists()) {
-                keyAlias = keystoreProperties["keyAlias"] as String?
-                keyPassword = keystoreProperties["keyPassword"] as String?
-                storePassword = keystoreProperties["storePassword"] as String?
-                storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+                storePassword = keystoreProperties.getProperty("storePassword")
+                
+                val storeFilePath = keystoreProperties.getProperty("storeFile")
+                if (!storeFilePath.isNullOrEmpty()) {
+                    storeFile = rootProject.file(storeFilePath)
+                }
             }
         }
     }
@@ -51,6 +61,7 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
+            
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -61,12 +72,11 @@ android {
     }
 }
 
-kotlin {
-    compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_11)
-    }
-}
-
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Corrected to the highest existing version for the 2.1.x line
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

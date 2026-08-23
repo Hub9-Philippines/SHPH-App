@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import '/components/screen_header.dart';
 import '/theme/app_theme.dart';
 import '../booking_funnel/widgets/booking_flow_route.dart';
 import 'tm_broadcast_screen.dart';
@@ -26,28 +27,17 @@ class TMEstimateScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
-      appBar: AppBar(
-        backgroundColor: theme.primaryBackground,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.arrow_back_rounded),
-        ),
-        title: Text(
-          'Estimate',
-          style: theme.titleLarge.override(
-            font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-          ),
-        ),
-      ),
       body: SafeArea(
         top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        child: Column(
+          children: [
+            const ScreenHeader(title: 'Estimate'),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(22),
@@ -84,7 +74,7 @@ class TMEstimateScreen extends StatelessWidget {
                     Text(
                       subCategory.title,
                       style: theme.headlineSmall.override(
-                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -99,7 +89,7 @@ class TMEstimateScreen extends StatelessWidget {
                       width: double.infinity,
                       padding: const EdgeInsets.all(18),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF6FBFF),
+                        color: theme.surfaceAlt,
                         borderRadius: BorderRadius.circular(22),
                         border: Border.all(
                           color: theme.primary.withValues(alpha: 0.18),
@@ -119,7 +109,7 @@ class TMEstimateScreen extends StatelessWidget {
                           Text(
                             subCategory.estimateLabel,
                             style: theme.displaySmall.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,
                               ),
                               color: theme.primaryText,
@@ -169,7 +159,7 @@ class TMEstimateScreen extends StatelessWidget {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: theme.primary,
-                    foregroundColor: Colors.white,
+                    foregroundColor: theme.onPrimary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
                     ),
@@ -177,14 +167,17 @@ class TMEstimateScreen extends StatelessWidget {
                   child: Text(
                     'Find Provider',
                     style: theme.titleMedium.override(
-                      color: Colors.white,
+                      color: theme.onPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
               ),
-            ],
-          ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

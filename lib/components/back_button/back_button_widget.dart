@@ -32,28 +32,30 @@ class _BackButtonWidgetState extends State<BackButtonWidget> {
   @override
   void dispose() {
     _model.maybeDispose();
-
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) => FlutterFlowIconButton(
-        borderRadius: 30,
-        buttonSize: 60,
-        hoverColor: const Color(0xFFD6D6D6),
-        hoverBorderColor: AppTheme.of(context).primaryText,
-        icon: const Icon(
-          Icons.chevron_left_rounded,
-          color: Color(0xFF525252),
-          size: 30,
-        ),
-        onPressed: () async {
-          if (context.canPop()) {
-            context.pop();
-          } else {
-            // Fallback to home if there's no route to pop to
-            context.goNamed('Home');
-          }
-        },
-      );
+  Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+
+    return FlutterFlowIconButton(
+      borderRadius: 30,
+      buttonSize: 60,
+      hoverColor: theme.alternate,
+      hoverBorderColor: theme.primaryText,
+      icon: Icon(
+        Icons.chevron_left_rounded,
+        color: theme.primaryText,
+        size: 30,
+      ),
+      onPressed: () async {
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.goNamed('Home');
+        }
+      },
+    );
+  }
 }

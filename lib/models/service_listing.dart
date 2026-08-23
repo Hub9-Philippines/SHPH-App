@@ -15,6 +15,9 @@ class ServiceListing {
     this.rating,
     this.thumbnail,
     this.reviewCount,
+    this.latitude,
+    this.longitude,
+    this.distanceKm,
     this.isTimeMaterial = false,
   });
 
@@ -34,6 +37,9 @@ class ServiceListing {
         rating: json['rating'] as String?,
         thumbnail: json['thumbnail'] as String?,
         reviewCount: json['review_count'] as int?,
+        latitude: (json['latitude'] as num?)?.toDouble(),
+        longitude: (json['longitude'] as num?)?.toDouble(),
+        distanceKm: (json['distance_km'] as num?)?.toDouble(),
         isTimeMaterial: json['is_time_material'] as bool? ?? false,
       );
 
@@ -52,6 +58,13 @@ class ServiceListing {
   final String? rating;
   final String? thumbnail;
   final int? reviewCount;
+  final double? latitude;
+  final double? longitude;
+
+  /// Server-computed distance in km (present when the fetch supplied the
+  /// user's location). Null means unknown — callers must not render a
+  /// placeholder.
+  final double? distanceKm;
   final bool isTimeMaterial;
 
   double? get ratingValue {

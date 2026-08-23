@@ -15,6 +15,11 @@ class ShphBooking {
     this.agreedPrice,
     this.totalPrice,
     this.createdAt,
+    this.arrivedAt,
+    this.startedAt,
+    this.clientAddress,
+    this.serviceLat,
+    this.serviceLng,
     this.serviceListing,
     this.clientProfile,
   });
@@ -34,6 +39,19 @@ class ShphBooking {
   final double? agreedPrice;
   final double? totalPrice;
   final String? createdAt;
+
+  /// Timestamp when the provider marked themselves as arrived (status →
+  /// arrived). Null until then.
+  final String? arrivedAt;
+
+  /// Timestamp when work actually began (status → in_progress).
+  final String? startedAt;
+
+  /// Server-derived service address (from the client's saved profile
+  /// addresses). Released by the API once the job is taken; may be null.
+  final String? clientAddress;
+  final double? serviceLat;
+  final double? serviceLng;
   final Map<String, dynamic>? serviceListing;
   final Map<String, dynamic>? clientProfile;
 
@@ -54,6 +72,11 @@ class ShphBooking {
       agreedPrice: _toDouble(json['agreed_price']),
       totalPrice: _toDouble(json['total_price']),
       createdAt: json['created_at'] as String?,
+      arrivedAt: json['arrived_at'] as String?,
+      startedAt: json['started_at'] as String?,
+      clientAddress: json['client_address'] as String?,
+      serviceLat: _toDouble(json['service_lat']),
+      serviceLng: _toDouble(json['service_lng']),
       serviceListing: json['service_listings'] as Map<String, dynamic>? ??
           json['service_listing'] as Map<String, dynamic>?,
       clientProfile: json['profiles'] as Map<String, dynamic>? ??
@@ -61,19 +84,24 @@ class ShphBooking {
     );
   }
 
+  /// Create payload for POST /api/services/bookings/.
+  ///
+  /// The deployed serializer requires `scheduled_at` (the working web client
+  /// always sends it and reads its field errors), so all three schedule keys
+  /// derive from the single [scheduledAt] value. `total_price` is readOnly
+  /// server-side and must NOT be sent.
   Map<String, dynamic> toCreateJson({
-    required int listingId,
-    String? scheduledDate,
-    String? scheduledTime,
+    required DateTime scheduledAt,
     String? notes,
-    double? totalPrice,
   }) {
     return {
-      'listing': listingId,
-      if (scheduledDate != null) 'scheduled_date': scheduledDate,
-      if (scheduledTime != null) 'scheduled_time': scheduledTime,
+      'listing': listing,
+      'scheduled_at': scheduledAt.toIso8601String(),
+      'scheduled_date':
+          '${scheduledAt.year.toString().padLeft(4, '0')}-${scheduledAt.month.toString().padLeft(2, '0')}-${scheduledAt.day.toString().padLeft(2, '0')}',
+      'scheduled_time':
+          '${scheduledAt.hour.toString().padLeft(2, '0')}:${scheduledAt.minute.toString().padLeft(2, '0')}:00',
       if (notes != null) 'notes': notes,
-      if (totalPrice != null) 'total_price': totalPrice,
     };
   }
 

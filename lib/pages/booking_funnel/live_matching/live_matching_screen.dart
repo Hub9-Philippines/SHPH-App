@@ -308,7 +308,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
         title: Text(
           'Cancel provider search?',
           style: theme.titleMedium.override(
-            font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+            font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
           ),
         ),
         content: Text(
@@ -944,6 +944,7 @@ class _AssignedProviderRouteMapState extends State<_AssignedProviderRouteMap> {
           clientLocation: widget.clientLocation,
           providerLocation: widget.providerLocation,
           providerPhoto: widget.pro['providerPhoto'] as String?,
+          bookingReference: widget.referenceId,
           shouldPopToHome: true,
         ),
       ),
@@ -1056,7 +1057,7 @@ class _AssignedProviderRouteMapState extends State<_AssignedProviderRouteMap> {
                                       widget.providerLocation,
                                     ]
                                   : _routePoints,
-                              color: const Color(0xFF1976D2),
+                              color: theme.primary,
                               width: 5,
                               jointType: JointType.round,
                               startCap: Cap.roundCap,
@@ -1167,7 +1168,7 @@ class _AssignedRouteTopBar extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.titleSmall.override(
-                            font: GoogleFonts.poppins(
+                            font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -1248,13 +1249,7 @@ class _AssignedRouteBottomSheet extends StatelessWidget {
         decoration: BoxDecoration(
           color: theme.primaryBackground.withValues(alpha: 0.98),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.12),
-              blurRadius: 24,
-              offset: const Offset(0, -8),
-            ),
-          ],
+          boxShadow: AppThemeData.shadowCard,
         ),
         child: ListView(
           controller: scrollController,
@@ -1301,7 +1296,7 @@ class _AssignedRouteBottomSheet extends StatelessWidget {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: theme.titleMedium.override(
-                                  font: GoogleFonts.poppins(
+                                  font: GoogleFonts.plusJakartaSans(
                                       fontWeight: FontWeight.w700),
                                 ),
                               ),
@@ -1744,13 +1739,7 @@ class _StatusBadge extends StatelessWidget {
                   ? theme.success.withValues(alpha: 0.30)
                   : Colors.white.withValues(alpha: 0.18),
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
+            boxShadow: AppThemeData.shadowCard,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1794,7 +1783,7 @@ class _StatusBadge extends StatelessWidget {
                     ? 'Provider assigned'
                     : 'Finding the nearest provider',
                 style: theme.titleMedium.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                 ),
               ),
               const SizedBox(height: 2),
@@ -1875,7 +1864,7 @@ class _GradientBar extends StatelessWidget {
 
   static const _stages = <_GradientStage>[
     _GradientStage(
-      color1: Color(0xFF368EFF),
+      color1: Color(0xFF1E3A8A),
       color2: Color(0xFF4FC3F7),
     ),
     _GradientStage(
@@ -2045,7 +2034,7 @@ class _SearchingSheet extends StatelessWidget {
           Text(
             'Searching nearby providers',
             style: theme.titleMedium.override(
-              font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(height: 6),
@@ -2300,7 +2289,7 @@ class _MatchedSheet extends StatelessWidget {
             onPressed: onBackHome,
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.primary,
-              foregroundColor: Colors.white,
+              foregroundColor: theme.onPrimary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(18),
               ),
@@ -2308,7 +2297,7 @@ class _MatchedSheet extends StatelessWidget {
             child: Text(
               'Back to Home',
               style: theme.titleMedium.override(
-                color: Colors.white,
+                color: theme.onPrimary,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -2405,7 +2394,7 @@ class _TimeoutSheet extends StatelessWidget {
             'Providers are busy, try again',
             textAlign: TextAlign.center,
             style: theme.titleMedium.override(
-              font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(height: 8),
@@ -2424,7 +2413,7 @@ class _TimeoutSheet extends StatelessWidget {
               onPressed: onAdjustBooking,
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.primary,
-                foregroundColor: Colors.white,
+                foregroundColor: theme.onPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),

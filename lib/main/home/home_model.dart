@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '/auth/supabase_auth/auth_util.dart';
-import '/backend/supabase/database/tables/notifications.dart';
+import '/auth/auth_util.dart';
 import '/components/categoriesgrid/categoriesgrid_widget.dart';
+import '../../app_state.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
+import '/services/notification_store.dart';
 import 'home_widget.dart' show HomeWidget;
 
 class HomeModel extends FlutterFlowModel<HomeWidget> {
@@ -34,11 +35,8 @@ class HomeModel extends FlutterFlowModel<HomeWidget> {
         return;
       }
 
-      final notifications = await NotificationsTable().queryRows(
-        queryFn: (q) => q.eq('user_id', currentUserUid),
-      );
-      FFAppState().notificationCount =
-          notifications.where((notification) => !notification.isRead).length;
+      await NotificationStore.instance.fetchNotifications();
+      FFAppState().notificationCount = NotificationStore.instance.unreadCount;
     } catch (e) {
       // On error, default to 0
       FFAppState().notificationCount = 0;

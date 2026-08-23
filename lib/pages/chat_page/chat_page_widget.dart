@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/theme/app_theme.dart';
 import 'chat_page_model.dart';
@@ -97,67 +96,47 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: const Color(0xFFF4F7FB),
+          backgroundColor: AppTheme.of(context).secondaryBackground,
           body: SafeArea(
             child: Column(
               children: [
-                _buildHeader(),
+                _buildHeader(context),
                 Expanded(
                   child: Container(
                     width: double.infinity,
                     margin: const EdgeInsets.fromLTRB(16, 0, 16, 0),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFFF8FBFF),
-                          Color(0xFFF2F7FB),
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
+                      color: AppTheme.of(context).primaryBackground,
                       borderRadius: BorderRadius.circular(28),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x12000000),
-                          blurRadius: 18,
-                          offset: Offset(0, 10),
-                        ),
-                      ],
+                      boxShadow: AppThemeData.shadowLg,
                     ),
-                    child: _buildConversationBody(),
+                    child: _buildConversationBody(context),
                   ),
                 ),
-                _buildComposer(),
+                _buildComposer(context),
               ],
             ),
           ),
         ),
       );
 
-  Widget _buildHeader() => Padding(
+  Widget _buildHeader(BuildContext context) => Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppTheme.of(context).primaryBackground,
             borderRadius: BorderRadius.circular(24),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x12000000),
-                blurRadius: 18,
-                offset: Offset(0, 10),
-              ),
-            ],
+            boxShadow: AppThemeData.shadowCard,
           ),
           child: Row(
             children: [
-              wrapWithModel(
-                model: _model.backButtonModel,
-                updateCallback: () => safeSetState(() {}),
-                child: const BackButtonWidget(),
+              IconButton(
+                onPressed: () => context.pop(),
+                icon: const Icon(Icons.arrow_back_rounded),
               ),
               const SizedBox(width: 10),
-              _buildAvatar(size: 52),
+              _buildAvatar(context, size: 52),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -166,10 +145,10 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                     Text(
                       widget.providerName ?? 'Conversation',
                       style: AppTheme.of(context).titleMedium.override(
-                            font: GoogleFonts.poppins(
+                            font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w700,
                             ),
-                            color: const Color(0xFF14213D),
+                            color: AppTheme.of(context).primaryText,
                           ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -180,8 +159,8 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                           ? 'Start the conversation'
                           : 'Connected to this thread',
                       style: AppTheme.of(context).bodySmall.override(
-                            font: GoogleFonts.poppins(),
-                            color: const Color(0xFF64748B),
+                            font: GoogleFonts.plusJakartaSans(),
+                            color: AppTheme.of(context).secondaryText,
                           ),
                     ),
                   ],
@@ -191,13 +170,13 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEAF6F2),
+                  color: AppTheme.of(context).primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
                   'Chat',
                   style: AppTheme.of(context).labelSmall.override(
-                        font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                        font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                         color: AppTheme.of(context).primary,
                       ),
                 ),
@@ -207,7 +186,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
         ),
       );
 
-  Widget _buildConversationBody() {
+  Widget _buildConversationBody(BuildContext context) {
     if (_model.isLoading) {
       return ListView.builder(
         padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
@@ -220,7 +199,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
             height: 54,
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.88),
+              color: AppTheme.of(context).primaryBackground.withValues(alpha: 0.88),
               borderRadius: BorderRadius.circular(22),
             ),
           ),
@@ -239,7 +218,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                 width: 76,
                 height: 76,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEAF6F2),
+                  color: AppTheme.of(context).primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Icon(
@@ -252,16 +231,16 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
               Text(
                 'No messages yet',
                 style: AppTheme.of(context).titleMedium.override(
-                      font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-                      color: const Color(0xFF14213D),
+                      font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+                      color: AppTheme.of(context).primaryText,
                     ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Send the first message to coordinate service details, arrival timing, or updates.',
                 style: AppTheme.of(context).bodyMedium.override(
-                      font: GoogleFonts.poppins(),
-                      color: const Color(0xFF64748B),
+                      font: GoogleFonts.plusJakartaSans(),
+                      color: AppTheme.of(context).secondaryText,
                     ),
                 textAlign: TextAlign.center,
               ),
@@ -296,7 +275,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                   Container(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
                     decoration: BoxDecoration(
-                      color: isMe ? AppTheme.of(context).primary : Colors.white,
+                      color: isMe ? AppTheme.of(context).primary : AppTheme.of(context).primaryBackground,
                       borderRadius: BorderRadius.only(
                         topLeft: const Radius.circular(22),
                         topRight: const Radius.circular(22),
@@ -306,7 +285,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                       boxShadow: [
                         BoxShadow(
                           blurRadius: 10,
-                          color: Colors.black.withValues(alpha: 0.06),
+                          color: AppTheme.of(context).primaryText.withValues(alpha: 0.06),
                           offset: const Offset(0, 6),
                         ),
                       ],
@@ -319,10 +298,10 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                           style: AppTheme.of(context)
                               .bodyMedium
                               .override(
-                                font: GoogleFonts.poppins(),
+                                font: GoogleFonts.plusJakartaSans(),
                                 color: isMe
-                                    ? Colors.white
-                                    : const Color(0xFF14213D),
+                                    ? AppTheme.of(context).secondaryBackground
+                                    : AppTheme.of(context).primaryText,
                               )
                               .copyWith(height: 1.4),
                         ),
@@ -333,12 +312,12 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                             Text(
                               message['time'] as String? ?? '',
                               style: AppTheme.of(context).labelSmall.override(
-                                    font: GoogleFonts.poppins(
+                                    font: GoogleFonts.plusJakartaSans(
                                       fontWeight: FontWeight.w500,
                                     ),
                                     color: isMe
-                                        ? Colors.white.withValues(alpha: 0.78)
-                                        : const Color(0xFF94A3B8),
+                                        ? AppTheme.of(context).secondaryBackground.withValues(alpha: 0.78)
+                                        : AppTheme.of(context).textTertiary,
                                   ),
                             ),
                             if (showStatus) ...[
@@ -346,13 +325,12 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                               Text(
                                 _statusLabel(message['status'] as String?),
                                 style: AppTheme.of(context).labelSmall.override(
-                                      font: GoogleFonts.poppins(
+                                      font: GoogleFonts.plusJakartaSans(
                                         fontWeight: FontWeight.w700,
                                       ),
                                       color: isMe
-                                          ? Colors.white
-                                              .withValues(alpha: 0.86)
-                                          : const Color(0xFF64748B),
+                                          ? AppTheme.of(context).secondaryBackground.withValues(alpha: 0.86)
+                                          : AppTheme.of(context).secondaryText,
                                     ),
                               ),
                             ],
@@ -366,8 +344,8 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                     Text(
                       widget.providerName ?? 'Contact',
                       style: AppTheme.of(context).labelSmall.override(
-                            font: GoogleFonts.poppins(),
-                            color: const Color(0xFF94A3B8),
+                            font: GoogleFonts.plusJakartaSans(),
+                            color: AppTheme.of(context).textTertiary,
                           ),
                     ),
                   ],
@@ -380,7 +358,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
     );
   }
 
-  Widget _buildComposer() => SafeArea(
+  Widget _buildComposer(BuildContext context) => SafeArea(
         top: false,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
@@ -391,15 +369,9 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                 child: Container(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppTheme.of(context).primaryBackground,
                     borderRadius: BorderRadius.circular(26),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x14000000),
-                        blurRadius: 22,
-                        offset: Offset(0, 12),
-                      ),
-                    ],
+                    boxShadow: AppThemeData.shadowLg,
                   ),
                   child: TextField(
                     controller: _messageController,
@@ -410,8 +382,8 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                     decoration: InputDecoration(
                       hintText: 'Write a message...',
                       hintStyle: AppTheme.of(context).bodyMedium.override(
-                            font: GoogleFonts.poppins(),
-                            color: const Color(0xFF94A3B8),
+                            font: GoogleFonts.plusJakartaSans(),
+                            color: AppTheme.of(context).textTertiary,
                           ),
                       border: InputBorder.none,
                       enabledBorder: InputBorder.none,
@@ -419,8 +391,8 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                       isCollapsed: true,
                     ),
                     style: AppTheme.of(context).bodyMedium.override(
-                          font: GoogleFonts.poppins(),
-                          color: const Color(0xFF14213D),
+                          font: GoogleFonts.plusJakartaSans(),
+                          color: AppTheme.of(context).primaryText,
                         ),
                   ),
                 ),
@@ -442,17 +414,11 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                       end: Alignment.bottomRight,
                     ),
                     shape: BoxShape.circle,
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x18000000),
-                        blurRadius: 14,
-                        offset: Offset(0, 6),
-                      ),
-                    ],
+                    boxShadow: AppThemeData.shadowLg,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.send_rounded,
-                    color: Colors.white,
+                    color: AppTheme.of(context).onPrimary,
                     size: 22,
                   ),
                 ),
@@ -462,7 +428,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
         ),
       );
 
-  Widget _buildAvatar({required double size}) => Container(
+  Widget _buildAvatar(BuildContext context, {required double size}) => Container(
         width: size,
         height: size,
         decoration: BoxDecoration(

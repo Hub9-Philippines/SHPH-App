@@ -67,7 +67,7 @@ class _ServiceSelectionPanelState extends State<ServiceSelectionPanel> {
             Text(
               'Pick a service',
               style: theme.titleLarge.override(
-                font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
               ),
             ),
             const SizedBox(height: 4),

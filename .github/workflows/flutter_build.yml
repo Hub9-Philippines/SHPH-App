@@ -39,55 +39,55 @@ jobs:
           name: SHPH-Android-APK
           path: build/app/outputs/flutter-apk/app-release.apk
 
-  # --- iOS BUILD JOB ---
-  build-ios:
-    runs-on: macos-latest
-    timeout-minutes: 360
-    steps:
-      - uses: actions/checkout@v4
+  # # --- iOS BUILD JOB ---
+  # build-ios:
+  #   runs-on: macos-latest
+  #   timeout-minutes: 360
+  #   steps:
+  #     - uses: actions/checkout@v4
       
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          cache: true
+  #     - name: Set up Flutter
+  #       uses: subosito/flutter-action@v2
+  #       with:
+  #         channel: 'stable'
+  #         cache: true
           
-      - name: Setup CocoaPods
-        run: |
-          sudo gem install cocoapods -v 1.15.0
-          pod repo update
+  #     - name: Setup CocoaPods
+  #       run: |
+  #         sudo gem install cocoapods -v 1.15.0
+  #         pod repo update
           
-      - name: Get dependencies
-        run: flutter pub get
+  #     - name: Get dependencies
+  #       run: flutter pub get
         
-      - name: Setup iOS project
-        env:
-          # Disable Swift Package Manager to use CocoaPods for all plugins
-          FLUTTER_USE_SWIFT_PACKAGE_MANAGER: 'false'
-        run: |
-          # Ensure Flutter iOS dependencies are available
-          flutter precache --ios
-          # Regenerate iOS build settings required by Podfile before CocoaPods runs
-          flutter pub get
-          # Ensure Pods are installed
-          cd ios
-          pod install --repo-update
-          cd ..
+  #     - name: Setup iOS project
+  #       env:
+  #         # Disable Swift Package Manager to use CocoaPods for all plugins
+  #         FLUTTER_USE_SWIFT_PACKAGE_MANAGER: 'false'
+  #       run: |
+  #         # Ensure Flutter iOS dependencies are available
+  #         flutter precache --ios
+  #         # Regenerate iOS build settings required by Podfile before CocoaPods runs
+  #         flutter pub get
+  #         # Ensure Pods are installed
+  #         cd ios
+  #         pod install --repo-update
+  #         cd ..
           
-      - name: Build iOS (no codesign)
-        env:
-          FLUTTER_USE_SWIFT_PACKAGE_MANAGER: 'false'
-        run: |
-          flutter build ios --release --no-codesign
+  #     - name: Build iOS (no codesign)
+  #       env:
+  #         FLUTTER_USE_SWIFT_PACKAGE_MANAGER: 'false'
+  #       run: |
+  #         flutter build ios --release --no-codesign
           
-          # Create IPA
-          mkdir -p build/ios/iphoneos/Payload
-          cp -r build/ios/iphoneos/Runner.app build/ios/iphoneos/Payload/
-          cd build/ios/iphoneos
-          zip -r shph-ios-release.ipa Payload
+  #         # Create IPA
+  #         mkdir -p build/ios/iphoneos/Payload
+  #         cp -r build/ios/iphoneos/Runner.app build/ios/iphoneos/Payload/
+  #         cd build/ios/iphoneos
+  #         zip -r shph-ios-release.ipa Payload
 
-      - name: Upload iOS IPA
-        uses: actions/upload-artifact@v4
-        with:
-          name: SHPH-iOS-IPA
-          path: build/ios/iphoneos/shph-ios-release.ipa
+  #     - name: Upload iOS IPA
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: SHPH-iOS-IPA
+  #         path: build/ios/iphoneos/shph-ios-release.ipa

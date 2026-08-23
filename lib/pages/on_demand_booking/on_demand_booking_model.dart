@@ -1,0 +1,3 @@
+class OnDemandBookingModel {
+  void dispose() {}
+}

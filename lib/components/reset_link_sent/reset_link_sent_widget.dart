@@ -63,7 +63,7 @@ class _ResetLinkSentWidgetState extends State<ResetLinkSentWidget> {
                   child: Text(
                     'Reset link sent!',
                     style: AppTheme.of(context).bodyMedium.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w600,
                             fontStyle: AppTheme.of(context)
                                 .bodyMedium
@@ -83,7 +83,7 @@ class _ResetLinkSentWidgetState extends State<ResetLinkSentWidget> {
               child: Text(
                 'We\'ve sent a password reset link to your email address. Please check your inbox and follow the instructions to reset your password.',
                 style: AppTheme.of(context).bodySmall.override(
-                      font: GoogleFonts.poppins(
+                      font: GoogleFonts.plusJakartaSans(
                         fontWeight:
                             AppTheme.of(context).bodySmall.fontWeight,
                         fontStyle:

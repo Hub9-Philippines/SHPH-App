@@ -99,22 +99,25 @@ class ShphApiClient {
       if (refreshToken == null || refreshToken.isEmpty) {
         return false;
       }
+      final sessionId = await ShphTokenStorage.getSessionId();
 
       final response = await Dio(
         BaseOptions(baseUrl: ApiConfig.baseUrl),
       ).post(
         '/api/auth/token/refresh/',
-        data: {'refresh': refreshToken},
+        data: {'refresh': refreshToken, 'session_id': sessionId},
       );
 
       final data = response.data;
       if (data is Map<String, dynamic>) {
         final access = data['access'] as String?;
         final refresh = data['refresh'] as String?;
+        final sessionId = data['session_id'] as String?;
         if (access != null) {
           await ShphTokenStorage.saveTokens(
             accessToken: access,
             refreshToken: refresh,
+            sessionId: sessionId,
           );
           return true;
         }

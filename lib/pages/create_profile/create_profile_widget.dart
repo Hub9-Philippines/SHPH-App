@@ -5,7 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:provider/provider.dart';
 
-import '/auth/supabase_auth/auth_util.dart';
+import '/auth/auth_util.dart';
+import '/api/resources/users_api.dart';
 import '/backend/supabase/supabase.dart';
 import '/components/password_validation_item/password_validation_item_widget.dart';
 import '/custom_code/actions/index.dart' as actions;
@@ -16,6 +17,7 @@ import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
 import '/services/error_handler.dart';
 import '/services/logging_service.dart';
+import '/services/auth_service.dart';
 import '/theme/app_theme.dart';
 import 'create_profile_model.dart';
 
@@ -125,11 +127,20 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
         tag: 'CreateProfile',
       );
 
-      final response = await Supabase.instance.client
-          .from('profiles')
-          .select('first_name, last_name, email, phone_number')
-          .eq('id', userId)
-          .maybeSingle();
+      final response = await ShphUsersApi.instance.getMe();
+      final profile = response['profile'] is Map<String, dynamic>
+          ? response['profile'] as Map<String, dynamic>
+          : response;
+      final first = profile['first_name'] as String?;
+      final last = profile['last_name'] as String?;
+      final email = profile['email'] as String?;
+      final phone = profile['phone_number'] as String?;
+      final responseForUi = <String, dynamic>{
+        'first_name': first,
+        'last_name': last,
+        'email': email,
+        'phone_number': phone,
+      };
 
       if (response == null) {
         LoggingService.debug(
@@ -224,7 +235,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                         'Complete your account',
                         textAlign: TextAlign.center,
                         style: AppTheme.of(context).displaySmall.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.bold,
                                 fontStyle:
                                     AppTheme.of(context).displaySmall.fontStyle,
@@ -240,7 +251,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                         'We need to verify that it\'s you',
                         textAlign: TextAlign.center,
                         style: AppTheme.of(context).bodyMedium.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight:
                                     AppTheme.of(context).bodyMedium.fontWeight,
                                 fontStyle:
@@ -284,7 +295,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                             style: AppTheme.of(context)
                                                 .bodyMedium
                                                 .override(
-                                                  font: GoogleFonts.poppins(
+                                                  font: GoogleFonts.plusJakartaSans(
                                                     fontWeight:
                                                         AppTheme.of(context)
                                                             .bodyMedium
@@ -329,7 +340,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                               hintStyle: AppTheme.of(context)
                                                   .bodyLarge
                                                   .override(
-                                                    font: GoogleFonts.poppins(
+                                                    font: GoogleFonts.plusJakartaSans(
                                                       fontWeight:
                                                           AppTheme.of(context)
                                                               .bodyLarge
@@ -400,7 +411,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                             style: AppTheme.of(context)
                                                 .bodyLarge
                                                 .override(
-                                                  font: GoogleFonts.poppins(
+                                                  font: GoogleFonts.plusJakartaSans(
                                                     fontWeight:
                                                         AppTheme.of(context)
                                                             .bodyLarge
@@ -440,7 +451,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                             style: AppTheme.of(context)
                                                 .bodyMedium
                                                 .override(
-                                                  font: GoogleFonts.poppins(
+                                                  font: GoogleFonts.plusJakartaSans(
                                                     fontWeight:
                                                         AppTheme.of(context)
                                                             .bodyMedium
@@ -485,7 +496,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                               hintStyle: AppTheme.of(context)
                                                   .bodyLarge
                                                   .override(
-                                                    font: GoogleFonts.poppins(
+                                                    font: GoogleFonts.plusJakartaSans(
                                                       fontWeight:
                                                           AppTheme.of(context)
                                                               .bodyLarge
@@ -556,7 +567,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                             style: AppTheme.of(context)
                                                 .bodyLarge
                                                 .override(
-                                                  font: GoogleFonts.poppins(
+                                                  font: GoogleFonts.plusJakartaSans(
                                                     fontWeight:
                                                         AppTheme.of(context)
                                                             .bodyLarge
@@ -596,7 +607,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                       style: AppTheme.of(context)
                                           .bodyMedium
                                           .override(
-                                            font: GoogleFonts.poppins(
+                                            font: GoogleFonts.plusJakartaSans(
                                               fontWeight: AppTheme.of(context)
                                                   .bodyMedium
                                                   .fontWeight,
@@ -641,7 +652,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                           hintStyle: AppTheme.of(context)
                                               .bodyLarge
                                               .override(
-                                                font: GoogleFonts.poppins(
+                                                font: GoogleFonts.plusJakartaSans(
                                                   fontWeight:
                                                       AppTheme.of(context)
                                                           .bodyLarge
@@ -718,7 +729,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                         style: AppTheme.of(context)
                                             .bodyLarge
                                             .override(
-                                              font: GoogleFonts.poppins(
+                                              font: GoogleFonts.plusJakartaSans(
                                                 fontWeight: AppTheme.of(context)
                                                     .bodyLarge
                                                     .fontWeight,
@@ -747,7 +758,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                         style: AppTheme.of(context)
                                             .bodySmall
                                             .override(
-                                              font: GoogleFonts.poppins(
+                                              font: GoogleFonts.plusJakartaSans(
                                                 fontWeight: AppTheme.of(context)
                                                     .bodySmall
                                                     .fontWeight,
@@ -778,7 +789,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                   style: AppTheme.of(context)
                                       .bodyMedium
                                       .override(
-                                        font: GoogleFonts.poppins(
+                                        font: GoogleFonts.plusJakartaSans(
                                           fontWeight: AppTheme.of(context)
                                               .bodyMedium
                                               .fontWeight,
@@ -837,7 +848,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                       hintStyle: AppTheme.of(context)
                                           .bodyLarge
                                           .override(
-                                            font: GoogleFonts.poppins(
+                                            font: GoogleFonts.plusJakartaSans(
                                               fontWeight: AppTheme.of(context)
                                                   .bodyLarge
                                                   .fontWeight,
@@ -911,7 +922,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                     ),
                                     style:
                                         AppTheme.of(context).bodyLarge.override(
-                                              font: GoogleFonts.poppins(
+                                              font: GoogleFonts.plusJakartaSans(
                                                 fontWeight: AppTheme.of(context)
                                                     .bodyLarge
                                                     .fontWeight,
@@ -969,7 +980,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                       style: AppTheme.of(context)
                                           .bodySmall
                                           .override(
-                                            font: GoogleFonts.poppins(
+                                            font: GoogleFonts.plusJakartaSans(
                                               fontWeight: AppTheme.of(context)
                                                   .bodySmall
                                                   .fontWeight,
@@ -1082,7 +1093,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                             AppTheme.of(context).secondaryText,
                                       ),
                                       activeColor: AppTheme.of(context).primary,
-                                      checkColor: AppTheme.of(context).info,
+                                      checkColor: AppTheme.of(context).onPrimary,
                                     ),
                                   ),
                                   Expanded(
@@ -1091,7 +1102,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                       style: AppTheme.of(context)
                                           .bodySmall
                                           .override(
-                                            font: GoogleFonts.poppins(
+                                            font: GoogleFonts.plusJakartaSans(
                                               fontWeight: AppTheme.of(context)
                                                   .bodySmall
                                                   .fontWeight,
@@ -1154,7 +1165,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                               tag: 'CreateProfile',
                                             );
                                             LoggingService.debug(
-                                              'Auth - currentUserUid: $currentUserUid, phone: ${FFAppState().phone}, role: ${FFAppState().tempsignuprole}',
+                                              'Auth - currentUserUid: $currentUserUid, phone: ${FFAppState().phone}, role: client',
                                               tag: 'CreateProfile',
                                             );
 
@@ -1185,7 +1196,7 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                                   .text
                                                   .trim(),
                                               FFAppState().phone,
-                                              FFAppState().tempsignuprole,
+                                              'client',
                                             );
 
                                             if (_model.register == 'success') {
@@ -1195,26 +1206,19 @@ class _CreateProfileWidgetState extends State<CreateProfileWidget>
                                                 tag: 'CreateProfile',
                                               );
                                               LoggingService.info(
-                                                'Role: ${FFAppState().tempsignuprole}, navigating...',
+                                                'Role: client, navigating to Home',
                                                 tag: 'CreateProfile',
                                               );
 
-                                              if (FFAppState().tempsignuprole !=
-                                                  'client') {
-                                                LoggingService.info(
-                                                  'Navigating to EKYCBegin',
-                                                  tag: 'CreateProfile',
-                                                );
-                                                await context.pushNamed(
-                                                    EKYCBeginWidget.routeName);
-                                              } else {
-                                                LoggingService.info(
-                                                  'Navigating to Home',
-                                                  tag: 'CreateProfile',
-                                                );
-                                                await context.pushNamed(
-                                                    HomeWidget.routeName);
-                                              }
+                                              await AuthService.instance
+                                                  .refreshCurrentUser();
+                                              if (!context.mounted) return;
+                                              LoggingService.info(
+                                                'Navigating to Home',
+                                                tag: 'CreateProfile',
+                                              );
+                                              await context.pushNamed(
+                                                  HomeWidget.routeName);
                                             } else {
                                               LoggingService.error(
                                                 'Registration failed: ${_model.register}',
@@ -1238,13 +1242,14 @@ EdgeInsetsDirectional.zero,
                                   color: AppTheme.of(context).primary,
                                   textStyle:
                                       AppTheme.of(context).titleMedium.override(
-                                            font: GoogleFonts.poppins(
+                                            font: GoogleFonts.plusJakartaSans(
                                               fontWeight: FontWeight.w600,
                                               fontStyle: AppTheme.of(context)
                                                   .titleMedium
                                                   .fontStyle,
                                             ),
-                                            color: AppTheme.of(context).info,
+                                            color:
+                                                AppTheme.of(context).onPrimary,
                                             letterSpacing: 0,
                                             fontWeight: FontWeight.w600,
                                             fontStyle: AppTheme.of(context)

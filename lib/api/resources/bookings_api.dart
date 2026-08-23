@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+
 import '/api/models/booking.dart';
 import '/api/models/paginated_response.dart';
 import '/api/shph_api_client.dart';
@@ -33,23 +35,20 @@ class ShphBookingsApi {
 
   Future<ShphBooking> createBooking({
     required int listingId,
-    String? scheduledDate,
-    String? scheduledTime,
+    required DateTime scheduledAt,
     String? notes,
-    double? totalPrice,
   }) async {
     final response = await _client.post<Map<String, dynamic>>(
       '/api/services/bookings/',
+      // `scheduled_at` is required by the deployed serializer; total_price is
+      // readOnly and must not be sent.
       data: ShphBooking(
         id: '',
         listing: listingId,
         status: 'pending',
       ).toCreateJson(
-        listingId: listingId,
-        scheduledDate: scheduledDate,
-        scheduledTime: scheduledTime,
+        scheduledAt: scheduledAt,
         notes: notes,
-        totalPrice: totalPrice,
       ),
     );
     return ShphBooking.fromJson(response.data ?? {});
@@ -86,5 +85,59 @@ class ShphBookingsApi {
 
   Future<void> cancelBooking(String id) async {
     await updateBooking(id, data: {'status': 'cancelled'});
+  }
+
+  Future<void> confirmArrival(String id) async {
+    await _client.post('/api/services/bookings/$id/confirm-arrival/');
+  }
+
+  Future<void> startService(String id, {String? pin}) async {
+    await _client.post(
+      '/api/services/bookings/$id/start/',
+      data: {if (pin != null) 'pin': pin},
+    );
+  }
+
+  Future<void> completeJob(String id) async {
+    await _client.post('/api/services/bookings/$id/complete/');
+  }
+
+  Future<void> uploadCompletionPhoto(String id, String filePath) async {
+    final formData = FormData.fromMap({
+      'photo': await MultipartFile.fromFile(filePath),
+    });
+    await _client.post(
+      '/api/services/bookings/$id/upload-photo/',
+      data: formData,
+    );
+  }
+
+  Future<void> updatePartsCost(
+    String id, {
+    required double cost,
+    String? description,
+  }) async {
+    await _client.post(
+      '/api/services/bookings/$id/parts-cost/',
+      data: {
+        'cost': cost,
+        if (description != null && description.isNotEmpty)
+          'description': description,
+      },
+    );
+  }
+
+  Future<void> createReview(
+    String id, {
+    required int rating,
+    String? comment,
+  }) async {
+    await _client.post(
+      '/api/services/bookings/$id/review/',
+      data: {
+        'rating': rating,
+        if (comment != null && comment.isNotEmpty) 'comment': comment,
+      },
+    );
   }
 }

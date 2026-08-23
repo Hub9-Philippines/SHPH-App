@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import '/components/screen_header.dart';
 import '/theme/app_theme.dart';
 import '../booking_funnel/widgets/booking_flow_route.dart';
 import 'tm_controller.dart';
@@ -19,28 +19,17 @@ class TMInvoiceScreen extends StatelessWidget {
     return Consumer<TMFlowController>(
       builder: (context, controller, _) => Scaffold(
         backgroundColor: theme.primaryBackground,
-        appBar: AppBar(
-          backgroundColor: theme.primaryBackground,
-          surfaceTintColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.arrow_back_rounded),
-          ),
-          title: Text(
-            'Final Invoice',
-            style: theme.titleLarge.override(
-              font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-            ),
-          ),
-        ),
         body: SafeArea(
           top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+          child: Column(
+            children: [
+              const ScreenHeader(title: 'Final Invoice'),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(22),
@@ -106,7 +95,7 @@ class TMInvoiceScreen extends StatelessWidget {
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: theme.primary,
-                      foregroundColor: Colors.white,
+                      foregroundColor: theme.onPrimary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(18),
                       ),
@@ -114,18 +103,21 @@ class TMInvoiceScreen extends StatelessWidget {
                     child: Text(
                       'Pay Now',
                       style: theme.titleMedium.override(
-                        color: Colors.white,
+                        color: theme.onPrimary,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
                 ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
-    );
+    ),
+  ),
+);
   }
 }
 

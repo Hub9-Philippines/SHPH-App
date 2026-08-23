@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
-import '/backend/supabase/supabase.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
@@ -20,8 +19,21 @@ class SignupModel extends FlutterFlowModel<SignupWidget> {
   TextEditingController? phoneFieldTextController;
   late MaskTextInputFormatter phoneFieldMask;
   String? Function(BuildContext, String?)? phoneFieldTextControllerValidator;
-  // Stores action output result for [Backend Call - Query Rows] action in Button widget.
-  List<ProfilesRow>? isPhoneExists;
+
+  // State field(s) for the registration form.
+  TextEditingController? firstNameTextController;
+  FocusNode? firstNameFocusNode;
+  TextEditingController? middleNameTextController;
+  FocusNode? middleNameFocusNode;
+  TextEditingController? lastNameTextController;
+  FocusNode? lastNameFocusNode;
+  TextEditingController? emailTextController;
+  FocusNode? emailFocusNode;
+  TextEditingController? passwordTextController;
+  FocusNode? passwordFocusNode;
+  TextEditingController? confirmPasswordTextController;
+  FocusNode? confirmPasswordFocusNode;
+
   String? errorMessage;
   // Model for backButton component.
   late BackButtonModel backButtonModel;
@@ -35,6 +47,19 @@ class SignupModel extends FlutterFlowModel<SignupWidget> {
   void dispose() {
     phoneFieldFocusNode?.dispose();
     phoneFieldTextController?.dispose();
+
+    firstNameFocusNode?.dispose();
+    firstNameTextController?.dispose();
+    middleNameFocusNode?.dispose();
+    middleNameTextController?.dispose();
+    lastNameFocusNode?.dispose();
+    lastNameTextController?.dispose();
+    emailFocusNode?.dispose();
+    emailTextController?.dispose();
+    passwordFocusNode?.dispose();
+    passwordTextController?.dispose();
+    confirmPasswordFocusNode?.dispose();
+    confirmPasswordTextController?.dispose();
 
     backButtonModel.dispose();
   }

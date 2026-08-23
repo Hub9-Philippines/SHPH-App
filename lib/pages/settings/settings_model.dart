@@ -10,9 +10,6 @@ class SettingsModel extends FlutterFlowModel<SettingsWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   late BackButtonModel backButtonModel;
 
-  // Settings state
-  bool darkMode = false;
-
   @override
   void initState(BuildContext context) {
     backButtonModel = createModel(context, BackButtonModel.new);

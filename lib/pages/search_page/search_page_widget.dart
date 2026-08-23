@@ -6,12 +6,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '/backend/supabase/database/tables/bookings.dart';
 import '/backend/supabase/database/tables/service_listings.dart';
+import '/components/category_pill.dart';
+import '/components/content_container.dart';
+import '/components/screen_header.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import '/models/service_listing.dart';
 import '/services/bookings_service.dart';
 import '/services/logging_service.dart';
+import '/services/service_listing_service.dart';
 import '/theme/app_theme.dart';
 import '/utils/geo_utils.dart';
 import '../booking_funnel/booking_controller.dart';
@@ -131,11 +135,31 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
     });
 
     try {
-      final services = await ServiceListingsTable().queryRows(
-        queryFn: (q) => q.eq('is_available', 'true').or(
-              'title.ilike.%$normalizedQuery%,category_name.ilike.%$normalizedQuery%,description.ilike.%$normalizedQuery%,provider_name.ilike.%$normalizedQuery%',
-            ),
-      );
+      final apiServices = await ServiceListingService.instance
+          .fetchServiceListings(search: normalizedQuery);
+      final services = apiServices
+          .map(
+            (listing) => ServiceListingsRow({
+              'id': listing.id,
+              'category': listing.category,
+              'category_name': listing.categoryName,
+              'provider': listing.provider,
+              'provider_name': listing.providerName,
+              'provider_photo': listing.providerPhoto,
+              'title': listing.title,
+              'description': listing.description,
+              'base_price': listing.basePrice,
+              'price_unit': listing.priceUnit,
+              'status': listing.status,
+              'is_available': listing.isAvailable ?? 'true',
+              'rating': listing.rating,
+              'thumbnail': listing.thumbnail,
+              'review_count': listing.reviewCount ?? 0,
+              'is_time_material': listing.isTimeMaterial,
+            }),
+          )
+          .where((service) => service.isAvailable == 'true')
+          .toList();
 
       final results = services.where((service) {
         final category = service.categoryName ?? '';
@@ -265,11 +289,28 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: const Color(0xFFF5F7FA),
+          backgroundColor: AppTheme.of(context).secondaryBackground,
           body: SafeArea(
             child: Column(
               children: [
-                _buildTopBar(),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                  child: ScreenHeader(
+                    title: 'Search',
+                    subtitle: 'Browse services with filters that actually help.',
+                    action: InkWell(
+                      onTap: () {
+                        safeSetState(() {
+                          _showFilters = !_showFilters;
+                        });
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: Icon(
+                        _showFilters ? Icons.close_rounded : Icons.tune_rounded,
+                      ),
+                    ),
+                  ),
+                ),
                 Expanded(
                   child: CustomScrollView(
                     physics: const BouncingScrollPhysics(
@@ -336,89 +377,21 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
         ),
       );
 
-  Widget _buildTopBar() => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-        child: Row(
-          children: [
-            Material(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              child: InkWell(
-                onTap: () => context.pop(),
-                borderRadius: BorderRadius.circular(16),
-                child: const SizedBox(
-                  width: 44,
-                  height: 44,
-                  child: Icon(Icons.arrow_back_rounded),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Search',
-                    style: AppTheme.of(context).titleLarge.override(
-                          font: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w700,
-                          ),
-                          color: const Color(0xFF16202A),
-                        ),
-                  ),
-                  Text(
-                    'Browse services with filters that actually help.',
-                    style: AppTheme.of(context).bodySmall.override(
-                          font: GoogleFonts.poppins(),
-                          color: const Color(0xFF6F7B86),
-                        ),
-                  ),
-                ],
-              ),
-            ),
-            Material(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              child: InkWell(
-                onTap: () {
-                  safeSetState(() {
-                    _showFilters = !_showFilters;
-                  });
-                },
-                borderRadius: BorderRadius.circular(16),
-                child: SizedBox(
-                  width: 44,
-                  height: 44,
-                  child: Icon(
-                    _showFilters ? Icons.close_rounded : Icons.tune_rounded,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-
-  Widget _buildSearchBar() => Container(
+  Widget _buildSearchBar() {
+    final theme = AppTheme.of(context);
+    return Container(
         height: 58,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.primaryBackground,
           borderRadius: BorderRadius.circular(24),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x12000000),
-              blurRadius: 20,
-              offset: Offset(0, 10),
-            ),
-          ],
+          border: Border.all(color: theme.border),
         ),
         child: Row(
           children: [
-            const Icon(
+            Icon(
               Icons.search_rounded,
-              color: Color(0xFF5F6B76),
+              color: AppTheme.of(context).secondaryText,
               size: 24,
             ),
             const SizedBox(width: 12),
@@ -431,8 +404,8 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
                 decoration: InputDecoration(
                   hintText: 'Search for services...',
                   hintStyle: AppTheme.of(context).bodyMedium.override(
-                        font: GoogleFonts.poppins(),
-                        color: const Color(0xFF93A0AC),
+                        font: GoogleFonts.plusJakartaSans(),
+                        color: AppTheme.of(context).textTertiary,
                       ),
                   border: InputBorder.none,
                 ),
@@ -445,11 +418,11 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
                   _performSearch('');
                 },
                 borderRadius: BorderRadius.circular(999),
-                child: const Padding(
-                  padding: EdgeInsets.all(4),
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
                   child: Icon(
                     Icons.close_rounded,
-                    color: Color(0xFF7F8B97),
+                    color: AppTheme.of(context).textTertiary,
                     size: 20,
                   ),
                 ),
@@ -457,6 +430,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
           ],
         ),
       );
+  }
 
   Widget _buildSearchSummary() => Container(
         width: double.infinity,
@@ -481,7 +455,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
                   ? 'Start with a keyword'
                   : '"${_searchController.text.trim()}"',
               style: AppTheme.of(context).headlineSmall.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: Colors.white,
                   ),
             ),
@@ -491,7 +465,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
                   ? 'Search by service name or category.'
                   : '${_searchResults.length} matching services',
               style: AppTheme.of(context).bodyMedium.override(
-                    font: GoogleFonts.poppins(),
+                    font: GoogleFonts.plusJakartaSans(),
                     color: Colors.white.withValues(alpha: 0.82),
                   ),
             ),
@@ -534,7 +508,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
             Text(
               label,
               style: AppTheme.of(context).labelMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                     color: Colors.white,
                   ),
             ),
@@ -591,27 +565,21 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppTheme.of(context).primaryBackground,
                 borderRadius: BorderRadius.circular(999),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x12000000),
-                    blurRadius: 12,
-                    offset: Offset(0, 4),
-                  ),
-                ],
+                border: Border.all(color: AppTheme.of(context).border),
               ),
               child: Row(
                 children: [
-                  Icon(icon, size: 14, color: const Color(0xFF17212B)),
+                  Icon(icon, size: 14, color: AppTheme.of(context).primaryText),
                   const SizedBox(width: 8),
                   Text(
                     label,
                     style: AppTheme.of(context).bodySmall.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w600,
                           ),
-                          color: const Color(0xFF17212B),
+                          color: AppTheme.of(context).primaryText,
                         ),
                   ),
                 ],
@@ -625,7 +593,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
         width: double.infinity,
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.of(context).primaryBackground,
           borderRadius: BorderRadius.circular(24),
           boxShadow: const [
             BoxShadow(
@@ -737,7 +705,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
           Text(
             title,
             style: AppTheme.of(context).labelLarge.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                   color: const Color(0xFF16202A),
                 ),
           ),
@@ -764,7 +732,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
         backgroundColor: const Color(0xFFF3F6F8),
         selectedColor: AppTheme.of(context).primary,
         labelStyle: AppTheme.of(context).labelMedium.override(
-              font: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
               color: selected ? Colors.white : const Color(0xFF16202A),
             ),
       );
@@ -790,7 +758,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
             Text(
               'Search for services',
               style: AppTheme.of(context).titleMedium.override(
-                    font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: const Color(0xFF16202A),
                   ),
             ),
@@ -799,7 +767,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
               'Try keywords like cleaning, painting, or plumbing.',
               textAlign: TextAlign.center,
               style: AppTheme.of(context).bodySmall.override(
-                    font: GoogleFonts.poppins(),
+                    font: GoogleFonts.plusJakartaSans(),
                     color: const Color(0xFF6F7B86),
                   ),
             ),
@@ -853,7 +821,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
           Text(
             title,
             style: AppTheme.of(context).labelLarge.override(
-                  font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                   color: const Color(0xFF16202A),
                 ),
           ),
@@ -890,7 +858,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
                 Text(
                   label,
                   style: AppTheme.of(context).bodySmall.override(
-                        font: GoogleFonts.poppins(),
+                        font: GoogleFonts.plusJakartaSans(),
                         color: const Color(0xFF16202A),
                       ),
                 ),
@@ -920,7 +888,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
               Text(
                 'No services found',
                 style: AppTheme.of(context).titleMedium.override(
-                      font: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                      font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                       color: const Color(0xFF16202A),
                     ),
               ),
@@ -929,7 +897,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
                 'Try another keyword, open a broader category, or clear your filters.',
                 textAlign: TextAlign.center,
                 style: AppTheme.of(context).bodySmall.override(
-                      font: GoogleFonts.poppins(),
+                      font: GoogleFonts.plusJakartaSans(),
                       color: const Color(0xFF6F7B86),
                     ),
               ),
@@ -1058,7 +1026,7 @@ class _SearchServiceCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.titleMedium.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
                           color: const Color(0xFF16202A),
@@ -1068,7 +1036,7 @@ class _SearchServiceCard extends StatelessWidget {
                       Text(
                         service.categoryName ?? 'Service',
                         style: theme.bodySmall.override(
-                          font: GoogleFonts.poppins(),
+                          font: GoogleFonts.plusJakartaSans(),
                           color: const Color(0xFF6F7B86),
                         ),
                       ),
@@ -1085,7 +1053,7 @@ class _SearchServiceCard extends StatelessWidget {
                             (double.tryParse(service.rating ?? '0') ?? 0)
                                 .toStringAsFixed(1),
                             style: theme.bodySmall.override(
-                              font: GoogleFonts.poppins(
+                              font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -1094,7 +1062,7 @@ class _SearchServiceCard extends StatelessWidget {
                           Text(
                             '${service.reviewCount ?? 0} reviews',
                             style: theme.bodySmall.override(
-                              font: GoogleFonts.poppins(),
+                              font: GoogleFonts.plusJakartaSans(),
                               color: const Color(0xFF6F7B86),
                             ),
                           ),
@@ -1106,7 +1074,7 @@ class _SearchServiceCard extends StatelessWidget {
                             ? 'PHP ${service.basePrice}${service.priceUnit ?? ''}'
                             : 'PHP 0',
                         style: theme.titleSmall.override(
-                          font: GoogleFonts.poppins(
+                          font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
                           color: theme.primary,
@@ -1161,7 +1129,7 @@ class _SearchServiceThumbnailFallback extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         width: _SearchServiceThumbnail.size,
         height: _SearchServiceThumbnail.size,
-        color: const Color(0xFFE8EDF2),
+        color: AppTheme.of(context).border,
         child: Icon(
           Icons.image_not_supported_outlined,
           color: AppTheme.of(context).secondaryText,

@@ -100,7 +100,7 @@ class _PinLocationWidgetState extends State<PinLocationWidget> {
                           color: Colors.transparent,
                           textAlign: TextAlign.start,
                           textStyle: AppTheme.of(context).titleSmall.override(
-                                font: GoogleFonts.poppins(
+                                font: GoogleFonts.plusJakartaSans(
                                   fontWeight: AppTheme.of(context)
                                       .titleSmall
                                       .fontWeight,
@@ -128,7 +128,7 @@ class _PinLocationWidgetState extends State<PinLocationWidget> {
                         fillColor: AppTheme.of(context).primary,
                         icon: Icon(
                           Icons.location_pin,
-                          color: AppTheme.of(context).info,
+                          color: AppTheme.of(context).onPrimary,
                           size: 24,
                         ),
                         onPressed: () async {
@@ -355,7 +355,7 @@ class _PinLocationWidgetState extends State<PinLocationWidget> {
                                 color: AppTheme.of(context).primary,
                                 textStyle:
                                     AppTheme.of(context).titleSmall.override(
-                                          font: GoogleFonts.poppins(
+                                          font: GoogleFonts.plusJakartaSans(
                                             fontWeight: AppTheme.of(context)
                                                 .titleSmall
                                                 .fontWeight,
@@ -363,7 +363,7 @@ class _PinLocationWidgetState extends State<PinLocationWidget> {
                                                 .titleSmall
                                                 .fontStyle,
                                           ),
-                                          color: Colors.white,
+                                          color: AppTheme.of(context).onPrimary,
                                           letterSpacing: 0,
                                           fontWeight: AppTheme.of(context)
                                               .titleSmall
