@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import '/api/api_config.dart';
 import '/api/shph_api_exception.dart';
 import '/api/shph_token_storage.dart';
+import '/demo/demo_interceptor.dart';
+import '/demo/demo_mode.dart';
 import '/services/logging_service.dart';
 
 /// Central Dio HTTP client for the SHPH REST API (OpenAPI spec).
@@ -38,6 +40,10 @@ class ShphApiClient {
         },
       ),
     );
+
+    if (kDemoMode) {
+      self._dio!.interceptors.add(DemoInterceptor());
+    }
 
     self._dio!.interceptors.add(
       InterceptorsWrapper(

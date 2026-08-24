@@ -4,6 +4,7 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:http/http.dart' as http;
 
 import '/api/api_config.dart';
+import '/demo/demo_mode.dart';
 import '/services/logging_service.dart';
 
 enum PaymentProvider { stripe, maya }
@@ -33,6 +34,7 @@ class PaymentController {
 
   Future<void> initializeStripe(String publishableKey) async {
     _stripePublishableKey = publishableKey;
+    if (kDemoMode) return;
     Stripe.publishableKey = publishableKey;
     await Stripe.instance.applySettings();
   }
@@ -44,6 +46,12 @@ class PaymentController {
     Map<String, String>? metadata,
   }) async {
     try {
+      if (kDemoMode) {
+        return const PaymentResult(
+          status: PaymentStatus.success,
+          transactionId: 'demo-stripe-txn',
+        );
+      }
       final clientSecret = await _fetchStripeClientSecret(
         amount: amount,
         currency: currency,
@@ -130,6 +138,12 @@ class PaymentController {
     Map<String, String>? metadata,
   }) async {
     try {
+      if (kDemoMode) {
+        return const PaymentResult(
+          status: PaymentStatus.success,
+          transactionId: 'demo-maya-txn',
+        );
+      }
       final checkoutUrl = await _fetchMayaCheckoutUrl(
         amount: amount,
         currency: currency,
