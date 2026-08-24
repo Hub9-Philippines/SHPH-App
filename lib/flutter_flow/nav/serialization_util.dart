@@ -1,5 +1,6 @@
 import 'dart:convert';
-import 'dart:ffi';
+import 'struct_stub.dart'
+    if (dart.library.io) 'struct_io.dart';
 
 import 'package:flutter/material.dart';
 import 'package:from_css_color/from_css_color.dart';
