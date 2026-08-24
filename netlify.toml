@@ -1,0 +1,36 @@
+# Netlify deploy config for the Flutter web preview.
+# Connect the repo in Netlify and it will pick this file up automatically.
+
+[build]
+  # Netlify's Linux runners don't ship Flutter; clone it (cached across builds
+  # via the _flutter dir) then build. Uses whatever branch the deploy is for.
+  command = """
+    if [ ! -d "_flutter/bin" ]; then
+      git clone https://github.com/flutter/flutter.git --depth 1 -b stable _flutter
+    fi
+    export PATH="$PWD/_flutter/bin:$PATH"
+    flutter config --no-analytics
+    flutter pub get
+    flutter build web --release --no-wasm-dry-run
+  """
+  publish = "build/web"
+
+[build.environment]
+  GIT_DEPTH = "1"
+
+# SPA fallback: GoRouter handles routing client-side, so every path
+# must serve index.html.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/main.dart.js"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
