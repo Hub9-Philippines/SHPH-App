@@ -3,10 +3,15 @@
 
 [build]
   # Netlify's Linux runners don't ship Flutter; clone it (cached across builds
-  # via the _flutter dir) then build. Uses whatever branch the deploy is for.
+  # via the _flutter dir) then build.
+  # IMPORTANT: keep FLUTTER_VERSION in sync with the local dev SDK
+  # (`flutter --version`) AND with the intl pin in pubspec.yaml — each Flutter
+  # release pins one exact intl version via flutter_localizations.
   command = """
-    if [ ! -d "_flutter/bin" ]; then
-      git clone https://github.com/flutter/flutter.git --depth 1 -b stable _flutter
+    FLUTTER_VERSION=3.44.0
+    if [ ! -d "_flutter/bin" ] || [ "$(_flutter/bin/flutter --version --machine 2>/dev/null | grep -o '"frameworkVersion":"[^"]*"' | cut -d'"' -f4)" != "$FLUTTER_VERSION" ]; then
+      rm -rf _flutter
+      git clone https://github.com/flutter/flutter.git --depth 1 -b "$FLUTTER_VERSION" _flutter
     fi
     export PATH="$PWD/_flutter/bin:$PATH"
     flutter config --no-analytics
