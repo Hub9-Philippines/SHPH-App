@@ -290,8 +290,11 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
   /// circular actions.
   Widget _buildProviderSummaryCard(BuildContext context) {
     final theme = AppTheme.of(context);
-    final rating =
-        (_model.serviceListing?['rating'] as num?)?.toDouble() ?? 0.0;
+    final ratingRaw = _model.serviceListing?['rating'];
+    final rating = switch (ratingRaw) {
+      final num n => n.toDouble(),
+      _ => double.tryParse('${ratingRaw ?? ''}') ?? 0.0,
+    };
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -510,7 +513,12 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
       subtitle: 'Core scheduling, payment, and location details.',
       child: Column(
         children: [
-          _buildInfoRow(context, 'Booking ID', booking.id.substring(0, 8)),
+          _buildInfoRow(
+              context,
+              'Booking ID',
+              booking.id.length <= 8
+                  ? booking.id
+                  : booking.id.substring(0, 8)),
           _buildInfoRow(
             context,
             'Date & Time',
