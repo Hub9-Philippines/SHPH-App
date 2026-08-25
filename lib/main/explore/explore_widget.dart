@@ -228,7 +228,7 @@ class _ExploreWidgetState extends State<ExploreWidget>
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return SizedBox(
-                  height: 96,
+                  height: 106,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: 4,
@@ -252,9 +252,12 @@ class _ExploreWidgetState extends State<ExploreWidget>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(
-                    height: 96,
+                    height: 106,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
+                      // Headroom so the emergency bolt badge (-6 offset)
+                      // floats fully above the tile instead of being clipped.
+                      padding: const EdgeInsets.only(top: 8, bottom: 2),
                       itemCount: categories.length,
                       separatorBuilder: (_, __) =>
                           const SizedBox(width: AppThemeData.spaceMd),

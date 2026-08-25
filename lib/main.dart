@@ -199,7 +199,10 @@ class _MyAppState extends State<MyApp> {
                 builder: (context, child) {
                   return Stack(
                     children: [
-                      child ?? const SizedBox.shrink(),
+                      SafeArea(
+                        bottom: false,
+                        child: child ?? const SizedBox.shrink(),
+                      ),
                       Positioned(
                         top: 0,
                         left: 0,

@@ -124,6 +124,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              const SizedBox(height: AppThemeData.spaceLg),
                               _buildHeroCard(profile),
                               const SizedBox(height: 24),
                               _buildGroup(
@@ -372,17 +373,32 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Large bold username — high contrast on the gradient.
-                    Text(
-                      displayName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTheme.of(context).headlineSmall.override(
-                            font: GoogleFonts.plusJakartaSans(
-                              fontWeight: FontWeight.w800,
-                            ),
-                            color: Colors.white,
+                    // Large bold username with inline verification badge —
+                    // high contrast on the gradient.
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            displayName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style:
+                                AppTheme.of(context).headlineSmall.override(
+                                      font: GoogleFonts.plusJakartaSans(
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                      color: Colors.white,
+                                    ),
                           ),
+                        ),
+                        const SizedBox(width: 8),
+                        _VerificationBadge(
+                          isVerified: profile.isVerified == true ||
+                              (profile.verificationStatus ?? '')
+                                      .toLowerCase() ==
+                                  'verified',
+                        ),
+                      ],
                     ),
                     if (phone.isNotEmpty) ...[
                       const SizedBox(height: 5),
@@ -457,16 +473,6 @@ class _ProfileWidgetState extends State<ProfileWidget> {
             ),
           ),
           ],
-        ),
-        // Verification badge — top-right of the hero card.
-        Positioned(
-          top: 14,
-          right: 14,
-          child: _VerificationBadge(
-            isVerified: profile.isVerified == true ||
-                (profile.verificationStatus ?? '').toLowerCase() ==
-                    'verified',
-          ),
         ),
       ],
       ),
@@ -878,10 +884,11 @@ class _VerificationBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      width: 26,
+      height: 26,
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.95),
-        borderRadius: BorderRadius.circular(AppThemeData.radiusPill),
+        shape: BoxShape.circle,
         boxShadow: const [
           BoxShadow(
             color: Color(0x22000000),
@@ -890,26 +897,11 @@ class _VerificationBadge extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isVerified
-                ? Icons.verified_rounded
-                : Icons.gpp_maybe_rounded,
-            size: 15,
-            color:
-                isVerified ? theme.colorScheme.primary : AppThemeData.accentYellow,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            isVerified ? 'Verified' : 'Unverified',
-            style: theme.textTheme.labelSmall?.override(
-              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
-              color: theme.textTheme.labelSmall?.color,
-            ),
-          ),
-        ],
+      child: Icon(
+        isVerified ? Icons.verified_rounded : Icons.gpp_maybe_rounded,
+        size: 17,
+        color:
+            isVerified ? theme.colorScheme.primary : AppThemeData.accentYellow,
       ),
     );
   }
