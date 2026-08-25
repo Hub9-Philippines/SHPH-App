@@ -13,7 +13,6 @@ import 'auth/auth_manager_factory.dart';
 import 'auth/auth_util.dart';
 import 'auth/shph_auth/shph_user_provider.dart';
 import 'components/connectivity_banner.dart';
-import 'components/demo_role_switcher.dart';
 import 'demo/demo_mode.dart';
 import 'demo/demo_session.dart';
 import 'flutter_flow/flutter_flow_util.dart';
@@ -104,9 +103,6 @@ class _MyAppState extends State<MyApp> {
     _appStateNotifier = AppStateNotifier.instance;
     _router =
         AppRouter.createRouter(_appStateNotifier, appState: widget.appState);
-    if (kDemoMode) {
-      DemoSession.router = _router;
-    }
 
     // Listen to SHPH API auth state changes
     AuthService.instance.addListener(_onAuthChanged);
@@ -217,12 +213,6 @@ class _MyAppState extends State<MyApp> {
                           isOffline: connectivity.isOffline,
                         ),
                       ),
-                      if (kDemoMode)
-                        const Positioned(
-                          left: 0,
-                          bottom: 0,
-                          child: DemoRoleSwitcher(),
-                        ),
                     ],
                   );
                 },

@@ -18,12 +18,7 @@ class DemoData {
   static Map<String, dynamic> get currentUser =>
       isProvider ? providerUser : clientUser;
 
-  static Map<String, dynamic> userForEmail(String email) {
-    final normalized = email.toLowerCase();
-    return normalized.contains('pro') || normalized.contains('maria')
-        ? providerUser
-        : clientUser;
-  }
+  static Map<String, dynamic> userForEmail(String email) => clientUser;
 
   static Map<String, dynamic> get clientUser => const {
         'id': 101,
