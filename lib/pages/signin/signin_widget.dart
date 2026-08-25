@@ -127,16 +127,6 @@ class _SigninWidgetState extends State<SigninWidget>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: Image.asset(
-            'assets/images/welcome-graphic.png',
-            width: double.infinity,
-            height: 150,
-            fit: BoxFit.cover,
-          ),
-        ),
-        const SizedBox(height: 20),
         Text(
           'Welcome to SerbisyoHub PH',
           textAlign: TextAlign.center,
