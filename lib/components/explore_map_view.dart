@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '/components/demo_map_placeholder.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class ExploreMapMarker {
@@ -87,7 +88,7 @@ class _ExploreMapViewState extends State<ExploreMapView> {
 
   @override
   Widget build(BuildContext context) {
-    return GoogleMap(
+    return kDemoMode ? const DemoMapPlaceholder(label: 'Explore map') : GoogleMap(
       initialCameraPosition: CameraPosition(
         target: widget.initialLocation ?? _defaultLocation,
         zoom: 14,

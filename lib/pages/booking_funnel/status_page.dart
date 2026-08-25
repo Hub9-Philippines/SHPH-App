@@ -1,4 +1,5 @@
 import 'dart:async';
+import '/components/demo_map_placeholder.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -322,7 +323,7 @@ class _StatusPageState extends State<StatusPage>
         children: [
           // Full-bleed map canvas behind every overlay.
           Positioned.fill(
-            child: GoogleMap(
+            child: kDemoMode ? const DemoMapPlaceholder(label: 'Live tracking') : GoogleMap(
               initialCameraPosition: CameraPosition(
                 target: _clientLocation,
                 zoom: 14,

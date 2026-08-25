@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '/components/demo_map_placeholder.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -167,7 +168,7 @@ class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: GoogleMap(
+            child: kDemoMode ? const DemoMapPlaceholder(label: 'Confirm service location') : GoogleMap(
               initialCameraPosition: CameraPosition(
                 target: _center,
                 zoom: 16,

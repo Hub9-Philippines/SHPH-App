@@ -1,4 +1,5 @@
 import 'dart:async';
+import '/components/demo_map_placeholder.dart';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
@@ -502,7 +503,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
       );
     }
 
-    return GoogleMap(
+    return kDemoMode ? const DemoMapPlaceholder(label: 'Live matching') : GoogleMap(
       initialCameraPosition: CameraPosition(
         target: location,
         zoom: _zoomNearby,
@@ -1021,7 +1022,7 @@ class _AssignedProviderRouteMapState extends State<_AssignedProviderRouteMap> {
                   child: Stack(
                     children: [
                       Positioned.fill(
-                        child: GoogleMap(
+                        child: kDemoMode ? const DemoMapPlaceholder(label: 'Live matching') : GoogleMap(
                           initialCameraPosition: CameraPosition(
                             target: widget.clientLocation,
                             zoom: 14,

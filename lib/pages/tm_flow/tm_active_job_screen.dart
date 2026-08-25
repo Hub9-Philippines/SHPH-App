@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '/components/demo_map_placeholder.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -391,7 +392,7 @@ class _TMTrackingTab extends StatelessWidget {
     return Stack(
       children: [
         Positioned.fill(
-          child: GoogleMap(
+          child: kDemoMode ? const DemoMapPlaceholder(label: 'Job map') : GoogleMap(
             initialCameraPosition: CameraPosition(target: location, zoom: 16),
             zoomControlsEnabled: false,
             compassEnabled: false,

@@ -1,4 +1,5 @@
 import 'dart:async';
+import '/components/demo_map_placeholder.dart';
 import 'dart:math';
 import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -195,7 +196,7 @@ class _FlutterFlowGoogleMapState extends State<FlutterFlowGoogleMap> {
 
     final googleMapWidget = AbsorbPointer(
       absorbing: !widget.allowInteraction,
-      child: GoogleMap(
+      child: kDemoMode ? const DemoMapPlaceholder(label: 'Location picker') : GoogleMap(
         style: googleMapStyleStrings[widget.style],
         onMapCreated: (controller) async {
           _controller.complete(controller);

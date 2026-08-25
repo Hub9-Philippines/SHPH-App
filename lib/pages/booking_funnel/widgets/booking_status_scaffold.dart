@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '/components/demo_map_placeholder.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '/theme/app_theme.dart';
@@ -75,7 +76,7 @@ class BookingStatusScaffold extends StatelessWidget {
                 height: mapHeight,
                 child: showMap
                     ? ClipRect(
-                        child: GoogleMap(
+                        child: kDemoMode ? const DemoMapPlaceholder(label: 'Booking location') : GoogleMap(
                           initialCameraPosition: CameraPosition(
                             target: location,
                             zoom: 16,

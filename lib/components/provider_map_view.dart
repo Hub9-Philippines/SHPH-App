@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '/components/demo_map_placeholder.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '/theme/app_theme.dart';
@@ -95,7 +96,7 @@ class _ProviderMapViewState extends State<ProviderMapView> {
     final theme = AppTheme.of(context);
     return Stack(
       children: [
-        GoogleMap(
+        kDemoMode ? const DemoMapPlaceholder(label: 'Provider location') : GoogleMap(
           initialCameraPosition: CameraPosition(
             target: _center(),
             zoom: 14,
