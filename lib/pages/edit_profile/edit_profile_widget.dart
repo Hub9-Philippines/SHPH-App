@@ -4,8 +4,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '/auth/auth_util.dart';
 import '/components/back_button/back_button_widget.dart';
+import '/components/cupertino_ui/app_text_field.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import '/l10n/app_localizations.dart';
 import '/services/profiles_service.dart';
 import '/theme/app_theme.dart';
 import 'edit_profile_model.dart';
@@ -30,6 +33,8 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   String? _verificationStatus;
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -95,8 +100,8 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Changes staged locally (pending approval)')),
+            SnackBar(
+                content: Text(_l10n.epStagedLocally)),
           );
           context.pop();
         }
@@ -110,7 +115,7 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile updated successfully')),
+            SnackBar(content: Text(_l10n.epUpdated)),
           );
           context.pop();
         }
@@ -118,7 +123,7 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating profile: $e')),
+          SnackBar(content: Text(_l10n.epUpdateError(e.toString()))),
         );
       }
     }
@@ -133,22 +138,21 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
         child: Scaffold(
           key: scaffoldKey,
           backgroundColor: AppTheme.of(context).primaryBackground,
-          appBar: AppBar(
-            backgroundColor: AppTheme.of(context).primaryBackground,
-            automaticallyImplyLeading: false,
-            leading: wrapWithModel(
-              model: _model.backButtonModel,
-              updateCallback: () => safeSetState(() {}),
-              child: const BackButtonWidget(),
-            ),
-            title: Text(
-              'Edit Profile',
-              style: AppTheme.of(context).titleLarge.override(
-                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(56),
+            child: CupertinoPageHeader(
+              title: _l10n.epTitle,
+              backgroundColor: AppTheme.of(context).primaryBackground,
+              leading: wrapWithModel(
+                model: _model.backButtonModel,
+                updateCallback: () => safeSetState(() {}),
+                child: const BackButtonWidget(),
+              ),
+              titleStyle: AppTheme.of(context).titleLarge.override(
+                    font: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.bold),
                   ),
             ),
-            centerTitle: true,
-            elevation: 0,
           ),
           body: SafeArea(
             top: true,
@@ -163,156 +167,63 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
                     children: [
                       const SizedBox(height: 24),
                       Text(
-                        'Personal Information',
+                        _l10n.epPersonalInfo,
                         style: AppTheme.of(context).titleMedium.override(
                               font: GoogleFonts.plusJakartaSans(
                                   fontWeight: FontWeight.bold),
                             ),
                       ),
                       const SizedBox(height: 16),
-                      TextFormField(
+                      AppTextField(
                         controller: _displayNameController,
-                        decoration: InputDecoration(
-                          labelText: 'Display Name',
-                          labelStyle: AppTheme.of(context).bodyMedium,
-                          hintText: 'Enter your name',
-                          hintStyle: AppTheme.of(context).bodyMedium,
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: AppTheme.of(context).secondaryText,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: AppTheme.of(context).primary,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: AppTheme.of(context).error,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          focusedErrorBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: AppTheme.of(context).error,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          filled: true,
-                          fillColor: AppTheme.of(context).secondaryBackground,
-                        ),
+                        label: _l10n.epDisplayName,
+                        placeholder: _l10n.epDisplayNameHint,
+                        placeholderStyle: AppTheme.of(context).bodyMedium,
+                        fillColor: AppTheme.of(context).secondaryBackground,
+                        radius: 8,
                         style: AppTheme.of(context).bodyMedium,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Display name is required';
+                            return _l10n.epDisplayNameRequired;
                           }
                           return null;
                         },
                       ),
                       const SizedBox(height: 16),
-                      TextFormField(
+                      AppTextField(
                         controller: _emailController,
-                        decoration: InputDecoration(
-                          labelText: 'Email',
-                          labelStyle: AppTheme.of(context).bodyMedium,
-                          hintText: 'Enter your email',
-                          hintStyle: AppTheme.of(context).bodyMedium,
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: AppTheme.of(context).secondaryText,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: AppTheme.of(context).primary,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: AppTheme.of(context).error,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          focusedErrorBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: AppTheme.of(context).error,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          filled: true,
-                          fillColor: AppTheme.of(context).secondaryBackground,
-                        ),
+                        label: _l10n.epEmail,
+                        placeholder: _l10n.epEmailHint,
+                        placeholderStyle: AppTheme.of(context).bodyMedium,
+                        fillColor: AppTheme.of(context).secondaryBackground,
+                        radius: 8,
                         style: AppTheme.of(context).bodyMedium,
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Email is required';
+                            return _l10n.epEmailRequired;
                           }
                           if (!value.contains('@')) {
-                            return 'Please enter a valid email';
+                            return _l10n.epEmailInvalid;
                           }
                           return null;
                         },
                       ),
                       const SizedBox(height: 16),
-                      TextFormField(
+                      AppTextField(
                         controller: _phoneController,
-                        decoration: InputDecoration(
-                          labelText: 'Phone Number',
-                          labelStyle: AppTheme.of(context).bodyMedium,
-                          hintText: 'Enter your phone number',
-                          hintStyle: AppTheme.of(context).bodyMedium,
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: AppTheme.of(context).secondaryText,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: AppTheme.of(context).primary,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: AppTheme.of(context).error,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          focusedErrorBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: AppTheme.of(context).error,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          filled: true,
-                          fillColor: AppTheme.of(context).secondaryBackground,
-                        ),
+                        label: _l10n.epPhoneNumber,
+                        placeholder: _l10n.epPhoneHint,
+                        placeholderStyle: AppTheme.of(context).bodyMedium,
+                        fillColor: AppTheme.of(context).secondaryBackground,
+                        radius: 8,
                         style: AppTheme.of(context).bodyMedium,
                         keyboardType: TextInputType.phone,
                       ),
                       const SizedBox(height: 32),
                       FFButtonWidget(
                         onPressed: _saveProfile,
-                        text: 'Save Changes',
+                        text: _l10n.epSave,
                         options: FFButtonOptions(
                           width: double.infinity,
                           height: 50,

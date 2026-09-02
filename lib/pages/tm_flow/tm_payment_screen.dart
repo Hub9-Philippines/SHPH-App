@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '/components/screen_header.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import '../booking_funnel/widgets/booking_flow_route.dart';
 import 'tm_controller.dart';
@@ -34,13 +35,14 @@ class _TMPaymentScreenState extends State<TMPaymentScreen> {
     return Consumer<TMFlowController>(
       builder: (context, controller, _) {
         _handleControllerErrors(controller);
+        final l10n = AppLocalizations.of(context)!;
         return Scaffold(
           backgroundColor: theme.primaryBackground,
           body: SafeArea(
             top: false,
             child: Column(
               children: [
-                const ScreenHeader(title: 'Pay for Service'),
+                ScreenHeader(title: l10n.tmPayForService),
                 Expanded(
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(20, 12, 20, 140),
@@ -55,7 +57,7 @@ class _TMPaymentScreenState extends State<TMPaymentScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Amount due',
+                      l10n.tmAmountDue,
                       style: theme.bodyMedium.override(
                         color: theme.secondaryText,
                       ),
@@ -73,7 +75,7 @@ class _TMPaymentScreenState extends State<TMPaymentScreen> {
               const SizedBox(height: 18),
               _PaymentChoiceCard(
                 label: 'GCash',
-                subtitle: 'Fast mobile wallet payment',
+                subtitle: l10n.tmFastMobileWallet,
                 selected: _selectedPaymentMethod == 'GCash',
                 icon: Icons.account_balance_wallet_rounded,
                 onTap: () {
@@ -83,8 +85,8 @@ class _TMPaymentScreenState extends State<TMPaymentScreen> {
               ),
               const SizedBox(height: 12),
               _PaymentChoiceCard(
-                label: 'Card',
-                subtitle: 'Visa, Mastercard, and debit cards',
+                label: l10n.tmPmtCard,
+                subtitle: l10n.tmPmtCardDesc,
                 selected: _selectedPaymentMethod == 'Card',
                 icon: Icons.credit_card_rounded,
                 onTap: () {
@@ -94,8 +96,8 @@ class _TMPaymentScreenState extends State<TMPaymentScreen> {
               ),
               const SizedBox(height: 12),
               _PaymentChoiceCard(
-                label: 'Cash on Completion',
-                subtitle: 'Record settlement after direct payment',
+                label: l10n.tmPmtCashCompletion,
+                subtitle: l10n.tmRecordSettlement,
                 selected: _selectedPaymentMethod == 'Cash on Completion',
                 icon: Icons.payments_rounded,
                 onTap: () {
@@ -127,7 +129,7 @@ class _TMPaymentScreenState extends State<TMPaymentScreen> {
                       ? null
                       : () async {
                           final navigator = Navigator.of(context);
-                          final success = await controller.processPayment();
+                          final success = await controller.processPayment(l10n);
                           if (!mounted || !success) {
                             return;
                           }
@@ -158,7 +160,7 @@ class _TMPaymentScreenState extends State<TMPaymentScreen> {
                           ),
                         )
                       : Text(
-                          'Pay Now',
+                          l10n.tmPayNow,
                           style: theme.titleMedium.override(
                             color: theme.onPrimary,
                             fontWeight: FontWeight.w700,

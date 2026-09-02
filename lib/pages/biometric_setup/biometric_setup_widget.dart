@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '/components/cupertino_ui/app_activity_indicator.dart';
+import '/components/cupertino_ui/app_button.dart';
+import '/components/cupertino_ui/app_text_field.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'biometric_setup_model.dart';
 
@@ -19,6 +24,7 @@ class BiometricSetupWidget extends StatefulWidget {
 class _BiometricSetupWidgetState extends State<BiometricSetupWidget> {
   late BiometricSetupModel _model;
   final _deviceNameCtrl = TextEditingController();
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -40,14 +46,16 @@ class _BiometricSetupWidgetState extends State<BiometricSetupWidget> {
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
-      appBar: AppBar(
-        backgroundColor: theme.primaryBackground,
-        title: Text('Biometric Setup', style: theme.titleMedium),
-        centerTitle: true,
-        elevation: 0,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: CupertinoPageHeader(
+          backgroundColor: theme.primaryBackground,
+          title: _l10n.bioSetupTitle,
+          titleStyle: theme.titleMedium,
+        ),
       ),
       body: _model.isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: AppActivityIndicator())
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
@@ -66,7 +74,7 @@ class _BiometricSetupWidgetState extends State<BiometricSetupWidget> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Use your fingerprint or face to sign in quickly and securely.',
+                          _l10n.bioSetupSubtitle,
                           style: theme.bodySmall,
                         ),
                       ),
@@ -85,32 +93,27 @@ class _BiometricSetupWidgetState extends State<BiometricSetupWidget> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Register this device',
+                      Text(_l10n.bioSetupRegister,
                           style: theme.titleSmall),
                       const SizedBox(height: 8),
-                      TextField(
+                      AppTextField(
                         controller: _deviceNameCtrl,
-                        decoration: InputDecoration(
-                          hintText: 'Device name (e.g. My Phone)',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          contentPadding:
-                              const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 12),
-                        ),
+                        placeholder: _l10n.bioSetupDeviceNameLabel,
+                        radius: 8,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 12),
                       ),
                       const SizedBox(height: 12),
                       SizedBox(
                         width: double.infinity,
-                        child: ElevatedButton(
+                        child: AppButton(
                           onPressed: _model.isRegistering
                               ? null
                               : () async {
                                   final name = _deviceNameCtrl.text
                                           .trim()
                                           .isEmpty
-                                      ? 'My Device'
+                                      ? _l10n.bioSetupDeviceNameDefault
                                       : _deviceNameCtrl.text.trim();
                                   final ok = await _model
                                       .registerDevice(name);
@@ -121,35 +124,25 @@ class _BiometricSetupWidgetState extends State<BiometricSetupWidget> {
                                       safeSetState(() {});
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
-                                        const SnackBar(
+                                        SnackBar(
                                           content: Text(
-                                              'Device registered'),
+                                              _l10n.bioSetupRegistered),
                                         ),
                                       );
                                     } else {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
-                                        const SnackBar(
+                                        SnackBar(
                                           content: Text(
-                                              'Registration failed'),
+                                              _l10n.bioSetupRegistrationFailed),
                                         ),
                                       );
                                     }
                                   }
                                 },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.primary,
-                          ),
-                          child: _model.isRegistering
-                              ? SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: theme.onPrimary),
-                                )
-                              : const Text(
-                                  'Register this device'),
+                          backgroundColor: theme.primary,
+                          loading: _model.isRegistering,
+                          child: Text(_l10n.bioSetupRegister),
                         ),
                       ),
                     ],
@@ -157,12 +150,12 @@ class _BiometricSetupWidgetState extends State<BiometricSetupWidget> {
                 ),
                 if (_model.credentials.isNotEmpty) ...[
                   const SizedBox(height: 24),
-                  Text('Registered Devices',
+                  Text(_l10n.bioSetupRegisteredDevices,
                       style: theme.titleSmall),
                   const SizedBox(height: 8),
                   ..._model.credentials.map((cred) {
                     final deviceName =
-                        cred['device_name']?.toString() ?? 'Unknown';
+                        cred['device_name']?.toString() ?? _l10n.bioSetupUnknown;
                     final createdAt =
                         cred['created_at']?.toString() ?? '';
                     final pk = cred['id'] as int? ?? 0;

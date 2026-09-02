@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/components/cupertino_ui/app_activity_indicator.dart';
+import '/components/cupertino_ui/app_text_field.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'chat_detail_model.dart';
 
@@ -38,20 +42,23 @@ class _ChatDetailWidgetState extends State<ChatDetailWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final _l10n = AppLocalizations.of(context)!;
     final name = _model.threadDetails?['name']?.toString() ?? 'Chat';
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         backgroundColor: theme.primaryBackground,
-        appBar: AppBar(
-          backgroundColor: theme.primaryBackground,
-          title: Text(name, style: theme.titleMedium),
-          centerTitle: true,
-          elevation: 0,
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(44),
+          child: CupertinoPageHeader(
+            backgroundColor: theme.primaryBackground,
+            title: name,
+            titleStyle: theme.titleMedium,
+          ),
         ),
         body: _model.isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? const Center(child: AppActivityIndicator())
             : Column(
                 children: [
                   Expanded(
@@ -138,6 +145,7 @@ class _ChatDetailWidgetState extends State<ChatDetailWidget> {
   }
 
   Widget _buildInputBar(BuildContext context, AppThemeData theme) {
+    final _l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
       decoration: BoxDecoration(
@@ -153,23 +161,17 @@ class _ChatDetailWidgetState extends State<ChatDetailWidget> {
       child: Row(
         children: [
           Expanded(
-            child: TextField(
+            child: AppTextField(
               controller: _model.messageController,
-              decoration: InputDecoration(
-                hintText: 'Type a message...',
-                hintStyle: GoogleFonts.plusJakartaSans(
-                  color: theme.textTertiary,
-                  fontSize: 14,
-                ),
-                filled: true,
-                fillColor: theme.primaryBackground,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              placeholder: _l10n.ckPlaceholder,
+              placeholderStyle: GoogleFonts.plusJakartaSans(
+                color: theme.textTertiary,
+                fontSize: 14,
               ),
+              fillColor: theme.primaryBackground,
+              radius: 24,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               style: GoogleFonts.plusJakartaSans(
                 color: theme.primaryText,
                 fontSize: 14,

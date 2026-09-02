@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '/components/cupertino_ui/app_button.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 
 class OnboardingStep {
@@ -50,6 +52,8 @@ class OnboardingOverlay extends StatefulWidget {
 class _OnboardingOverlayState extends State<OnboardingOverlay> {
   late PageController _pageController;
   int _currentStep = 0;
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -143,23 +147,24 @@ class _OnboardingOverlayState extends State<OnboardingOverlay> {
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: AppButton(
                   onPressed: _next,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.primary,
-                    foregroundColor: theme.onPrimary,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  ),
+                  backgroundColor: theme.primary,
+                  foregroundColor: theme.onPrimary,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  borderRadius: 14,
                   child: Text(
-                    _currentStep < widget.steps.length - 1 ? 'Next' : 'Get Started',
-                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                    _currentStep < widget.steps.length - 1
+                        ? _l10n.ccNext
+                        : _l10n.ccGetStarted,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 16),
                   ),
                 ),
               ),
               if (_currentStep > 0) ...[
                 const SizedBox(height: 8),
-                TextButton(
+                AppButton(
                   onPressed: () {
                     _pageController.animateToPage(
                       _currentStep - 1,
@@ -167,16 +172,19 @@ class _OnboardingOverlayState extends State<OnboardingOverlay> {
                       curve: Curves.easeInOut,
                     );
                   },
-                  child: const Text('Back'),
+                  variant: AppButtonVariant.text,
+                  child: Text(_l10n.ccBack),
                 ),
               ] else ...[
                 const SizedBox(height: 8),
-                TextButton(
+                AppButton(
                   onPressed: () {
                     widget.onSkip?.call();
                     Navigator.of(context).pop();
                   },
-                  child: Text('Skip', style: TextStyle(color: theme.secondaryText)),
+                  variant: AppButtonVariant.text,
+                  foregroundColor: theme.secondaryText,
+                  child: Text(_l10n.ccSkip),
                 ),
               ],
             ],

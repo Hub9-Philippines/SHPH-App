@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '/backend/supabase/database/tables/service_listings.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/services/bookings_service.dart';
 import '/services/logging_service.dart';
 import '/services/service_listing_service.dart';
@@ -53,6 +54,13 @@ class BookingsModel extends FlutterFlowModel<BookingsWidget> {
   // Store service listings data
   final Map<int, ServiceListingsRow> _serviceListingsCache = {};
 
+  // Localization
+  AppLocalizations? _l10n;
+
+  void setLocalization(AppLocalizations l10n) {
+    _l10n = l10n;
+  }
+
   /// Bookings scoped by the active chip and narrowed by the search query
   /// (service title or provider name match).
   List<BookingItem> get filteredBookings {
@@ -88,33 +96,35 @@ class BookingsModel extends FlutterFlowModel<BookingsWidget> {
   /// active search query takes precedence with its own no-match variant.
   (String heading, String description) emptyStateCopy({
     required bool hasSearchQuery,
+    AppLocalizations? l10n,
   }) {
+    final loc = l10n ?? _l10n;
     if (hasSearchQuery) {
       return (
-        'No bookings matched',
-        'Try another keyword or switch the status filter.',
+        loc?.bkEmptySearchTitle ?? 'No bookings matched',
+        loc?.bkEmptySearchDesc ?? 'Try another keyword or switch the status filter.',
       );
     }
     switch (selectedFilter) {
       case BookingsFilter.all:
         return (
-          'No bookings found',
-          "You haven't scheduled any services yet. Find a pro to get started!",
+          loc?.bkEmptyAllTitle ?? 'No bookings found',
+          loc?.bkEmptyAllDesc ?? "You haven't scheduled any services yet. Find a pro to get started!",
         );
       case BookingsFilter.pending:
         return (
-          'No pending jobs',
-          'Any service requests waiting for provider approval will appear here.',
+          loc?.bkEmptyPendingTitle ?? 'No pending jobs',
+          loc?.bkEmptyPendingDesc ?? 'Any service requests waiting for provider approval will appear here.',
         );
       case BookingsFilter.completed:
         return (
-          'No completed visits yet',
-          'Once a service technician finishes a job, your history will show up here.',
+          loc?.bkEmptyCompletedTitle ?? 'No completed visits yet',
+          loc?.bkEmptyCompletedDesc ?? 'Once a service technician finishes a job, your history will show up here.',
         );
       case BookingsFilter.canceled:
         return (
-          'No canceled bookings',
-          "Great! You don't have any canceled or interrupted service requests.",
+          loc?.bkEmptyCanceledTitle ?? 'No canceled bookings',
+          loc?.bkEmptyCanceledDesc ?? "Great! You don't have any canceled or interrupted service requests.",
         );
     }
   }
@@ -187,8 +197,10 @@ class BookingsModel extends FlutterFlowModel<BookingsWidget> {
             id: booking.id,
             serviceListingId: booking.serviceListingId,
             status: _formatStatus(booking.status),
-            title: serviceListing?.title ?? 'Unknown Service',
-            serviceType: serviceListing?.categoryName ?? 'Service',
+            title: serviceListing?.title ??
+                (_l10n?.bkFallbackUnknownService ?? 'Unknown Service'),
+            serviceType: serviceListing?.categoryName ??
+                (_l10n?.bkFallbackService ?? 'Service'),
             date: _formatDate(booking.bookingDate),
             scheduledExecutionDate: booking.bookingDate,
             price: booking.totalPrice ?? 0.0,
@@ -203,7 +215,7 @@ class BookingsModel extends FlutterFlowModel<BookingsWidget> {
       onStateChanged?.call();
     } catch (e) {
       isLoading = false;
-      errorMessage = 'Failed to load bookings: $e';
+      errorMessage = _l10n?.ehGenericError ?? 'Something went wrong. Please try again.';
       LoggingService.error(
         'Error loading bookings',
         tag: 'BookingsModel',
@@ -215,19 +227,19 @@ class BookingsModel extends FlutterFlowModel<BookingsWidget> {
 
   String _formatStatus(String? status) {
     if (status == null) {
-      return 'Unknown';
+      return _l10n?.bkStatusUnknown ?? 'Unknown';
     }
     switch (status.toLowerCase()) {
       case 'pending':
-        return 'Pending';
+        return _l10n?.bkStatusPending ?? 'Pending';
       case 'confirmed':
-        return 'Confirmed';
+        return _l10n?.bkStatusConfirmed ?? 'Confirmed';
       case 'in_progress':
-        return 'In Progress';
+        return _l10n?.bkStatusInProgress ?? 'In Progress';
       case 'completed':
-        return 'Completed';
+        return _l10n?.bkStatusCompleted ?? 'Completed';
       case 'cancelled':
-        return 'Cancelled';
+        return _l10n?.bkStatusCancelled ?? 'Cancelled';
       default:
         return status;
     }

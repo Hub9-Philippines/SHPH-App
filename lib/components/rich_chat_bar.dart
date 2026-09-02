@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '/components/cupertino_ui/app_text_field.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 
 class RichChatBar extends StatelessWidget {
@@ -21,6 +23,7 @@ class RichChatBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final _l10n = AppLocalizations.of(context)!;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
@@ -52,33 +55,24 @@ class RichChatBar extends StatelessWidget {
                     Icon(Icons.image_outlined, color: theme.textTertiary),
               ),
             Expanded(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                decoration: BoxDecoration(
-                  color: theme.secondaryBackground,
-                  borderRadius: BorderRadius.circular(24),
+              child: AppTextField(
+                controller: controller,
+                minLines: 1,
+                maxLines: 4,
+                textInputAction: TextInputAction.newline,
+                onSubmitted: (_) => onSend(),
+                placeholder: _l10n.ccTypeMessage,
+                placeholderStyle: theme.bodyMedium.override(
+                  color: theme.textTertiary,
                 ),
-                child: TextField(
-                  controller: controller,
-                  minLines: 1,
-                  maxLines: 4,
-                  textInputAction: TextInputAction.newline,
-                  onSubmitted: (_) => onSend(),
-                  decoration: InputDecoration(
-                    hintText: 'Type a message...',
-                    hintStyle: theme.bodyMedium.override(
-                      color: theme.textTertiary,
-                    ),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    isCollapsed: true,
-                    contentPadding:
-                        const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  style: theme.bodyMedium.override(
-                    color: theme.primaryText,
-                  ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                fillColor: theme.secondaryBackground,
+                radius: 24,
+                style: theme.bodyMedium.override(
+                  color: theme.primaryText,
                 ),
               ),
             ),

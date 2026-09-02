@@ -1,0 +1,715 @@
+Analyzing SHPH...                                               
+
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\api\bridges\api_row_mapper.dart:20:35 - always_put_control_body_on_new_line
+   info - Unnecessary type annotation on a local variable. Try removing the type annotation - lib\api\bridges\api_row_mapper.dart:36:5 - omit_local_variable_types
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\api\bridges\api_row_mapper.dart:75:77 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\api\bridges\api_row_mapper.dart:100:61 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\api\bridges\api_row_mapper.dart:113:57 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\api\bridges\api_row_mapper.dart:133:6 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\api\bridges\api_row_mapper.dart:149:62 - prefer_expression_function_bodies
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\api\bridges\shph_auth_bridge.dart:20:35 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\api\bridges\shph_auth_bridge.dart:40:35 - always_put_control_body_on_new_line
+   info - The referenced name isn't visible in scope. Try adding an import for the referenced name - lib\api\bridges\shph_auth_bridge.dart:47:11 - comment_references
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\api\bridges\shph_auth_bridge.dart:51:35 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\api\bridges\shph_auth_bridge.dart:89:35 - always_put_control_body_on_new_line
+   info - Constructor declarations should be before non-constructor declarations. Try moving the constructor declaration before all other members - lib\api\models\address.dart:27:11 - sort_constructors_first
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\api\models\address.dart:27:59 - prefer_expression_function_bodies
+   info - The referenced name isn't visible in scope. Try adding an import for the referenced name - lib\api\models\address.dart:55:18 - comment_references
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\api\models\address.dart:63:25 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\api\models\address.dart:67:31 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\api\models\address.dart:78:25 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\api\models\address.dart:82:31 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\api\models\address.dart:92:24 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\api\models\address.dart:93:23 - always_put_control_body_on_new_line
+   info - Constructor declarations should be before non-constructor declarations. Try moving the constructor declaration before all other members - lib\api\models\booking.dart:58:11 - sort_constructors_first
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\api\models\booking.dart:58:59 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\api\models\booking.dart:96:6 - prefer_expression_function_bodies
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\api\models\booking.dart:109:24 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\api\models\booking.dart:110:23 - always_put_control_body_on_new_line
+   info - Constructor declarations should be before non-constructor declarations. Try moving the constructor declaration before all other members - lib\api\models\category.dart:18:11 - sort_constructors_first
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\api\models\category.dart:18:60 - prefer_expression_function_bodies
+   info - Constructor declarations should be before non-constructor declarations. Try moving the constructor declaration before all other members - lib\api\models\paginated_response.dart:14:11 - sort_constructors_first
+   info - Constructor declarations should be before non-constructor declarations. Try moving the constructor declaration before all other members - lib\api\models\review.dart:24:11 - sort_constructors_first
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\api\models\review.dart:24:58 - prefer_expression_function_bodies
+   info - Constructor declarations should be before non-constructor declarations. Try moving the constructor declaration before all other members - lib\api\models\service_listing.dart:56:11 - sort_constructors_first
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\api\models\service_listing.dart:56:66 - prefer_expression_function_bodies
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\api\models\service_listing.dart:109:24 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\api\models\service_listing.dart:110:23 - always_put_control_body_on_new_line
+   info - Unnecessary duplication of receiver. Try using a cascade to avoid the duplication - lib\api\shph_api_client.dart:30:5 - cascade_invocations
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\api\shph_api_client.dart:94:24 - always_put_control_body_on_new_line
+   info - Constructor declarations should be before non-constructor declarations. Try moving the constructor declaration before all other members - lib\api\shph_api_exception.dart:14:11 - sort_constructors_first
+   info - Unnecessary type annotation on a local variable. Try removing the type annotation - lib\api\shph_api_exception.dart:19:5 - omit_local_variable_types
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\api\shph_api_exception.dart:38:25 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\api\shph_api_exception.dart:46:23 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\api\shph_api_exception.dart:49:55 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\api\shph_api_exception.dart:54:55 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\api\shph_api_exception.dart:70:31 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\api\shph_api_exception.dart:72:24 - always_put_control_body_on_new_line
+   info - Unnecessary use of a 'double' literal. Try using an 'int' literal - lib\app_state.dart:124:37 - prefer_int_literals
+   info - Unnecessary duplication of receiver. Try using a cascade to avoid the duplication - lib\app_state.dart:188:5 - cascade_invocations
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\app_state.dart:263:24 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\app_state.dart:264:23 - always_put_control_body_on_new_line
+   info - Classes should define instance members. Try adding instance behavior or moving the members out of the class - lib\auth\auth_manager_factory.dart:8:7 - avoid_classes_with_only_static_members
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\auth\auth_util.dart:26:27 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\auth\auth_util.dart:36:27 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\auth\auth_util.dart:41:27 - always_put_control_body_on_new_line
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\auth\auth_util.dart:64:4 - prefer_expression_function_bodies
+   info - The import of '../pages/create_profile/create_profile_widget.dart' is unnecessary because all of the used elements are also provided by the import of '../index.dart'. Try removing the import directive - lib\auth\post_auth_navigation_flow.dart:7:8 - unnecessary_import
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\auth\post_auth_navigation_flow.dart:65:37 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\auth\post_auth_navigation_flow.dart:79:29 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\auth\post_auth_navigation_flow.dart:80:27 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\auth\post_auth_navigation_flow.dart:114:31 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\auth\post_auth_navigation_flow.dart:124:29 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\auth\post_auth_navigation_flow.dart:177:25 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\auth\post_auth_navigation_flow.dart:179:31 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\auth\post_auth_navigation_flow.dart:181:58 - always_put_control_body_on_new_line
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\auth\shph_auth\shph_auth_manager.dart:4:1 - directives_ordering
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\auth\shph_auth\shph_auth_manager.dart:85:80 - prefer_expression_function_bodies
+   info - Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a 'mounted' check - lib\auth\shph_auth\shph_auth_manager.dart:98:16 - use_build_context_synchronously
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\auth\shph_auth\shph_user_provider.dart:26:20 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\auth\shph_auth\shph_user_provider.dart:32:37 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\auth\shph_auth\shph_user_provider.dart:38:46 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\auth\shph_auth\shph_user_provider.dart:44:35 - prefer_expression_function_bodies
+   info - Missing a newline at the end of the file. Try adding a newline at the end of the file - lib\auth\test_auth_user.dart:32:2 - eol_at_end_of_file
+   info - Don't return 'this' from a method. Try changing the return type to 'void' and removing the return - lib\backend\supabase\database\table.dart:18:12 - avoid_returning_this
+   info - Don't return 'this' from a method. Try changing the return type to 'void' and removing the return - lib\backend\supabase\database\table.dart:26:12 - avoid_returning_this
+   info - Don't return 'this' from a method. Try changing the return type to 'void' and removing the return - lib\backend\supabase\database\table.dart:33:12 - avoid_returning_this
+   info - Don't return 'this' from a method. Try changing the return type to 'void' and removing the return - lib\backend\supabase\database\table.dart:38:12 - avoid_returning_this
+   info - Don't return 'this' from a method. Try changing the return type to 'void' and removing the return - lib\backend\supabase\database\table.dart:43:12 - avoid_returning_this
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\auth_prompt_modal.dart:10:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\auth_prompt_modal.dart:11:19 - always_put_required_named_parameters_first
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\components\auth_prompt_modal.dart:23:18 - always_put_control_body_on_new_line
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\components\auth_prompt_modal.dart:48:35 - invalid_null_aware_operator
+   info - Missing a newline at the end of the file. Try adding a newline at the end of the file - lib\components\back_button\back_button_widget.dart:61:2 - eol_at_end_of_file
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\booking_action_row.dart:15:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\booking_card.dart:11:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\booking_card.dart:12:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\booking_card.dart:13:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\booking_card.dart:14:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\booking_step_indicator.dart:29:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\booking_step_indicator.dart:30:19 - always_put_required_named_parameters_first
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\components\booking_step_indicator.dart:59:30 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\components\booking_step_indicator.dart:60:31 - always_put_control_body_on_new_line
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\call_accept_permission_sheet.dart:11:19 - always_put_required_named_parameters_first
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\components\call_accept_permission_sheet.dart:25:6 - prefer_expression_function_bodies
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\category_pill.dart:7:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\content_container.dart:10:19 - always_put_required_named_parameters_first
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\components\cupertino_ui\app_activity_indicator.dart:19:38 - prefer_expression_function_bodies
+   info - Missing a newline at the end of the file. Try adding a newline at the end of the file - lib\components\cupertino_ui\app_activity_indicator.dart:26:2 - eol_at_end_of_file
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\cupertino_ui\app_button.dart:30:19 - always_put_required_named_parameters_first
+   info - Missing a newline at the end of the file. Try adding a newline at the end of the file - lib\components\cupertino_ui\app_button.dart:151:2 - eol_at_end_of_file
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\components\cupertino_ui\app_feedback.dart:27:6 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\components\cupertino_ui\app_feedback.dart:54:6 - prefer_expression_function_bodies
+   info - Missing a newline at the end of the file. Try adding a newline at the end of the file - lib\components\cupertino_ui\app_feedback.dart:242:2 - eol_at_end_of_file
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\components\cupertino_ui\app_pickers.dart:15:4 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\components\cupertino_ui\app_pickers.dart:111:38 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\components\cupertino_ui\app_pickers.dart:141:38 - prefer_expression_function_bodies
+   info - Missing a newline at the end of the file. Try adding a newline at the end of the file - lib\components\cupertino_ui\app_pickers.dart:159:2 - eol_at_end_of_file
+   info - The import of 'package:flutter/material.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/cupertino.dart'. Try removing the import directive - lib\components\cupertino_ui\app_switch.dart:2:8 - unnecessary_import
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\cupertino_ui\app_switch.dart:10:19 - always_put_required_named_parameters_first
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeTrackColor instead. This feature was deprecated after v3.24.0-0.2.pre. Try replacing the use of the deprecated member with the replacement - lib\components\cupertino_ui\app_switch.dart:26:7 - deprecated_member_use
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\cupertino_ui\app_switch.dart:37:19 - always_put_required_named_parameters_first
+   info - Missing a newline at the end of the file. Try adding a newline at the end of the file - lib\components\cupertino_ui\app_switch.dart:78:2 - eol_at_end_of_file
+   info - Missing a message in an assert. Try adding a message to the assert - lib\components\cupertino_ui\app_text_field.dart:48:9 - prefer_asserts_with_message
+   info - Field overrides a field inherited from 'FormField'. Try removing the field, overriding the getter and setter if necessary - lib\components\cupertino_ui\app_text_field.dart:69:14 - overridden_fields
+   info - The member 'enabled' overrides an inherited member but isn't annotated with '@override'. Try adding the '@override' annotation - lib\components\cupertino_ui\app_text_field.dart:69:14 - annotate_overrides
+   info - Missing a newline at the end of the file. Try adding a newline at the end of the file - lib\components\cupertino_ui\app_text_field.dart:168:2 - eol_at_end_of_file
+   info - The import of 'package:flutter/material.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/cupertino.dart'. Try removing the import directive - lib\components\cupertino_ui\cupertino_page_header.dart:2:8 - unnecessary_import
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\cupertino_ui\cupertino_page_header.dart:13:19 - always_put_required_named_parameters_first
+   info - Missing a newline at the end of the file. Try adding a newline at the end of the file - lib\components\cupertino_ui\cupertino_page_header.dart:70:2 - eol_at_end_of_file
+   info - Missing a newline at the end of the file. Try adding a newline at the end of the file - lib\components\cupertino_ui\cupertino_theme_scope.dart:39:2 - eol_at_end_of_file
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\earnings_chart.dart:9:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\earnings_chart.dart:10:19 - always_put_required_named_parameters_first
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\components\earnings_chart.dart:21:23 - always_put_control_body_on_new_line
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\components\edit_address\edit_address_widget.dart:7:1 - directives_ordering
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\empty_state.dart:8:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\empty_state.dart:9:19 - always_put_required_named_parameters_first
+   info - Use 'late' for private members with a non-nullable type. Try making adding the modifier 'late' - lib\components\explore_map_view.dart:43:24 - use_late_for_private_fields_and_variables
+warning - The value of the field '_controller' isn't used. Try removing the field, or using it - lib\components\explore_map_view.dart:43:24 - unused_field
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\components\explore_map_view.dart:58:46 - always_put_control_body_on_new_line
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\components\explore_map_view.dart:62:39 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\components\explore_map_view.dart:89:38 - prefer_expression_function_bodies
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\components\hero_offer_banner.dart:32:19 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\components\hero_offer_banner.dart:120:24 - prefer_const_constructors
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\image_lightbox.dart:8:19 - always_put_required_named_parameters_first
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\components\image_lightbox.dart:56:38 - prefer_expression_function_bodies
+   info - Unnecessary use of a 'double' literal. Try using an 'int' literal - lib\components\image_lightbox.dart:78:23 - prefer_int_literals
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\in_app_notification.dart:12:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\in_app_notification.dart:13:19 - always_put_required_named_parameters_first
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\components\in_app_notification.dart:52:26 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\components\in_app_notification.dart:82:20 - always_put_control_body_on_new_line
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\components\in_app_notification.dart:187:38 - prefer_expression_function_bodies
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\incoming_job_modal.dart:9:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\incoming_job_modal.dart:10:19 - always_put_required_named_parameters_first
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\components\incoming_job_modal.dart:41:6 - prefer_expression_function_bodies
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\components\incoming_job_modal.dart:155:17 - prefer_const_constructors
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\instant_dispatch_section.dart:11:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\instant_dispatch_section.dart:12:19 - always_put_required_named_parameters_first
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\components\invite_earn_banner.dart:30:19 - prefer_const_constructors
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\invoice_line_items.dart:14:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\onboarding_overlay.dart:21:19 - always_put_required_named_parameters_first
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\components\onboarding_overlay.dart:35:6 - prefer_expression_function_bodies
+warning - Unused import: '/theme/app_theme.dart'. Try removing the import directive - lib\components\popover_menu.dart:3:8 - unused_import
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\popover_menu.dart:22:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\popover_menu.dart:23:19 - always_put_required_named_parameters_first
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\components\popover_menu.dart:74:50 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\components\popover_menu.dart:76:26 - always_put_control_body_on_new_line
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\components\popover_menu.dart:92:38 - prefer_expression_function_bodies
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\components\provider_map_view.dart:139:75 - always_put_control_body_on_new_line
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\provider_proximity_card.dart:15:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\provider_proximity_card.dart:16:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\provider_proximity_card.dart:17:19 - always_put_required_named_parameters_first
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\components\provider_proximity_card.dart:89:23 - prefer_const_constructors
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\provider_status_toggle.dart:10:19 - always_put_required_named_parameters_first
+   info - 'bool' parameters should be named parameters. Try converting the parameter to a named parameter - lib\components\provider_status_toggle.dart:16:23 - avoid_positional_boolean_parameters
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\quick_book_bar.dart:10:48 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\recommendation_card.dart:11:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\recommendation_card.dart:12:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\recommendation_card.dart:13:19 - always_put_required_named_parameters_first
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\components\recommendation_card.dart:64:49 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\components\recommendation_card.dart:70:29 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\components\recommendation_card.dart:76:29 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\components\recommendation_card.dart:102:47 - invalid_null_aware_operator
+   info - The import of 'package:flutter/material.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/cupertino.dart'. Try removing the import directive - lib\components\refreshable_page.dart:2:8 - unnecessary_import
+   info - The referenced name isn't visible in scope. Try adding an import for the referenced name - lib\components\refreshable_page.dart:6:29 - comment_references
+   info - Missing a newline at the end of the file. Try adding a newline at the end of the file - lib\components\refreshable_page.dart:34:2 - eol_at_end_of_file
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\rich_chat_bar.dart:9:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\rich_chat_bar.dart:10:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\screen_header.dart:9:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\searchable_select.dart:9:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\searchable_select.dart:10:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\searchable_select.dart:11:19 - always_put_required_named_parameters_first
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\components\searchable_select.dart:39:47 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\components\searchable_select.dart:45:30 - always_put_control_body_on_new_line
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\components\searchable_select.dart:121:42 - prefer_expression_function_bodies
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\section_header.dart:9:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\segmented_control.dart:12:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\segmented_control.dart:13:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\segmented_control.dart:14:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\service_card.dart:10:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\service_card.dart:11:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\service_card.dart:12:19 - always_put_required_named_parameters_first
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\components\service_card.dart:129:48 - prefer_expression_function_bodies
+warning - Unused import: '/theme/app_theme.dart'. Try removing the import directive - lib\components\service_recommendations.dart:4:8 - unused_import
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\service_recommendations.dart:9:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\service_recommendations.dart:10:19 - always_put_required_named_parameters_first
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\components\service_recommendations.dart:20:24 - always_put_control_body_on_new_line
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\soft_card.dart:8:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\star_rating.dart:8:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\status_pill.dart:9:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\step_up_password_modal.dart:8:19 - always_put_required_named_parameters_first
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\components\step_up_password_modal.dart:21:6 - prefer_expression_function_bodies
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\components\step_up_password_modal.dart:76:20 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\components\step_up_password_modal.dart:78:20 - always_put_control_body_on_new_line
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\tinted_menu_tile.dart:12:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\tinted_menu_tile.dart:13:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\tinted_menu_tile.dart:14:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\tinted_menu_tile.dart:15:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\tinted_menu_tile.dart:92:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\tinted_menu_tile.dart:93:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\tinted_menu_tile.dart:94:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\tinted_menu_tile.dart:95:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\tinted_menu_tile.dart:96:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\tinted_menu_tile.dart:97:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\components\trust_badge.dart:8:19 - always_put_required_named_parameters_first
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\components\user_avatar.dart:38:48 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\components\waiting_for_client_modal.dart:22:6 - prefer_expression_function_bodies
+   info - Classes should define instance members. Try adding instance behavior or moving the members out of the class - lib\flutter_flow\auth_logger.dart:5:7 - avoid_classes_with_only_static_members
+   info - Unnecessary duplication of receiver. Try using a cascade to avoid the duplication - lib\flutter_flow\flutter_flow_model.dart:20:3 - cascade_invocations
+   info - Unnecessary duplication of receiver. Try using a cascade to avoid the duplication - lib\flutter_flow\flutter_flow_model.dart:33:3 - cascade_invocations
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\flutter_flow\flutter_flow_model.dart:46:30 - always_put_control_body_on_new_line
+   info - Unnecessary use of getter and setter to wrap a field. Try removing the getter and setter and renaming the field - lib\flutter_flow\flutter_flow_model.dart:53:10 - unnecessary_getters_setters
+   info - Function literals shouldn't be passed to 'forEach'. Try using a 'for' loop - lib\flutter_flow\flutter_flow_model.dart:129:44 - avoid_function_literals_in_foreach_calls
+   info - The imported package 'google_maps_webservice' isn't a dependency of the importing package. Try adding a dependency for 'google_maps_webservice' in the 'pubspec.yaml' file - lib\flutter_flow\flutter_flow_place_picker.dart:6:8 - depend_on_referenced_packages
+   info - Invalid use of a private type in a public API. Try making the private type public, or making the API that uses the private type also be private - lib\flutter_flow\flutter_flow_place_picker.dart:29:3 - library_private_types_in_public_api
+   info - Don't throw instances of classes that don't extend either 'Exception' or 'Error'. Try throwing a different class of object - lib\flutter_flow\flutter_flow_util.dart:50:11 - only_throw_errors
+   info - 'bool' parameters should be named parameters. Try converting the parameter to a named parameter - lib\flutter_flow\flutter_flow_util.dart:185:3 - avoid_positional_boolean_parameters
+warning - The declaration '_focusNode' isn't referenced. Try removing the declaration of '_focusNode' - lib\flutter_flow\flutter_flow_widgets.dart:80:17 - unused_element
+   info - Missing a newline at the end of the file. Try adding a newline at the end of the file - lib\flutter_flow\flutter_flow_widgets.dart:370:2 - eol_at_end_of_file
+   info - Static method should be a constructor. Try converting the method into a constructor - lib\flutter_flow\nav\nav.dart:16:31 - prefer_constructors_over_static_methods
+   info - The method is used to change a property. Try converting the method to a setter - lib\flutter_flow\nav\nav.dart:42:8 - use_setters_to_change_properties
+   info - 'bool' parameters should be named parameters. Try converting the parameter to a named parameter - lib\flutter_flow\nav\nav.dart:42:33 - avoid_positional_boolean_parameters
+   info - 'bool' parameters should be named parameters. Try converting the parameter to a named parameter - lib\flutter_flow\nav\nav.dart:76:5 - avoid_positional_boolean_parameters
+   info - 'bool' parameters should be named parameters. Try converting the parameter to a named parameter - lib\flutter_flow\nav\nav.dart:93:5 - avoid_positional_boolean_parameters
+   info - 'bool' parameters should be named parameters. Try converting the parameter to a named parameter - lib\flutter_flow\nav\nav.dart:121:26 - avoid_positional_boolean_parameters
+   info - 'bool' parameters should be named parameters. Try converting the parameter to a named parameter - lib\flutter_flow\nav\nav.dart:125:23 - avoid_positional_boolean_parameters
+   info - Place 'package:' imports before relative imports. Try sorting the directives - lib\flutter_flow\nav\serialization_util.dart:5:1 - directives_ordering
+   info - Place 'package:' imports before relative imports. Try sorting the directives - lib\flutter_flow\nav\serialization_util.dart:6:1 - directives_ordering
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\flutter_flow\nav\serialization_util.dart:8:1 - directives_ordering
+   info - 'bool' parameters should be named parameters. Try converting the parameter to a named parameter - lib\flutter_flow\nav\serialization_util.dart:170:3 - avoid_positional_boolean_parameters
+   info - Missing a newline at the beginning of a multiline string. Try adding a newline at the beginning of the string - lib\flutter_flow\place.dart:23:24 - leading_newlines_in_multiline_strings
+   info - Static method should be a constructor. Try converting the method into a constructor - lib\flutter_flow\uploaded_file.dart:36:25 - prefer_constructors_over_static_methods
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\index.dart:25:1 - directives_ordering
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\index.dart:38:1 - directives_ordering
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\index.dart:69:1 - directives_ordering
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\index.dart:70:1 - directives_ordering
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\index.dart:72:1 - directives_ordering
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\index.dart:74:1 - directives_ordering
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\index.dart:76:1 - directives_ordering
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\index.dart:80:1 - directives_ordering
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\index.dart:82:1 - directives_ordering
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\index.dart:83:1 - directives_ordering
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\index.dart:84:1 - directives_ordering
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\index.dart:87:1 - directives_ordering
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\index.dart:90:1 - directives_ordering
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\index.dart:91:1 - directives_ordering
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\index.dart:94:1 - directives_ordering
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\index.dart:95:1 - directives_ordering
+   info - Invalid use of a private type in a public API. Try making the private type public, or making the API that uses the private type also be private - lib\main.dart:71:10 - library_private_types_in_public_api
+   info - Invalid use of a private type in a public API. Try making the private type public, or making the API that uses the private type also be private - lib\main.dart:232:3 - library_private_types_in_public_api
+   info - Missing an 'await' for the 'Future' computed by this expression. Try adding an 'await' or wrapping the expression with 'unawaited' - lib\main\bookings\bookings_widget.dart:423:14 - unawaited_futures
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\explore\explore_widget.dart:83:26 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\explore\explore_widget.dart:416:23 - always_put_control_body_on_new_line
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\main\explore\explore_widget.dart:478:54 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\main\explore\explore_widget.dart:497:54 - prefer_expression_function_bodies
+   info - Use 'const' for final variables initialized to a constant value. Try replacing 'final' with 'const' - lib\main\explore\explore_widget.dart:501:9 - prefer_const_declarations
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\main\explore\explore_widget.dart:516:32 - prefer_const_constructors
+   info - The import of '../../app_state.dart' is unnecessary because all of the used elements are also provided by the import of '/flutter_flow/flutter_flow_util.dart'. Try removing the import directive - lib\main\home\home_model.dart:5:8 - unnecessary_import
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\main\home\home_model.dart:6:1 - directives_ordering
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\main\home\home_widget.dart:9:1 - directives_ordering
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:45:24 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:49:202 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:51:37 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:52:28 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:54:6 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:54:38 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:55:29 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:56:54 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:59:69 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:60:47 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:66:47 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:69:26 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:73:55 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:81:660 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:85:60 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:90:39 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:97:15 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:101:66 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:108:32 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:113:15 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:116:46 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:118:103 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:123:25 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:285:15 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:289:14 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:292:42 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:305:15 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:312:32 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:319:55 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:324:14 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:326:98 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:330:44 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:334:110 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:336:47 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:338:47 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:371:34 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:373:67 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:392:85 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:395:39 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\home\home_widget.dart:397:36 - always_put_control_body_on_new_line
+   info - The import of '/app_state.dart' is unnecessary because all of the used elements are also provided by the import of '/flutter_flow/flutter_flow_util.dart'. Try removing the import directive - lib\main\messages\messages_model.dart:3:8 - unnecessary_import
+warning - Unused import: '/components/screen_header.dart'. Try removing the import directive - lib\main\payment_methods\payment_methods_widget.dart:7:8 - unused_import
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\main\profile\profile_widget.dart:4:1 - directives_ordering
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\main\profile\profile_widget.dart:89:20 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\main\profile\profile_widget.dart:91:21 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\main\profile\profile_widget.dart:92:24 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\main\profile\profile_widget.dart:93:26 - prefer_const_constructors
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\main\profile\profile_widget.dart:282:36 - prefer_expression_function_bodies
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\profile\profile_widget.dart:479:42 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\profile\profile_widget.dart:694:40 - always_put_control_body_on_new_line
+   info - Closure should be a tearoff. Try using a tearoff rather than a closure - lib\main\profile\profile_widget.dart:821:24 - unnecessary_lambdas
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\profile\profile_widget.dart:886:20 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\profile\profile_widget.dart:902:19 - always_put_control_body_on_new_line
+   info - Missing an 'await' for the 'Future' computed by this expression. Try adding an 'await' or wrapping the expression with 'unawaited' - lib\main\profile\profile_widget.dart:906:5 - unawaited_futures
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\profile\profile_widget.dart:936:21 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\profile\profile_widget.dart:957:21 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\profile\profile_widget.dart:963:20 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\profile\profile_widget.dart:989:35 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\profile\profile_widget.dart:1003:35 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\profile\profile_widget.dart:1034:31 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\main\profile\profile_widget.dart:1038:19 - always_put_control_body_on_new_line
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\main\services\services_widget.dart:8:1 - directives_ordering
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\main\services\services_widget.dart:11:1 - directives_ordering
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\main\services\services_widget.dart:13:1 - directives_ordering
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\address_form\address_form_widget.dart:680:36 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\address_form\address_form_widget.dart:683:36 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\address_form\address_form_widget.dart:753:42 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\address_form\address_form_widget.dart:820:47 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\address_form\address_form_widget.dart:835:42 - always_put_control_body_on_new_line
+   info - Unnecessary type annotation on a local variable. Try removing the type annotation - lib\pages\address_form\address_form_widget.dart:902:9 - omit_local_variable_types
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\address_form\address_form_widget.dart:905:45 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\address_form\address_form_widget.dart:911:52 - prefer_expression_function_bodies
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\address_form\address_form_widget.dart:1108:19 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\address_form\address_form_widget.dart:1283:39 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\address_form\address_form_widget.dart:1290:39 - always_put_control_body_on_new_line
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\addresses\addresses_widget.dart:464:46 - prefer_expression_function_bodies
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\ai_booking_composer\ai_booking_composer_model.dart:16:25 - always_put_control_body_on_new_line
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\ai_booking_composer\ai_booking_composer_widget.dart:202:55 - prefer_expression_function_bodies
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\biometric_setup\biometric_setup_model.dart:28:28 - always_put_control_body_on_new_line
+  error - The getter 'bioSetupDeviceNameHint' isn't defined for the type 'AppLocalizations'. Try importing the library that defines 'bioSetupDeviceNameHint', correcting the name to the name of an existing getter, or defining a getter or field named 'bioSetupDeviceNameHint' - lib\pages\biometric_setup\biometric_setup_widget.dart:101:44 - undefined_getter
+   info - Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a 'mounted' check - lib\pages\biometric_setup\biometric_setup_widget.dart:125:60 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext - lib\pages\biometric_setup\biometric_setup_widget.dart:133:60 - use_build_context_synchronously
+  error - Invalid constant value - lib\pages\biometric_setup\biometric_setup_widget.dart:137:47 - invalid_constant
+   info - 'bool' parameters should be named parameters. Try converting the parameter to a named parameter - lib\pages\booking_funnel\booking_controller.dart:137:30 - avoid_positional_boolean_parameters
+   info - 'bool' parameters should be named parameters. Try converting the parameter to a named parameter - lib\pages\booking_funnel\booking_controller.dart:158:26 - avoid_positional_boolean_parameters
+   info - 'bool' parameters should be named parameters. Try converting the parameter to a named parameter - lib\pages\booking_funnel\booking_controller.dart:163:30 - avoid_positional_boolean_parameters
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\booking_funnel\booking_controller.dart:251:47 - always_put_control_body_on_new_line
+   info - Unnecessary duplication of receiver. Try using a cascade to avoid the duplication - lib\pages\booking_funnel\checkout\checkout_screen.dart:76:25 - cascade_invocations
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\pages\booking_funnel\express_checkout_screen.dart:22:19 - always_put_required_named_parameters_first
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\pages\booking_funnel\express_checkout_screen.dart:57:32 - prefer_const_constructors
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\booking_funnel\express_checkout_screen.dart:93:33 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\booking_funnel\express_checkout_screen.dart:107:27 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\booking_funnel\express_checkout_screen.dart:136:27 - always_put_control_body_on_new_line
+   info - Too many newlines at the end of the file. Try removing the extra newlines at the end of the file - lib\pages\booking_funnel\express_checkout_screen.dart:177:2 - eol_at_end_of_file
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\pages\booking_funnel\live_matching\live_matching_screen.dart:19:1 - directives_ordering
+   info - Unnecessary use of a 'double' literal. Try using an 'int' literal - lib\pages\booking_funnel\live_matching\live_matching_screen.dart:224:43 - prefer_int_literals
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\booking_funnel\live_matching\live_matching_screen.dart:349:24 - always_put_control_body_on_new_line
+   info - Unnecessary type annotation on a local variable. Try removing the type annotation - lib\pages\booking_funnel\live_matching\live_matching_screen.dart:1626:10 - omit_local_variable_types
+   info - Unnecessary use of a 'double' literal. Try using an 'int' literal - lib\pages\booking_funnel\live_matching\live_matching_screen.dart:1629:31 - prefer_int_literals
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\pages\booking_funnel\status_page.dart:12:1 - directives_ordering
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\booking_funnel\status_page.dart:124:63 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\booking_funnel\status_page.dart:125:31 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\booking_funnel\status_page.dart:126:59 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\booking_funnel\status_page.dart:127:51 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\booking_funnel\status_page.dart:128:62 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\booking_funnel\status_page.dart:170:22 - always_put_control_body_on_new_line
+   info - Unnecessary duplication of receiver. Try using a cascade to avoid the duplication - lib\pages\booking_funnel\status_page.dart:187:11 - cascade_invocations
+   info - Unnecessary duplication of receiver. Try using a cascade to avoid the duplication - lib\pages\booking_funnel\status_page.dart:197:11 - cascade_invocations
+   info - Unnecessary duplication of receiver. Try using a cascade to avoid the duplication - lib\pages\booking_funnel\status_page.dart:239:7 - cascade_invocations
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\booking_funnel\status_page.dart:425:34 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\booking_funnel\status_page.dart:430:22 - always_put_control_body_on_new_line
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\booking_funnel\status_page.dart:634:38 - prefer_expression_function_bodies
+   info - Use an 'if' element to conditionally add elements. Try using an 'if' element rather than a conditional expression - lib\pages\booking_funnel\status_page.dart:872:17 - prefer_if_elements_to_conditional_expressions
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\booking_funnel\status_page.dart:981:38 - prefer_expression_function_bodies
+   info - The 'child' argument should be last in widget constructor invocations. Try moving the argument to the end of the argument list - lib\pages\booking_funnel\widgets\booking_status_scaffold.dart:110:19 - sort_child_properties_last
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\pages\booking_funnel\widgets\express_checkout_sheet.dart:25:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\pages\booking_funnel\widgets\express_checkout_sheet.dart:26:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\pages\booking_funnel\widgets\express_checkout_sheet.dart:27:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\pages\booking_funnel\widgets\express_checkout_sheet.dart:28:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\pages\booking_funnel\widgets\express_checkout_sheet.dart:29:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\pages\booking_funnel\widgets\express_checkout_sheet.dart:30:19 - always_put_required_named_parameters_first
+   info - Closure should be a tearoff. Try using a tearoff rather than a closure - lib\pages\booking_funnel\widgets\express_checkout_sheet.dart:135:17 - unnecessary_lambdas
+   info - Unnecessary use of parentheses. Try removing the parentheses - lib\pages\booking_funnel\widgets\express_checkout_sheet.dart:382:22 - unnecessary_parenthesis
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\booking_funnel\widgets\express_checkout_sheet.dart:525:41 - prefer_expression_function_bodies
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\booking_funnel\widgets\express_checkout_sheet.dart:843:45 - always_put_control_body_on_new_line
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\pages\booking_funnel\widgets\express_shimmer.dart:10:19 - always_put_required_named_parameters_first
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\booking_funnel\widgets\express_shimmer.dart:160:53 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\booking_funnel\widgets\express_shimmer.dart:193:6 - prefer_expression_function_bodies
+   info - Unnecessary use of a raw string. Try using a normal string - lib\pages\booking_payment\booking_payment_widget.dart:208:43 - unnecessary_raw_strings
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes. Try adding 'const' before the literal - lib\pages\booking_payment\booking_payment_widget.dart:674:22 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\pages\booking_payment\booking_payment_widget.dart:675:13 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\pages\booking_payment\booking_payment_widget.dart:676:22 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\pages\booking_payment\booking_payment_widget.dart:678:23 - prefer_const_constructors
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\call_history_details_page\call_history_details_page_widget.dart:60:42 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\call_history_details_page\call_history_details_page_widget.dart:67:27 - always_put_control_body_on_new_line
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\pages\call_permission\call_permission_widget.dart:110:23 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\pages\call_permission\call_permission_widget.dart:111:23 - prefer_const_constructors
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\pages\category_detail\category_detail_widget.dart:15:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\pages\category_detail\category_detail_widget.dart:16:19 - always_put_required_named_parameters_first
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\category_detail\category_detail_widget.dart:69:42 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\category_detail\category_detail_widget.dart:94:63 - prefer_expression_function_bodies
+   info - Missing an 'await' for the 'Future' computed by this expression. Try adding an 'await' or wrapping the expression with 'unawaited' - lib\pages\chat_detail\chat_detail_model.dart:27:34 - unawaited_futures
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\chat_detail\chat_detail_model.dart:49:23 - always_put_control_body_on_new_line
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\pages\chat_detail\chat_detail_widget.dart:14:52 - always_put_required_named_parameters_first
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\chat_detail\chat_detail_widget.dart:141:23 - always_put_control_body_on_new_line
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\chat_detail\chat_detail_widget.dart:145:67 - prefer_expression_function_bodies
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\chat_detail\chat_detail_widget.dart:192:18 - always_put_control_body_on_new_line
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\pages\client_ondemand_jobs\client_ondemand_jobs_widget.dart:145:65 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\pages\client_ondemand_jobs\client_ondemand_jobs_widget.dart:157:61 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\pages\client_ondemand_jobs\client_ondemand_jobs_widget.dart:184:58 - invalid_null_aware_operator
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\create_profile\create_profile_model.dart:28:53 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\create_profile\create_profile_model.dart:29:52 - always_put_control_body_on_new_line
+   info - Missing a newline at the end of the file. Try adding a newline at the end of the file - lib\pages\create_profile\create_profile_model.dart:42:2 - eol_at_end_of_file
+   info - The import of 'dart:typed_data' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/services.dart'. Try removing the import directive - lib\pages\create_profile\create_profile_widget.dart:1:8 - unnecessary_import
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\create_profile\create_profile_widget.dart:75:40 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\create_profile\create_profile_widget.dart:115:25 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\create_profile\create_profile_widget.dart:125:52 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\create_profile\create_profile_widget.dart:128:36 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\create_profile\create_profile_widget.dart:138:24 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\create_profile\create_profile_widget.dart:147:22 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\create_profile\create_profile_widget.dart:170:21 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\create_profile\create_profile_widget.dart:180:21 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\create_profile\create_profile_widget.dart:192:20 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\create_profile\create_profile_widget.dart:206:52 - always_put_control_body_on_new_line
+   info - Missing a newline at the end of the file. Try adding a newline at the end of the file - lib\pages\create_profile\create_profile_widget.dart:432:2 - eol_at_end_of_file
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\pages\disputes\disputes_widget.dart:150:65 - invalid_null_aware_operator
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\edit_profile\edit_profile_widget.dart:87:45 - always_put_control_body_on_new_line
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\pages\eta_tracking\eta_tracking_widget.dart:13:53 - always_put_required_named_parameters_first
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\forgot_password\forgot_password_widget.dart:380:59 - always_put_control_body_on_new_line
+   info - Constructor declarations should be before non-constructor declarations. Try moving the constructor declaration before all other members - lib\pages\help\chatbot_page.dart:26:3 - sort_constructors_first
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\help\chatbot_page.dart:96:37 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\help\chatbot_page.dart:107:21 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\help\chatbot_page.dart:114:21 - always_put_control_body_on_new_line
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes. Try adding 'const' before the literal - lib\pages\help\help_page.dart:42:20 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\pages\help\help_page.dart:43:15 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\pages\help\help_page.dart:48:15 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\pages\help\help_page.dart:53:15 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes. Try adding 'const' before the literal - lib\pages\help\help_page.dart:64:20 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\pages\help\help_page.dart:65:15 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\pages\help\help_page.dart:70:15 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes. Try adding 'const' before the literal - lib\pages\help\help_page.dart:81:20 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\pages\help\help_page.dart:82:15 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\pages\help\help_page.dart:87:15 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\pages\help\help_page.dart:92:15 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes. Try adding 'const' before the literal - lib\pages\help\help_page.dart:103:20 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\pages\help\help_page.dart:104:15 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\pages\help\help_page.dart:109:15 - prefer_const_constructors
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\help\help_page.dart:141:38 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\help\help_page.dart:192:38 - prefer_expression_function_bodies
+   info - Missing a newline at the end of the file. Try adding a newline at the end of the file - lib\pages\kyc\kyc_document_model.dart:24:2 - eol_at_end_of_file
+   info - The import of 'dart:typed_data' is unnecessary because all of the used elements are also provided by the import of '/flutter_flow/flutter_flow_util.dart'. Try removing the import directive - lib\pages\kyc\kyc_document_widget.dart:1:8 - unnecessary_import
+   info - The import of 'kyc_face_liveness_widget.dart' is unnecessary because all of the used elements are also provided by the import of '/index.dart'. Try removing the import directive - lib\pages\kyc\kyc_document_widget.dart:16:8 - unnecessary_import
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\kyc\kyc_document_widget.dart:49:37 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\kyc\kyc_document_widget.dart:56:37 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\kyc\kyc_document_widget.dart:95:48 - always_put_control_body_on_new_line
+   info - Missing an 'await' for the 'Future' computed by this expression. Try adding an 'await' or wrapping the expression with 'unawaited' - lib\pages\kyc\kyc_document_widget.dart:96:13 - unawaited_futures
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\kyc\kyc_document_widget.dart:106:28 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\kyc\kyc_document_widget.dart:110:19 - always_put_control_body_on_new_line
+warning - The '!' will have no effect because the receiver can't be null. Try removing the '!' operator - lib\pages\kyc\kyc_document_widget.dart:233:46 - unnecessary_non_null_assertion
+   info - Missing a newline at the end of the file. Try adding a newline at the end of the file - lib\pages\kyc\kyc_document_widget.dart:286:2 - eol_at_end_of_file
+   info - Missing a newline at the end of the file. Try adding a newline at the end of the file - lib\pages\kyc\kyc_face_liveness_model.dart:33:2 - eol_at_end_of_file
+   info - The import of 'dart:typed_data' is unnecessary because all of the used elements are also provided by the import of '/flutter_flow/flutter_flow_util.dart'. Try removing the import directive - lib\pages\kyc\kyc_face_liveness_widget.dart:1:8 - unnecessary_import
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\pages\kyc\kyc_face_liveness_widget.dart:9:1 - directives_ordering
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\kyc\kyc_face_liveness_widget.dart:86:18 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\kyc\kyc_face_liveness_widget.dart:94:22 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\kyc\kyc_face_liveness_widget.dart:105:20 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\kyc\kyc_face_liveness_widget.dart:111:18 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\kyc\kyc_face_liveness_widget.dart:126:27 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\kyc\kyc_face_liveness_widget.dart:130:20 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\kyc\kyc_face_liveness_widget.dart:146:69 - always_put_control_body_on_new_line
+   info - Unnecessary use of a 'double' literal. Try using an 'int' literal - lib\pages\kyc\kyc_face_liveness_widget.dart:163:24 - prefer_int_literals
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\kyc\kyc_face_liveness_widget.dart:165:21 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\kyc\kyc_face_liveness_widget.dart:175:21 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\kyc\kyc_face_liveness_widget.dart:187:28 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\kyc\kyc_face_liveness_widget.dart:191:19 - always_put_control_body_on_new_line
+   info - Missing a newline at the end of the file. Try adding a newline at the end of the file - lib\pages\kyc\kyc_face_liveness_widget.dart:372:2 - eol_at_end_of_file
+   info - Missing a newline at the end of the file. Try adding a newline at the end of the file - lib\pages\kyc\kyc_onboarding_model.dart:16:2 - eol_at_end_of_file
+   info - The import of 'kyc_document_widget.dart' is unnecessary because all of the used elements are also provided by the import of '/index.dart'. Try removing the import directive - lib\pages\kyc\kyc_onboarding_widget.dart:12:8 - unnecessary_import
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\kyc\kyc_onboarding_widget.dart:48:28 - always_put_control_body_on_new_line
+   info - Missing an 'await' for the 'Future' computed by this expression. Try adding an 'await' or wrapping the expression with 'unawaited' - lib\pages\kyc\kyc_onboarding_widget.dart:49:13 - unawaited_futures
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\kyc\kyc_onboarding_widget.dart:53:28 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\kyc\kyc_onboarding_widget.dart:57:19 - always_put_control_body_on_new_line
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\kyc\kyc_onboarding_widget.dart:176:73 - prefer_expression_function_bodies
+   info - Missing a newline at the end of the file. Try adding a newline at the end of the file - lib\pages\kyc\kyc_onboarding_widget.dart:190:2 - eol_at_end_of_file
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\language_settings\language_settings_widget.dart:45:33 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\language_settings\language_settings_widget.dart:58:26 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\language_settings\language_settings_widget.dart:61:19 - always_put_control_body_on_new_line
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\my_notifications\my_notifications_widget.dart:286:38 - prefer_expression_function_bodies
+  error - Expected an identifier - lib\pages\my_notifications\my_notifications_widget.dart:454:40 - missing_identifier
+  error - Expected an identifier - lib\pages\my_notifications\my_notifications_widget.dart:554:31 - missing_identifier
+  error - Expected to find '=>' - lib\pages\my_notifications\my_notifications_widget.dart:554:31 - expected_token
+  error - Expected an identifier - lib\pages\my_notifications\my_notifications_widget.dart:556:31 - missing_identifier
+  error - Expected to find '=>' - lib\pages\my_notifications\my_notifications_widget.dart:556:31 - expected_token
+  error - Expected an identifier - lib\pages\my_notifications\my_notifications_widget.dart:692:47 - missing_identifier
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\my_notifications\my_notifications_widget.dart:718:24 - always_put_control_body_on_new_line
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\pages\not_found\not_found_widget.dart:59:23 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\pages\not_found\not_found_widget.dart:63:40 - invalid_null_aware_operator
+warning - The declaration '_toggleCategory' isn't referenced. Try removing the declaration of '_toggleCategory' - lib\pages\notification_preferences\notification_preferences_widget.dart:52:16 - unused_element
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre. Try replacing the use of the deprecated member with the replacement - lib\pages\notification_preferences\notification_preferences_widget.dart:102:29 - deprecated_member_use
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre. Try replacing the use of the deprecated member with the replacement - lib\pages\notification_preferences\notification_preferences_widget.dart:135:33 - deprecated_member_use
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\on_demand_booking\on_demand_booking_widget.dart:193:42 - prefer_expression_function_bodies
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext - lib\pages\otp_page\otp_page_widget.dart:119:44 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext - lib\pages\otp_page\otp_page_widget.dart:122:23 - use_build_context_synchronously
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\pages\phone_verify_user\phone_verify_user_widget.dart:9:1 - directives_ordering
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\phone_verify_user\phone_verify_user_widget.dart:245:51 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\phone_verify_user\phone_verify_user_widget.dart:280:51 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\phone_verify_user\phone_verify_user_widget.dart:293:49 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\phone_verify_user\phone_verify_user_widget.dart:406:49 - always_put_control_body_on_new_line
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre. Try replacing the use of the deprecated member with the replacement - lib\pages\project_create\project_create_widget.dart:86:19 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext - lib\pages\project_create\project_create_widget.dart:122:33 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext - lib\pages\project_create\project_create_widget.dart:125:54 - use_build_context_synchronously
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\project_detail\project_detail_model.dart:25:21 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\project_detail\project_detail_model.dart:27:25 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\project_detail\project_detail_model.dart:33:21 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\project_detail\project_detail_model.dart:35:13 - always_put_control_body_on_new_line
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\pages\project_detail\project_detail_widget.dart:13:55 - always_put_required_named_parameters_first
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\pages\project_detail\project_detail_widget.dart:116:57 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\pages\project_detail\project_detail_widget.dart:128:51 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\pages\project_detail\project_detail_widget.dart:183:35 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\pages\project_detail\project_detail_widget.dart:199:45 - invalid_null_aware_operator
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\project_detail\project_detail_widget.dart:205:61 - prefer_expression_function_bodies
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\pages\project_detail\project_detail_widget.dart:247:47 - invalid_null_aware_operator
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext - lib\pages\project_detail\project_detail_widget.dart:274:52 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext - lib\pages\project_detail\project_detail_widget.dart:309:39 - use_build_context_synchronously
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\project_detail\project_detail_widget.dart:309:39 - always_put_control_body_on_new_line
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\project_detail\project_detail_widget.dart:339:67 - prefer_expression_function_bodies
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\pages\project_list\project_list_widget.dart:141:63 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\pages\project_list\project_list_widget.dart:160:59 - invalid_null_aware_operator
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\pages\provider_profile\provider_profile_widget.dart:13:57 - always_put_required_named_parameters_first
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\provider_profile\provider_profile_widget.dart:62:42 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\provider_profile\provider_profile_widget.dart:115:65 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\provider_profile\provider_profile_widget.dart:160:57 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\provider_profile\provider_profile_widget.dart:173:68 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\provider_profile\provider_profile_widget.dart:191:50 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\provider_profile\provider_profile_widget.dart:217:64 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\provider_profile\provider_profile_widget.dart:231:58 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\provider_profile\provider_profile_widget.dart:240:71 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\provider_profile\provider_profile_widget.dart:329:48 - prefer_expression_function_bodies
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\provider_profile\provider_profile_widget.dart:391:33 - always_put_control_body_on_new_line
+   info - Unnecessary use of a 'double' literal. Try using an 'int' literal - lib\pages\provider_profile\provider_profile_widget.dart:391:40 - prefer_int_literals
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\recommendations\recommendations_model.dart:44:42 - always_put_control_body_on_new_line
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\recommendations\recommendations_widget.dart:89:52 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\recommendations\recommendations_widget.dart:108:83 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\recommendations\recommendations_widget.dart:122:83 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\recommendations\recommendations_widget.dart:212:49 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\recommendations\recommendations_widget.dart:267:42 - prefer_expression_function_bodies
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\report_problem\report_problem_model.dart:17:30 - always_put_control_body_on_new_line
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre. Try replacing the use of the deprecated member with the replacement - lib\pages\report_problem\report_problem_widget.dart:107:25 - deprecated_member_use
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\report_problem\report_problem_widget.dart:149:48 - always_put_control_body_on_new_line
+   info - Unnecessary use of a 'double' literal. Try using an 'int' literal - lib\pages\room_create\room_create_model.dart:15:25 - prefer_int_literals
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext - lib\pages\room_create\room_create_widget.dart:181:31 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext - lib\pages\room_create\room_create_widget.dart:183:52 - use_build_context_synchronously
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\room_detail\room_detail_model.dart:25:21 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\room_detail\room_detail_model.dart:27:13 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\room_detail\room_detail_model.dart:33:21 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\room_detail\room_detail_model.dart:35:13 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\room_detail\room_detail_model.dart:41:21 - always_put_control_body_on_new_line
+   info - Unnecessary 'await'. Try removing the 'await' - lib\pages\room_detail\room_detail_model.dart:42:12 - unnecessary_await_in_return
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\pages\room_detail\room_detail_widget.dart:14:52 - always_put_required_named_parameters_first
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\pages\room_detail\room_detail_widget.dart:117:57 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\pages\room_detail\room_detail_widget.dart:130:51 - invalid_null_aware_operator
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext - lib\pages\room_detail\room_detail_widget.dart:224:52 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext - lib\pages\room_detail\room_detail_widget.dart:252:39 - use_build_context_synchronously
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\room_detail\room_detail_widget.dart:252:39 - always_put_control_body_on_new_line
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext - lib\pages\room_detail\room_detail_widget.dart:275:39 - use_build_context_synchronously
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\room_detail\room_detail_widget.dart:275:39 - always_put_control_body_on_new_line
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\room_detail\room_detail_widget.dart:295:67 - prefer_expression_function_bodies
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\room_join\room_join_model.dart:18:31 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\room_join\room_join_model.dart:34:21 - always_put_control_body_on_new_line
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\pages\room_join\room_join_widget.dart:108:27 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\pages\room_join\room_join_widget.dart:130:27 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\pages\room_join\room_join_widget.dart:139:25 - invalid_null_aware_operator
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext - lib\pages\room_join\room_join_widget.dart:154:35 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext - lib\pages\room_join\room_join_widget.dart:156:56 - use_build_context_synchronously
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\pages\room_list\room_list_widget.dart:142:63 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\pages\room_list\room_list_widget.dart:154:57 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\pages\room_list\room_list_widget.dart:165:61 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\pages\room_list\room_list_widget.dart:172:64 - invalid_null_aware_operator
+warning - Unused import: '/components/category_pill.dart'. Try removing the import directive - lib\pages\search_page\search_page_widget.dart:10:8 - unused_import
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\pages\search_page\search_page_widget.dart:12:1 - directives_ordering
+warning - Unused import: '/components/content_container.dart'. Try removing the import directive - lib\pages\search_page\search_page_widget.dart:12:8 - unused_import
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\security_settings\security_settings_widget.dart:442:79 - prefer_expression_function_bodies
+  error - Invalid constant value - lib\pages\sessions\sessions_widget.dart:43:11 - invalid_constant
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\pages\sessions\sessions_widget.dart:188:47 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\pages\sessions\sessions_widget.dart:206:51 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\pages\sessions\sessions_widget.dart:217:63 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\pages\sessions\sessions_widget.dart:221:63 - invalid_null_aware_operator
+warning - Unused import: '/auth/base_auth_user_provider.dart'. Try removing the import directive - lib\pages\signin\signin_widget.dart:7:8 - unused_import
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\pages\signin\signin_widget.dart:9:1 - directives_ordering
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\signin\signin_widget.dart:84:23 - always_put_control_body_on_new_line
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\signin\signin_widget.dart:134:43 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\signin\signin_widget.dart:158:43 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\signin\signin_widget.dart:242:45 - prefer_expression_function_bodies
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\signin\signin_widget.dart:345:47 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\signin\signin_widget.dart:358:51 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\signin\signin_widget.dart:371:47 - always_put_control_body_on_new_line
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\signin\signin_widget.dart:453:45 - prefer_expression_function_bodies
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\signin\signin_widget.dart:603:47 - always_put_control_body_on_new_line
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext - lib\pages\signin\signin_widget.dart:606:36 - use_build_context_synchronously
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\signin\signin_widget.dart:614:47 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\signup\signup_widget.dart:81:23 - always_put_control_body_on_new_line
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\signup\signup_widget.dart:120:43 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\signup\signup_widget.dart:150:41 - prefer_expression_function_bodies
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\signup\signup_widget.dart:335:43 - always_put_control_body_on_new_line
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext - lib\pages\signup\signup_widget.dart:336:27 - use_build_context_synchronously
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\signup\signup_widget.dart:344:43 - always_put_control_body_on_new_line
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\signup\signup_widget.dart:387:55 - prefer_expression_function_bodies
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\pages\signup\signup_widget.dart:401:21 - always_put_required_named_parameters_first
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\pages\signup\signup_widget.dart:405:6 - prefer_expression_function_bodies
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\pages\splash\splash_widget.dart:44:21 - always_put_control_body_on_new_line
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\pages\subcategory\subcategory_widget.dart:14:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\pages\subcategory\subcategory_widget.dart:15:19 - always_put_required_named_parameters_first
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre. Try replacing the use of the deprecated member with the replacement - lib\pages\theme_settings\theme_settings_widget.dart:87:21 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre. Try replacing the use of the deprecated member with the replacement - lib\pages\theme_settings\theme_settings_widget.dart:88:21 - deprecated_member_use
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary. Try replacing the operator '?.' with '.' - lib\pages\theme_settings\theme_settings_widget.dart:101:47 - invalid_null_aware_operator
+warning - Unused import: 'package:flutter/material.dart'. Try removing the import directive - lib\pages\wallet\wallet_model.dart:1:8 - unused_import
+   info - Unnecessary use of a 'double' literal. Try using an 'int' literal - lib\pages\wallet\wallet_model.dart:7:20 - prefer_int_literals
+   info - Unnecessary use of a 'double' literal. Try using an 'int' literal - lib\pages\wallet\wallet_model.dart:8:26 - prefer_int_literals
+   info - Unnecessary use of a 'double' literal. Try using an 'int' literal - lib\pages\wallet\wallet_model.dart:9:23 - prefer_int_literals
+warning - Unused import: '/components/star_rating.dart'. Try removing the import directive - lib\pages\write_review\write_review_widget.dart:6:8 - unused_import
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\pages\write_review\write_review_widget.dart:16:19 - always_put_required_named_parameters_first
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext - lib\pages\write_review\write_review_widget.dart:102:42 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext - lib\pages\write_review\write_review_widget.dart:105:21 - use_build_context_synchronously
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\pages\write_review\write_review_widget.dart:130:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\pages\write_review\write_review_widget.dart:131:19 - always_put_required_named_parameters_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\pages\write_review\write_review_widget.dart:132:19 - always_put_required_named_parameters_first
+warning - Unused import: '/auth/base_auth_user_provider.dart'. Try removing the import directive - lib\router\app_router.dart:7:8 - unused_import
+warning - The declaration '_fetchUserProfile' isn't referenced. Try removing the declaration of '_fetchUserProfile' - lib\router\app_router.dart:19:31 - unused_element
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\router\app_router.dart:25:26 - always_put_control_body_on_new_line
+   info - Don't cast a nullable value to a non-nullable type. Try adding a not-null assertion ('!') to make the type non-nullable - lib\router\app_router.dart:757:22 - cast_nullable_to_non_nullable
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\services\ai_composer_service.dart:68:31 - prefer_expression_function_bodies
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\ai_service.dart:126:40 - always_put_control_body_on_new_line
+   info - Unnecessary type annotation on a local variable. Try removing the type annotation - lib\services\ai_service.dart:146:5 - omit_local_variable_types
+warning - Unused import: 'package:flutter/foundation.dart'. Try removing the import directive - lib\services\call_service.dart:3:8 - unused_import
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\call_service.dart:22:23 - always_put_control_body_on_new_line
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\services\client_kyc_service.dart:56:6 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\services\client_kyc_service.dart:78:6 - prefer_expression_function_bodies
+   info - Missing a newline at the end of the file. Try adding a newline at the end of the file - lib\services\client_kyc_service.dart:93:2 - eol_at_end_of_file
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\device_info_service.dart:17:25 - always_put_control_body_on_new_line
+   info - Local variables should be final. Try making the variable final - lib\services\device_info_service.dart:23:5 - prefer_final_locals
+   info - Unnecessary type annotation on a local variable. Try removing the type annotation - lib\services\device_info_service.dart:23:5 - omit_local_variable_types
+   info - Local variables should be final. Try making the variable final - lib\services\device_info_service.dart:24:5 - prefer_final_locals
+   info - Unnecessary type annotation on a local variable. Try removing the type annotation - lib\services\device_info_service.dart:24:5 - omit_local_variable_types
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\device_info_service.dart:76:17 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\earnings_service.dart:119:26 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\earnings_service.dart:124:23 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\kyc_submission_service.dart:42:26 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\kyc_submission_service.dart:71:23 - always_put_control_body_on_new_line
+   info - The method is used to change a property. Try converting the method to a setter - lib\services\logging_service.dart:26:15 - use_setters_to_change_properties
+   info - Constructor declarations should be before non-constructor declarations. Try moving the constructor declaration before all other members - lib\services\notification_store.dart:31:11 - sort_constructors_first
+warning - Unused import: 'package:flutter/foundation.dart'. Try removing the import directive - lib\services\offline_service.dart:3:8 - unused_import
+   info - Sort directive sections alphabetically. Try sorting the directives - lib\services\offline_service.dart:5:1 - directives_ordering
+   info - The imported package 'path' isn't a dependency of the importing package. Try adding a dependency for 'path' in the 'pubspec.yaml' file - lib\services\offline_service.dart:5:8 - depend_on_referenced_packages
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\offline_service.dart:19:23 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\offline_service.dart:55:22 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\offline_service.dart:71:22 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\offline_service.dart:78:23 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\offline_service.dart:83:22 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\offline_service.dart:88:22 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\offline_service.dart:97:22 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\offline_service.dart:108:22 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\offline_service.dart:113:22 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\offline_service.dart:118:22 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\pro_bookings_service.dart:301:24 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\pro_bookings_service.dart:302:23 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\push_notification_service.dart:22:23 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\push_notification_service.dart:27:43 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\push_notification_service.dart:42:43 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\push_notification_service.dart:76:43 - always_put_control_body_on_new_line
+   info - Closure should be a tearoff. Try using a tearoff rather than a closure - lib\services\reviews_service.dart:46:16 - unnecessary_lambdas
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\services\reviews_service.dart:55:39 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\services\reviews_service.dart:59:46 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\services\reviews_service.dart:63:54 - prefer_expression_function_bodies
+   info - Unnecessary use of a block function body. Try using an expression function body - lib\services\service_listing_service.dart:15:63 - prefer_expression_function_bodies
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\service_listing_service.dart:115:23 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\wallet_service.dart:20:44 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\wallet_service.dart:28:44 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\wallet_service.dart:37:45 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\wallet_service.dart:38:28 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\wallet_service.dart:39:28 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\wallet_service.dart:84:26 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\wallet_service.dart:86:23 - always_put_control_body_on_new_line
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\services\wallet_service.dart:95:26 - always_put_control_body_on_new_line
+   info - Sort combinator names alphabetically. Try sorting the combinator names alphabetically - lib\theme\app_theme.dart:2:5 - combinators_ordering
+   info - Classes should define instance members. Try adding instance behavior or moving the members out of the class - lib\theme\app_theme.dart:12:7 - avoid_classes_with_only_static_members
+   info - Constructor declarations should be before non-constructor declarations. Try moving the constructor declaration before all other members - lib\theme\app_theme.dart:466:11 - sort_constructors_first
+   info - Constructor declarations should be before non-constructor declarations. Try moving the constructor declaration before all other members - lib\theme\app_theme.dart:494:11 - sort_constructors_first
+   info - Required named parameters should be before optional named parameters. Try moving the required named parameter to be before any optional named parameters - lib\utils\category_icons.dart:106:58 - always_put_required_named_parameters_first
+   info - Statement should be on a separate line. Try moving the statement to a new line - lib\utils\emergency_categories.dart:19:22 - always_put_control_body_on_new_line
+   info - Classes should define instance members. Try adding instance behavior or moving the members out of the class - lib\utils\geo_utils.dart:3:7 - avoid_classes_with_only_static_members
+   info - Unnecessary type annotation on a local variable. Try removing the type annotation - lib\utils\geo_utils.dart:43:11 - omit_local_variable_types
+   info - Dependencies not sorted alphabetically. Try sorting the dependencies alphabetically (A to Z) - pubspec.yaml:30:3 - sort_pub_dependencies
+   info - Dependencies not sorted alphabetically. Try sorting the dependencies alphabetically (A to Z) - pubspec.yaml:116:3 - sort_pub_dependencies
+   info - Missing a newline at the end of the file. Try adding a newline at the end of the file - test\client_auth_flow_test.dart:103:2 - eol_at_end_of_file
+   info - Missing a newline at the end of the file. Try adding a newline at the end of the file - test\client_kyc_service_test.dart:72:2 - eol_at_end_of_file
+   info - Missing a newline at the end of the file. Try adding a newline at the end of the file - test\create_profile_page_test.dart:198:2 - eol_at_end_of_file
+warning - Unused import: 'package:serbisyohubph/theme/app_theme.dart'. Try removing the import directive - test\explore_redesign_test.dart:8:8 - unused_import
+   info - Sort directive sections alphabetically. Try sorting the directives - test\onboarding_language_test.dart:5:1 - directives_ordering
+   info - Missing a newline at the end of the file. Try adding a newline at the end of the file - test\onboarding_language_test.dart:65:2 - eol_at_end_of_file
+   info - Unnecessary use of a 'double' literal. Try using an 'int' literal - test\proximity_scoring_test.dart:164:40 - prefer_int_literals
+   info - Unnecessary use of a 'double' literal. Try using an 'int' literal - test\proximity_scoring_test.dart:164:45 - prefer_int_literals
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes. Try adding 'const' before the literal - test\psgc_service_test.dart:8:42 - prefer_const_literals_to_create_immutables
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes. Try adding 'const' before the literal - test\psgc_service_test.dart:25:42 - prefer_const_literals_to_create_immutables
+
+710 issues found. (ran in 122.1s)
+ANALYZE_DONE 

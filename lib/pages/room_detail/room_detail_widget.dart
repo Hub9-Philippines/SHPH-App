@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '/components/cupertino_ui/app_activity_indicator.dart';
+import '/components/cupertino_ui/app_button.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'room_detail_model.dart';
 
@@ -21,6 +25,9 @@ class RoomDetailWidget extends StatefulWidget {
 
 class _RoomDetailWidgetState extends State<RoomDetailWidget> {
   late RoomDetailModel _model;
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
   int? currentUserId;
 
   Color _statusColor(String status, AppThemeData theme) => switch (status) {
@@ -33,11 +40,11 @@ class _RoomDetailWidgetState extends State<RoomDetailWidget> {
       };
 
   String _statusLabel(String status) => switch (status) {
-        'open' => 'Open',
-        'locked' => 'Locked',
-        'settled' => 'Settled',
-        'cancelled' => 'Cancelled',
-        'expired' => 'Expired',
+        'open' => _l10n.rlStatusOpen,
+        'locked' => _l10n.rlStatusLocked,
+        'settled' => _l10n.rlStatusSettled,
+        'cancelled' => _l10n.rlStatusCancelled,
+        'expired' => _l10n.rlStatusExpired,
         _ => status,
       };
 
@@ -63,17 +70,19 @@ class _RoomDetailWidgetState extends State<RoomDetailWidget> {
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
-      appBar: AppBar(
-        backgroundColor: theme.primaryBackground,
-        title: Text('Room Details', style: theme.titleMedium),
-        centerTitle: true,
-        elevation: 0,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(44),
+        child: CupertinoPageHeader(
+          backgroundColor: theme.primaryBackground,
+          title: _l10n.rdTitle,
+          titleStyle: theme.titleMedium,
+        ),
       ),
       body: _model.isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: AppActivityIndicator())
           : room == null
               ? Center(
-                  child: Text('Room not found', style: theme.bodyMedium))
+                  child: Text(_l10n.rdRoomNotFound, style: theme.bodyMedium))
               : ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
@@ -143,7 +152,10 @@ class _RoomDetailWidgetState extends State<RoomDetailWidget> {
                           _infoRow(
                             theme,
                             Icons.people,
-                            '${(room['participants'] as List?)?.length ?? 0} / ${room['heads_required']} joined',
+                            _l10n.rdJoined(
+                              (room['participants'] as List?)?.length ?? 0,
+                              room['heads_required'] ?? '?',
+                            ),
                           ),
                           if (room['price_per_head'] != null)
                             _infoRow(theme, Icons.attach_money,
@@ -154,7 +166,7 @@ class _RoomDetailWidgetState extends State<RoomDetailWidget> {
                     if (room['participants'] is List &&
                         (room['participants'] as List).isNotEmpty) ...[
                       const SizedBox(height: 16),
-                      Text('Participants', style: theme.titleSmall),
+                      Text(_l10n.rdParticipants, style: theme.titleSmall),
                       const SizedBox(height: 8),
                       ...(room['participants'] as List).map((p) => Card(
                             margin: const EdgeInsets.only(bottom: 8),
@@ -187,26 +199,31 @@ class _RoomDetailWidgetState extends State<RoomDetailWidget> {
                     if (isOrganizer && room['status'] == 'open') ...[
                       SizedBox(
                         width: double.infinity,
-                        child: ElevatedButton.icon(
+                        child: AppButton(
                           onPressed: () {
                             Clipboard.setData(ClipboardData(
                                 text: room['join_token']?.toString() ?? ''));
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('Join code copied')),
+                              SnackBar(
+                                  content: Text(_l10n.rdJoinCodeCopied)),
                             );
                           },
-                          icon: const Icon(Icons.share, size: 18),
-                          label: const Text('Share Join Code'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.primary,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.share, size: 18,
+                                  color: Colors.white),
+                              SizedBox(width: 8),
+                              Text(_l10n.rdShareJoinCode),
+                            ],
                           ),
                         ),
                       ),
                       const SizedBox(height: 8),
                       SizedBox(
                         width: double.infinity,
-                        child: OutlinedButton.icon(
+                        child: AppButton(
+                          variant: AppButtonVariant.outlined,
                           onPressed: () async {
                             final ok = await _model.lockRoom();
                             if (mounted) {
@@ -214,18 +231,27 @@ class _RoomDetailWidgetState extends State<RoomDetailWidget> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                     content: Text(
-                                        ok ? 'Room locked' : 'Failed')),
+                                        ok ? _l10n.rdRoomLocked : _l10n.rdFailed)),
                               );
                             }
                           },
-                          icon: const Icon(Icons.lock, size: 18),
-                          label: const Text('Lock Room'),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.lock, size: 18,
+                                  color: theme.primaryText),
+                              const SizedBox(width: 8),
+                              Text(_l10n.rdLockRoom),
+                            ],
+                          ),
                         ),
                       ),
                       const SizedBox(height: 8),
                       SizedBox(
                         width: double.infinity,
-                        child: TextButton.icon(
+                        child: AppButton(
+                          variant: AppButtonVariant.text,
+                          foregroundColor: theme.error,
                           onPressed: () async {
                             final ok = await _model.cancelRoom();
                             if (mounted) {
@@ -233,26 +259,38 @@ class _RoomDetailWidgetState extends State<RoomDetailWidget> {
                               if (ok) context.pop();
                             }
                           },
-                          icon: Icon(Icons.cancel,
-                              size: 18, color: theme.error),
-                          label: Text('Cancel Room',
-                              style:
-                                  TextStyle(color: theme.error)),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.cancel,
+                                  size: 18, color: theme.error),
+                              const SizedBox(width: 8),
+                              Text(_l10n.rdCancelRoom),
+                            ],
+                          ),
                         ),
                       ),
                     ],
                     if (!isOrganizer && room['status'] == 'open') ...[
                       SizedBox(
                         width: double.infinity,
-                        child: OutlinedButton.icon(
+                        child: AppButton(
+                          variant: AppButtonVariant.outlined,
                           onPressed: () async {
                             final ok = await _model.leaveRoom();
                             if (mounted) {
                               if (ok) context.pop();
                             }
                           },
-                          icon: const Icon(Icons.exit_to_app, size: 18),
-                          label: const Text('Leave Room'),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.exit_to_app, size: 18,
+                                  color: theme.primaryText),
+                              const SizedBox(width: 8),
+                              Text(_l10n.rdLeaveRoom),
+                            ],
+                          ),
                         ),
                       ),
                     ],

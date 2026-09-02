@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'theme_settings_model.dart';
 
@@ -18,6 +20,8 @@ class ThemeSettingsWidget extends StatefulWidget {
 
 class _ThemeSettingsWidgetState extends State<ThemeSettingsWidget> {
   late ThemeSettingsModel _model;
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -37,11 +41,13 @@ class _ThemeSettingsWidgetState extends State<ThemeSettingsWidget> {
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
-      appBar: AppBar(
-        backgroundColor: theme.primaryBackground,
-        title: Text('Appearance', style: theme.titleMedium),
-        centerTitle: true,
-        elevation: 0,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: CupertinoPageHeader(
+          title: _l10n.thTitle,
+          backgroundColor: theme.primaryBackground,
+          titleStyle: theme.titleMedium,
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -56,14 +62,14 @@ class _ThemeSettingsWidgetState extends State<ThemeSettingsWidget> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Theme', style: theme.titleSmall),
+                Text(_l10n.thTheme, style: theme.titleSmall),
                 const SizedBox(height: 12),
                 ...ThemeMode.values.map((mode) {
                   final selected = _model.current == mode;
                   final title = switch (mode) {
-                    ThemeMode.light => 'Light',
-                    ThemeMode.dark => 'Dark',
-                    ThemeMode.system => 'System Default',
+                    ThemeMode.light => _l10n.thLight,
+                    ThemeMode.dark => _l10n.thDark,
+                    ThemeMode.system => _l10n.thSystemDefault,
                   };
                   final icon = switch (mode) {
                     ThemeMode.light => Icons.light_mode,
@@ -71,10 +77,10 @@ class _ThemeSettingsWidgetState extends State<ThemeSettingsWidget> {
                     ThemeMode.system => Icons.settings_brightness,
                   };
                   final subtitle = switch (mode) {
-                    ThemeMode.light => 'Always use light mode',
-                    ThemeMode.dark => 'Always use dark mode',
+                    ThemeMode.light => _l10n.thLightSubtitle,
+                    ThemeMode.dark => _l10n.thDarkSubtitle,
                     ThemeMode.system =>
-                      'Follow device settings',
+                      _l10n.thSystemSubtitle,
                   };
                   return RadioListTile<ThemeMode>(
                     value: mode,

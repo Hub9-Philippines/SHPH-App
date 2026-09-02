@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'sessions_model.dart';
 
@@ -18,6 +19,7 @@ class SessionsWidget extends StatefulWidget {
 
 class _SessionsWidgetState extends State<SessionsWidget> {
   late SessionsModel _model;
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -36,18 +38,18 @@ class _SessionsWidgetState extends State<SessionsWidget> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Sign Out All Devices'),
-        content: const Text(
-          'This will sign you out of all active sessions except this one.',
+        title: Text(_l10n.snSignOutAllDevices),
+        content: Text(
+          _l10n.snSignOutAllConfirm,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(_l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Sign Out All'),
+            child: Text(_l10n.snSignOutAll),
           ),
         ],
       ),
@@ -58,11 +60,11 @@ class _SessionsWidgetState extends State<SessionsWidget> {
         if (ok) {
           setState(() => _model.sessions.clear());
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('All other sessions revoked')),
+            SnackBar(content: Text(_l10n.snAllRevoked)),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to revoke sessions')),
+            SnackBar(content: Text(_l10n.snFailedRevokeAll)),
           );
         }
       }
@@ -75,11 +77,11 @@ class _SessionsWidgetState extends State<SessionsWidget> {
       if (ok) {
         safeSetState(() {});
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Session revoked')),
+          SnackBar(content: Text(_l10n.snRevoked)),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to revoke session')),
+          SnackBar(content: Text(_l10n.snFailedRevoke)),
         );
       }
     }
@@ -93,7 +95,7 @@ class _SessionsWidgetState extends State<SessionsWidget> {
       backgroundColor: theme.primaryBackground,
       appBar: AppBar(
         backgroundColor: theme.primaryBackground,
-        title: Text('Active Sessions', style: theme.titleMedium),
+        title: Text(_l10n.snTitle, style: theme.titleMedium),
         centerTitle: true,
         elevation: 0,
         actions: [
@@ -104,7 +106,7 @@ class _SessionsWidgetState extends State<SessionsWidget> {
                   color: _model.isRevokingAll
                       ? theme.textTertiary
                       : theme.error),
-              tooltip: 'Sign Out All',
+              tooltip: _l10n.snSignOutAll,
             ),
         ],
       ),
@@ -118,7 +120,7 @@ class _SessionsWidgetState extends State<SessionsWidget> {
                       Icon(Icons.devices,
                           size: 64, color: theme.secondaryText),
                       const SizedBox(height: 16),
-                      Text('No active sessions',
+                      Text(_l10n.snNoActiveSessions,
                           style: theme.bodyMedium),
                     ],
                   ),
@@ -131,7 +133,7 @@ class _SessionsWidgetState extends State<SessionsWidget> {
                     final sessionId =
                         session['session_id']?.toString() ?? '';
                     final device =
-                        session['device']?.toString() ?? 'Unknown';
+                        session['device']?.toString() ?? _l10n.snUnknown;
                     final platform =
                         session['platform']?.toString() ?? '';
                     final loginAt =
@@ -199,7 +201,7 @@ class _SessionsWidgetState extends State<SessionsWidget> {
                                             borderRadius:
                                                 BorderRadius.circular(4),
                                           ),
-                                          child: Text('Current',
+                                          child: Text(_l10n.snCurrent,
                                               style: theme.bodySmall
                                                   ?.copyWith(
                                                       color:
@@ -227,7 +229,7 @@ class _SessionsWidgetState extends State<SessionsWidget> {
                                     _revokeSingle(sessionId),
                                 icon: Icon(Icons.logout,
                                     color: theme.error, size: 20),
-                                tooltip: 'Revoke',
+                                tooltip: _l10n.snRevoke,
                               ),
                           ],
                         ),

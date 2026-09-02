@@ -4,7 +4,11 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '/backend/supabase/database/tables/reviews.dart';
 import '/components/back_button/back_button_widget.dart';
+import '/components/cupertino_ui/app_activity_indicator.dart';
+import '/components/cupertino_ui/app_button.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/services/logging_service.dart';
 import '/services/reviews_service.dart';
 import '/theme/app_theme.dart';
@@ -33,6 +37,8 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
   List<ReviewsRow> _reviews = [];
   bool _isLoading = false;
   bool _hasError = false;
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -76,17 +82,17 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
     
     if (difference.inDays == 0) {
       if (difference.inHours == 0) {
-        return '${difference.inMinutes} min ago';
+        return _l10n.rvMinAgo(difference.inMinutes);
       }
-      return '${difference.inHours} hours ago';
+      return _l10n.rvHoursAgo(difference.inHours);
     } else if (difference.inDays == 1) {
-      return '1 day ago';
+      return _l10n.rvDayAgo;
     } else if (difference.inDays < 7) {
-      return '${difference.inDays} days ago';
+      return _l10n.rvDaysAgo(difference.inDays);
     } else if (difference.inDays < 30) {
-      return '${(difference.inDays / 7).floor()} weeks ago';
+      return _l10n.rvWeeksAgo((difference.inDays / 7).floor());
     } else {
-      return '${(difference.inDays / 30).floor()} months ago';
+      return _l10n.rvMonthsAgo((difference.inDays / 30).floor());
     }
   }
 
@@ -105,28 +111,25 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
         child: Scaffold(
           key: scaffoldKey,
           backgroundColor: AppTheme.of(context).primaryBackground,
-          appBar: AppBar(
-            backgroundColor: AppTheme.of(context).primaryBackground,
-            automaticallyImplyLeading: false,
-            leading: wrapWithModel(
-              model: _model.backButtonModel,
-              updateCallback: () => safeSetState(() {}),
-              child: const BackButtonWidget(),
-            ),
-            title: Text(
-              'Reviews',
-              style: AppTheme.of(context).titleLarge.override(
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(56),
+            child: CupertinoPageHeader(
+              backgroundColor: AppTheme.of(context).primaryBackground,
+              leading: wrapWithModel(
+                model: _model.backButtonModel,
+                updateCallback: () => safeSetState(() {}),
+                child: const BackButtonWidget(),
+              ),
+              title: _l10n.rvTitle,
+              titleStyle: AppTheme.of(context).titleLarge.override(
                     font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
                   ),
             ),
-            actions: const [],
-            centerTitle: true,
-            elevation: 0,
           ),
           body: SafeArea(
             top: true,
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: AppActivityIndicator())
                 : _hasError
                     ? Center(
                         child: Column(
@@ -135,13 +138,13 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
                             const Icon(Icons.error_outline, size: 48),
                             const SizedBox(height: 16),
                             Text(
-                              'Error loading reviews',
+                              _l10n.rvError,
                               style: AppTheme.of(context).bodyMedium,
                             ),
                             const SizedBox(height: 16),
-                            ElevatedButton(
+                            AppButton(
                               onPressed: _loadReviews,
-                              child: const Text('Retry'),
+                              child: Text(_l10n.rvRetry),
                             ),
                           ],
                         ),
@@ -158,12 +161,12 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
                                 ),
                                 const SizedBox(height: 16),
                                 Text(
-                                  'No reviews yet',
+                                  _l10n.rvNoReviews,
                                   style: AppTheme.of(context).titleMedium,
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  'Be the first to review ${widget.serviceName}',
+                                  _l10n.rvBeFirst(widget.serviceName),
                                   style: AppTheme.of(context).bodySmall.override(
                                         color: AppTheme.of(context).secondaryText,
                                       ),
@@ -222,7 +225,7 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'User',
+                      _l10n.rvUser,
                       style: AppTheme.of(context)
                           .bodyMedium
                           .override(

@@ -3,11 +3,13 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '/api/bridges/api_row_mapper.dart';
 import '/auth/auth_util.dart';
+import '/components/cupertino_ui/app_activity_indicator.dart';
 import '/backend/supabase/supabase.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
 import '/services/addresses_service.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'edit_address_model.dart';
 
@@ -23,6 +25,8 @@ class EditAddressWidget extends StatefulWidget {
 class _EditAddressWidgetState extends State<EditAddressWidget> {
   late EditAddressModel _model;
   late Future<List<AddressesRow>> _addressesFuture;
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void setState(VoidCallback callback) {
@@ -105,7 +109,7 @@ class _EditAddressWidgetState extends State<EditAddressWidget> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Select address',
+                      _l10n.adSelectAddress,
                       style: AppTheme.of(context).headlineSmall.override(
                             font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.bold,
@@ -124,7 +128,7 @@ class _EditAddressWidgetState extends State<EditAddressWidget> {
                   future: _addressesFuture,
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
-                      return const Center(child: CircularProgressIndicator());
+                      return const Center(child: AppActivityIndicator());
                     }
                     final addresses = snapshot.data!;
                     if (addresses.isEmpty) {
@@ -140,7 +144,7 @@ class _EditAddressWidgetState extends State<EditAddressWidget> {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'No addresses yet',
+                              _l10n.adNoAddressesYet,
                               style: AppTheme.of(context).bodyLarge,
                             ),
                           ],
@@ -168,7 +172,7 @@ class _EditAddressWidgetState extends State<EditAddressWidget> {
                       AddressFormWidget.routePath,
                     );
                   },
-                  text: 'Add new address',
+                  text: _l10n.adAddNewAddress,
                   icon: const Icon(
                     Icons.add_circle_outline,
                     size: 22,
@@ -234,7 +238,7 @@ class _EditAddressWidgetState extends State<EditAddressWidget> {
                     Row(
                       children: [
                         Text(
-                          address.addressLine2 ?? 'Address',
+                          address.addressLine2 ?? _l10n.bfAddress,
                           style: AppTheme.of(context).titleSmall.override(
                                 fontWeight: FontWeight.w600,
                               ),
@@ -251,7 +255,7 @@ class _EditAddressWidgetState extends State<EditAddressWidget> {
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
-                              'Default',
+                              _l10n.adDefault,
                               style: AppTheme.of(context).bodySmall.override(
                                     color: AppTheme.of(context).onPrimary,
                                     fontSize: 10,

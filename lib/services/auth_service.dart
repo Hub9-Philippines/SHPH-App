@@ -25,7 +25,12 @@ class AuthService extends ChangeNotifier {
   bool get isAuthenticated => _status == AuthStatus.authenticated;
   String? get userId => _currentUser?['id']?.toString();
   String? get email => _currentUser?['email'] as String?;
-  String? get displayName => _currentUser?['display_name'] as String?;
+  String? get displayName => _currentUser?['display_name'] as String? ??
+      _currentUser?['name'] as String? ??
+      _currentUser?['full_name'] as String? ??
+      ((_currentUser?['first_name'] != null)
+          ? '${_currentUser?['first_name']} ${_currentUser?['last_name'] ?? ''}'.trim()
+          : null);
 
   /// Role from the backend (`client`/`provider`/`admin`), matching web
   /// `auth.user.role`. Prefer [isProvider]/[isClient] for capability checks.
@@ -37,11 +42,14 @@ class AuthService extends ChangeNotifier {
   /// True when the account holds client capability (`is_client`).
   bool get isClient => _currentUser?['is_client'] == true;
 
-  /// Profile completeness mirrors web: a non-empty `display_name` is the
-  /// only required signal for the post-auth flow.
+  /// Profile completeness: true if `is_profile_complete` is true, or if
+  /// `first_name` or `display_name` is non-empty.
   bool get isProfileComplete {
-    final displayName = this.displayName;
-    return displayName != null && displayName.trim().isNotEmpty;
+    if (_currentUser?['is_profile_complete'] == true) return true;
+    final first = _currentUser?['first_name']?.toString().trim();
+    if (first != null && first.isNotEmpty) return true;
+    final name = displayName;
+    return name != null && name.trim().isNotEmpty;
   }
 
   /// True when the provider chose "I'll do this later" on KYC (server-persisted).

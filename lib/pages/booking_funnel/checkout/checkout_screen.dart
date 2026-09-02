@@ -7,7 +7,9 @@ import 'package:provider/provider.dart';
 
 import '/app_state.dart';
 import '/backend/supabase/supabase.dart';
+import '/components/cupertino_ui/app_button.dart';
 import '/components/edit_address/edit_address_widget.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import '../booking_controller.dart';
 import '../booking_models.dart';
@@ -27,6 +29,7 @@ class CheckoutScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Consumer<BookingFlowController>(
         builder: (context, controller, _) {
+          final l10n = AppLocalizations.of(context)!;
           final draft = controller.draft;
           final quote = controller.quote;
           final isScheduled = draft.urgency == BookingUrgency.scheduled;
@@ -46,11 +49,11 @@ class CheckoutScreen extends StatelessWidget {
                       quote: quote,
                       isScheduled: isScheduled,
                       scheduleLabel: isScheduled
-                          ? _formatSchedule(draft)
-                          : _asapLabel(draft),
+                          ? _formatSchedule(draft, l10n)
+                          : _asapLabel(draft, l10n),
                       serviceLevelLabel:
-                          _serviceLevelLabel(draft.serviceCategoryName),
-                      quantityLabel: _quantityLabel(draft.serviceCategoryName),
+                          _serviceLevelLabel(draft.serviceCategoryName, l10n),
+                      quantityLabel: _quantityLabel(draft.serviceCategoryName, l10n),
                       onResume: () {
                         controller.setMatchingActive(false);
                         unawaited(
@@ -61,7 +64,7 @@ class CheckoutScreen extends StatelessWidget {
                                 child: LiveMatchingScreen(
                                   bookingDate: _liveMatchingDate(draft),
                                   showMap: showLiveMap,
-                                  serviceTitle: controller.selectedServiceLabel,
+                                  serviceTitle: controller.selectedServiceLabel(l10n),
                                 ),
                               ),
                             ),
@@ -79,11 +82,11 @@ class CheckoutScreen extends StatelessWidget {
                       isScheduled: isScheduled,
                       isImmediate: isImmediate,
                       title: isScheduled
-                          ? 'Review scheduled booking'
-                          : 'Review live request',
+                          ? l10n.bfReviewScheduledBooking
+                          : l10n.bfReviewLiveRequest,
                       subtitle: isScheduled
-                          ? 'Confirm the slot, pinned address, and payment before we reserve it.'
-                          : 'Confirm the pinned address and payment before we start searching nearby providers.',
+                          ? l10n.bfConfirmCheckoutBody
+                          : l10n.bfConfirmSearchBody,
                       onSubmit: controller.isSubmitting
                           ? null
                           : () async {
@@ -93,13 +96,13 @@ class CheckoutScreen extends StatelessWidget {
                         await _pickAddress(context, controller);
                       },
                       onBack: () => Navigator.of(context).pop(),
-                      buttonLabel: _buttonLabel(draft),
+                      buttonLabel: _buttonLabel(draft, l10n),
                       scheduleLabel: isScheduled
-                          ? _formatSchedule(draft)
-                          : _asapLabel(draft),
-                      quantityLabel: _quantityLabel(draft.serviceCategoryName),
+                          ? _formatSchedule(draft, l10n)
+                          : _asapLabel(draft, l10n),
+                      quantityLabel: _quantityLabel(draft.serviceCategoryName, l10n),
                       serviceLevelLabel:
-                          _serviceLevelLabel(draft.serviceCategoryName),
+                          _serviceLevelLabel(draft.serviceCategoryName, l10n),
                     ),
             ),
           );
@@ -110,10 +113,11 @@ class CheckoutScreen extends StatelessWidget {
     BuildContext context,
     BookingFlowController controller,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final urgency = controller.draft.urgency;
 
     if (urgency == BookingUrgency.scheduled) {
-      final success = await controller.attachReservationToken();
+      final success = await controller.attachReservationToken(l10n);
       if (!context.mounted) {
         return;
       }
@@ -121,8 +125,7 @@ class CheckoutScreen extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              controller.lastError ??
-                  'Could not reserve the slot. Please try again.',
+              controller.lastError ?? l10n.bfCouldNotReserveSlot,
             ),
           ),
         );
@@ -141,7 +144,7 @@ class CheckoutScreen extends StatelessWidget {
       return;
     }
 
-    final success = await controller.attachLiveSearchToken();
+    final success = await controller.attachLiveSearchToken(l10n);
     if (!context.mounted) {
       return;
     }
@@ -149,8 +152,7 @@ class CheckoutScreen extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            controller.lastError ??
-                'Could not start live matching. Please try again.',
+            controller.lastError ?? l10n.bfCouldNotStartLiveMatching,
           ),
         ),
       );
@@ -164,7 +166,7 @@ class CheckoutScreen extends StatelessWidget {
             child: LiveMatchingScreen(
               bookingDate: _liveMatchingDate(controller.draft),
               showMap: showLiveMap,
-              serviceTitle: controller.selectedServiceLabel,
+              serviceTitle: controller.selectedServiceLabel(l10n),
             ),
           ),
         ),
@@ -192,13 +194,14 @@ class CheckoutScreen extends StatelessWidget {
     if (!context.mounted || result == null) {
       return;
     }
+    final l10n = AppLocalizations.of(context)!;
 
     final appState = FFAppState();
     controller.setAddress(
       BookingAddress(
         label: appState.selectedAddressLabel.isNotEmpty
             ? appState.selectedAddressLabel
-            : (result.addressLine2 ?? 'Address'),
+            : (result.addressLine2 ?? l10n.bfAddress),
         line1: appState.selectedAddressLine1.isNotEmpty
             ? appState.selectedAddressLine1
             : (result.addressLine1 ?? ''),
@@ -218,16 +221,16 @@ class CheckoutScreen extends StatelessWidget {
     }
   }
 
-  String _buttonLabel(BookingDraft draft) {
+  String _buttonLabel(BookingDraft draft, AppLocalizations l10n) {
     if (draft.urgency == BookingUrgency.scheduled) {
-      return 'Confirm & Reserve Slot';
+      return l10n.bfConfirmReserveSlot;
     }
 
     final category = (draft.serviceCategoryName ?? '').toLowerCase();
     if (category.contains('clean')) {
-      return 'Find Active Cleaner Now';
+      return l10n.bfFindActiveCleanerNow;
     }
-    return 'Find Active Provider Now';
+    return l10n.bfFindActiveProviderNow;
   }
 
   DateTime _liveMatchingDate(BookingDraft draft) {
@@ -243,50 +246,50 @@ class CheckoutScreen extends StatelessWidget {
     return draft.scheduledDate ?? DateTime.now();
   }
 
-  String _asapLabel(BookingDraft draft) {
+  String _asapLabel(BookingDraft draft, AppLocalizations l10n) {
     if (draft.urgency == BookingUrgency.laterToday &&
         draft.scheduledTime != null) {
-      return 'ASAP today after ${formatTimeOfDay(draft.scheduledTime!)}';
+      return l10n.bfAsapTodayAfter(formatTimeOfDay(draft.scheduledTime!));
     }
     if (draft.urgency == BookingUrgency.laterToday) {
-      return 'Later today';
+      return l10n.bfLaterToday;
     }
-    return 'ASAP - Finding nearest provider';
+    return l10n.bfAsapFindingProvider;
   }
 
-  String _formatSchedule(BookingDraft draft) {
+  String _formatSchedule(BookingDraft draft, AppLocalizations l10n) {
     if (draft.urgency == BookingUrgency.rightNow) {
-      return 'Now';
+      return l10n.bfNow;
     }
     if (draft.urgency == BookingUrgency.laterToday &&
         draft.scheduledTime != null) {
-      return 'Today at ${formatTimeOfDay(draft.scheduledTime!)}';
+      return l10n.bfTodayAtTime(formatTimeOfDay(draft.scheduledTime!));
     }
     if (draft.urgency == BookingUrgency.scheduled &&
         draft.scheduledDate != null &&
         draft.scheduledTime != null) {
       return '${draft.scheduledDate!.month}/${draft.scheduledDate!.day} at ${formatTimeOfDay(draft.scheduledTime!)}';
     }
-    return 'Select a time';
+    return l10n.bfSelectATime;
   }
 
-  String _quantityLabel(String? categoryName) {
+  String _quantityLabel(String? categoryName, AppLocalizations l10n) {
     final normalized = (categoryName ?? '').toLowerCase();
     if (normalized.contains('clean')) {
-      return 'Rooms';
+      return l10n.bfRooms;
     }
     if (normalized.contains('repair') || normalized.contains('install')) {
-      return 'Items';
+      return l10n.bfItems;
     }
-    return 'Quantity';
+    return l10n.bfQuantity;
   }
 
-  String _serviceLevelLabel(String? categoryName) {
+  String _serviceLevelLabel(String? categoryName, AppLocalizations l10n) {
     final normalized = (categoryName ?? '').toLowerCase();
     if (normalized.contains('clean')) {
-      return 'Cleaning type';
+      return l10n.bfCleaningType;
     }
-    return 'Service level';
+    return l10n.bfServiceLevel;
   }
 }
 
@@ -323,6 +326,7 @@ class _CheckoutSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = AppTheme.of(context);
     final draft = controller.draft;
 
@@ -381,23 +385,23 @@ class _CheckoutSheet extends StatelessWidget {
                 _ModeBanner(
                   isScheduled: isScheduled,
                   title: isScheduled
-                      ? 'Scheduled reservation'
-                      : 'Instant provider search',
+                      ? l10n.bfScheduledReservation
+                      : l10n.bfInstantProviderSearch,
                   subtitle: isScheduled
-                      ? 'We will lock in your selected slot and keep this pinned location for the visit.'
-                      : 'We will search nearby providers around this saved pin as soon as you continue.',
+                      ? l10n.bfLockInSlot
+                      : l10n.bfSearchSavedPin,
                 ),
                 const SizedBox(height: 14),
                 _SummaryGrid(
                   rows: [
                     _SummaryItem(
-                      label: 'Service',
-                      value: controller.selectedServiceLabel,
+                      label: l10n.bfService,
+                      value: controller.selectedServiceLabel(l10n),
                     ),
                     _SummaryItem(
                       label: isScheduled
-                          ? 'Scheduled date & time'
-                          : 'Dispatch mode',
+                          ? l10n.bfScheduledDateTime
+                          : l10n.bfDispatchMode,
                       value: scheduleLabel,
                     ),
                     _SummaryItem(
@@ -406,7 +410,7 @@ class _CheckoutSheet extends StatelessWidget {
                     ),
                     _SummaryItem(
                       label: serviceLevelLabel,
-                      value: controller.cleaningTypeLabel,
+                      value: controller.cleaningTypeLabel(l10n),
                     ),
                   ],
                 ),
@@ -419,7 +423,7 @@ class _CheckoutSheet extends StatelessWidget {
                   onTap: onPickAddress,
                 ),
                 const SizedBox(height: 14),
-                const _SectionTitle(title: 'Payment method'),
+                _SectionTitle(title: l10n.bfPaymentMethod),
                 const SizedBox(height: 10),
                 Wrap(
                   spacing: 10,
@@ -433,14 +437,14 @@ class _CheckoutSheet extends StatelessWidget {
                           .setPaymentMethod(BookingPaymentMethod.gcash),
                     ),
                     _Pill(
-                      label: 'Card',
+                      label: l10n.tmPmtCard,
                       selected:
                           draft.paymentMethod == BookingPaymentMethod.card,
                       onTap: () => controller
                           .setPaymentMethod(BookingPaymentMethod.card),
                     ),
                     _Pill(
-                      label: 'COD',
+                      label: l10n.bkPmtCOD,
                       selected: draft.paymentMethod == BookingPaymentMethod.cod,
                       onTap: () =>
                           controller.setPaymentMethod(BookingPaymentMethod.cod),
@@ -449,11 +453,11 @@ class _CheckoutSheet extends StatelessWidget {
                 ),
                 if (isImmediate) ...[
                   const SizedBox(height: 14),
-                  const _SectionTitle(title: 'Matching flow'),
+                  _SectionTitle(title: l10n.bfMatchingFlow),
                   const SizedBox(height: 10),
-                  const _SimpleNote(
-                    title: 'Provider assignment',
-                    subtitle: 'Nearest available provider',
+                  _SimpleNote(
+                    title: l10n.bfProviderAssignment,
+                    subtitle: l10n.bfNearestAvailableProvider,
                     icon: Icons.bolt_rounded,
                   ),
                 ],
@@ -467,23 +471,19 @@ class _CheckoutSheet extends StatelessWidget {
         SizedBox(
           width: double.infinity,
           height: 58,
-          child: ElevatedButton(
+          child: AppButton(
             onPressed: onSubmit == null
                 ? null
                 : () async {
                     await onSubmit!();
                   },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.primary,
-              foregroundColor: theme.onPrimary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-              ),
-            ),
+            backgroundColor: theme.primary,
+            foregroundColor: theme.onPrimary,
+            borderRadius: 18,
+            width: double.infinity,
             child: Text(
               buttonLabel,
               style: theme.titleMedium.override(
-                color: theme.onPrimary,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -517,6 +517,7 @@ class _MatchingWaitingSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = AppTheme.of(context);
     final draft = controller.draft;
 
@@ -546,7 +547,7 @@ class _MatchingWaitingSheet extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              'Live matching active',
+              l10n.bfLiveMatchingActive,
               style: theme.labelLarge.override(
                 color: theme.primary,
                 fontWeight: FontWeight.w700,
@@ -556,7 +557,7 @@ class _MatchingWaitingSheet extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Text(
-          draft.serviceTitle ?? 'Service request',
+          draft.serviceTitle ?? l10n.bfServiceRequest,
           style: theme.titleMedium.override(
             font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
           ),
@@ -585,17 +586,17 @@ class _MatchingWaitingSheet extends StatelessWidget {
           ),
           child: Column(
             children: [
-              _WaitingInfoRow(label: 'Dispatch', value: scheduleLabel),
+              _WaitingInfoRow(label: l10n.bfDispatch, value: scheduleLabel),
               const SizedBox(height: 8),
               _WaitingInfoRow(label: quantityLabel, value: '${draft.rooms}'),
               const SizedBox(height: 8),
               _WaitingInfoRow(
                 label: serviceLevelLabel,
-                value: controller.cleaningTypeLabel,
+                value: controller.cleaningTypeLabel(l10n),
               ),
               const Divider(height: 20),
               _WaitingInfoRow(
-                label: 'Estimated total',
+                label: l10n.bfEstimatedTotal,
                 value: 'PHP ${quote.total.toStringAsFixed(0)}',
                 valueStyle: theme.titleMedium.override(
                   fontWeight: FontWeight.w700,
@@ -609,18 +610,14 @@ class _MatchingWaitingSheet extends StatelessWidget {
         SizedBox(
           width: double.infinity,
           height: 54,
-          child: ElevatedButton(
+          child: AppButton(
             onPressed: onResume,
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
+            borderRadius: 16,
+            width: double.infinity,
             child: Text(
-              'Return to live matching',
+              l10n.bfReturnToLiveMatching,
               style: theme.titleSmall.override(
                 fontWeight: FontWeight.w700,
-                color: theme.onPrimary,
               ),
             ),
           ),
@@ -629,13 +626,14 @@ class _MatchingWaitingSheet extends StatelessWidget {
         SizedBox(
           width: double.infinity,
           height: 44,
-          child: TextButton(
+          child: AppButton(
             onPressed: onCancel,
+            variant: AppButtonVariant.text,
+            foregroundColor: theme.secondaryText,
+            width: double.infinity,
             child: Text(
-              'Cancel matching',
-              style: theme.bodyMedium.override(
-                color: theme.secondaryText,
-              ),
+              l10n.bfCancelMatching,
+              style: theme.bodyMedium,
             ),
           ),
         ),
@@ -957,6 +955,7 @@ class _TotalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = AppTheme.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
@@ -971,7 +970,7 @@ class _TotalCard extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'Estimated total',
+            l10n.bfEstimatedTotal,
             style: theme.bodyLarge.override(
               fontWeight: FontWeight.w600,
             ),

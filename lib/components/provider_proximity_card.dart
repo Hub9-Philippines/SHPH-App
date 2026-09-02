@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/components/cupertino_ui/app_button.dart';
 import '/components/user_avatar.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 
 /// Provider card for the Explore "Top Rated Near You" carousel (section 3).
@@ -38,6 +40,7 @@ class ProviderProximityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final _l10n = AppLocalizations.of(context)!;
     return Container(
       width: 240,
       margin: const EdgeInsets.only(right: AppThemeData.spaceMd),
@@ -119,7 +122,7 @@ class ProviderProximityCard extends StatelessWidget {
                         size: 13, color: theme.secondaryText),
                     const SizedBox(width: 3),
                     Text(
-                      '${distanceKm!.toStringAsFixed(1)} km away',
+                      _l10n.ccKmAway(distanceKm!.toStringAsFixed(1)),
                       style: theme.bodySmall.override(
                         font: GoogleFonts.plusJakartaSans(),
                         color: theme.secondaryText,
@@ -129,7 +132,7 @@ class ProviderProximityCard extends StatelessWidget {
                   ],
                   Expanded(
                     child: Text(
-                      'Starting $startingFee',
+                      _l10n.ccStarting(startingFee),
                       textAlign: TextAlign.right,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -150,21 +153,20 @@ class ProviderProximityCard extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 height: 34,
-                child: FilledButton(
+                child: AppButton(
                   onPressed: onBookNow,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: theme.primary,
-                    foregroundColor: theme.onPrimary,
-                    padding: EdgeInsets.zero,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    textStyle: GoogleFonts.plusJakartaSans(
+                  backgroundColor: theme.primary,
+                  foregroundColor: theme.onPrimary,
+                  padding: EdgeInsets.zero,
+                  borderRadius: 10,
+                  width: double.infinity,
+                  child: Text(
+                    _l10n.ccBookNow,
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  child: const Text('Book Now'),
                 ),
               ),
             ],

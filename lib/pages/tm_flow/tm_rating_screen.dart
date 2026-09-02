@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '/components/screen_header.dart';
+import '/l10n/app_localizations.dart';
 import '/main.dart';
 import '/theme/app_theme.dart';
 import 'tm_controller.dart';
@@ -26,12 +27,13 @@ class _TMRatingScreenState extends State<TMRatingScreen> {
     return Consumer<TMFlowController>(
       builder: (context, controller, _) {
         _handleControllerErrors(controller);
+        final l10n = AppLocalizations.of(context)!;
         return Scaffold(
           backgroundColor: theme.primaryBackground,
           body: SafeArea(
             child: Column(
               children: [
-                const ScreenHeader(title: 'Rate your service'),
+                ScreenHeader(title: l10n.tmRateYourService),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
@@ -40,11 +42,15 @@ class _TMRatingScreenState extends State<TMRatingScreen> {
                       children: [
                         const SizedBox(height: 8),
                         Text(
-                    'How was the time-material service experience with ${controller.matchedProvider?.name ?? 'your provider'}?',
-                    style: theme.bodyMedium.override(
-                      color: theme.secondaryText,
-                    ),
-                  ),
+                          controller.matchedProvider?.name != null
+                              ? l10n.tmHowWasExperience(
+                                  controller.matchedProvider!.name,
+                                )
+                              : l10n.tmHowWasExperienceNoName,
+                          style: theme.bodyMedium.override(
+                            color: theme.secondaryText,
+                          ),
+                        ),
                   const SizedBox(height: 28),
                   Center(
                     child: Row(
@@ -81,7 +87,7 @@ class _TMRatingScreenState extends State<TMRatingScreen> {
                               final navigator =
                                   Navigator.of(context, rootNavigator: true);
                               final success = await controller
-                                  .submitRating(_selectedRating);
+                                  .submitRating(_selectedRating, l10n);
                               if (!mounted || !success) {
                                 return;
                               }
@@ -113,7 +119,7 @@ class _TMRatingScreenState extends State<TMRatingScreen> {
                               ),
                             )
                           : Text(
-                              'Submit Rating',
+                              l10n.tmSubmitRating,
                               style: theme.titleMedium.override(
                                 color: theme.onPrimary,
                                 fontWeight: FontWeight.w700,

@@ -7,8 +7,10 @@ import 'package:provider/provider.dart';
 
 import '/app_state.dart';
 import '/backend/supabase/database/tables/addresses.dart';
+import '/components/cupertino_ui/app_pickers.dart';
 import '/components/edit_address/edit_address_widget.dart';
 import '/flutter_flow/lat_lng.dart' as ff_latlng;
+import '/l10n/app_localizations.dart';
 import '/models/service_listing.dart';
 import '/pages/pin_location/pin_location_widget.dart';
 import '/theme/app_theme.dart';
@@ -38,7 +40,8 @@ class BookingFlowScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ChangeNotifierProvider(
-        create: (_) {
+        create: (context) {
+          final l10n = AppLocalizations.of(context)!;
           final appState = FFAppState();
           final initialDraft = BookingDraft(
             urgency: initialUrgency ?? BookingUrgency.rightNow,
@@ -48,7 +51,7 @@ class BookingFlowScreen extends StatelessWidget {
             address: BookingAddress(
               label: appState.selectedAddressLabel.isNotEmpty
                   ? appState.selectedAddressLabel
-                  : 'Home',
+                  : l10n.bfHome,
               line1: appState.selectedAddressLine1.isNotEmpty
                   ? appState.selectedAddressLine1
                   : '123 Example Street',
@@ -154,6 +157,7 @@ class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = AppTheme.of(context);
     final mediaQuery = MediaQuery.of(context);
     final mapPadding = EdgeInsets.only(
@@ -228,8 +232,8 @@ class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
               right: 16,
               child: _FlowTopCard(
                 currentStep: _isLocationConfirmed ? 2 : 1,
-                title: controller.selectedServiceLabel,
-                subtitle: _heroSubtitle(controller),
+                title: controller.selectedServiceLabel(l10n),
+                subtitle: _heroSubtitle(controller, l10n),
                 address: controller.draft.address,
                 onBack: () {
                   if (_isLocationConfirmed) {
@@ -253,7 +257,7 @@ class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
                 top: false,
                 child: _isLocationConfirmed
                     ? TimeSelectionPanel(
-                        serviceTitle: controller.selectedServiceLabel,
+                        serviceTitle: controller.selectedServiceLabel(l10n),
                         urgency: controller.draft.urgency,
                         scheduledDate: controller.draft.scheduledDate,
                         scheduledTime: controller.draft.scheduledTime,
@@ -285,18 +289,9 @@ class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
     final controller = context.read<BookingFlowController>();
     final outerContext = context;
 
-    final picked = await showTimePicker(
+    final picked = await showAppTimePicker(
       context: outerContext,
       initialTime: TimeOfDay.now(),
-      builder: (pickerContext, child) => Theme(
-        // Prevent shadowing with outerContext
-        data: Theme.of(pickerContext).copyWith(
-          timePickerTheme: TimePickerThemeData(
-            backgroundColor: AppTheme.of(outerContext).primaryBackground,
-          ),
-        ),
-        child: child!,
-      ),
     );
     if (picked == null) {
       return;
@@ -310,7 +305,7 @@ class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
 
   Future<void> _pickScheduledSlot(BuildContext context) async {
     final controller = context.read<BookingFlowController>();
-    final date = await showDatePicker(
+    final date = await showAppDatePicker(
       context: context,
       initialDate: DateTime.now().add(const Duration(days: 1)),
       firstDate: DateTime.now(),
@@ -323,7 +318,7 @@ class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
     if (!context.mounted) {
       return;
     }
-    final time = await showTimePicker(
+    final time = await showAppTimePicker(
       context: context,
       initialTime: const TimeOfDay(hour: 9, minute: 0),
     );
@@ -380,13 +375,14 @@ class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
     if (!context.mounted || result == null) {
       return;
     }
+    final l10n = AppLocalizations.of(context)!;
 
     final appState = FFAppState();
     controller.setAddress(
       BookingAddress(
         label: appState.selectedAddressLabel.isNotEmpty
             ? appState.selectedAddressLabel
-            : (result.addressLine2 ?? 'Address'),
+            : (result.addressLine2 ?? l10n.bfAddress),
         line1: appState.selectedAddressLine1.isNotEmpty
             ? appState.selectedAddressLine1
             : (result.addressLine1 ?? ''),
@@ -483,12 +479,12 @@ class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
     await _animateToCurrentLocation();
   }
 
-  String _heroSubtitle(BookingFlowController controller) {
+  String _heroSubtitle(BookingFlowController controller, AppLocalizations l10n) {
     final category = controller.draft.serviceCategoryName;
     if (category != null && category.isNotEmpty) {
-      return '$category service ready. Pick the time, then we\'ll route it fast.';
+      return l10n.bfHeroCategoryReady(category);
     }
-    return 'Fast dispatch. Zero friction. Pick the service, then the time.';
+    return l10n.bfHeroFastDispatch;
   }
 }
 
@@ -511,6 +507,7 @@ class _FlowTopCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = AppTheme.of(context);
 
     return Container(
@@ -539,7 +536,7 @@ class _FlowTopCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Step $currentStep of 3',
+                      l10n.bfStepOf(currentStep),
                       style: theme.labelMedium.override(
                         color: theme.primary,
                         fontWeight: FontWeight.w700,
@@ -569,7 +566,7 @@ class _FlowTopCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _StepPill(
-                  title: 'Location',
+                  title: l10n.bfLocation,
                   active: currentStep == 1,
                   done: currentStep > 1,
                 ),
@@ -577,7 +574,7 @@ class _FlowTopCard extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: _StepPill(
-                  title: 'Time',
+                  title: l10n.bfTime,
                   active: currentStep == 2,
                   done: false,
                 ),
@@ -585,7 +582,7 @@ class _FlowTopCard extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: _StepPill(
-                  title: 'Setup',
+                  title: l10n.bfSetup,
                   active: currentStep == 3,
                   done: false,
                 ),

@@ -1,4 +1,4 @@
--- Sample Data Insert Script for SHPH (SerbisyoHub PH)
+-- Sample Data Insert Script for SHPH (Serbisyo)
 -- This script inserts sample categories and service listings for testing
 
 
@@ -159,7 +159,7 @@ INSERT INTO notifications (id, user_id, title, body, type, is_read, image_url, a
 ('00000000-0000-0000-0000-000000000026', '3ea054ef-fe0b-451e-bacc-042c47e986c9', 'New Review Received', 'You received a 4-star review for "Wiring Installation".', 'review', false, 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=100', '/services', '{"review_id": "00000000-0000-0000-0000-000000000015"}', '2024-12-17 11:30:00'),
 
 -- System notifications
-('00000000-0000-0000-0000-000000000027', '3ea054ef-fe0b-451e-bacc-042c47e986c9', 'Welcome to SerbisyoHub PH', 'Thank you for joining! Start exploring services in your area.', 'system', true, 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=100', '/home', '{}', '2024-12-01 09:00:00'),
+('00000000-0000-0000-0000-000000000027', '3ea054ef-fe0b-451e-bacc-042c47e986c9', 'Welcome to Serbisyo', 'Thank you for joining! Start exploring services in your area.', 'system', true, 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=100', '/home', '{}', '2024-12-01 09:00:00'),
 ('00000000-0000-0000-0000-000000000028', '3ea054ef-fe0b-451e-bacc-042c47e986c9', 'Profile Verification', 'Complete your profile verification to unlock provider features.', 'system', false, 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100', '/profile', '{}', '2024-12-05 10:00:00'),
 
 -- Promotion notifications

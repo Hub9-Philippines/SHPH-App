@@ -4,11 +4,13 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '/auth/auth_util.dart';
 import '/components/back_button/back_button_widget.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/components/reset_link_sent/reset_link_sent_widget.dart';
 import '/flutter_flow/custom_functions.dart' as functions;
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import '../../auth/shph_auth/shph_auth_manager.dart';
 import 'forgot_password_model.dart';
@@ -30,6 +32,8 @@ class _ForgotPasswordWidgetState extends State<ForgotPasswordWidget> {
   late ForgotPasswordModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -56,17 +60,17 @@ class _ForgotPasswordWidgetState extends State<ForgotPasswordWidget> {
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: AppTheme.of(context).primaryBackground,
-        appBar: AppBar(
-          backgroundColor: AppTheme.of(context).primaryBackground,
-          automaticallyImplyLeading: false,
-          leading: wrapWithModel(
-            model: _model.backButtonModel,
-            updateCallback: () => safeSetState(() {}),
-            child: const BackButtonWidget(),
-          ),
-          title: Text(
-            'Forgot Password',
-            style: AppTheme.of(context).titleLarge.override(
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(56),
+          child: CupertinoPageHeader(
+            title: _l10n.fpTitle,
+            backgroundColor: AppTheme.of(context).primaryBackground,
+            leading: wrapWithModel(
+              model: _model.backButtonModel,
+              updateCallback: () => safeSetState(() {}),
+              child: const BackButtonWidget(),
+            ),
+            titleStyle: AppTheme.of(context).titleLarge.override(
                   font: GoogleFonts.plusJakartaSans(
                     fontWeight:
                         AppTheme.of(context).titleLarge.fontWeight,
@@ -79,9 +83,6 @@ class _ForgotPasswordWidgetState extends State<ForgotPasswordWidget> {
                   fontStyle: AppTheme.of(context).titleLarge.fontStyle,
                 ),
           ),
-          actions: const [],
-          centerTitle: true,
-          elevation: 0,
         ),
         body: SafeArea(
           top: true,
@@ -100,7 +101,7 @@ class _ForgotPasswordWidgetState extends State<ForgotPasswordWidget> {
                         padding:
                             const EdgeInsetsDirectional.fromSTEB(0, 24, 0, 0),
                         child: Text(
-                          'Forgot Password',
+                          _l10n.fpTitle,
                           style: AppTheme.of(context)
                               .displaySmall
                               .override(
@@ -126,7 +127,7 @@ class _ForgotPasswordWidgetState extends State<ForgotPasswordWidget> {
                         padding:
                             const EdgeInsetsDirectional.fromSTEB(0, 8, 0, 0),
                         child: Text(
-                          'Don\'t worry! It happens. Please enter the email address associated with your account.',
+                          _l10n.fpSubtitle,
                           style: AppTheme.of(context)
                               .bodyMedium
                               .override(
@@ -185,7 +186,7 @@ class _ForgotPasswordWidgetState extends State<ForgotPasswordWidget> {
                                     obscureText: false,
                                     decoration: InputDecoration(
                                       isDense: true,
-                                      labelText: 'Email',
+                                      labelText: _l10n.fpEmail,
                                       labelStyle: AppTheme.of(context)
                                           .bodyLarge
                                           .override(
@@ -327,7 +328,7 @@ class _ForgotPasswordWidgetState extends State<ForgotPasswordWidget> {
                                 ),
                                 if (!_model.isEmailvalid)
                                   Text(
-                                    'Invalid email',
+                                    _l10n.fpInvalidEmail,
                                     style: AppTheme.of(context)
                                         .bodySmall
                                         .override(
@@ -398,7 +399,7 @@ class _ForgotPasswordWidgetState extends State<ForgotPasswordWidget> {
                                         ),
                                     );
                                   },
-                            text: 'Send Reset Link',
+                            text: _l10n.fpSendReset,
                             options: FFButtonOptions(
                               width: double.infinity,
                               height: 52,
@@ -440,7 +441,7 @@ class _ForgotPasswordWidgetState extends State<ForgotPasswordWidget> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              'Remember your password? ',
+                              _l10n.fpRememberPassword,
                               style: AppTheme.of(context)
                                   .bodyMedium
                                   .override(
@@ -472,7 +473,7 @@ class _ForgotPasswordWidgetState extends State<ForgotPasswordWidget> {
                                 await context.pushNamed(SigninWidget.routeName);
                               },
                               child: Text(
-                                'Sign In',
+                                _l10n.siSignIn,
                                 style: AppTheme.of(context)
                                     .bodyMedium
                                     .override(

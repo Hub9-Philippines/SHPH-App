@@ -9,6 +9,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
+import '/components/cupertino_ui/app_button.dart';
+import '/components/cupertino_ui/app_feedback.dart';
+import '/l10n/app_localizations.dart';
 import '/main.dart';
 import '/services/nearby_pro_mock_data.dart';
 import '/theme/app_theme.dart';
@@ -263,29 +266,29 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
   }
 
   // ── Matching stage helpers ─────────────────────────────────────────
-  _MatchingStage _matchingStage(int seconds) {
+  _MatchingStage _matchingStage(int seconds, AppLocalizations l10n) {
     if (_matchedPro != null) {
       final name = _matchedPro!['providerName'] as String? ?? 'a pro';
       return _MatchingStage(
-        label: 'Provider found',
-        subtitle: '$name is on the way to your location.',
+        label: l10n.bfProviderFound,
+        subtitle: l10n.bfNameOnWay(name),
       );
     }
     if (seconds > 20) {
-      return const _MatchingStage(
-        label: 'Broadcasting request',
-        subtitle: 'Alerting nearby active providers around your pin.',
+      return _MatchingStage(
+        label: l10n.bfBroadcastingRequest,
+        subtitle: l10n.bfAlertingNearbyProviders,
       );
     }
     if (seconds > 10) {
-      return const _MatchingStage(
-        label: 'Checking availability',
-        subtitle: 'Comparing who can reach you the fastest.',
+      return _MatchingStage(
+        label: l10n.bfCheckingAvailability,
+        subtitle: l10n.bfComparingWhoReaches,
       );
     }
-    return const _MatchingStage(
-      label: 'Final nearby sweep',
-      subtitle: 'Running one last pass before the request times out.',
+    return _MatchingStage(
+      label: l10n.bfFinalNearbySweep,
+      subtitle: l10n.bfFinalPass,
     );
   }
 
@@ -299,51 +302,19 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
   }
 
   void _showCancelDialog() {
-    final theme = AppTheme.of(context);
-    showDialog(
+    final l10n = AppLocalizations.of(context)!;
+    AppFeedback.confirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: theme.primaryBackground,
-        title: Text(
-          'Cancel provider search?',
-          style: theme.titleMedium.override(
-            font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
-          ),
-        ),
-        content: Text(
-          'Your current search is still running. '
-          'If you cancel now, you can adjust the booking details and try again.',
-          style: theme.bodyMedium.override(color: theme.secondaryText),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(
-              'Continue search',
-              style: theme.bodyMedium.override(
-                fontWeight: FontWeight.w600,
-                color: theme.primary,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              _popClean();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.error,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-            ),
-            child: const Text('Cancel search'),
-          ),
-        ],
-      ),
-    );
+      title: l10n.bfCancelProviderSearchQ,
+      message: l10n.bfCancelSearchBody,
+      confirmText: l10n.bfCancelSearch,
+      cancelText: l10n.bfContinueSearch,
+      destructive: true,
+    ).then((value) {
+      if (value == true) {
+        _popClean();
+      }
+    });
   }
 
   void _popClean() {
@@ -358,6 +329,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
   // ── Build ──────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final booking = context.watch<BookingFlowController?>();
     final draft = booking?.draft;
     final location = LatLng(
@@ -365,8 +337,8 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
       draft?.longitude ?? 120.9842,
     );
     final serviceTitle =
-        widget.serviceTitle ?? draft?.serviceTitle ?? 'Service request';
-    final stage = _matchingStage(_secondsRemaining);
+        widget.serviceTitle ?? draft?.serviceTitle ?? l10n.bfServiceRequest;
+    final stage = _matchingStage(_secondsRemaining, l10n);
 
     final showActive = !_timedOut && _matchedPro == null;
 
@@ -381,11 +353,11 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
           providerLocation: _providerLatLng!,
           pro: _matchedPro!,
           serviceTitle: serviceTitle,
-          addressLabel: draft?.address.label ?? 'Pinned location',
+          addressLabel: draft?.address.label ?? l10n.bfPinnedLocation,
           addressLine:
-              '${draft?.address.line1 ?? 'Location loading'}${(draft?.address.city ?? '').isNotEmpty ? ', ${draft!.address.city}' : ''}',
+              '${draft?.address.line1 ?? l10n.bfLocationLoading}${(draft?.address.city ?? '').isNotEmpty ? ', ${draft!.address.city}' : ''}',
           referenceId: booking?.activeReferenceId,
-          locationLabel: _resolveLocationLabel(draft),
+          locationLabel: _resolveLocationLabel(draft, l10n),
           bookingStatus: bookingStatus,
           bookingDate: widget.bookingDate,
           onFindAnotherProvider: _retryProviderSearch,
@@ -463,7 +435,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     );
   }
 
-  String _resolveLocationLabel(BookingDraft? draft) {
+  String _resolveLocationLabel(BookingDraft? draft, AppLocalizations l10n) {
     final label = draft?.address.label.trim() ?? '';
     if (label.isNotEmpty) {
       return label;
@@ -482,7 +454,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
       return addressParts.join(', ');
     }
 
-    return 'Your Current Location';
+    return l10n.bfYourCurrentLocation;
   }
 
   // ── Map widget ──────────────────────────────────────────────────────
@@ -546,6 +518,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     required BookingDraft? draft,
     required BookingFlowController? booking,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = AppTheme.of(context);
 
     return DraggableScrollableSheet(
@@ -593,14 +566,14 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
                       ),
                     )
                   : _matchedPro != null
-                      ? _MatchedSheet(
+                      ?                           _MatchedSheet(
                           scrollController: scrollController,
                           theme: theme,
                           pro: _matchedPro!,
                           addressLabel:
-                              draft?.address.label ?? 'Pinned location',
+                              draft?.address.label ?? l10n.bfPinnedLocation,
                           addressLine:
-                              '${draft?.address.line1 ?? 'Location loading'}${(draft?.address.city ?? '').isNotEmpty ? ', ${draft!.address.city}' : ''}',
+                              '${draft?.address.line1 ?? l10n.bfLocationLoading}${(draft?.address.city ?? '').isNotEmpty ? ', ${draft!.address.city}' : ''}',
                           referenceId: booking?.activeReferenceId,
                           onBackHome: () =>
                               Navigator.of(context, rootNavigator: true)
@@ -614,15 +587,15 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
                             (route) => false,
                           ),
                         )
-                      : _SearchingSheet(
+                      :                           _SearchingSheet(
                           scrollController: scrollController,
                           theme: theme,
                           stageLabel: stage.label,
                           stageSubtitle: stage.subtitle,
                           addressLabel:
-                              draft?.address.label ?? 'Pinned location',
+                              draft?.address.label ?? l10n.bfPinnedLocation,
                           addressLine:
-                              '${draft?.address.line1 ?? 'Location loading'}${(draft?.address.city ?? '').isNotEmpty ? ', ${draft!.address.city}' : ''}',
+                              '${draft?.address.line1 ?? l10n.bfLocationLoading}${(draft?.address.city ?? '').isNotEmpty ? ', ${draft!.address.city}' : ''}',
                           referenceId: booking?.activeReferenceId,
                           secondsRemaining: _secondsRemaining,
                           gradientValue: _gradientController,
@@ -727,6 +700,7 @@ class _AssignedProviderRouteMapState extends State<_AssignedProviderRouteMap> {
   }
 
   Future<void> _fetchRoutePolyline() async {
+    final l10n = AppLocalizations.of(context)!;
     final fallbackRoute = [
       widget.clientLocation,
       widget.providerLocation,
@@ -774,7 +748,7 @@ class _AssignedProviderRouteMapState extends State<_AssignedProviderRouteMap> {
         _routeError = result.errorMessage?.isNotEmpty == true
             ? result.errorMessage
             : points.isEmpty
-                ? 'No route found. Showing direct path.'
+                ? l10n.bfNoRouteFound
                 : null;
       });
     } catch (_) {
@@ -787,7 +761,7 @@ class _AssignedProviderRouteMapState extends State<_AssignedProviderRouteMap> {
           _routeDistanceMeters(fallbackRoute),
         );
         _routeEtaMinutes = _etaMinutesFromRoute(routePoints: fallbackRoute);
-        _routeError = 'Route unavailable. Showing direct path.';
+        _routeError = l10n.bfRouteUnavailable;
       });
     }
 
@@ -934,12 +908,13 @@ class _AssignedProviderRouteMapState extends State<_AssignedProviderRouteMap> {
   }
 
   void _openStatusPage() {
+    final l10n = AppLocalizations.of(context)!;
     Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
       MaterialPageRoute(
         builder: (_) => StatusPage(
           bookingStatus: widget.bookingStatus,
           bookingDate: widget.bookingDate,
-          providerName: widget.pro['providerName'] as String? ?? 'Professional',
+          providerName: widget.pro['providerName'] as String? ?? l10n.bfProfessional,
           serviceTitle: widget.serviceTitle,
           clientLocation: widget.clientLocation,
           providerLocation: widget.providerLocation,
@@ -977,9 +952,10 @@ class _AssignedProviderRouteMapState extends State<_AssignedProviderRouteMap> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = AppTheme.of(context);
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
-    final name = widget.pro['providerName'] as String? ?? 'Professional';
+    final name = widget.pro['providerName'] as String? ?? l10n.bfProfessional;
     final photo = widget.pro['providerPhoto'] as String?;
     final rating = widget.pro['rating'] as double? ?? 0;
     final distanceText = _routeDistanceText ??
@@ -1133,6 +1109,7 @@ class _AssignedRouteTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = AppTheme.of(context);
 
     return SafeArea(
@@ -1183,7 +1160,7 @@ class _AssignedRouteTopBar extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Heading to $locationLabel',
+                    l10n.bfHeadingTo(locationLabel),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.bodySmall.override(
@@ -1244,7 +1221,9 @@ class _AssignedRouteBottomSheet extends StatelessWidget {
   final String? routeError;
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
         clipBehavior: Clip.hardEdge,
         decoration: BoxDecoration(
           color: theme.primaryBackground.withValues(alpha: 0.98),
@@ -1342,7 +1321,7 @@ class _AssignedRouteBottomSheet extends StatelessWidget {
                           child: _MatchedInfoTile(
                             theme: theme,
                             icon: Icons.access_time_rounded,
-                            label: 'ETA',
+                            label: l10n.bfEta,
                             value: '$etaMinutes min',
                           ),
                         ),
@@ -1351,7 +1330,7 @@ class _AssignedRouteBottomSheet extends StatelessWidget {
                           child: _MatchedInfoTile(
                             theme: theme,
                             icon: Icons.near_me_rounded,
-                            label: 'Distance',
+                            label: l10n.bfDistance,
                             value: distanceText,
                           ),
                         ),
@@ -1362,7 +1341,7 @@ class _AssignedRouteBottomSheet extends StatelessWidget {
                       _MetaRow(
                         theme: theme,
                         icon: Icons.info_outline_rounded,
-                        title: 'Route',
+                        title: l10n.bfRoute,
                         subtitle: routeError!,
                       ),
                     ],
@@ -1378,7 +1357,7 @@ class _AssignedRouteBottomSheet extends StatelessWidget {
                       _MetaRow(
                         theme: theme,
                         icon: Icons.tag_rounded,
-                        title: 'Reference',
+                        title: l10n.lmReference,
                         subtitle: referenceId!,
                       ),
                     ],
@@ -1398,6 +1377,7 @@ class _AssignedRouteBottomSheet extends StatelessWidget {
           ],
         ),
       );
+    }
 }
 
 class _BookingStatusChip extends StatelessWidget {
@@ -1411,6 +1391,7 @@ class _BookingStatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final normalized = status.toLowerCase();
     final color = switch (normalized) {
       'booking confirmed' => const Color(0xFF16A34A),
@@ -1426,7 +1407,7 @@ class _BookingStatusChip extends StatelessWidget {
         border: Border.all(color: color.withValues(alpha: 0.28)),
       ),
       child: Text(
-        _titleCaseStatus(normalized),
+        _titleCaseStatus(l10n, normalized),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: theme.bodySmall.override(
@@ -1458,12 +1439,13 @@ class _BookingActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final normalized = bookingStatus.toLowerCase();
 
     if (normalized == 'booking confirmed') {
       return _SheetPrimaryButton(
         theme: theme,
-        label: isBookingToday ? 'View Status' : 'View Bookings',
+        label: isBookingToday ? l10n.bfViewStatus : l10n.bfViewBookings,
         icon: isBookingToday
             ? Icons.track_changes_rounded
             : Icons.calendar_month_rounded,
@@ -1474,7 +1456,7 @@ class _BookingActionButton extends StatelessWidget {
 
     return _SheetPrimaryButton(
       theme: theme,
-      label: 'Find Another Provider',
+      label: l10n.bfFindAnotherProvider,
       icon: Icons.person_search_rounded,
       backgroundColor: theme.secondary,
       onPressed: normalized == 'confirmation pending'
@@ -1484,28 +1466,14 @@ class _BookingActionButton extends StatelessWidget {
   }
 
   Future<void> _confirmFindAnotherProvider(BuildContext context) async {
-    final shouldCancel = await showDialog<bool>(
+    final l10n = AppLocalizations.of(context)!;
+    final shouldCancel = await AppFeedback.confirmDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Find another provider?'),
-        content: const Text(
-          'Are you sure you want to cancel this booking and search for another provider?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('No'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.error,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Yes, Cancel'),
-          ),
-        ],
-      ),
+      title: l10n.bfFindAnotherProviderQ,
+      message: l10n.bfCancelBookingQ,
+      confirmText: l10n.bfYesCancel,
+      cancelText: l10n.bfNo,
+      destructive: true,
     );
 
     if (shouldCancel == true) {
@@ -1533,33 +1501,37 @@ class _SheetPrimaryButton extends StatelessWidget {
   Widget build(BuildContext context) => SizedBox(
         width: double.infinity,
         height: 56,
-        child: ElevatedButton.icon(
+        child: AppButton(
           onPressed: onPressed,
-          icon: Icon(icon, size: 20),
-          label: Text(
-            label,
-            style: theme.titleMedium.override(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: backgroundColor,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
-            ),
+          backgroundColor: backgroundColor,
+          foregroundColor: Colors.white,
+          borderRadius: 18,
+          width: double.infinity,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 20, color: Colors.white),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: theme.titleMedium.override(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
           ),
         ),
       );
 }
 
-String _titleCaseStatus(String status) => status
-    .split(' ')
-    .map((word) => word.isEmpty
-        ? word
-        : '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}')
-    .join(' ');
+String _titleCaseStatus(AppLocalizations l10n, String status) {
+  final normalized = status.toLowerCase();
+  return switch (normalized) {
+    'booking confirmed' => l10n.bfBookingConfirmed,
+    'booking cancelled' => l10n.bfBookingCancelled,
+    _ => l10n.bfConfirmationPending,
+  };
+}
 
 class _MeasureSize extends SingleChildRenderObjectWidget {
   const _MeasureSize({
@@ -1722,6 +1694,7 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = AppTheme.of(context);
     final isMatched = matchedPro != null;
 
@@ -1768,7 +1741,7 @@ class _StatusBadge extends StatelessWidget {
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        'Assigned',
+                        l10n.bfAssigned,
                         style: theme.labelSmall.override(
                           color: theme.success,
                           fontWeight: FontWeight.w700,
@@ -1780,8 +1753,8 @@ class _StatusBadge extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 isMatched
-                    ? 'Provider assigned'
-                    : 'Finding the nearest provider',
+                    ? l10n.bfProviderAssigned
+                    : l10n.bfFindingNearestProvider,
                 style: theme.titleMedium.override(
                   font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                 ),
@@ -1956,7 +1929,9 @@ class _SearchingSheet extends StatelessWidget {
   final int stageIndex;
 
   @override
-  Widget build(BuildContext context) => ListView(
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return ListView(
         controller: scrollController,
         padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
         children: [
@@ -2032,14 +2007,14 @@ class _SearchingSheet extends StatelessWidget {
           const SizedBox(height: 14),
           // Header
           Text(
-            'Searching nearby providers',
+            l10n.bfSearchingNearbyProviders,
             style: theme.titleMedium.override(
               font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(height: 6),
           Text(
-            'Stay on this screen while we look for the closest available professional.',
+            l10n.bfStayOnScreen,
             style: theme.bodyMedium.override(
               color: theme.secondaryText,
             ),
@@ -2056,7 +2031,7 @@ class _SearchingSheet extends StatelessWidget {
             _MetaRow(
               theme: theme,
               icon: Icons.tag_rounded,
-              title: 'Search reference',
+              title: l10n.bfSearchReference,
               subtitle: referenceId!,
             ),
           ],
@@ -2064,20 +2039,19 @@ class _SearchingSheet extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             height: 54,
-            child: OutlinedButton(
+            child: AppButton(
               onPressed: onCancel,
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: theme.alternate),
-                foregroundColor: theme.secondaryText,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: const Text('Cancel search'),
+              variant: AppButtonVariant.outlined,
+              borderSide: BorderSide(color: theme.alternate),
+              foregroundColor: theme.secondaryText,
+              borderRadius: 16,
+              width: double.infinity,
+              child: Text(l10n.bfCancelSearch),
             ),
           ),
         ],
       );
+  }
 }
 
 // ────────────────────────────────────────────────────────────────────────
@@ -2105,7 +2079,8 @@ class _MatchedSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = pro['providerName'] as String? ?? 'Professional';
+    final l10n = AppLocalizations.of(context)!;
+    final name = pro['providerName'] as String? ?? l10n.bfProfessional;
     final photo = pro['providerPhoto'] as String?;
     final rating = pro['rating'] as double? ?? 0;
     final distanceText = pro['distanceText'] as String? ?? 'nearby';
@@ -2160,7 +2135,7 @@ class _MatchedSheet extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Provider found',
+                      l10n.bfProviderFound,
                       style: theme.labelLarge.override(
                         color: theme.success,
                         fontWeight: FontWeight.w700,
@@ -2168,7 +2143,7 @@ class _MatchedSheet extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'A professional has been assigned to your request.',
+                      l10n.bfProAssigned,
                       style: theme.bodySmall.override(
                         color: theme.secondaryText,
                       ),
@@ -2250,7 +2225,7 @@ class _MatchedSheet extends StatelessWidget {
               child: _MatchedInfoTile(
                 theme: theme,
                 icon: Icons.access_time_rounded,
-                label: 'ETA',
+                label: l10n.bfEta,
                 value: '$etaMinutes min',
               ),
             ),
@@ -2259,7 +2234,7 @@ class _MatchedSheet extends StatelessWidget {
               child: _MatchedInfoTile(
                 theme: theme,
                 icon: Icons.near_me_rounded,
-                label: 'Distance',
+                label: l10n.bfDistance,
                 value: distanceText,
               ),
             ),
@@ -2277,7 +2252,7 @@ class _MatchedSheet extends StatelessWidget {
           _MetaRow(
             theme: theme,
             icon: Icons.tag_rounded,
-            title: 'Reference',
+            title: l10n.bfReference,
             subtitle: referenceId!,
           ),
         ],
@@ -2285,19 +2260,15 @@ class _MatchedSheet extends StatelessWidget {
         SizedBox(
           width: double.infinity,
           height: 56,
-          child: ElevatedButton(
+          child: AppButton(
             onPressed: onBackHome,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.primary,
-              foregroundColor: theme.onPrimary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-              ),
-            ),
+            backgroundColor: theme.primary,
+            foregroundColor: theme.onPrimary,
+            borderRadius: 18,
+            width: double.infinity,
             child: Text(
-              'Back to Home',
+              l10n.bfBackToHome,
               style: theme.titleMedium.override(
-                color: theme.onPrimary,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -2373,7 +2344,9 @@ class _TimeoutSheet extends StatelessWidget {
   final VoidCallback onBackHome;
 
   @override
-  Widget build(BuildContext context) => ListView(
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return ListView(
         controller: scrollController,
         padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
         children: [
@@ -2391,7 +2364,7 @@ class _TimeoutSheet extends StatelessWidget {
           Icon(Icons.timer_off_rounded, size: 48, color: theme.secondaryText),
           const SizedBox(height: 12),
           Text(
-            'Providers are busy, try again',
+            l10n.bfProvidersBusy,
             textAlign: TextAlign.center,
             style: theme.titleMedium.override(
               font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
@@ -2399,7 +2372,7 @@ class _TimeoutSheet extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'You can adjust the booking details and retry, or head back home for now.',
+            l10n.bfAdjustOrGoHome,
             textAlign: TextAlign.center,
             style: theme.bodyMedium.override(
               color: theme.secondaryText,
@@ -2409,36 +2382,32 @@ class _TimeoutSheet extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             height: 54,
-            child: ElevatedButton(
+            child: AppButton(
               onPressed: onAdjustBooking,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.primary,
-                foregroundColor: theme.onPrimary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: const Text('Adjust booking'),
+              backgroundColor: theme.primary,
+              foregroundColor: theme.onPrimary,
+              borderRadius: 16,
+              width: double.infinity,
+              child: Text(l10n.bfAdjustBooking),
             ),
           ),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
             height: 54,
-            child: OutlinedButton(
+            child: AppButton(
               onPressed: onBackHome,
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: theme.alternate),
-                foregroundColor: theme.secondaryText,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: const Text('Back home'),
+              variant: AppButtonVariant.outlined,
+              borderSide: BorderSide(color: theme.alternate),
+              foregroundColor: theme.secondaryText,
+              borderRadius: 16,
+              width: double.infinity,
+              child: Text(l10n.bfBackHome),
             ),
           ),
         ],
       );
+  }
 }
 
 // ────────────────────────────────────────────────────────────────────────

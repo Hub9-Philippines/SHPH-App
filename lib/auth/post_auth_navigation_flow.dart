@@ -4,7 +4,10 @@ import '../api/resources/users_api.dart';
 import '../flutter_flow/auth_logger.dart';
 import '../flutter_flow/nav/nav.dart';
 import '../index.dart';
+import '../l10n/app_localizations.dart';
+import '../pages/create_profile/create_profile_widget.dart';
 import '../services/auth_service.dart';
+import '../services/client_kyc_service.dart';
 
 /// Placeholder store URL for the standalone Provider app.
 /// Replace with the real Play Store / App Store link once published.
@@ -46,14 +49,14 @@ class PostAuthNavigationFlow {
 
   Future<void> _showProviderNotice(BuildContext context) async {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Provider account detected'),
-        content: const Text(
-          'Provider tools have moved to the SerbisyoHub Provider app. '
-          'You can continue using this app as a client, or sign out.',
+        title: Text(l10n.pfProviderDetected),
+        content: Text(
+          l10n.panProviderAppBody,
         ),
         actions: [
           TextButton(
@@ -63,11 +66,11 @@ class PostAuthNavigationFlow {
               if (!context.mounted) return;
               context.goNamedAuth(SigninWidget.routeName, context.mounted);
             },
-            child: const Text('Sign out'),
+            child: Text(l10n.panSignOut),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Continue as client'),
+            child: Text(l10n.panContinueAsClient),
           ),
         ],
       ),
@@ -115,10 +118,28 @@ class PostAuthNavigationFlow {
       }
 
       AuthLogger.info(
-        'Client account. Routing to Home.',
+        'Client account. Resolving profile-completion status.',
         tag: 'PostAuthNavigationFlow',
       );
-      if (context.mounted) {
+      final status = await checkProfileStatus(userId);
+      if (!context.mounted) return;
+      if (status == 'needs_profile') {
+        AuthLogger.info(
+          'Profile incomplete. Routing to profile creation.',
+          tag: 'PostAuthNavigationFlow',
+        );
+        context.goNamedAuth(CreateProfileWidget.routeName, context.mounted);
+      } else if (status == 'needs_kyc') {
+        AuthLogger.info(
+          'Profile complete, KYC not started. Routing to KYC onboarding.',
+          tag: 'PostAuthNavigationFlow',
+        );
+        context.goNamedAuth(KycOnboardingWidget.routeName, context.mounted);
+      } else {
+        AuthLogger.info(
+          'Profile complete. Routing to Home.',
+          tag: 'PostAuthNavigationFlow',
+        );
         context.goNamedAuth(HomeWidget.routeName, context.mounted);
       }
     } catch (e) {
@@ -128,10 +149,11 @@ class PostAuthNavigationFlow {
         error: e,
       );
       if (context.mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Navigation error. Please try again.'),
-            duration: Duration(seconds: 3),
+          SnackBar(
+            content: Text(l10n.panNavigationError),
+            duration: const Duration(seconds: 3),
           ),
         );
         context.goNamedAuth(HomeWidget.routeName, context.mounted);
@@ -139,11 +161,35 @@ class PostAuthNavigationFlow {
     }
   }
 
-  /// Client-only: always ready for Home (provider lifecycle removed).
-  Future<String> checkProfileStatus(String userId) async {
+  /// Resolves the signed-in client's next step. Returns:
+  /// - `needs_profile` when the profile is missing or not yet marked complete
+  ///   (`is_profile_complete != true`);
+  /// - `needs_kyc` when the profile is complete but KYC is `not_submitted`
+  ///   and the user has not skipped verification;
+  /// - otherwise `ready_home`.
+  /// KYC lookups never trap the user: if the KYC check itself fails the
+  /// status falls back to `ready_home` and the skip path stays available.
+  /// [kycService] is injectable for tests.
+  Future<String> checkProfileStatus(
+    String userId, {
+    ClientKycService? kycService,
+  }) async {
     try {
       final user = await _ensureUser();
       if (user == null) return 'needs_profile';
+      final isComplete = user['is_profile_complete'] == true ||
+          (user['display_name'] != null &&
+              user['display_name'].toString().trim().isNotEmpty) ||
+          (user['name'] != null &&
+              user['name'].toString().trim().isNotEmpty) ||
+          (user['full_name'] != null &&
+              user['full_name'].toString().trim().isNotEmpty) ||
+          (user['first_name'] != null &&
+              user['first_name'].toString().trim().isNotEmpty) ||
+          AuthService.instance.isProfileComplete;
+      if (!isComplete) return 'needs_profile';
+      final kyc = await (kycService ?? ClientKycService()).status();
+      if (kyc.status == 'not_submitted' && !kyc.skipped) return 'needs_kyc';
       return 'ready_home';
     } catch (e) {
       AuthLogger.error(

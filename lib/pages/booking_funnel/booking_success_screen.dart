@@ -4,8 +4,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '/components/cupertino_ui/app_button.dart';
 import '/components/invite_earn_banner.dart';
 import '/index.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'booking_controller.dart';
 import 'booking_models.dart';
@@ -34,18 +36,20 @@ class BookingConfirmationView extends StatelessWidget {
   static const String _inviteUrl = 'https://serbisyohubph.com/invite';
 
   void _shareInviteLink(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     Clipboard.setData(const ClipboardData(text: _inviteUrl));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Invite link copied — share it with friends!'),
-        duration: Duration(seconds: 2),
+      SnackBar(
+        content: Text(l10n.bfInviteCopied),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
 
   Future<void> _addToCalendar(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     final title = Uri.encodeComponent(
-      serviceTitle ?? 'SerbisyoHub PH booking',
+      serviceTitle ?? l10n.bsCalTitle,
     );
     // Floating local time; Google Calendar accepts yyyyMMdd'T'HHmmss.
     final start = DateTime.now().add(const Duration(days: 1));
@@ -54,7 +58,7 @@ class BookingConfirmationView extends StatelessWidget {
     final url = Uri.parse(
       'https://calendar.google.com/calendar/render?action=TEMPLATE'
       '&text=$title&dates=${fmt(start)}/${fmt(start.add(const Duration(hours: 2)))}'
-      '&details=${Uri.encodeComponent('Booking ${bookingId ?? ''} via SerbisyoHub PH')}',
+      '&details=${Uri.encodeComponent(l10n.bsCalDesc(bookingId ?? ''))}',
     );
     try {
       final launched = await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -69,20 +73,22 @@ class BookingConfirmationView extends StatelessWidget {
   }
 
   void _showCalendarFallback(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Could not open your calendar app.'),
-        duration: Duration(seconds: 2),
+      SnackBar(
+        content: Text(l10n.bfCouldNotOpenCalendar),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
 
   void _trackBooking(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (bookingId == null || bookingId!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Tracking will be available once a provider accepts.'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text(l10n.bfTrackingAfterAccept),
+          duration: const Duration(seconds: 2),
         ),
       );
       return;
@@ -96,6 +102,7 @@ class BookingConfirmationView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = AppTheme.of(context);
     return Scaffold(
       backgroundColor: theme.secondaryBackground,
@@ -109,7 +116,7 @@ class BookingConfirmationView extends StatelessWidget {
               const _CheckHero(),
               const SizedBox(height: 20),
               Text(
-                'Booking Confirmed!',
+                l10n.bfBookingConfirmedExclaim,
                 style: theme.headlineSmall.override(
                   font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
                   color: theme.primaryText,
@@ -117,8 +124,7 @@ class BookingConfirmationView extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                'Your request is in. We\'ll notify you the moment a provider '
-                'accepts — no follow-up needed.',
+                l10n.bfRequestInBody,
                 style: theme.bodyMedium.override(
                   font: GoogleFonts.plusJakartaSans(),
                   color: theme.secondaryText,
@@ -128,60 +134,49 @@ class BookingConfirmationView extends StatelessWidget {
               _ReceiptCard(
                 bookingId: bookingId,
                 serviceTitle: serviceTitle,
-                providerName: providerName ?? 'To be assigned',
-                scheduledText: scheduledText ?? 'You will confirm a slot shortly',
-                totalLabel: totalLabel ?? paymentLabel ?? 'As quoted at checkout',
+                providerName: providerName ?? l10n.bfToBeAssigned,
+                scheduledText:
+                    scheduledText ?? l10n.bfConfirmSlotSoon,
+                totalLabel:
+                    totalLabel ?? paymentLabel ?? l10n.bfAsQuotedAtCheckout,
               ),
               const SizedBox(height: 20),
-              SizedBox(
+              AppButton(
                 width: double.infinity,
                 height: 54,
-                child: FilledButton.icon(
-                  onPressed: () => _trackBooking(context),
-                  icon: const Icon(Icons.location_searching_rounded, size: 19),
-                  label: Text(
-                    'Track My Booking',
-                    style: theme.titleSmall.override(
-                      font: GoogleFonts.plusJakartaSans(
-                        fontWeight: FontWeight.w700,
-                      ),
-                      color: Colors.white,
-                    ),
-                  ),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppThemeData.actionPrimary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppThemeData.radiusMd),
-                    ),
-                  ),
+                backgroundColor: AppThemeData.actionPrimary,
+                foregroundColor: Colors.white,
+                borderRadius: AppThemeData.radiusMd,
+                onPressed: () => _trackBooking(context),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.location_searching_rounded,
+                        size: 19, color: Colors.white),
+                    const SizedBox(width: 8),
+                    Text(l10n.bfTrackMyBooking),
+                  ],
                 ),
               ),
               const SizedBox(height: 10),
-              SizedBox(
+              AppButton(
                 width: double.infinity,
                 height: 52,
-                child: OutlinedButton.icon(
-                  onPressed: () => _addToCalendar(context),
-                  icon: const Icon(Icons.event_available_rounded, size: 19),
-                  label: Text(
-                    'Add to Calendar',
-                    style: theme.titleSmall.override(
-                      font: GoogleFonts.plusJakartaSans(
-                        fontWeight: FontWeight.w600,
-                      ),
-                      color: AppThemeData.actionPrimary,
-                    ),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppThemeData.actionPrimary,
-                    side: const BorderSide(color: AppThemeData.actionPrimary),
-                    backgroundColor: theme.primaryBackground,
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppThemeData.radiusMd),
-                    ),
-                  ),
+                variant: AppButtonVariant.outlined,
+                backgroundColor: theme.primaryBackground,
+                foregroundColor: AppThemeData.actionPrimary,
+                borderSide: const BorderSide(
+                    color: AppThemeData.actionPrimary),
+                borderRadius: AppThemeData.radiusMd,
+                onPressed: () => _addToCalendar(context),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.event_available_rounded,
+                        size: 19, color: AppThemeData.actionPrimary),
+                    const SizedBox(width: 8),
+                    Text(l10n.bfAddToCalendar),
+                  ],
                 ),
               ),
               const SizedBox(height: 16),
@@ -246,17 +241,17 @@ class _CheckHeroState extends State<_CheckHero>
               width: 104,
               height: 104,
               decoration: BoxDecoration(
-                color: AppThemeData.successTeal.withValues(alpha: 0.12),
+                color: AppThemeData.successBrand.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               padding: const EdgeInsets.all(14),
               child: Container(
                 decoration: const BoxDecoration(
-                  color: AppThemeData.successTeal,
+                  color: AppThemeData.successBrand,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Color(0x330D808A),
+                      color: Color(0x337C5CFC),
                       blurRadius: 18,
                       offset: Offset(0, 8),
                     ),
@@ -292,6 +287,7 @@ class _ReceiptCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = AppTheme.of(context);
     return Container(
       width: double.infinity,
@@ -305,7 +301,7 @@ class _ReceiptCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Booking summary',
+            l10n.bfBookingSummary,
             style: theme.titleSmall.override(
               font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
               color: theme.primaryText,
@@ -323,22 +319,22 @@ class _ReceiptCard extends StatelessWidget {
           ],
           const SizedBox(height: 12),
           _ReceiptRow(
-            label: 'Booking ID',
+            label: l10n.bfBookingId,
             value: (bookingId == null || bookingId!.isEmpty)
-                ? 'Pending assignment'
+                ? l10n.bfPendingAssignment
                 : bookingId!.length > 8
                     ? bookingId!.substring(0, 8).toUpperCase()
                     : bookingId!,
           ),
           const SizedBox(height: 10),
-          _ReceiptRow(label: 'Date & Time', value: scheduledText),
+          _ReceiptRow(label: l10n.bfDateAndTime, value: scheduledText),
           const SizedBox(height: 10),
-          _ReceiptRow(label: 'Service Provider', value: providerName),
+          _ReceiptRow(label: l10n.bfServiceProvider, value: providerName),
           const SizedBox(height: 10),
           Divider(color: theme.border, height: 1),
           const SizedBox(height: 10),
           _ReceiptRow(
-            label: 'Total Amount',
+            label: l10n.bfTotalAmount,
             value: totalLabel,
             emphasized: true,
           ),
@@ -386,7 +382,7 @@ class _ReceiptRow extends StatelessWidget {
                 fontWeight: emphasized ? FontWeight.w800 : FontWeight.w500,
               ),
               color: emphasized
-                  ? AppThemeData.successTeal
+                  ? AppThemeData.successBrand
                   : theme.primaryText,
             ),
           ),
@@ -405,6 +401,7 @@ class BookingSuccessScreen extends StatelessWidget {
   Widget build(BuildContext context) =>
       Consumer<BookingFlowController>(
         builder: (context, controller, _) {
+          final l10n = AppLocalizations.of(context)!;
           final draft = controller.draft;
           String? schedule;
           if (draft.scheduledDate != null) {
@@ -415,14 +412,14 @@ class BookingSuccessScreen extends StatelessWidget {
             schedule =
                 '${d.day}/${d.month}/${d.year}${time == null ? '' : ' · $time'}';
           } else {
-            schedule = 'Provider matching now';
+            schedule = l10n.bfProviderMatchingNow;
           }
           return BookingConfirmationView(
             bookingId: controller.activeReferenceId,
-            serviceTitle: controller.selectedServiceLabel,
-            providerName: 'To be assigned',
+            serviceTitle: controller.selectedServiceLabel(l10n),
+            providerName: l10n.bfToBeAssigned,
             scheduledText: schedule,
-            paymentLabel: controller.paymentLabel,
+            paymentLabel: controller.paymentLabel(l10n),
           );
         },
       );

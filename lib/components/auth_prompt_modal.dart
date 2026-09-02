@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '/components/cupertino_ui/app_button.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 
 class AuthPromptModal extends StatelessWidget {
@@ -18,6 +20,7 @@ class AuthPromptModal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final _l10n = AppLocalizations.of(context)!;
 
     if (!isOpen) return const SizedBox.shrink();
 
@@ -37,29 +40,31 @@ class AuthPromptModal extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            message ?? 'Sign in to continue',
+            message ?? _l10n.ccSignInTitle,
             style: theme.titleMedium,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 4),
           Text(
-            'You need to be signed in to access this feature.',
+            _l10n.ccSignInSubtitle,
             style: theme.bodySmall?.copyWith(color: theme.secondaryText),
             textAlign: TextAlign.center,
           ),
         ],
       ),
       actions: [
-        TextButton(
+        AppButton(
           onPressed: onDismiss,
-          child: const Text('Cancel'),
+          variant: AppButtonVariant.text,
+          child: Text(_l10n.ccCancel),
         ),
-        FilledButton(
+        AppButton(
           onPressed: () {
             onDismiss();
             GoRouter.of(context).go('/signin');
           },
-          child: const Text('Sign In'),
+          variant: AppButtonVariant.primary,
+          child: Text(_l10n.ccSignIn),
         ),
       ],
     );

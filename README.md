@@ -1,6 +1,6 @@
-# SerbisyoHub PH — Client App 🇵🇭
+# Serbisyo — Client App 🇵🇭
 
-> **Client-only app.** Provider tools now live in the standalone **SerbisyoHub Provider** app (`E:\Dev\shph-provider`). This repository no longer contains provider dashboard, earnings, service management, or KYC verification screens.
+> **Client-only app.** Provider tools now live in the standalone **Serbisyo Provider** app (`E:\Dev\shph-provider`). This repository no longer contains provider dashboard, earnings, service management, or KYC verification screens.
 
 A service marketplace mobile application for **clients**: discover services, book providers, track jobs, chat, and review. Provider capabilities (job handling, earnings, KYC) were extracted to `shph-provider` per `openspec/changes/split-client-provider-apps`.
 

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '/components/cupertino_ui/app_activity_indicator.dart';
+import '/components/cupertino_ui/app_button.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'client_ondemand_jobs_model.dart';
 
@@ -20,6 +24,8 @@ class ClientOnDemandJobsWidget extends StatefulWidget {
 class _ClientOnDemandJobsWidgetState
     extends State<ClientOnDemandJobsWidget> {
   late ClientOnDemandJobsModel _model;
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -43,10 +49,10 @@ class _ClientOnDemandJobsWidgetState
       };
 
   String _statusLabel(String status) => switch (status) {
-        'searching' => 'Searching',
-        'accepted' => 'Accepted',
-        'expired' => 'Expired',
-        'cancelled' => 'Cancelled',
+        'searching' => _l10n.cjStatusSearching,
+        'accepted' => _l10n.cjStatusAccepted,
+        'expired' => _l10n.cjStatusExpired,
+        'cancelled' => _l10n.cjStatusCancelled,
         _ => status,
       };
 
@@ -64,14 +70,16 @@ class _ClientOnDemandJobsWidgetState
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
-      appBar: AppBar(
-        backgroundColor: theme.primaryBackground,
-        title: Text('My On-Demand Jobs', style: theme.titleMedium),
-        centerTitle: true,
-        elevation: 0,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: CupertinoPageHeader(
+          backgroundColor: theme.primaryBackground,
+          title: _l10n.cjTitle,
+          titleStyle: theme.titleMedium,
+        ),
       ),
       body: _model.isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: AppActivityIndicator())
           : _model.jobs.isEmpty
               ? Center(
                   child: Column(
@@ -80,7 +88,7 @@ class _ClientOnDemandJobsWidgetState
                       Icon(Icons.work_off,
                           size: 64, color: theme.secondaryText),
                       const SizedBox(height: 16),
-                      Text('No on-demand jobs yet',
+                      Text(_l10n.cjNoJobs,
                           style: theme.bodyMedium),
                     ],
                   ),
@@ -148,7 +156,7 @@ class _ClientOnDemandJobsWidgetState
                                   const Spacer(),
                                   if (bidCount > 0)
                                     Text(
-                                      '$bidCount bid${bidCount == 1 ? '' : 's'}',
+                                      _l10n.cjBids(bidCount),
                                       style: theme.bodySmall?.copyWith(
                                           color: theme.secondaryText),
                                     ),
@@ -157,7 +165,7 @@ class _ClientOnDemandJobsWidgetState
                               const SizedBox(height: 12),
                               Text(
                                 job['category_name']?.toString() ??
-                                    'General',
+                                    _l10n.cjGeneral,
                                 style: theme.titleSmall,
                               ),
                               if (job['description'] != null &&
@@ -175,7 +183,9 @@ class _ClientOnDemandJobsWidgetState
                               if (feeMin != null || feeMax != null) ...[
                                 const SizedBox(height: 8),
                                 Text(
-                                  'Fee: ${feeMin != null ? '\$${feeMin.toStringAsFixed(0)}' : ''}${feeMin != null && feeMax != null ? ' - ' : ''}${feeMax != null ? '\$${feeMax.toStringAsFixed(0)}' : ''}',
+                                  _l10n.cjFee(
+                                    '${feeMin != null ? '\$${feeMin.toStringAsFixed(0)}' : ''}${feeMin != null && feeMax != null ? ' - ' : ''}${feeMax != null ? '\$${feeMax.toStringAsFixed(0)}' : ''}',
+                                  ),
                                   style: theme.bodyMedium?.copyWith(
                                       fontWeight: FontWeight.w600),
                                 ),
@@ -207,7 +217,7 @@ class _ClientOnDemandJobsWidgetState
                                     Text(
                                       provider['display_name']
                                               ?.toString() ??
-                                          'Provider',
+                                          _l10n.cjProvider,
                                       style: theme.bodyMedium,
                                     ),
                                   ],
@@ -217,16 +227,11 @@ class _ClientOnDemandJobsWidgetState
                                 const SizedBox(height: 12),
                                 SizedBox(
                                   width: double.infinity,
-                                  child: ElevatedButton(
+                                  child: AppButton(
                                     onPressed: () {},
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: theme.primary,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(8),
-                                      ),
-                                    ),
-                                    child: const Text('Resume'),
+                                    backgroundColor: theme.primary,
+                                    borderRadius: 8,
+                                    child: Text(_l10n.cjResume),
                                   ),
                                 ),
                               ],

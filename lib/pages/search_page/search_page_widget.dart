@@ -6,18 +6,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '/backend/supabase/database/tables/bookings.dart';
 import '/backend/supabase/database/tables/service_listings.dart';
+import '/components/back_button/back_button_widget.dart';
 import '/components/category_pill.dart';
+import '/components/cupertino_ui/app_button.dart';
 import '/components/content_container.dart';
-import '/components/screen_header.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
+import '/l10n/app_localizations.dart';
 import '/models/service_listing.dart';
 import '/services/bookings_service.dart';
 import '/services/logging_service.dart';
 import '/services/service_listing_service.dart';
 import '/theme/app_theme.dart';
 import '/utils/geo_utils.dart';
+import '/utils/tagalog_service_keywords.dart';
 import '../booking_funnel/booking_controller.dart';
 import '../booking_funnel/booking_models.dart';
 import '../booking_funnel/express_checkout_screen.dart';
@@ -44,6 +47,8 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   static const List<String> _categoryOptions = [
     'Cleaning',
@@ -135,8 +140,12 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
     });
 
     try {
+      // Tagalog queries won't match English titles server-side. Fetch a broad
+      // listing set and let the client-side Tagalog keyword expansion do the
+      // matching.
+      final isTagalog = isTagalogQuery(normalizedQuery);
       final apiServices = await ServiceListingService.instance
-          .fetchServiceListings(search: normalizedQuery);
+          .fetchServiceListings(search: isTagalog ? null : normalizedQuery);
       final services = apiServices
           .map(
             (listing) => ServiceListingsRow({
@@ -170,16 +179,16 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
         final matchesRating =
             _selectedRating == null || rating >= double.parse(_selectedRating!);
 
-        final matchesQuery = service.title
-                .toLowerCase()
-                .contains(normalizedQuery.toLowerCase()) ||
-            category.toLowerCase().contains(normalizedQuery.toLowerCase()) ||
-            (service.description ?? '')
-                .toLowerCase()
-                .contains(normalizedQuery.toLowerCase()) ||
-            (service.providerName ?? '')
-                .toLowerCase()
-                .contains(normalizedQuery.toLowerCase()) ||
+        final terms = expandTagalogQuery(normalizedQuery);
+        final title = service.title.toLowerCase();
+        final desc = (service.description ?? '').toLowerCase();
+        final provider = (service.providerName ?? '').toLowerCase();
+        final categoryLower = category.toLowerCase();
+        final matchesQuery = terms.any(
+              (term) => title.contains(term) || categoryLower.contains(term),
+            ) ||
+            desc.contains(normalizedQuery.toLowerCase()) ||
+            provider.contains(normalizedQuery.toLowerCase()) ||
             _matchesCategory(normalizedQuery, category);
 
         return matchesCategory && matchesRating && matchesQuery;
@@ -295,20 +304,63 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-                  child: ScreenHeader(
-                    title: 'Search',
-                    subtitle: 'Browse services with filters that actually help.',
-                    action: InkWell(
-                      onTap: () {
-                        safeSetState(() {
-                          _showFilters = !_showFilters;
-                        });
-                      },
-                      borderRadius: BorderRadius.circular(16),
-                      child: Icon(
-                        _showFilters ? Icons.close_rounded : Icons.tune_rounded,
+                  child: Row(
+                    children: [
+                      Material(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        child: wrapWithModel(
+                          model: _model.backButtonModel,
+                          updateCallback: () => safeSetState(() {}),
+                          child: const BackButtonWidget(),
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _l10n.spHeaderTitle,
+                              style:
+                                  AppTheme.of(context).titleLarge.override(
+                                        font: GoogleFonts.plusJakartaSans(
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                        color: AppTheme.of(context).primaryText,
+                                      ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              _l10n.spHeaderSubtitle,
+                              style:
+                                  AppTheme.of(context).bodySmall.override(
+                                        font: GoogleFonts.plusJakartaSans(),
+                                        color: AppTheme.of(context)
+                                            .secondaryText,
+                                      ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton.filledTonal(
+                        onPressed: () {
+                          safeSetState(() {
+                            _showFilters = !_showFilters;
+                          });
+                        },
+                        style: IconButton.styleFrom(
+                          backgroundColor:
+                              AppTheme.of(context).primaryBackground,
+                          foregroundColor: AppTheme.of(context).primary,
+                        ),
+                        icon: Icon(
+                          _showFilters
+                              ? Icons.close_rounded
+                              : Icons.tune_rounded,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 Expanded(
@@ -330,8 +382,6 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
                                 ),
                               ),
                               const SizedBox(height: 16),
-                              _buildSearchSummary(),
-                              const SizedBox(height: 14),
                               _buildQuickCategoryRail(),
                               if (_showFilters) ...[
                                 const SizedBox(height: 16),
@@ -402,7 +452,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
                 autofocus: true,
                 onChanged: _scheduleSearch,
                 decoration: InputDecoration(
-                  hintText: 'Search for services...',
+                  hintText: _l10n.spSearchPlaceholder,
                   hintStyle: AppTheme.of(context).bodyMedium.override(
                         font: GoogleFonts.plusJakartaSans(),
                         color: AppTheme.of(context).textTertiary,
@@ -432,90 +482,6 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
       );
   }
 
-  Widget _buildSearchSummary() => Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF17212B),
-              Color(0xFF23384D),
-              Color(0xFF2F5368),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(28),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _searchController.text.trim().isEmpty
-                  ? 'Start with a keyword'
-                  : '"${_searchController.text.trim()}"',
-              style: AppTheme.of(context).headlineSmall.override(
-                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
-                    color: Colors.white,
-                  ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              _searchController.text.trim().isEmpty
-                  ? 'Search by service name or category.'
-                  : '${_searchResults.length} matching services',
-              style: AppTheme.of(context).bodyMedium.override(
-                    font: GoogleFonts.plusJakartaSans(),
-                    color: Colors.white.withValues(alpha: 0.82),
-                  ),
-            ),
-            const SizedBox(height: 14),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _buildSummaryPill(
-                  icon: Icons.auto_awesome_rounded,
-                  label: _searchController.text.trim().isEmpty
-                      ? 'Smart discovery'
-                      : 'Live search',
-                ),
-                _buildSummaryPill(
-                  icon: Icons.tune_rounded,
-                  label: _selectedCategory ?? 'All categories',
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-
-  Widget _buildSummaryPill({
-    required IconData icon,
-    required String label,
-  }) =>
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.16),
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 16, color: Colors.white),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: AppTheme.of(context).labelMedium.override(
-                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
-                    color: Colors.white,
-                  ),
-            ),
-          ],
-        ),
-      );
-
   Widget _buildQuickCategoryRail() => SizedBox(
         height: 40,
         child: ListView(
@@ -523,27 +489,27 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
           children: [
             _buildQuickCategoryChip(
               icon: Icons.cleaning_services_rounded,
-              label: 'Cleaning',
+              label: _l10n.hmCatCleaning,
               onTap: () => _openCategoryBrowse('Cleaning'),
             ),
             _buildQuickCategoryChip(
               icon: Icons.plumbing_rounded,
-              label: 'Plumbing',
+              label: _l10n.hmCatPlumbing,
               onTap: () => _openCategoryBrowse('Plumbing'),
             ),
             _buildQuickCategoryChip(
               icon: Icons.electrical_services_rounded,
-              label: 'Electrical',
+              label: _l10n.hmCatElectrical,
               onTap: () => _openCategoryBrowse('Electrical'),
             ),
             _buildQuickCategoryChip(
               icon: Icons.format_paint_rounded,
-              label: 'Painting',
+              label: _l10n.hmCatPainting,
               onTap: () => _openCategoryBrowse('Painting & Decorating'),
             ),
             _buildQuickCategoryChip(
               icon: Icons.grid_view_rounded,
-              label: 'All services',
+              label: _l10n.spAllServices,
               onTap: () => context.pushNamed(ServicesScreen.routeName),
             ),
           ],
@@ -607,10 +573,10 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildFilterGroup(
-              title: 'Category',
+              title: _l10n.spCategory,
               children: [
                 _buildChip(
-                  label: 'All',
+                  label: _l10n.spAll,
                   selected: _selectedCategory == null,
                   onTap: () {
                     safeSetState(() => _selectedCategory = null);
@@ -631,10 +597,10 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
             ),
             const SizedBox(height: 14),
             _buildFilterGroup(
-              title: 'Minimum rating',
+              title: _l10n.spMinRating,
               children: [
                 _buildChip(
-                  label: 'All',
+                  label: _l10n.spAll,
                   selected: _selectedRating == null,
                   onTap: () {
                     safeSetState(() => _selectedRating = null);
@@ -655,10 +621,10 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
             ),
             const SizedBox(height: 14),
             _buildFilterGroup(
-              title: 'Price',
+              title: _l10n.spPrice,
               children: [
                 _buildChip(
-                  label: 'Default',
+                  label: _l10n.spDefault,
                   selected: _selectedPriceSort == null,
                   onTap: () {
                     safeSetState(() => _selectedPriceSort = null);
@@ -666,7 +632,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
                   },
                 ),
                 _buildChip(
-                  label: 'Low to High',
+                  label: _l10n.spLowToHigh,
                   selected: _selectedPriceSort == 'low',
                   onTap: () {
                     safeSetState(() => _selectedPriceSort = 'low');
@@ -674,7 +640,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
                   },
                 ),
                 _buildChip(
-                  label: 'High to Low',
+                  label: _l10n.spHighToLow,
                   selected: _selectedPriceSort == 'high',
                   onTap: () {
                     safeSetState(() => _selectedPriceSort = 'high');
@@ -686,9 +652,10 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
             const SizedBox(height: 16),
             Align(
               alignment: Alignment.centerRight,
-              child: TextButton(
+              child: AppButton(
                 onPressed: _resetFilters,
-                child: const Text('Reset filters'),
+                variant: AppButtonVariant.text,
+                child: Text(_l10n.spResetFilters),
               ),
             ),
           ],
@@ -756,7 +723,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
             ),
             const SizedBox(height: 18),
             Text(
-              'Search for services',
+              _l10n.spEmptyTitle,
               style: AppTheme.of(context).titleMedium.override(
                     font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: const Color(0xFF16202A),
@@ -764,7 +731,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Try keywords like cleaning, painting, or plumbing.',
+              _l10n.spEmptySubtitle,
               textAlign: TextAlign.center,
               style: AppTheme.of(context).bodySmall.override(
                     font: GoogleFonts.plusJakartaSans(),
@@ -772,14 +739,14 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
                   ),
             ),
             const SizedBox(height: 20),
-            FilledButton(
+            AppButton(
               onPressed: () => context.pushNamed(ServicesScreen.routeName),
-              child: const Text('Browse all services'),
+              child: Text(_l10n.spBrowseAllServices),
             ),
             if (_recentSearches.isNotEmpty) ...[
               const SizedBox(height: 26),
               _buildSuggestionBlock(
-                title: 'Recent searches',
+                title: _l10n.spRecentSearches,
                 children: _recentSearches
                     .map(
                       (search) => _buildSuggestionChip(
@@ -794,12 +761,12 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
             if (_recentBookings.isNotEmpty) ...[
               const SizedBox(height: 20),
               _buildSuggestionBlock(
-                title: 'Recent bookings',
+                title: _l10n.spRecentBookings,
                 children: _recentBookings
                     .map(
                       (booking) => _buildSuggestionChip(
                         icon: Icons.bookmark_outline_rounded,
-                        label: 'Booking #${booking.id.substring(0, 8)}',
+                        label: '${_l10n.spBookingRefPrefix}${booking.id.substring(0, 8)}',
                         onTap: () => _applyQuickSearch(
                             booking.serviceListingId.toString()),
                       ),
@@ -886,7 +853,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
               ),
               const SizedBox(height: 16),
               Text(
-                'No services found',
+                _l10n.spNoServicesFound,
                 style: AppTheme.of(context).titleMedium.override(
                       font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                       color: const Color(0xFF16202A),
@@ -894,7 +861,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Try another keyword, open a broader category, or clear your filters.',
+                _l10n.spNoResultsSubtitle,
                 textAlign: TextAlign.center,
                 style: AppTheme.of(context).bodySmall.override(
                       font: GoogleFonts.plusJakartaSans(),
@@ -907,19 +874,20 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
                 runSpacing: 10,
                 alignment: WrapAlignment.center,
                 children: [
-                  FilledButton(
+                  AppButton(
                     onPressed: () {
                       _resetFilters();
                       _searchController.clear();
                       _performSearch('');
                     },
-                    child: const Text('Clear filters'),
+                    child: Text(_l10n.spClearFilters),
                   ),
-                  OutlinedButton(
+                  AppButton(
                     onPressed: () => context.pushNamed(
                       ServicesScreen.routeName,
                     ),
-                    child: const Text('Browse all services'),
+                    variant: AppButtonVariant.outlined,
+                    child: Text(_l10n.spBrowseAllServices),
                   ),
                 ],
               ),
@@ -951,12 +919,16 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
         cleaningType: ServiceType.standard,
         paymentMethod: BookingPaymentMethod.gcash,
         address: BookingAddress(
-          label: appState.selectedAddressLabel.isNotEmpty
-              ? appState.selectedAddressLabel
-              : 'Pinned location',
-          line1: appState.selectedAddressLine1.isNotEmpty
-              ? appState.selectedAddressLine1
-              : 'Pinned address',
+          label: appState.selectedLocationMode == 'device'
+              ? _l10n.hmCurrentDeviceLocation
+              : appState.selectedAddressLabel.isNotEmpty
+                  ? appState.selectedAddressLabel
+                  : _l10n.bfPinnedLocation,
+          line1: appState.selectedLocationMode == 'device'
+              ? _l10n.hmPinnedAddress
+              : appState.selectedAddressLine1.isNotEmpty
+                  ? appState.selectedAddressLine1
+                  : _l10n.hmPinnedAddress,
           city: appState.selectedAddressCity.isNotEmpty
               ? appState.selectedAddressCity
               : 'Metro Manila',
@@ -1034,7 +1006,8 @@ class _SearchServiceCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        service.categoryName ?? 'Service',
+                        service.categoryName ??
+                            AppLocalizations.of(context)!.spServiceFallback,
                         style: theme.bodySmall.override(
                           font: GoogleFonts.plusJakartaSans(),
                           color: const Color(0xFF6F7B86),

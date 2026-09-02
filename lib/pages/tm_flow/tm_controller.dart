@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import '/app_state.dart';
+import '/l10n/app_localizations.dart';
 import '/models/service_listing.dart';
 import '/pages/dispatch/dispatch_repository.dart';
 import '/services/logging_service.dart';
@@ -16,9 +17,12 @@ import 'tm_repository.dart';
 enum TMBroadcastStage { idle, nearbySearch, expandedSearch, failed }
 
 class TMFlowController extends ChangeNotifier {
-  TMFlowController({required this.selectedService, TMRepository? repository})
-      : repository = repository ?? _createDispatchRepository(),
-        _subCategories = tmSubCategoriesForService(selectedService);
+  TMFlowController({
+    required this.selectedService,
+    required AppLocalizations l10n,
+    TMRepository? repository,
+  }) : repository = repository ?? _createDispatchRepository(),
+       _subCategories = tmSubCategoriesForService(selectedService, l10n);
 
   static DispatchTMRepository _createDispatchRepository() {
     final appState = FFAppState();
@@ -149,7 +153,7 @@ class TMFlowController extends ChangeNotifier {
     _lastErrorMessage = null;
   }
 
-  void startBroadcast() {
+  void startBroadcast([AppLocalizations? l10n]) {
     final option = _selectedSubCategory;
     if (option == null) {
       return;
@@ -188,13 +192,13 @@ class TMFlowController extends ChangeNotifier {
     _isSubmittingRating = false;
     _submittedRating = 0;
     _lastErrorMessage = null;
-    _startTicker();
+    _startTicker(l10n);
     unawaited(_startRepositorySearch(option, cycleId: _searchCycleId));
     notifyListeners();
   }
 
-  void retryBroadcast() {
-    startBroadcast();
+  void retryBroadcast([AppLocalizations? l10n]) {
+    startBroadcast(l10n);
   }
 
   void clearBroadcastNotice() {
@@ -254,7 +258,7 @@ class TMFlowController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> approveHardwareRequest() async {
+  Future<bool> approveHardwareRequest([AppLocalizations? l10n]) async {
     final request = _pendingHardwareRequest;
     final requestId = _searchReferenceId;
     final option = _selectedSubCategory;
@@ -278,7 +282,9 @@ class TMFlowController extends ChangeNotifier {
         totalPrice: approvedTotal,
       );
       if (!success) {
-        _lastErrorMessage = 'Could not approve the hardware request right now.';
+        _lastErrorMessage =
+            l10n?.tmErrorApproveHardware ??
+            'Could not approve the hardware request right now.';
         return false;
       }
       _approvedHardwareCost += request.additionalCost;
@@ -291,7 +297,7 @@ class TMFlowController extends ChangeNotifier {
     }
   }
 
-  Future<bool> rejectHardwareRequest() async {
+  Future<bool> rejectHardwareRequest([AppLocalizations? l10n]) async {
     final request = _pendingHardwareRequest;
     final requestId = _searchReferenceId;
     final option = _selectedSubCategory;
@@ -313,7 +319,9 @@ class TMFlowController extends ChangeNotifier {
         totalPrice: baseLaborCost + _approvedHardwareCost,
       );
       if (!success) {
-        _lastErrorMessage = 'Could not reject the hardware request right now.';
+        _lastErrorMessage =
+            l10n?.tmErrorRejectHardware ??
+            'Could not reject the hardware request right now.';
         return false;
       }
       _lastHardwareRequestId = request.id;
@@ -325,7 +333,7 @@ class TMFlowController extends ChangeNotifier {
     }
   }
 
-  Future<bool> completeJob() async {
+  Future<bool> completeJob([AppLocalizations? l10n]) async {
     final requestId = _searchReferenceId;
     final option = _selectedSubCategory;
     if (requestId == null || option == null || _isCompletingJob) {
@@ -340,7 +348,9 @@ class TMFlowController extends ChangeNotifier {
         subCategory: option,
       );
       if (!success) {
-        _lastErrorMessage = 'Could not mark the job complete right now.';
+        _lastErrorMessage =
+            l10n?.tmErrorMarkComplete ??
+            'Could not mark the job complete right now.';
         return false;
       }
       _jobCompleted = true;
@@ -352,7 +362,7 @@ class TMFlowController extends ChangeNotifier {
     }
   }
 
-  Future<bool> processPayment() async {
+  Future<bool> processPayment([AppLocalizations? l10n]) async {
     if (_isProcessingPayment) {
       return false;
     }
@@ -361,7 +371,9 @@ class TMFlowController extends ChangeNotifier {
     try {
       final requestId = _searchReferenceId;
       if (requestId == null || requestId.isEmpty) {
-        _lastErrorMessage = 'Missing booking reference for this payment.';
+        _lastErrorMessage =
+            l10n?.tmErrorMissingBookingRef ??
+            'Missing booking reference for this payment.';
         return false;
       }
       final success = await repository.processPayment(
@@ -370,7 +382,9 @@ class TMFlowController extends ChangeNotifier {
         paymentMethod: _paymentMethod,
       );
       if (!success) {
-        _lastErrorMessage = 'Payment could not be processed right now.';
+        _lastErrorMessage =
+            l10n?.tmErrorPaymentFailed ??
+            'Payment could not be processed right now.';
       }
       return success;
     } finally {
@@ -379,7 +393,7 @@ class TMFlowController extends ChangeNotifier {
     }
   }
 
-  Future<bool> submitRating(int rating) async {
+  Future<bool> submitRating(int rating, [AppLocalizations? l10n]) async {
     if (_isSubmittingRating) {
       return false;
     }
@@ -389,7 +403,9 @@ class TMFlowController extends ChangeNotifier {
     final providerId = _matchedProvider?.id;
     final requestId = _searchReferenceId;
     if (providerId == null || requestId == null || requestId.isEmpty) {
-      _lastErrorMessage = 'Missing provider or booking reference for rating.';
+      _lastErrorMessage =
+          l10n?.tmErrorMissingRatingRef ??
+          'Missing provider or booking reference for rating.';
       _isSubmittingRating = false;
       notifyListeners();
       return false;
@@ -401,7 +417,9 @@ class TMFlowController extends ChangeNotifier {
         rating: rating,
       );
       if (!success) {
-        _lastErrorMessage = 'Could not submit your rating right now.';
+        _lastErrorMessage =
+            l10n?.tmErrorSubmitRating ??
+            'Could not submit your rating right now.';
       }
       return success;
     } finally {
@@ -412,6 +430,7 @@ class TMFlowController extends ChangeNotifier {
 
   Future<bool> cancelBroadcastRequest({
     String reason = 'user_cancelled',
+    AppLocalizations? l10n,
   }) async {
     if (_isCancellingBroadcast) {
       return false;
@@ -429,7 +448,9 @@ class TMFlowController extends ChangeNotifier {
           reason: reason,
         );
         if (!success) {
-          _lastErrorMessage = 'Could not cancel the search right now.';
+          _lastErrorMessage =
+              l10n?.tmErrorCancelSearch ??
+              'Could not cancel the search right now.';
           return false;
         }
       }
@@ -512,7 +533,7 @@ class TMFlowController extends ChangeNotifier {
     }
   }
 
-  void _startTicker() {
+  void _startTicker([AppLocalizations? l10n]) {
     _ticker?.dispose();
     _ticker = Ticker((elapsed) {
       final remaining = 60 - elapsed.inSeconds;
@@ -533,8 +554,9 @@ class TMFlowController extends ChangeNotifier {
         _secondsRemaining = 60;
         _broadcastStage = TMBroadcastStage.expandedSearch;
         _broadcastNotice =
+            l10n?.tmExpandingSearchNotice ??
             'Expanding Search... Service Fee may increase by 50-100 per km';
-        _startTicker();
+        _startTicker(l10n);
         if (option != null) {
           unawaited(_startRepositorySearch(option, cycleId: _searchCycleId));
         }

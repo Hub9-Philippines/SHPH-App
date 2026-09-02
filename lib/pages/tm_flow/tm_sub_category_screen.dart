@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '/components/screen_header.dart';
+import '/l10n/app_localizations.dart';
 import '/models/service_listing.dart';
 import '/theme/app_theme.dart';
 import '../booking_funnel/widgets/booking_flow_route.dart';
@@ -23,7 +24,10 @@ class TMSubCategoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ChangeNotifierProvider(
-        create: (_) => TMFlowController(selectedService: selectedService),
+        create: (ctx) => TMFlowController(
+          selectedService: selectedService,
+          l10n: AppLocalizations.of(ctx)!,
+        ),
         child: const _TMSubCategoryView(),
       );
 }
@@ -34,6 +38,7 @@ class _TMSubCategoryView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final controller = context.watch<TMFlowController>();
 
     return Scaffold(
@@ -42,7 +47,7 @@ class _TMSubCategoryView extends StatelessWidget {
         top: false,
         child: Column(
           children: [
-            const ScreenHeader(title: 'Choose a Job Type'),
+            ScreenHeader(title: l10n.tmChooseJobType),
             Expanded(
               child: Column(
                 children: [
@@ -69,7 +74,7 @@ class _TMSubCategoryView extends StatelessWidget {
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Text(
-                              'Time-Material flow',
+                              l10n.tmTimeMaterialFlow,
                               style: theme.labelMedium.override(
                                 color: theme.primary,
                                 fontWeight: FontWeight.w700,
@@ -85,7 +90,7 @@ class _TMSubCategoryView extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Pick the closest job type so we can give a tighter estimate before searching for nearby providers.',
+                            l10n.tmPickClosestJobType,
                             style: theme.bodyMedium.override(
                               color: theme.secondaryText,
                             ),
@@ -144,6 +149,44 @@ class _TMSubCategoryCard extends StatelessWidget {
   final TMSubCategoryOption option;
   final VoidCallback onTap;
 
+  String _localizedTitle(BuildContext context, String? key) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (key) {
+      case 'tmSubHomeLockout':
+        return l10n.tmSubHomeLockout;
+      case 'tmSubLockRepair':
+        return l10n.tmSubLockRepair;
+      case 'tmSubLockReplace':
+        return l10n.tmSubLockReplace;
+      case 'tmSubPipeLeak':
+        return l10n.tmSubPipeLeak;
+      case 'tmSubFaucetValve':
+        return l10n.tmSubFaucetValve;
+      case 'tmSubDrainClog':
+        return l10n.tmSubDrainClog;
+      case 'tmSubOutletSwitch':
+        return l10n.tmSubOutletSwitch;
+      case 'tmSubBreakerTrip':
+        return l10n.tmSubBreakerTrip;
+      case 'tmSubLightingRepair':
+        return l10n.tmSubLightingRepair;
+      case 'tmSubWasherDryer':
+        return l10n.tmSubWasherDryer;
+      case 'tmSubRefrigerator':
+        return l10n.tmSubRefrigerator;
+      case 'tmSubSmallAppliance':
+        return l10n.tmSubSmallAppliance;
+      case 'tmSubQuickRepair':
+        return l10n.tmSubQuickRepair;
+      case 'tmSubDiagnostic':
+        return l10n.tmSubDiagnostic;
+      case 'tmSubUrgent':
+        return l10n.tmSubUrgent;
+      default:
+        return option.title;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
@@ -180,7 +223,7 @@ class _TMSubCategoryCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      option.title,
+                      _localizedTitle(context, option.titleKey),
                       style: theme.bodyLarge.override(
                         fontWeight: FontWeight.w700,
                       ),

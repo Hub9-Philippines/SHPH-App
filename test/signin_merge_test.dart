@@ -7,7 +7,7 @@ import 'package:serbisyohubph/pages/signin/signin_widget.dart';
 
 void main() {
   group('merged sign-in welcome header', () {
-    testWidgets('renders welcome artwork and SerbisyoHub headline',
+    testWidgets('renders welcome headline and sign-in tabs',
         (tester) async {
       await tester.pumpWidget(ChangeNotifierProvider<FFAppState>.value(
         value: FFAppState(),
@@ -15,18 +15,9 @@ void main() {
       ));
       await tester.pump();
 
-      expect(find.text('Welcome to SerbisyoHub PH'), findsOneWidget);
+      expect(find.text('Welcome to Serbisyo'), findsOneWidget);
       expect(find.text('Sign in to continue with your home services.'),
           findsOneWidget);
-      // Compact artwork is present (asset image widget).
-      expect(
-        find.byWidgetPredicate((w) =>
-            w is Image &&
-            w.image is AssetImage &&
-            (w.image as AssetImage).assetName ==
-                'assets/images/welcome-graphic.png'),
-        findsOneWidget,
-      );
       // Phone/Email tabs still present.
       expect(find.text('Phone'), findsOneWidget);
       expect(find.text('Email'), findsOneWidget);

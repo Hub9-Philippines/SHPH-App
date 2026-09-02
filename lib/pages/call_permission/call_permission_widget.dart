@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '/components/cupertino_ui/app_button.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'call_permission_model.dart';
 
@@ -25,6 +28,7 @@ class CallPermissionWidget extends StatefulWidget {
 
 class _CallPermissionWidgetState extends State<CallPermissionWidget> {
   late CallPermissionModel _model;
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -45,12 +49,13 @@ class _CallPermissionWidgetState extends State<CallPermissionWidget> {
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
-      appBar: AppBar(
-        backgroundColor: theme.primaryBackground,
-        title: Text(isVideo ? 'Camera & Microphone' : 'Microphone',
-            style: theme.titleMedium),
-        centerTitle: true,
-        elevation: 0,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: CupertinoPageHeader(
+          title: isVideo ? _l10n.callPermTitleVideo : _l10n.callPermTitleAudio,
+          backgroundColor: theme.primaryBackground,
+          titleStyle: theme.titleMedium,
+        ),
       ),
       body: Center(
         child: Padding(
@@ -74,14 +79,14 @@ class _CallPermissionWidgetState extends State<CallPermissionWidget> {
               const SizedBox(height: 24),
               Text(
                 isVideo
-                    ? 'Allow camera & microphone'
-                    : 'Allow microphone',
+                    ? _l10n.callPermAllowBoth
+                    : _l10n.callPermAllowMic,
                 style: theme.titleLarge,
               ),
               if (widget.participantName != null) ...[
                 const SizedBox(height: 8),
                 Text(
-                  'Calling ${widget.participantName}',
+                  _l10n.callPermCalling(widget.participantName!),
                   style: theme.bodyMedium.copyWith(
                       color: theme.secondaryText),
                 ),
@@ -89,25 +94,31 @@ class _CallPermissionWidgetState extends State<CallPermissionWidget> {
               const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton.icon(
+                child: AppButton(
                   onPressed: () {
                     setState(() {
                       _model.micGranted = true;
                       _model.cameraGranted = !isVideo || true;
                     });
                   },
-                  icon: const Icon(Icons.check),
-                  label: const Text('Allow'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.primary,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  backgroundColor: theme.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.check),
+                      SizedBox(width: 8),
+                      Text(_l10n.callPermAllow),
+                    ],
                   ),
                 ),
               ),
               const SizedBox(height: 12),
-              TextButton(
+              AppButton(
                 onPressed: () => context.pop(),
-                child: const Text('Cancel'),
+                variant: AppButtonVariant.text,
+                child: Text(_l10n.cancel),
               ),
             ],
           ),

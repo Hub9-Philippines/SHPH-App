@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Serbisyo — Home</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{fontFamily:{jakarta:['Plus Jakarta Sans','sans-serif']},colors:{brand:'#1E3A8A',ink:'#0F172A',canvas:'#F8FAFC'},boxShadow:{phone:'0 32px 80px rgba(15,23,42,.55)'}}}}</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <style>.no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}#appHeader{border-bottom:0!important;box-shadow:none!important;background:linear-gradient(135deg,#ecfdf5 0%,#f4fffc 55%,#f8fafc 100%)!important;transition:padding .24s ease,background .24s ease}#appHeader .eyebrow,#appHeader .welcome-copy{transition:opacity .18s ease,max-height .24s ease,margin .24s ease,transform .24s ease}#appHeader .eyebrow,#appHeader .search-wrap .fa-microphone{color:#0f8a6c!important}#appHeader .short-greeting{display:none}#appHeader .search-wrap{box-shadow:0 1px 2px rgba(15,23,42,.05)!important;transition:margin .24s ease,height .24s ease}#appHeader.compact{padding-top:.55rem;padding-bottom:.55rem;background:#fff!important}#appHeader.compact .eyebrow,#appHeader.compact .welcome-copy{max-height:0;margin:0;opacity:0;overflow:hidden;transform:translateY(-5px)}#appHeader.compact .long-greeting{display:none}#appHeader.compact .short-greeting{display:inline}#appHeader.compact h1{margin-top:0;font-size:15px;line-height:1.2}#appHeader.compact .search-wrap{height:2.5rem;margin-top:.55rem}aside.mt-6{background:linear-gradient(135deg,#5B2E91,#7C4DBE)!important;box-shadow:0 10px 20px rgba(91,46,145,.18)!important}#browseExplore{display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:24px;padding:16px;border-radius:16px;background:#eff6ff;color:#1e3a8a;text-align:left}</style>
+</head>
+<body class="min-h-screen bg-slate-900 font-jakarta text-ink antialiased md:flex md:items-center md:justify-center"><main class="relative mx-auto h-[892px] w-[412px] max-w-full overflow-hidden rounded-3xl bg-canvas shadow-phone"><div class="flex h-full min-h-0 flex-col">
+  <div class="flex h-11 shrink-0 items-center justify-between bg-white px-7 pt-1 text-[12px] font-bold"><span>9:41</span><div class="flex items-center gap-2 text-[13px]"><i class="fa-solid fa-signal"></i><i class="fa-solid fa-wifi"></i><i class="fa-solid fa-battery-three-quarters text-[16px]"></i></div></div>
+
+  <header id="appHeader" class="relative z-20 shrink-0 bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-5 pb-4 pt-3 transition-all duration-200">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="eyebrow text-[10px] font-bold uppercase tracking-[.18em] text-brand">Your home, made easy</p>
+        <h1 class="mt-1 text-[21px] font-extrabold tracking-tight text-ink"><span class="long-greeting">Good morning, Rina <span class="inline-block">&#128075;</span></span><span class="short-greeting">Hi, Rina</span></h1>
+        <p class="welcome-copy mt-1 text-[11px] font-medium text-slate-500">Tell us what needs fixing. We’ll find the right pro.</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button aria-label="Notifications" class="relative grid h-10 w-10 place-items-center rounded-2xl bg-white text-slate-700 shadow-sm"><i class="fa-regular fa-bell text-base"></i><span class="absolute right-2 top-2 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500"></span></button>
+        <button id="accountMenuButton" aria-expanded="false" aria-controls="accountMenu" aria-label="Open quick account menu" class="rounded-2xl"><img class="h-10 w-10 rounded-2xl object-cover ring-2 ring-white shadow-sm" alt="Rina's account" src="https://i.pravatar.cc/100?img=47"></button>
+      </div>
+    </div>
+    <div class="search-wrap mt-4 flex h-12 items-center gap-3 rounded-2xl bg-white px-4 text-slate-400 shadow-sm">
+      <i class="fa-solid fa-magnifying-glass text-sm"></i><span class="flex-1 text-[12px] font-medium">What service do you need...</span><i class="fa-solid fa-microphone text-brand"></i>
+    </div>
+    <div id="accountMenu" class="absolute right-5 top-14 hidden w-52 overflow-hidden rounded-2xl bg-white p-1.5 shadow-xl ring-1 ring-slate-200">
+      <div class="border-b border-slate-100 px-3 py-2"><p class="text-[11px] font-extrabold text-ink">Rina Santos</p><p class="text-[9px] text-slate-500">rina@email.com</p></div>
+      <button class="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[11px] font-semibold text-slate-600 hover:bg-slate-50"><i class="fa-solid fa-location-dot w-3 text-brand"></i>Manage addresses</button>
+      <button class="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[11px] font-semibold text-slate-600 hover:bg-slate-50"><i class="fa-regular fa-circle-question w-3 text-brand"></i>Help &amp; support</button>
+      <button class="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[11px] font-semibold text-red-500 hover:bg-red-50"><i class="fa-solid fa-arrow-right-from-bracket w-3"></i>Sign out</button>
+    </div>
+  </header>
+
+  <section id="homeScroll" class="no-scrollbar min-h-0 flex-1 overflow-y-auto bg-[#F8FAFC] px-5 pb-28 pt-5">
+
+
+    <!-- Active bookings -->
+    <div class="mb-4 mt-5 flex items-center justify-between">
+      <h2 class="text-[11px] font-extrabold tracking-[.16em] text-slate-500">YOUR BOOKINGS</h2>
+      <button data-callout="See more" class="text-[11px] font-bold text-brand" onclick="showView('bookings')">See more</button>
+    </div>
+    <div class="space-y-3">
+      <article class="rounded-[24px] bg-white p-4 shadow-sm ring-1 ring-slate-100">
+        <div class="flex items-center gap-3">
+          <div class="relative">
+            <div class="grid h-[52px] w-[52px] place-items-center rounded-2xl bg-blue-50 text-brand"><i class="fa-solid fa-key text-lg"></i></div>
+            <span class="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-emerald-500"></span>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center justify-between gap-2">
+              <p class="truncate text-[12px] font-bold text-ink">Lockout Assistance</p>
+              <span class="shrink-0 rounded-full bg-blue-50 px-2.5 py-1 text-[8px] font-extrabold text-blue-600">On the way</span>
+            </div>
+            <p class="mt-0.5 truncate text-[9px] text-slate-500">Mario Santos · Locksmith</p>
+            <p class="mt-1.5 flex items-center gap-1 text-[9px] font-semibold text-emerald-600"><i class="fa-solid fa-location-dot text-[8px]"></i>ETA 12 min · ₱350</p>
+          </div>
+        </div>
+        <div class="mt-3 flex items-center gap-2">
+          <button data-callout="Track booking" class="flex-1 rounded-xl bg-brand py-2.5 text-[10px] font-extrabold text-white"><i class="fa-solid fa-location-crosshairs mr-1.5 text-xs"></i>Track Service</button>
+          <button data-callout="Message Mario Santos" class="grid h-10 w-10 place-items-center rounded-xl bg-blue-50 text-brand"><i class="fa-regular fa-comment text-sm"></i></button>
+        </div>
+      </article>
+
+      <article class="rounded-[24px] bg-white p-4 shadow-sm ring-1 ring-slate-100">
+        <div class="flex items-center gap-3">
+          <div class="relative">
+            <div class="grid h-[52px] w-[52px] place-items-center rounded-2xl bg-emerald-50 text-emerald-600"><i class="fa-solid fa-broom-ball text-lg"></i></div>
+            <span class="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-emerald-500"></span>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center justify-between gap-2">
+              <p class="truncate text-[12px] font-bold text-ink">Deep Cleaning</p>
+              <span class="shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-[8px] font-extrabold text-amber-600">In progress</span>
+            </div>
+            <p class="mt-0.5 truncate text-[9px] text-slate-500">Ana Cruz · Cleaning</p>
+            <p class="mt-1.5 text-[9px] font-semibold text-slate-500">Started 9:05 AM · 2 of 3 rooms done</p>
+          </div>
+        </div>
+        <div class="mt-3 flex items-center gap-2">
+          <button data-callout="Track booking" class="flex-1 rounded-xl bg-brand py-2.5 text-[10px] font-extrabold text-white"><i class="fa-solid fa-location-crosshairs mr-1.5 text-xs"></i>Track Service</button>
+          <button data-callout="Message Ana Cruz" class="grid h-10 w-10 place-items-center rounded-xl bg-emerald-50 text-emerald-600"><i class="fa-regular fa-comment text-sm"></i></button>
+        </div>
+      </article>
+    </div>
+
+
+    <!-- Need help right now? -->
+    <div class="mt-5 overflow-hidden rounded-[28px] bg-gradient-to-r from-red-500 to-rose-500 p-4 text-white shadow-lg shadow-red-100">
+      <div class="flex items-center gap-3">
+        <div class="grid h-10 w-10 place-items-center rounded-xl bg-white/20"><i class="fa-solid fa-triangle-exclamation text-lg"></i></div>
+        <div class="flex-1">
+          <p class="text-[12px] font-extrabold">Need help right now?</p>
+          <p class="mt-0.5 text-[10px] font-medium text-red-50">Connect with an emergency service pro.</p>
+        </div>
+        <button data-callout="Emergency help" class="rounded-xl bg-white px-3 py-2 text-[10px] font-extrabold text-red-500">Get help</button>
+      </div>
+    </div>
+<!-- Explore Services — gradient category cards, horizontal scroll -->
+    <div class="mt-6">
+      <div class="mb-3 flex items-center justify-between">
+        <div>
+          <h2 class="text-[11px] font-extrabold tracking-[.16em] text-slate-500">EXPLORE SERVICES</h2>
+          <p class="mt-1 text-[10px] text-slate-400">Popular local services, all in one place.</p>
+        </div>
+        <button data-callout="Browse all categories" class="text-[10px] font-bold text-brand">Browse all</button>
+      </div>
+      <div class="no-scrollbar flex gap-3 overflow-x-auto pb-2">
+        <button class="cat-scroll w-[150px] shrink-0 rounded-[24px] bg-gradient-to-br from-amber-400 to-orange-500 p-3 text-left text-white shadow-sm" data-cat="Locksmith">
+          <div class="flex items-start justify-between"><i class="fa-solid fa-key text-base"></i><span class="rounded-full bg-white/25 px-2 py-0.5 text-[7px] font-extrabold uppercase">On-demand</span></div>
+          <p class="mt-6 text-[11px] font-bold">Locksmith</p>
+          <p class="text-[8px] text-white/80">from ₱350 · 24/7</p>
+        </button>
+        <button class="cat-scroll w-[150px] shrink-0 rounded-[24px] bg-gradient-to-br from-blue-500 to-blue-700 p-3 text-left text-white shadow-sm" data-cat="Plumbing">
+          <div class="flex items-start justify-between"><i class="fa-solid fa-faucet-drip text-base"></i><span class="rounded-full bg-white/25 px-2 py-0.5 text-[7px] font-extrabold uppercase">Project</span></div>
+          <p class="mt-6 text-[11px] font-bold">Plumbing</p>
+          <p class="text-[8px] text-white/80">from ₱380</p>
+        </button>
+        <button class="cat-scroll w-[150px] shrink-0 rounded-[24px] bg-gradient-to-br from-amber-300 to-yellow-500 p-3 text-left text-amber-950 shadow-sm" data-cat="Electrical">
+          <div class="flex items-start justify-between"><i class="fa-solid fa-bolt text-base"></i><span class="rounded-full bg-amber-950/15 px-2 py-0.5 text-[7px] font-extrabold uppercase">On-demand</span></div>
+          <p class="mt-6 text-[11px] font-bold">Electrical</p>
+          <p class="text-[8px] text-amber-950/70">from ₱320</p>
+        </button>
+        <button class="cat-scroll w-[150px] shrink-0 rounded-[24px] bg-gradient-to-br from-emerald-400 to-emerald-600 p-3 text-left text-white shadow-sm" data-cat="Cleaning">
+          <div class="flex items-start justify-between"><i class="fa-solid fa-broom text-base"></i><span class="rounded-full bg-white/25 px-2 py-0.5 text-[7px] font-extrabold uppercase">Project</span></div>
+          <p class="mt-6 text-[11px] font-bold">Cleaning</p>
+          <p class="text-[8px] text-white/80">from ₱499</p>
+        </button>
+        <button class="cat-scroll w-[150px] shrink-0 rounded-[24px] bg-gradient-to-br from-cyan-400 to-cyan-600 p-3 text-left text-white shadow-sm" data-cat="Aircon Repair">
+          <div class="flex items-start justify-between"><i class="fa-solid fa-snowflake text-base"></i></div>
+          <p class="mt-6 text-[11px] font-bold">Aircon Repair</p>
+          <p class="text-[8px] text-white/80">from ₱299</p>
+        </button>
+        <button class="cat-scroll w-[150px] shrink-0 rounded-[24px] bg-gradient-to-br from-violet-400 to-purple-600 p-3 text-left text-white shadow-sm" data-cat="Appliance Repair">
+          <div class="flex items-start justify-between"><i class="fa-solid fa-screwdriver-wrench text-base"></i></div>
+          <p class="mt-6 text-[11px] font-bold">Appliance Repair</p>
+          <p class="text-[8px] text-white/80">from ₱450</p>
+        </button>
+        <button class="cat-scroll w-[150px] shrink-0 rounded-[24px] bg-gradient-to-br from-lime-400 to-green-600 p-3 text-left text-white shadow-sm" data-cat="Pest Control">
+          <div class="flex items-start justify-between"><i class="fa-solid fa-bug text-base"></i><span class="rounded-full bg-white/25 px-2 py-0.5 text-[7px] font-extrabold uppercase">On-demand</span></div>
+          <p class="mt-6 text-[11px] font-bold">Pest Control</p>
+          <p class="text-[8px] text-white/80">from ₱390</p>
+        </button>
+        <button class="cat-scroll w-[150px] shrink-0 rounded-[24px] bg-gradient-to-br from-sky-400 to-sky-600 p-3 text-left text-white shadow-sm" data-cat="Car Wash">
+          <div class="flex items-start justify-between"><i class="fa-solid fa-car-side text-base"></i></div>
+          <p class="mt-6 text-[11px] font-bold">Car Wash</p>
+          <p class="text-[8px] text-white/80">from ₱250</p>
+        </button>
+      </div>
+    </div>
+
+    <!-- Bayanihan Pool -->
+    <div class="mt-6 overflow-hidden rounded-[24px] bg-gradient-to-br from-teal-500 to-emerald-600 p-4 text-white shadow-lg shadow-teal-100">
+      <div class="flex items-center gap-3">
+        <div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/20"><i class="fa-solid fa-people-roof text-base"></i></div>
+        <div class="flex-1">
+          <p class="text-[12px] font-extrabold">Bayanihan Pool</p>
+          <p class="mt-0.5 text-[9px] leading-4 text-teal-50">Join neighbors nearby and split the cost of a shared service booking.</p>
+        </div>
+        <button class="shrink-0 rounded-xl bg-white px-3 py-2 text-[10px] font-extrabold text-teal-600" data-callout="Bayanihan Pool">View</button>
+      </div>
+    </div>
+<!-- Seasonal offer -->
+    <div class="mt-6 overflow-hidden rounded-[30px] bg-gradient-to-br from-[#1D4ED8] via-[#1E3A8A] to-[#0F172A] p-5 text-white shadow-[0_20px_40px_rgba(37,99,235,.22)]">
+      <p class="text-[10px] font-extrabold uppercase tracking-[.16em] text-sky-200">Seasonal offer</p>
+      <div class="mt-2 flex items-start gap-4">
+        <div class="flex-1">
+          <h2 class="max-w-[220px] text-[20px] font-extrabold leading-tight">Get your home back in shape for the season.</h2>
+          <p class="mt-2 max-w-[220px] text-[10px] leading-4 text-blue-100">Save 15% on appliance repair and preventive cleaning this week.</p>
+          <button class="mt-4 rounded-xl bg-white px-4 py-2.5 text-[10px] font-extrabold text-brand" data-callout="Seasonal offer">Book now</button>
+        </div>
+        <div class="relative flex h-24 w-24 items-end justify-center"><div class="absolute inset-0 rounded-full bg-white/10 blur-xl"></div><i class="fa-solid fa-house-chimney text-5xl text-white/20"></i></div>
+      </div>
+    </div>
+
+    <!-- Trending near you -->
+    <div class="mt-7">
+      <div class="flex items-end justify-between gap-3">
+        <div>
+          <h2 class="text-[12px] font-extrabold uppercase tracking-[.16em] text-slate-500">Trending near you</h2>
+          <p class="mt-1 text-[10px] text-slate-400">Verified pros with the strongest reviews nearby.</p>
+        </div>
+        <button data-callout="See all trending" class="text-[10px] font-bold text-brand">See all</button>
+      </div>
+      <div class="no-scrollbar mt-3 flex gap-3 overflow-x-auto pb-2">
+        <article class="min-w-[178px] rounded-[24px] bg-white p-3 shadow-sm ring-1 ring-slate-100">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <div class="relative"><img class="h-10 w-10 rounded-2xl" src="https://i.pravatar.cc/80?img=12" alt="Mario Santos"><span class="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-emerald-500"></span></div>
+              <div><p class="text-[10px] font-bold">Mario Santos</p><p class="text-[9px] text-slate-500">Locksmith</p></div>
+            </div>
+            <span class="rounded-full bg-emerald-50 px-2 py-1 text-[8px] font-extrabold text-emerald-600">Online</span>
+          </div>
+          <p class="mt-4 text-[10px] font-bold text-amber-500"><i class="fa-solid fa-star"></i> 4.9 <span class="font-medium text-slate-400">(124)</span></p>
+          <p class="mt-1 text-[9px] text-slate-500">1.2 km away · from ₱350</p>
+          <button class="mt-3 w-full rounded-xl bg-blue-50 py-2 text-[10px] font-bold text-brand" data-callout="Mario Santos">View profile</button>
+        </article>
+        <article class="min-w-[178px] rounded-[24px] bg-white p-3 shadow-sm ring-1 ring-slate-100">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <div class="relative"><img class="h-10 w-10 rounded-2xl" src="https://i.pravatar.cc/80?img=15" alt="Ana Cruz"><span class="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-emerald-500"></span></div>
+              <div><p class="text-[10px] font-bold">Ana Cruz</p><p class="text-[9px] text-slate-500">Cleaning</p></div>
+            </div>
+            <span class="rounded-full bg-emerald-50 px-2 py-1 text-[8px] font-extrabold text-emerald-600">Online</span>
+          </div>
+          <p class="mt-4 text-[10px] font-bold text-amber-500"><i class="fa-solid fa-star"></i> 4.9 <span class="font-medium text-slate-400">(98)</span></p>
+          <p class="mt-1 text-[9px] text-slate-500">2.0 km away · from ₱499</p>
+          <button class="mt-3 w-full rounded-xl bg-blue-50 py-2 text-[10px] font-bold text-brand" data-callout="Ana Cruz">View profile</button>
+        </article>
+        <article class="min-w-[178px] rounded-[24px] bg-white p-3 shadow-sm ring-1 ring-slate-100">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <div class="relative"><img class="h-10 w-10 rounded-2xl" src="https://i.pravatar.cc/80?img=68" alt="Juan Dela Cruz"><span class="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-emerald-500"></span></div>
+              <div><p class="text-[10px] font-bold">Juan Dela Cruz</p><p class="text-[9px] text-slate-500">Electrical</p></div>
+            </div>
+            <span class="rounded-full bg-emerald-50 px-2 py-1 text-[8px] font-extrabold text-emerald-600">Online</span>
+          </div>
+          <p class="mt-4 text-[10px] font-bold text-amber-500"><i class="fa-solid fa-star"></i> 4.8 <span class="font-medium text-slate-400">(89)</span></p>
+          <p class="mt-1 text-[9px] text-slate-500">2.4 km away · from ₱420</p>
+          <button class="mt-3 w-full rounded-xl bg-blue-50 py-2 text-[10px] font-bold text-brand" data-callout="Juan Dela Cruz">View profile</button>
+        </article>
+      </div>
+    </div>
+<!-- Recommended for you -->
+    <div class="mt-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-[12px] font-extrabold uppercase tracking-[.16em] text-slate-500">Recommended for you</h2>
+          <p class="mt-1 text-[10px] text-slate-400">Based on what homeowners nearby are booking.</p>
+        </div>
+        <i class="fa-solid fa-arrow-right text-xs text-brand"></i>
+      </div>
+      <div class="mt-3 space-y-3 rounded-[28px] bg-slate-100 p-3">
+        <div class="flex items-center gap-3">
+          <div class="relative"><img class="h-11 w-11 rounded-xl" src="https://i.pravatar.cc/80?img=11" alt="Pedro Reyes"><span class="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-slate-100 bg-emerald-500"></span></div>
+          <div class="flex-1">
+            <p class="text-[12px] font-bold">Pedro Reyes</p>
+            <p class="text-[10px] text-slate-500">Licensed Plumber · 1.2 km away</p>
+            <p class="mt-1 text-[10px] font-bold text-amber-500"><i class="fa-solid fa-star"></i> 4.9 <span class="font-medium text-slate-400">(124 reviews)</span></p>
+          </div>
+          <button class="rounded-xl bg-white px-3 py-2 text-[10px] font-bold text-brand shadow-sm" data-callout="Pedro Reyes">View</button>
+        </div>
+        <div class="h-px bg-slate-200"></div>
+        <div class="flex items-center gap-3">
+          <div class="relative"><img class="h-11 w-11 rounded-xl" src="https://i.pravatar.cc/80?img=68" alt="Juan Dela Cruz"><span class="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-slate-100 bg-emerald-500"></span></div>
+          <div class="flex-1">
+            <p class="text-[12px] font-bold">Juan Dela Cruz</p>
+            <p class="text-[10px] text-slate-500">Electrical Expert · 2.4 km away</p>
+            <p class="mt-1 text-[10px] font-bold text-amber-500"><i class="fa-solid fa-star"></i> 4.8 <span class="font-medium text-slate-400">(89 reviews)</span></p>
+          </div>
+          <button class="rounded-xl bg-white px-3 py-2 text-[10px] font-bold text-brand shadow-sm" data-callout="Juan Dela Cruz">View</button>
+        </div>
+      </div>
+    </div>
+
+    <aside class="mt-6 overflow-hidden rounded-[30px] bg-gradient-to-br from-[#5B2E91] to-[#7C4DBE] text-white shadow-lg shadow-purple-100">
+      <div class="flex items-center gap-3 p-4">
+        <div class="grid h-10 w-10 place-items-center rounded-xl bg-white/15"><i class="fa-solid fa-gift text-lg"></i></div>
+        <div class="flex-1">
+          <p class="text-[12px] font-extrabold">Share Serbisyo, earn ₱100</p>
+          <p class="mt-0.5 text-[10px] text-purple-100">Give friends ₱50 off their first booking.</p>
+        </div>
+        <i class="fa-solid fa-chevron-right text-xs text-purple-100"></i>
+      </div>
+      <div class="border-t border-white/20 px-4 py-2.5 text-center text-[10px] font-bold">Your code: <span class="ml-1 rounded-md bg-white/15 px-2 py-1 tracking-wider">RINA100</span></div>
+    </aside>
+</section>
+
+<section id="bookingsView" class="no-scrollbar hidden min-h-0 flex-1 overflow-y-auto bg-[#F8FAFC] pb-28">
+    <div class="sticky top-0 z-10 bg-[#F8FAFC]/95 px-5 pb-3 pt-5 backdrop-blur">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-[10px] font-extrabold uppercase tracking-[.18em] text-slate-500">Your services</p>
+          <h1 class="mt-1 text-[24px] font-extrabold tracking-tight">Bookings</h1>
+          <p class="mt-0.5 text-[10px] font-medium text-slate-500">Track active work, completed visits, and next steps.</p>
+        </div>
+        <button id="bookingsRefresh" class="grid h-10 w-10 place-items-center rounded-2xl bg-white text-brand shadow-sm" aria-label="Refresh bookings"><i class="fa-solid fa-rotate text-sm"></i></button>
+      </div>
+      <div class="mt-4 flex h-12 items-center gap-3 rounded-2xl bg-white px-4 text-slate-400 shadow-sm">
+        <i class="fa-solid fa-magnifying-glass text-sm"></i>
+        <input id="bookingsSearch" type="text" placeholder="Search services or providers" class="flex-1 bg-transparent text-[12px] font-medium text-ink outline-none placeholder:text-slate-400">
+        <button id="bookingsSearchClear" class="hidden text-slate-400"><i class="fa-solid fa-xmark text-sm"></i></button>
+      </div>
+      <div id="bookingsChips" class="no-scrollbar mt-3 flex gap-2 overflow-x-auto">
+        <button data-b-filter="all" class="shrink-0 rounded-full bg-brand px-4 py-2 text-[10px] font-extrabold text-white">All</button>
+        <button data-b-filter="pending" class="shrink-0 rounded-full bg-white px-4 py-2 text-[10px] font-semibold text-slate-500 ring-1 ring-slate-200">Pending</button>
+        <button data-b-filter="completed" class="shrink-0 rounded-full bg-white px-4 py-2 text-[10px] font-semibold text-slate-500 ring-1 ring-slate-200">Completed</button>
+        <button data-b-filter="canceled" class="shrink-0 rounded-full bg-white px-4 py-2 text-[10px] font-semibold text-slate-500 ring-1 ring-slate-200">Canceled</button>
+      </div>
+    </div>
+
+    <div id="bookingsList" class="px-5 pt-3">
+      <article data-booking class="rounded-[24px] bg-white p-4 shadow-sm ring-1 ring-slate-100" data-status="pending" data-title="Lockout Assistance" data-provider="Mario Santos" data-date="2026-08-30 16:30">
+        <div class="flex items-start gap-3">
+          <div class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-slate-100 text-slate-500"><i class="fa-solid fa-key text-lg"></i></div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-start justify-between gap-2">
+              <p class="truncate text-[13px] font-bold text-ink">Lockout Assistance</p>
+              <span class="shrink-0 rounded-full bg-orange-50 px-2.5 py-1 text-[9px] font-extrabold text-orange-500">Pending</span>
+            </div>
+            <p class="mt-0.5 truncate text-[10px] text-slate-500">Mario Santos</p>
+          </div>
+        </div>
+        <div class="mt-3 flex items-center gap-2">
+          <i class="fa-regular fa-calendar text-xs text-slate-400"></i>
+          <span class="flex-1 text-[10px] font-medium text-slate-500">Aug 30, 2026 · 4:30 PM</span>
+          <span class="text-[11px] font-extrabold text-ink">₱350</span>
+        </div>
+        <div class="mt-3 flex items-center gap-2">
+          <button data-b-action="track" class="flex-1 rounded-xl bg-brand py-2.5 text-[10px] font-extrabold text-white"><i class="fa-solid fa-location-crosshairs mr-1.5 text-xs"></i>Track Service</button>
+          <button data-b-action="reschedule" class="flex-1 rounded-xl py-2.5 text-[10px] font-extrabold text-brand ring-1 ring-brand"><i class="fa-regular fa-calendar-check mr-1.5 text-xs"></i>Reschedule</button>
+        </div>
+      </article>
+
+      <article data-booking class="mt-3 rounded-[24px] bg-white p-4 shadow-sm ring-1 ring-slate-100" data-status="pending" data-title="Pest Control" data-provider="Juan Dela Cruz" data-date="2026-08-31 09:00">
+        <div class="flex items-start gap-3">
+          <div class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-slate-100 text-slate-500"><i class="fa-solid fa-bug text-lg"></i></div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-start justify-between gap-2">
+              <p class="truncate text-[13px] font-bold text-ink">Pest Control</p>
+              <span class="shrink-0 rounded-full bg-orange-50 px-2.5 py-1 text-[9px] font-extrabold text-orange-500">Pending</span>
+            </div>
+            <p class="mt-0.5 truncate text-[10px] text-slate-500">Juan Dela Cruz</p>
+          </div>
+        </div>
+        <div class="mt-3 flex items-center gap-2">
+          <i class="fa-regular fa-calendar text-xs text-slate-400"></i>
+          <span class="flex-1 text-[10px] font-medium text-slate-500">Aug 31, 2026 · 9:00 AM</span>
+          <span class="text-[11px] font-extrabold text-ink">₱499</span>
+        </div>
+        <div class="mt-3 flex items-center gap-2">
+          <button data-b-action="track" class="flex-1 rounded-xl bg-brand py-2.5 text-[10px] font-extrabold text-white"><i class="fa-solid fa-location-crosshairs mr-1.5 text-xs"></i>Track Service</button>
+          <button data-b-action="reschedule" class="flex-1 rounded-xl py-2.5 text-[10px] font-extrabold text-brand ring-1 ring-brand"><i class="fa-regular fa-calendar-check mr-1.5 text-xs"></i>Reschedule</button>
+        </div>
+      </article>
+
+<article data-booking class="mt-3 rounded-[24px] bg-white p-4 shadow-sm ring-1 ring-slate-100" data-status="completed" data-title="Deep Cleaning" data-provider="Ana Cruz" data-date="2026-08-20 10:00">
+        <div class="flex items-start gap-3">
+          <div class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-slate-100 text-slate-500"><i class="fa-solid fa-broom-ball text-lg"></i></div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-start justify-between gap-2">
+              <p class="truncate text-[13px] font-bold text-ink">Deep Cleaning</p>
+              <span class="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-[9px] font-extrabold text-emerald-600">Completed</span>
+            </div>
+            <p class="mt-0.5 truncate text-[10px] text-slate-500">Ana Cruz</p>
+          </div>
+        </div>
+        <div class="mt-3 flex items-center gap-2">
+          <i class="fa-regular fa-calendar text-xs text-slate-400"></i>
+          <span class="flex-1 text-[10px] font-medium text-slate-500">Aug 20, 2026 · 10:00 AM</span>
+          <span class="text-[11px] font-extrabold text-ink">₱1,200</span>
+        </div>
+        <div class="mt-3 flex items-center gap-2">
+          <button data-b-action="review" class="flex-1 rounded-xl bg-emerald-600 py-2.5 text-[10px] font-extrabold text-white"><i class="fa-solid fa-star mr-1.5 text-xs"></i>Write Review</button>
+          <button data-b-action="bookAgain" class="flex-1 rounded-xl py-2.5 text-[10px] font-extrabold text-slate-600 ring-1 ring-slate-200"><i class="fa-solid fa-rotate-left mr-1.5 text-xs"></i>Book Again</button>
+        </div>
+      </article>
+
+      <article data-booking class="mt-3 rounded-[24px] bg-white p-4 shadow-sm ring-1 ring-slate-100" data-status="completed" data-title="Appliance Checkup" data-provider="Pedro Reyes" data-date="2026-08-12 14:00">
+        <div class="flex items-start gap-3">
+          <div class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-slate-100 text-slate-500"><i class="fa-solid fa-screwdriver-wrench text-lg"></i></div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-start justify-between gap-2">
+              <p class="truncate text-[13px] font-bold text-ink">Appliance Checkup</p>
+              <span class="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-[9px] font-extrabold text-emerald-600">Completed</span>
+            </div>
+            <p class="mt-0.5 truncate text-[10px] text-slate-500">Pedro Reyes</p>
+          </div>
+        </div>
+        <div class="mt-3 flex items-center gap-2">
+          <i class="fa-regular fa-calendar text-xs text-slate-400"></i>
+          <span class="flex-1 text-[10px] font-medium text-slate-500">Aug 12, 2026 · 2:00 PM</span>
+          <span class="text-[11px] font-extrabold text-ink">₱850</span>
+        </div>
+        <div class="mt-3 flex items-center gap-2">
+          <button data-b-action="review" class="flex-1 rounded-xl bg-emerald-600 py-2.5 text-[10px] font-extrabold text-white"><i class="fa-solid fa-star mr-1.5 text-xs"></i>Write Review</button>
+          <button data-b-action="bookAgain" class="flex-1 rounded-xl py-2.5 text-[10px] font-extrabold text-slate-600 ring-1 ring-slate-200"><i class="fa-solid fa-rotate-left mr-1.5 text-xs"></i>Book Again</button>
+        </div>
+      </article>
+
+      <article data-booking class="mt-3 rounded-[24px] bg-white p-4 shadow-sm ring-1 ring-slate-100" data-status="canceled" data-title="Emergency Plumbing" data-provider="Pedro Reyes" data-date="2026-07-28 13:00">
+        <div class="flex items-start gap-3">
+          <div class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-slate-100 text-slate-500"><i class="fa-solid fa-faucet-drip text-lg"></i></div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-start justify-between gap-2">
+              <p class="truncate text-[13px] font-bold text-ink">Emergency Plumbing</p>
+              <span class="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[9px] font-extrabold text-slate-500">Canceled</span>
+            </div>
+            <p class="mt-0.5 truncate text-[10px] text-slate-500">Pedro Reyes</p>
+          </div>
+        </div>
+        <div class="mt-3 flex items-center gap-2">
+          <i class="fa-regular fa-calendar text-xs text-slate-400"></i>
+          <span class="flex-1 text-[10px] font-medium text-slate-500">Jul 28, 2026 · 1:00 PM</span>
+          <span class="text-[11px] font-extrabold text-ink">₱600</span>
+        </div>
+        <button data-b-action="viewDetails" class="mt-3 flex items-center gap-1.5 text-[10px] font-semibold text-slate-400"><i class="fa-regular fa-eye text-xs"></i>View Details</button>
+      </article>
+    </div>
+
+    <div id="bookingsEmpty" class="hidden px-5 pt-6">
+      <div class="rounded-[24px] border border-slate-200 bg-white p-8 text-center shadow-sm">
+        <div class="mx-auto grid h-16 w-16 place-items-center rounded-[20px] bg-emerald-100/70"><i id="bookingsEmptyIcon" class="fa-solid fa-inbox text-2xl text-emerald-700"></i></div>
+        <h3 id="bookingsEmptyTitle" class="mt-4 text-[13px] font-extrabold text-ink">No bookings yet</h3>
+        <p id="bookingsEmptyDesc" class="mx-auto mt-1.5 max-w-[230px] text-[10px] leading-4 text-slate-500">Your booking requests will appear here once you start a service.</p>
+      </div>
+    </div>
+  </section>
+
+<section id="messagesView" class="no-scrollbar hidden min-h-0 flex-1 overflow-y-auto bg-[#F8FAFC] pb-28">
+    <div class="sticky top-0 z-10 bg-[#F8FAFC]/95 px-5 pb-3 pt-5 backdrop-blur">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-[10px] font-extrabold uppercase tracking-[.18em] text-slate-500">Conversations</p>
+          <h1 class="mt-1 text-[24px] font-extrabold tracking-tight">Messages</h1>
+          <p class="mt-0.5 text-[10px] font-medium text-slate-500">Stay close to providers, updates, and support.</p>
+        </div>
+        <button class="grid h-10 w-10 place-items-center rounded-2xl bg-white text-brand shadow-sm"><i class="fa-regular fa-pen-to-square text-sm"></i></button>
+      </div>
+      <div class="mt-4 flex h-12 items-center gap-3 rounded-2xl bg-white px-4 text-slate-400 shadow-sm">
+        <i class="fa-solid fa-magnifying-glass text-sm"></i>
+        <input id="messagesSearch" type="text" placeholder="Search conversations or calls" class="flex-1 bg-transparent text-[12px] font-medium text-ink outline-none placeholder:text-slate-400">
+        <button id="messagesSearchClear" class="hidden text-slate-400"><i class="fa-solid fa-xmark text-sm"></i></button>
+      </div>
+      <div id="messagesSegments" class="mt-4 grid grid-cols-2 rounded-2xl bg-slate-100 p-1 text-[11px] font-bold text-slate-500">
+        <button data-msg-tab="0" class="rounded-xl bg-white py-2.5 text-ink shadow-sm"><i class="fa-regular fa-comment-dots mr-1.5 text-xs"></i>Chats</button>
+        <button data-msg-tab="1" class="rounded-xl py-2.5"><i class="fa-solid fa-phone mr-1.5 text-xs"></i>Calls history</button>
+      </div>
+    </div>
+    <div class="px-5">
+      <div id="messagesSectionLabel" class="mb-3 flex items-center justify-between">
+        <h2 class="text-[12px] font-extrabold uppercase tracking-[.16em] text-slate-600">Recent conversations</h2>
+        <span id="messagesItemCount" class="rounded-full bg-brand/10 px-3 py-1.5 text-[9px] font-extrabold text-brand">3 items</span>
+      </div>
+
+      <div id="messagesChatTab" class="space-y-3">
+        <article data-chat class="cursor-pointer rounded-[24px] bg-white p-4 shadow-sm ring-1 ring-slate-100" data-name="Mario Santos" data-snippet="Lockout Assistance confirmed. Heading to your location now.">
+          <div class="flex items-start gap-3">
+            <div class="relative"><img class="h-[58px] w-[58px] rounded-full" src="https://i.pravatar.cc/80?img=12" alt="Mario Santos"><span class="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-emerald-500"></span></div>
+            <div class="flex-1">
+              <div class="flex items-center justify-between gap-2"><p class="text-[12px] font-bold text-ink">Mario Santos</p><span class="text-[9px] text-slate-400">2m ago</span></div>
+              <p class="mt-1.5 text-[9px] leading-4 text-slate-500">Lockout Assistance confirmed. Heading to your location now.</p>
+              <div class="mt-2.5 flex items-center justify-between">
+                <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-[8px] font-extrabold text-emerald-600">Conversation</span>
+                <span class="rounded-full bg-brand px-2.5 py-1 text-[8px] font-extrabold text-white">2 unread</span>
+              </div>
+            </div>
+          </div>
+        </article>
+        <article data-chat class="cursor-pointer rounded-[24px] bg-white p-4 shadow-sm ring-1 ring-slate-100" data-name="Juan Dela Cruz" data-snippet="Sent inspection checklist and prep instructions for tomorrow.">
+          <div class="flex items-start gap-3">
+            <div class="relative"><img class="h-[58px] w-[58px] rounded-full" src="https://i.pravatar.cc/80?img=68" alt="Juan Dela Cruz"><span class="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-emerald-500"></span></div>
+            <div class="flex-1">
+              <div class="flex items-center justify-between gap-2"><p class="text-[12px] font-bold text-ink">Juan Dela Cruz</p><span class="text-[9px] text-slate-400">18m ago</span></div>
+              <p class="mt-1.5 text-[9px] leading-4 text-slate-500">Sent inspection checklist and prep instructions for tomorrow.</p>
+              <div class="mt-2.5 flex items-center justify-between">
+                <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-[8px] font-extrabold text-emerald-600">Conversation</span>
+                <span class="rounded-full bg-brand px-2.5 py-1 text-[8px] font-extrabold text-white">2 unread</span>
+              </div>
+            </div>
+          </div>
+        </article>
+        <article data-chat class="cursor-pointer rounded-[24px] bg-white p-4 shadow-sm ring-1 ring-slate-100" data-name="Ana Cruz" data-snippet="Your deep cleaning is done. Here is the post-service summary.">
+          <div class="flex items-start gap-3">
+            <div class="relative"><img class="h-[58px] w-[58px] rounded-full" src="https://i.pravatar.cc/80?img=15" alt="Ana Cruz"><span class="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-slate-300"></span></div>
+            <div class="flex-1">
+              <div class="flex items-center justify-between gap-2"><p class="text-[12px] font-bold text-ink">Ana Cruz</p><span class="text-[9px] text-slate-400">Yesterday</span></div>
+              <p class="mt-1.5 text-[9px] leading-4 text-slate-500">Your deep cleaning is done. Here is the post-service summary.</p>
+              <div class="mt-2.5 flex items-center justify-between">
+                <span class="rounded-full bg-brand/10 px-2.5 py-1 text-[8px] font-extrabold text-brand">Completed</span>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+
+<div id="messagesCallTab" class="hidden space-y-3">
+        <article data-call class="cursor-pointer rounded-[24px] bg-white p-4 shadow-sm ring-1 ring-slate-100" data-name="Mario Santos">
+          <div class="flex items-start gap-3">
+            <div class="relative"><img class="h-[58px] w-[58px] rounded-full" src="https://i.pravatar.cc/80?img=12" alt="Mario Santos"><span class="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-emerald-500"></span></div>
+            <div class="flex-1">
+              <p class="text-[12px] font-bold text-ink">Mario Santos</p>
+              <div class="mt-1.5 flex items-center gap-2">
+                <i class="fa-solid fa-phone-volume text-[10px] text-amber-500"></i>
+                <span class="text-[9px] font-extrabold text-amber-500">OUTGOING</span>
+                <i class="fa-solid fa-video text-[10px] text-slate-400"></i>
+                <span class="text-[9px] text-slate-500">VIDEO</span>
+              </div>
+            </div>
+            <span class="text-[9px] text-slate-400">2d ago</span>
+          </div>
+        </article>
+        <article data-call class="cursor-pointer rounded-[24px] bg-white p-4 shadow-sm ring-1 ring-slate-100" data-name="Juan Dela Cruz">
+          <div class="flex items-start gap-3">
+            <div class="relative"><img class="h-[58px] w-[58px] rounded-full" src="https://i.pravatar.cc/80?img=68" alt="Juan Dela Cruz"><span class="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-emerald-500"></span></div>
+            <div class="flex-1">
+              <p class="text-[12px] font-bold text-ink">Juan Dela Cruz</p>
+              <div class="mt-1.5 flex items-center gap-2">
+                <i class="fa-solid fa-phone text-[10px] text-emerald-500"></i>
+                <span class="text-[9px] font-extrabold text-emerald-500">INCOMING</span>
+                <i class="fa-solid fa-phone text-[10px] text-slate-400"></i>
+                <span class="text-[9px] text-slate-500">VOICE</span>
+              </div>
+            </div>
+            <span class="text-[9px] text-slate-400">1d ago</span>
+          </div>
+        </article>
+        <article data-call class="cursor-pointer rounded-[24px] bg-white p-4 shadow-sm ring-1 ring-slate-100" data-name="Ana Cruz">
+          <div class="flex items-start gap-3">
+            <div class="relative"><img class="h-[58px] w-[58px] rounded-full" src="https://i.pravatar.cc/80?img=15" alt="Ana Cruz"><span class="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-slate-300"></span></div>
+            <div class="flex-1">
+              <p class="text-[12px] font-bold text-ink">Ana Cruz</p>
+              <div class="mt-1.5 flex items-center gap-2">
+                <i class="fa-solid fa-phone text-[10px] text-emerald-500"></i>
+                <span class="text-[9px] font-extrabold text-emerald-500">INCOMING</span>
+                <i class="fa-solid fa-phone text-[10px] text-slate-400"></i>
+                <span class="text-[9px] text-slate-500">VOICE</span>
+              </div>
+            </div>
+            <span class="text-[9px] text-slate-400">3d ago</span>
+          </div>
+        </article>
+      </div>
+
+      <div id="messagesEmpty" class="hidden">
+        <div class="rounded-[24px] border border-slate-200 bg-white p-8 text-center shadow-sm">
+          <div class="mx-auto grid h-[68px] w-[68px] place-items-center rounded-[22px] bg-brand/10"><i id="messagesEmptyIcon" class="fa-regular fa-comment text-2xl text-brand"></i></div>
+          <h3 id="messagesEmptyTitle" class="mt-4 text-[13px] font-extrabold text-ink">No conversations yet</h3>
+          <p id="messagesEmptyDesc" class="mx-auto mt-1.5 max-w-[240px] text-[10px] leading-4 text-slate-500">Messages from your providers will show up here once a booking starts.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<section id="profileView" class="no-scrollbar hidden min-h-0 flex-1 overflow-y-auto bg-[#F8FAFC] pb-28">
+  <div class="sticky top-0 z-10 bg-[#F8FAFC]/95 px-5 pb-4 pt-5 backdrop-blur">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <p class="text-[10px] font-extrabold uppercase tracking-[.18em] text-slate-500">Account</p>
+        <h1 class="mt-1 text-[24px] font-extrabold tracking-tight">Profile</h1>
+        <p class="mt-0.5 text-[10px] font-medium text-slate-500">Manage your profile, preferences, and account access.</p>
+      </div>
+      <button id="profileSettings" class="grid h-10 w-10 place-items-center rounded-2xl bg-white text-brand shadow-sm" aria-label="Settings"><i class="fa-solid fa-gear text-sm"></i></button>
+    </div>
+  </div>
+  <div class="px-5">
+
+    <!-- Hero: royal-blue brand gradient card -->
+    <div class="rounded-[30px] bg-gradient-to-br from-[#1E3A8A] via-[#274FB5] to-[#3B62D9] p-5 text-white shadow-lg shadow-blue-200">
+      <div class="flex items-center gap-4">
+        <div class="relative shrink-0">
+          <img class="h-[76px] w-[76px] rounded-full border-2 border-white/85 object-cover p-[2px]" src="https://i.pravatar.cc/120?img=47" alt="Rina Santos">
+          <button class="absolute -bottom-0.5 -right-0.5 grid h-7 w-7 place-items-center rounded-full bg-white text-brand shadow" title="Edit photo" aria-label="Edit photo"><i class="fa-solid fa-camera text-[11px]"></i></button>
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-1.5">
+            <p class="truncate text-[16px] font-extrabold text-white">Rina Santos</p>
+            <i class="fa-solid fa-circle-check shrink-0 text-[15px] text-emerald-300" title="Verified identity"></i>
+          </div>
+          <p class="mt-0.5 text-[10px] font-medium text-white/80">Makati City · Member since 2024</p>
+          <p class="mt-1 text-[10px] font-bold text-amber-300"><i class="fa-solid fa-star"></i> 4.9 <span class="font-medium text-white/70">· 124 completed bookings</span></p>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <button id="editProfileBtn" class="rounded-full bg-white px-3.5 py-1.5 text-[10px] font-extrabold text-brand shadow-sm">Edit Profile</button>
+          </div>
+        </div>
+      </div>
+
+      <button id="savedPlacesTile" class="mt-4 flex w-full items-center gap-3 rounded-2xl bg-white/10 px-4 py-3 text-left ring-1 ring-inset ring-white/15">
+        <i class="fa-solid fa-location-dot text-white/90"></i>
+        <span class="flex-1 text-[11px] font-bold text-white">Saved Places</span>
+        <span class="text-[10px] font-medium text-white/80">2 set</span>
+        <i class="fa-solid fa-chevron-right text-[10px] text-white/90"></i>
+      </button>
+    </div>
+
+    <!-- Account readiness / KYC verification -->
+    <div class="mt-6" data-verify-section>
+      <p class="mb-2 px-1 text-[10px] font-extrabold uppercase tracking-[.6px] text-slate-500">Verification</p>
+      <div class="overflow-hidden rounded-[24px] bg-white shadow-sm ring-1 ring-slate-100">
+        <div class="flex items-center gap-3.5 p-4">
+          <div id="verifyIconWrap" class="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-xl bg-brand/10"><i id="verifyIcon" class="fa-solid fa-shield-halved text-[18px] text-brand"></i></div>
+          <div class="min-w-0 flex-1">
+            <p class="text-[13px] font-extrabold text-ink">KYC Verification</p>
+            <p id="verifyStatusDesc" class="mt-0.5 text-[10px] text-slate-500">Complete a quick identity check to unlock more features.</p>
+          </div>
+          <span id="verifyBadge" class="shrink-0 rounded-full bg-brand/10 px-2.5 py-1 text-[9px] font-extrabold text-brand">Not started</span>
+        </div>
+        <div class="px-4 pb-4">
+          <button id="verifyNowBtn" class="w-full rounded-2xl bg-brand py-3 text-[11px] font-extrabold text-white">Verify Now</button>
+        </div>
+      </div>
+    </div>
+
+<!-- Group: ACCOUNT -->
+    <div class="mt-6 p-group" data-group="Account">
+      <p class="mb-2 px-1 text-[10px] font-extrabold uppercase tracking-[.6px] text-slate-500">Account</p>
+      <div class="overflow-hidden rounded-[24px] bg-white shadow-sm ring-1 ring-slate-100">
+        <button data-menu="My Bookings" class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-slate-50">
+          <span class="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-xl" style="background:rgba(30,58,138,.10)"><i class="fa-solid fa-calendar-days text-[#1E3A8A]"></i></span>
+          <span class="min-w-0 flex-1"><span class="block text-[12px] font-bold text-ink">My Bookings</span><span class="mt-0.5 block text-[9px] text-slate-500">View past and upcoming jobs</span></span>
+          <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
+        </button>
+        <div class="mx-4 h-px bg-slate-100"></div>
+        <button data-menu="Payment + Invoices" class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-slate-50">
+          <span class="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-xl" style="background:rgba(14,165,233,.12)"><i class="fa-solid fa-receipt text-[#0EA5E9]"></i></span>
+          <span class="min-w-0 flex-1"><span class="block text-[12px] font-bold text-ink">Payment &amp; Invoices</span><span class="mt-0.5 block text-[9px] text-slate-500">View history and download invoices</span></span>
+          <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
+        </button>
+        <div class="mx-4 h-px bg-slate-100"></div>
+        <button data-menu="Language Preference" class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-slate-50">
+          <span class="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-xl" style="background:rgba(124,92,252,.12)"><i class="fa-solid fa-language text-[#7C5CFC]"></i></span>
+          <span class="min-w-0 flex-1"><span class="block text-[12px] font-bold text-ink">Language Preference</span><span class="mt-0.5 block text-[9px] text-slate-500">English, Filipino</span></span>
+          <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Group: PREFERENCES & UTILITIES -->
+    <div class="mt-6 p-group" data-group="Preferences & Utilities">
+      <p class="mb-2 px-1 text-[10px] font-extrabold uppercase tracking-[.6px] text-slate-500">Preferences &amp; Utilities</p>
+      <div class="overflow-hidden rounded-[24px] bg-white shadow-sm ring-1 ring-slate-100">
+        <button data-menu="Favorites" class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-slate-50">
+          <span class="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-xl" style="background:rgba(236,72,153,.12)"><i class="fa-solid fa-heart text-[#EC4899]"></i></span>
+          <span class="min-w-0 flex-1"><span class="block text-[12px] font-bold text-ink">Favorites</span><span class="mt-0.5 block text-[9px] text-slate-500">Jump back into the services you saved</span></span>
+          <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
+        </button>
+        <div class="mx-4 h-px bg-slate-100"></div>
+        <button data-menu="My Reviews" class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-slate-50">
+          <span class="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-xl" style="background:rgba(249,115,22,.12)"><i class="fa-solid fa-star text-[#F97316]"></i></span>
+          <span class="min-w-0 flex-1"><span class="block text-[12px] font-bold text-ink">My Reviews</span><span class="mt-0.5 block text-[9px] text-slate-500">See the feedback you have left</span></span>
+          <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
+        </button>
+        <div class="mx-4 h-px bg-slate-100"></div>
+        <button data-menu="Referral Program" class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-slate-50">
+          <span class="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-xl" style="background:rgba(99,102,241,.12)"><i class="fa-solid fa-gift text-[#6366F1]"></i></span>
+          <span class="min-w-0 flex-1"><span class="block text-[12px] font-bold text-ink">Referral Program</span><span class="mt-0.5 block text-[9px] text-slate-500">Share and earn rewards</span></span>
+          <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
+        </button>
+        <div class="mx-4 h-px bg-slate-100"></div>
+        <button data-menu="Notification Settings" class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-slate-50">
+          <span class="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-xl" style="background:rgba(245,158,11,.14)"><i class="fa-solid fa-bell text-[#F59E0B]"></i></span>
+          <span class="min-w-0 flex-1"><span class="block text-[12px] font-bold text-ink">Notification Settings</span><span class="mt-0.5 block text-[9px] text-slate-500">Control alerts and reminders</span></span>
+          <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
+        </button>
+        <div class="mx-4 h-px bg-slate-100"></div>
+        <button data-menu="Help Center" class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-slate-50">
+          <span class="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-xl" style="background:rgba(37,99,235,.12)"><i class="fa-regular fa-circle-question text-[#2563EB]"></i></span>
+          <span class="min-w-0 flex-1"><span class="block text-[12px] font-bold text-ink">Help Center</span><span class="mt-0.5 block text-[9px] text-slate-500">FAQs and chat with our support team</span></span>
+          <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
+        </button>
+      </div>
+    </div>
+
+<!-- Group: SYSTEM ACCESS -->
+    <div class="mt-6 p-group" data-group="System Access">
+      <p class="mb-2 px-1 text-[10px] font-extrabold uppercase tracking-[.6px] text-slate-500">System Access</p>
+      <div class="overflow-hidden rounded-[24px] bg-white shadow-sm ring-1 ring-slate-100">
+        <button data-menu="Security" class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-slate-50">
+          <span class="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-xl" style="background:rgba(30,58,138,.10)"><i class="fa-solid fa-shield-halved text-[#1E3A8A]"></i></span>
+          <span class="min-w-0 flex-1"><span class="block text-[12px] font-bold text-ink">Security</span><span class="mt-0.5 block text-[9px] text-slate-500">Password, login protection, and app security</span></span>
+          <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
+        </button>
+        <div class="mx-4 h-px bg-slate-100"></div>
+        <div class="flex w-full items-center gap-3 px-4 py-3">
+          <span class="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-xl" style="background:rgba(30,58,138,.10)"><i class="fa-solid fa-right-left text-[#1E3A8A]"></i></span>
+          <span class="min-w-0 flex-1"><span class="block text-[12px] font-bold text-ink">Are you a service provider?</span><span class="mt-0.5 block text-[9px] text-slate-500">Switch to Provider Account</span></span>
+          <button id="providerToggle" role="switch" aria-checked="false" aria-label="Toggle provider account" class="relative h-6 w-11 shrink-0 rounded-full bg-slate-200 transition"><span class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition"></span></button>
+        </div>
+        <div class="mx-4 h-px bg-slate-100"></div>
+        <button data-menu="Log out" class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-red-50">
+          <span class="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-xl" style="background:rgba(225,29,72,.10)"><i class="fa-solid fa-arrow-right-from-bracket text-[#E11D48]"></i></span>
+          <span class="min-w-0 flex-1"><span class="block text-[12px] font-bold text-[#E11D48]">Log out</span><span class="mt-0.5 block text-[9px] text-slate-500">Sign out of your account on this device</span></span>
+          <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+  <nav class="absolute bottom-0 left-0 right-0 flex h-[76px] items-start justify-around border-t border-slate-100 bg-white px-3 pt-3">
+    <button data-view="home" class="flex w-16 flex-col items-center gap-1 text-brand"><i class="fa-solid fa-house text-base"></i><span class="text-[9px] font-extrabold">Home</span></button>
+    <button data-view="bookings" class="flex w-16 flex-col items-center gap-1 text-slate-400"><i class="fa-regular fa-calendar-check text-base"></i><span class="text-[9px] font-semibold">Bookings</span></button>
+    <button data-view="messages" class="flex w-16 flex-col items-center gap-1 text-slate-400"><i class="fa-regular fa-message text-base"></i><span class="text-[9px] font-semibold">Messages</span></button>
+    <button data-view="profile" class="flex w-16 flex-col items-center gap-1 text-slate-400"><i class="fa-regular fa-user text-base"></i><span class="text-[9px] font-semibold">Profile</span></button>
+  </nav>
+</div></main><script>
+const homeScroll=document.getElementById('homeScroll');
+const appHeader=document.getElementById('appHeader');
+const bookingsView=document.getElementById('bookingsView');
+const messagesView=document.getElementById('messagesView');
+const profileView=document.getElementById('profileView');
+const accountMenuButton=document.getElementById('accountMenuButton');
+const accountMenu=document.getElementById('accountMenu');
+const navViews=document.querySelectorAll('nav [data-view]');
+const views={home:homeScroll,bookings:bookingsView,messages:messagesView,profile:profileView};
+
+const toastEl=document.createElement('div');
+toastEl.id='appToast';
+toastEl.style.cssText='position:fixed;left:50%;bottom:92px;transform:translateX(-50%) translateY(18px);z-index:60;background:#0F172A;color:#fff;font-size:11px;font-weight:700;padding:10px 16px;border-radius:14px;box-shadow:0 10px 24px rgba(15,23,42,.3);opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;max-width:80%;text-align:center';
+document.body.appendChild(toastEl);
+let toastTimer;
+function showToast(msg){toastEl.textContent=msg;toastEl.style.opacity='1';toastEl.style.transform='translateX(-50%) translateY(0)';clearTimeout(toastTimer);toastTimer=setTimeout(()=>{toastEl.style.opacity='0';toastEl.style.transform='translateX(-50%) translateY(18px)';},1500);}
+
+homeScroll.addEventListener('scroll',()=>appHeader.classList.toggle('compact',homeScroll.scrollTop>28),{passive:true});
+if(accountMenuButton&&accountMenu){
+  accountMenuButton.addEventListener('click',()=>{const isOpen=!accountMenu.classList.toggle('hidden');accountMenuButton.setAttribute('aria-expanded',String(isOpen));});
+  document.addEventListener('click',(event)=>{if(!appHeader.contains(event.target)){accountMenu.classList.add('hidden');accountMenuButton.setAttribute('aria-expanded','false');}});
+}
+function showView(view){
+  Object.entries(views).forEach(([name,el])=>{if(el)el.classList.toggle('hidden',name!==view);});
+  if(appHeader)appHeader.classList.toggle('hidden',view!=='home');
+  navViews.forEach(item=>{const active=item.dataset.view===view;item.classList.toggle('text-brand',active);item.classList.toggle('text-slate-400',!active);const spa=item.querySelector('span');if(spa){spa.classList.toggle('font-extrabold',active);spa.classList.toggle('font-semibold',!active);}});
+  if(view==='home'&&appHeader){appHeader.classList.toggle('compact',homeScroll.scrollTop>28);accountMenu.classList.add('hidden');accountMenuButton.setAttribute('aria-expanded','false');}
+}
+navViews.forEach(item=>item.addEventListener('click',event=>{event.preventDefault();showView(item.dataset.view);}));
+showView('home');
+/* MESSAGES */
+const msgTabButtons=document.querySelectorAll('#messagesSegments [data-msg-tab]');
+const msgChatTab=document.getElementById('messagesChatTab');
+const msgCallsTab=document.getElementById('messagesCallTab');
+const msgSectionTitle=document.querySelector('#messagesSectionLabel h2');
+const msgCount=document.getElementById('messagesItemCount');
+const msgEmpty=document.getElementById('messagesEmpty');
+const msgEmptyIcon=document.getElementById('messagesEmptyIcon');
+const msgEmptyTitle=document.getElementById('messagesEmptyTitle');
+const msgEmptyDesc=document.getElementById('messagesEmptyDesc');
+const messagesSearch=document.getElementById('messagesSearch');
+const messagesSearchClear=document.getElementById('messagesSearchClear');
+let msgTab=0;
+const msgTabMeta=[
+  {chat:true,title:'Recent conversations',icon:'fa-comment',emptyTitle:'No conversations yet',emptyDesc:'Messages from your providers will show up here once a booking starts.'},
+  {chat:false,title:'Call history',icon:'fa-phone',emptyTitle:'No calls yet',emptyDesc:'Your voice and video calls with providers will appear here.'}
+];
+function setMsgTab(index){
+  msgTab=index;
+  const meta=msgTabMeta[index];
+  msgChatTab.classList.toggle('hidden',!meta.chat);
+  if(msgCallsTab)msgCallsTab.classList.toggle('hidden',meta.chat);
+  msgTabButtons.forEach(b=>{const active=Number(b.dataset.msgTab)===index;b.classList.toggle('bg-white',active);b.classList.toggle('text-ink',active);b.classList.toggle('shadow-sm',active);b.classList.toggle('text-slate-500',!active);});
+  if(msgSectionTitle)msgSectionTitle.textContent=meta.title;
+  filterMessages();
+}
+msgTabButtons.forEach(b=>b.addEventListener('click',()=>setMsgTab(Number(b.dataset.msgTab))));
+function filterMessages(){
+  const q=messagesSearch?messagesSearch.value.trim().toLowerCase():'';
+  const meta=msgTabMeta[msgTab];
+  const list=meta.chat?msgChatTab:msgCallsTab;
+  if(!list)return;
+  let visible=0;
+  const cards=list.querySelectorAll('[data-chat], [data-call]');
+  cards.forEach(card=>{
+    const name=(card.dataset.name||'').toLowerCase();
+    const snippet=(card.dataset.snippet||'').toLowerCase();
+    const match=!q||name.includes(q)||snippet.includes(q);
+    card.classList.toggle('hidden',!match);
+    if(match)visible++;
+  });
+  if(msgCount)msgCount.textContent=visible+' '+(visible===1?'item':'items');
+  if(msgEmpty){
+    const empty=visible===0;
+    msgEmpty.classList.toggle('hidden',!empty);
+    if(empty){
+      if(msgEmptyIcon)msgEmptyIcon.className='fa-regular '+meta.icon+' text-2xl text-brand';
+      if(msgEmptyTitle)msgEmptyTitle.textContent=meta.emptyTitle;
+      if(msgEmptyDesc)msgEmptyDesc.textContent=q?'No matches found for "'+messagesSearch.value+'".':meta.emptyDesc;
+    }
+  }
+}
+if(messagesSearch){messagesSearch.addEventListener('input',()=>{messagesSearchClear.classList.toggle('hidden',messagesSearch.value==='');filterMessages();});}
+if(messagesSearchClear){messagesSearchClear.addEventListener('click',()=>{messagesSearch.value='';messagesSearchClear.classList.add('hidden');filterMessages();messagesSearch.focus();});}
+if(msgChatTab)msgChatTab.querySelectorAll('[data-chat]').forEach(c=>c.addEventListener('click',()=>showToast('Demo: open chat with '+c.dataset.name)));
+/* BOOKINGS */
+const bookingsSearch=document.getElementById('bookingsSearch');
+const bookingsSearchClear=document.getElementById('bookingsSearchClear');
+const bookingChips=document.querySelectorAll('#bookingsChips [data-b-filter]');
+const bookingCards=document.querySelectorAll('#bookingsList [data-booking]');
+const bookingsEmpty=document.getElementById('bookingsEmpty');
+const bookingsEmptyIcon=document.getElementById('bookingsEmptyIcon');
+const bookingsEmptyTitle=document.getElementById('bookingsEmptyTitle');
+const bookingsEmptyDesc=document.getElementById('bookingsEmptyDesc');
+const bookingsRefresh=document.getElementById('bookingsRefresh');
+let bookingFilter='all';
+const bookingLabels={all:'bookings',pending:'pending bookings',completed:'completed bookings',canceled:'canceled bookings'};
+function styleBookingChips(){
+  bookingChips.forEach(chip=>{const active=chip.dataset.bFilter===bookingFilter;chip.className='shrink-0 rounded-full px-4 py-2 text-[10px] '+(active?'bg-brand font-extrabold text-white':'bg-white font-semibold text-slate-500 ring-1 ring-slate-200');});
+}
+function filterBookings(){
+  const q=bookingsSearch?(bookingsSearch.value.trim().toLowerCase()):'';
+  let visible=0;
+  bookingCards.forEach(card=>{
+    const statusMatch=bookingFilter==='all'||card.dataset.status===bookingFilter;
+    const text=((card.getAttribute('data-title')||'')+' '+(card.getAttribute('data-provider')||'')).toLowerCase();
+    const searchMatch=!q||text.includes(q);
+    const show=statusMatch&&searchMatch;
+    card.classList.toggle('hidden',!show);
+    if(show)visible++;
+  });
+  const label=bookingLabels[bookingFilter]||'bookings';
+  if(bookingsEmpty){
+    const empty=visible===0;
+    bookingsEmpty.classList.toggle('hidden',!empty);
+    if(empty){
+      if(bookingsEmptyTitle)bookingsEmptyTitle.textContent='No '+label+' found';
+      if(bookingsEmptyDesc)bookingsEmptyDesc.textContent=q?'No matches for "'+bookingsSearch.value+'". Try a different search or filter.':'You have no '+label+' yet. Your booking requests will appear here once you start a service.';
+      if(bookingsEmptyIcon)bookingsEmptyIcon.className='fa-solid fa-inbox text-2xl text-emerald-700';
+    }
+  }
+}
+bookingChips.forEach(chip=>chip.addEventListener('click',()=>{bookingFilter=chip.dataset.bFilter;styleBookingChips();filterBookings();}));
+if(bookingsSearch){bookingsSearch.addEventListener('input',()=>{bookingsSearchClear.classList.toggle('hidden',bookingsSearch.value==='');filterBookings();});}
+if(bookingsSearchClear){bookingsSearchClear.addEventListener('click',()=>{bookingsSearch.value='';bookingsSearchClear.classList.add('hidden');filterBookings();bookingsSearch.focus();});}
+if(bookingsRefresh){bookingsRefresh.addEventListener('click',()=>{showToast('Refreshing bookings…');setTimeout(()=>showToast('Bookings are up to date'),700);});}
+document.querySelectorAll('[data-b-action]').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();showToast('Demo: '+btn.textContent.trim());}));
+
+/* PROFILE */
+const providerToggle=document.getElementById('providerToggle');
+if(providerToggle){providerToggle.addEventListener('click',()=>{const on=providerToggle.getAttribute('aria-checked')==='true';providerToggle.setAttribute('aria-checked',String(!on));providerToggle.classList.toggle('bg-brand',!on);providerToggle.classList.toggle('bg-slate-200',on);const knob=providerToggle.querySelector('span');if(knob)knob.classList.toggle('translate-x-5',!on);showToast(!on?'Provider account enabled':'Switched back to client');});}
+const verifyNowBtn=document.getElementById('verifyNowBtn');
+if(verifyNowBtn){verifyNowBtn.addEventListener('click',()=>showToast('Demo: identity verification flow'));}
+document.querySelectorAll('#profileView [data-menu]').forEach(btn=>btn.addEventListener('click',e=>{e.preventDefault();showToast('Demo: '+btn.getAttribute('data-menu'));}));
+const profileSettings=document.getElementById('profileSettings');
+const editProfileBtn=document.getElementById('editProfileBtn');
+const savedPlacesTile=document.getElementById('savedPlacesTile');
+if(profileSettings)profileSettings.addEventListener('click',()=>showToast('Settings'));
+if(editProfileBtn)editProfileBtn.addEventListener('click',()=>showToast('Edit Profile'));
+if(savedPlacesTile)savedPlacesTile.addEventListener('click',()=>showToast('Saved Places'));
+</script>
+<script>
+/* HOME enhancements: category tiles + generic callouts */
+(function(){
+  var cats=document.querySelectorAll('#homeScroll .cat-scroll');
+  if(cats.length){cats.forEach(function(b){b.addEventListener('click',function(){showToast('Demo: browse '+b.getAttribute('data-cat'));});});}
+  var co=document.querySelectorAll('#homeScroll [data-callout]');
+  if(co.length){co.forEach(function(b){b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();showToast('Demo: '+b.getAttribute('data-callout'));});});}
+})();
+</script>
+</body></html>

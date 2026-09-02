@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+import '/components/cupertino_ui/app_button.dart';
+import '/components/cupertino_ui/app_text_field.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'otp_page_model.dart';
 
@@ -20,6 +25,8 @@ class OtpPageWidget extends StatefulWidget {
 
 class _OtpPageWidgetState extends State<OtpPageWidget> {
   late OtpPageModel _model;
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -42,11 +49,12 @@ class _OtpPageWidgetState extends State<OtpPageWidget> {
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
-      appBar: AppBar(
-        backgroundColor: theme.primaryBackground,
-        title: const Text('Phone Verification'),
-        centerTitle: true,
-        elevation: 0,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: CupertinoPageHeader(
+          backgroundColor: theme.primaryBackground,
+          title: _l10n.otpTitle,
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(24),
@@ -55,72 +63,61 @@ class _OtpPageWidgetState extends State<OtpPageWidget> {
           Icon(Icons.phone_android, size: 64, color: theme.primary),
           const SizedBox(height: 16),
           Text(
-            'Verify your phone',
+            _l10n.otpVerifyPhone,
             style: theme.titleLarge,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
             !_model.codeSent
-                ? 'Enter your phone number to receive a one-time code.'
-                : 'Enter the 6-digit code sent to your phone.',
+                ? _l10n.otpEnterPhone
+                : _l10n.otpEnterCode,
             style: theme.bodyMedium,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
           if (!_model.codeSent) ...[
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Phone Number',
-                hintText: '+63xxxxxxxxxx',
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                filled: true,
-                fillColor: theme.secondaryBackground,
-              ),
+            AppTextField(
+              label: _l10n.otpPhoneNumber,
+              placeholder: _l10n.otpPhonePlaceholder,
+              radius: 12,
+              fillColor: theme.secondaryBackground,
               keyboardType: TextInputType.phone,
               onChanged: (v) => _model.phone = v,
             ),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: AppButton(
                 onPressed: () async {
-                  await _model.sendCode();
+                  await _model.sendCode(_l10n);
                   setState(() {});
                 },
-                child: _model.loading
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Text('Send Code'),
+                loading: _model.loading,
+                child: Text(_l10n.otpSendCode),
               ),
             ),
           ] else ...[
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'OTP Code',
-                hintText: '000000',
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                filled: true,
-                fillColor: theme.secondaryBackground,
-              ),
+            AppTextField(
+              label: _l10n.otpCodeLabel,
+              placeholder: _l10n.otpCodePlaceholder,
+              radius: 12,
+              fillColor: theme.secondaryBackground,
               keyboardType: TextInputType.number,
               maxLength: 6,
+              maxLengthEnforcement: MaxLengthEnforcement.enforced,
               onChanged: (v) => _model.code = v,
             ),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: AppButton(
                 onPressed: () async {
-                  final ok = await _model.verify();
+                  final ok = await _model.verify(_l10n);
                   if (mounted) {
                     if (ok) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Verified!')),
+                        SnackBar(content: Text(_l10n.otpVerified)),
                       );
                       context.pop();
                     } else {
@@ -128,24 +125,21 @@ class _OtpPageWidgetState extends State<OtpPageWidget> {
                     }
                   }
                 },
-                child: _model.loading
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Text('Verify'),
+                loading: _model.loading,
+                child: Text(_l10n.otpVerify),
               ),
             ),
-            TextButton(
+            AppButton(
               onPressed:
                   _model.cooldown > 0 || _model.loading ? null : () async {
-                    await _model.sendCode();
+                    await _model.sendCode(_l10n);
                     setState(() {});
                   },
+              variant: AppButtonVariant.text,
               child: Text(
                 _model.cooldown > 0
-                    ? 'Resend OTP (${_model.cooldown}s)'
-                    : 'Resend OTP',
+                    ? _l10n.otpResendCooldown(_model.cooldown)
+                    : _l10n.otpResend,
               ),
             ),
           ],

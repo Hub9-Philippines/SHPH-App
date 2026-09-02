@@ -6,6 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '/app_state.dart';
+import '/l10n/app_localizations.dart';
 import '/main.dart';
 import '/theme/app_theme.dart';
 import '../booking_funnel/booking_flow_screen.dart';
@@ -38,7 +39,9 @@ class _TMBroadcastScreenState extends State<TMBroadcastScreen> {
       if (!mounted) {
         return;
       }
-      context.read<TMFlowController>().startBroadcast();
+      context.read<TMFlowController>().startBroadcast(
+        AppLocalizations.of(context),
+      );
     });
   }
 
@@ -128,13 +131,14 @@ class _TMBroadcastScreenState extends State<TMBroadcastScreen> {
           builder: (sheetContext) => _NoProviderFoundModal(
             onSearchAgain: () {
               Navigator.of(sheetContext).pop();
-              controller.retryBroadcast();
+              controller.retryBroadcast(AppLocalizations.of(context));
               _shownFailureDialog = false;
             },
             onSchedule: () async {
               Navigator.of(sheetContext).pop();
               await controller.cancelBroadcastRequest(
                 reason: 'switched_to_scheduled',
+                l10n: AppLocalizations.of(context),
               );
               if (!context.mounted) {
                 return;
@@ -185,7 +189,9 @@ class _TMBroadcastScreenState extends State<TMBroadcastScreen> {
     BuildContext context,
     TMFlowController controller,
   ) async {
-    final success = await controller.cancelBroadcastRequest();
+    final success = await controller.cancelBroadcastRequest(
+      l10n: AppLocalizations.of(context),
+    );
     if (!context.mounted || !success) {
       return;
     }
@@ -196,7 +202,9 @@ class _TMBroadcastScreenState extends State<TMBroadcastScreen> {
     BuildContext context,
     TMFlowController controller,
   ) async {
-    final success = await controller.cancelBroadcastRequest();
+    final success = await controller.cancelBroadcastRequest(
+      l10n: AppLocalizations.of(context),
+    );
     if (!context.mounted || !success) {
       return;
     }
@@ -221,17 +229,17 @@ class _TMBroadcastTopCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final stageLabel = switch (controller.broadcastStage) {
-      TMBroadcastStage.expandedSearch => 'Expanded radius search',
-      TMBroadcastStage.failed => 'No provider found yet',
-      _ => 'Searching nearby providers',
+      TMBroadcastStage.expandedSearch => l10n.tmExpandedRadiusSearch,
+      TMBroadcastStage.failed => l10n.tmNoProviderFoundYet,
+      _ => l10n.tmSearchingNearbyProviders,
     };
 
     final subtitle = switch (controller.broadcastStage) {
-      TMBroadcastStage.expandedSearch =>
-        'We widened the search radius to reach more active providers.',
-      TMBroadcastStage.failed => 'Nearby and expanded searches both timed out.',
-      _ => 'Broadcasting your request to active providers near your pin.',
+      TMBroadcastStage.expandedSearch => l10n.tmWidenedSearchRadius,
+      TMBroadcastStage.failed => l10n.tmNearbyExpandedTimedOut,
+      _ => l10n.tmBroadcastingRequest,
     };
 
     return SafeArea(
@@ -292,7 +300,7 @@ class _TMBroadcastTopCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
-                      '${controller.searchRadiusKm} km radius',
+                      l10n.tmRadiusLabel(controller.searchRadiusKm.toString()),
                       style: theme.labelMedium.override(
                         color: theme.primary,
                         fontWeight: FontWeight.w700,
@@ -306,7 +314,7 @@ class _TMBroadcastTopCard extends StatelessWidget {
                   const Spacer(),
                   Text(
                     controller.hasFailed
-                        ? 'Timed out'
+                        ? l10n.tmTimedOut
                         : '${controller.secondsRemaining}s',
                     style: theme.labelLarge.override(
                       color: theme.secondaryText,
@@ -342,6 +350,7 @@ class _TMBroadcastSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final subCategory = controller.selectedSubCategory;
 
     return Column(
@@ -360,7 +369,7 @@ class _TMBroadcastSheet extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Text(
-          'Looking for a provider',
+          l10n.tmLookingForProvider,
           style: theme.titleMedium.override(
             font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
           ),
@@ -368,8 +377,8 @@ class _TMBroadcastSheet extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           controller.hasFailed
-              ? 'We could not secure a provider from the current search cycle.'
-              : 'Stay on this screen while we keep your request active and visible to nearby providers.',
+              ? l10n.tmCouldNotSecureProvider
+              : l10n.tmStayOnScreen,
           style: theme.bodyMedium.override(color: theme.secondaryText),
         ),
         const SizedBox(height: 16),
@@ -406,7 +415,7 @@ class _TMBroadcastSheet extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Estimate ${subCategory.estimateLabel}',
+                        '${l10n.tmEstimate} ${subCategory.estimateLabel}',
                         style: theme.bodySmall.override(
                           color: theme.secondaryText,
                         ),
@@ -418,24 +427,22 @@ class _TMBroadcastSheet extends StatelessWidget {
             ),
           ),
         const SizedBox(height: 14),
-        const _TMFactRow(
+        _TMFactRow(
           icon: Icons.place_rounded,
-          title: 'Search radius',
-          subtitle:
-              'Currently scanning providers within 4-8 km of your pin depending on the current search phase.',
+          title: l10n.tmSearchRadius,
+          subtitle: l10n.tmCurrentlyScanning,
         ),
         const SizedBox(height: 12),
-        const _TMFactRow(
+        _TMFactRow(
           icon: Icons.info_outline_rounded,
-          title: 'Dynamic fees',
-          subtitle:
-              'Expanded searches may increase the service fee based on travel distance.',
+          title: l10n.tmDynamicFees,
+          subtitle: l10n.tmExpandedMayIncreaseFee,
         ),
         if ((controller.searchReferenceId ?? '').isNotEmpty) ...[
           const SizedBox(height: 12),
           _TMFactRow(
             icon: Icons.tag_rounded,
-            title: 'Search reference',
+            title: l10n.tmSearchReference,
             subtitle: controller.searchReferenceId!,
           ),
         ],
@@ -456,7 +463,7 @@ class _TMBroadcastSheet extends StatelessWidget {
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('Cancel Search'),
+                : Text(l10n.tmCancelSearch),
           ),
         ),
       ],
@@ -520,11 +527,12 @@ class _TMDispatchModeChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isServer = controller.isServerDispatchMode;
     final label = switch (controller.dispatchMode) {
-      'server' => 'Server dispatch',
-      'fallback' => 'Fallback dispatch',
-      _ => 'Dispatch pending',
+      'server' => l10n.tmModeServer,
+      'fallback' => l10n.tmModeFallback,
+      _ => l10n.tmModePending,
     };
 
     return Container(
@@ -652,6 +660,7 @@ class _NoProviderFoundModal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return SafeArea(
       top: false,
       child: Padding(
@@ -679,14 +688,14 @@ class _NoProviderFoundModal extends StatelessWidget {
               ),
               const SizedBox(height: 18),
               Text(
-                'No provider found',
+                l10n.tmNoProviderFound,
                 style: theme.titleMedium.override(
                   font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                'We finished both search windows without a provider match. You can retry, switch to the scheduled flow, or head back home.',
+                l10n.tmFinishedSearchWindows,
                 style: theme.bodyMedium.override(color: theme.secondaryText),
               ),
               const SizedBox(height: 18),
@@ -702,7 +711,7 @@ class _NoProviderFoundModal extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  child: const Text('Search again'),
+                  child: Text(l10n.tmSearchAgain),
                 ),
               ),
               const SizedBox(height: 10),
@@ -716,7 +725,7 @@ class _NoProviderFoundModal extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  child: const Text('Schedule instead'),
+                  child: Text(l10n.tmScheduleInstead),
                 ),
               ),
               const SizedBox(height: 10),
@@ -725,7 +734,7 @@ class _NoProviderFoundModal extends StatelessWidget {
                 height: 54,
                 child: TextButton(
                   onPressed: onCancelSearch,
-                  child: const Text('Cancel Search'),
+                  child: Text(l10n.tmCancelSearch),
                 ),
               ),
             ],

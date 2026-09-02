@@ -1,6 +1,6 @@
 ## Purpose
 
-Defines the merged welcome + sign-in experience: a single auth entry screen greets every user with the SerbisyoHub brand and welcome artwork, serves both sign-in (phone/email) and the path to sign-up, and replaces the former standalone welcome page.
+Defines the merged welcome + sign-in experience: a single auth entry screen greets every user with the Serbisyo brand and welcome artwork, serves both sign-in (phone/email) and the path to sign-up, and replaces the former standalone welcome page.
 
 ### Requirement: Single auth entry screen
 The app SHALL route unauthenticated users from splash and onboarding directly to the merged sign-in screen; a separate welcome/role-selection page MUST NOT exist between them.
@@ -14,11 +14,11 @@ The app SHALL route unauthenticated users from splash and onboarding directly to
 - **THEN** navigation proceeds directly to the merged sign-in screen
 
 ### Requirement: Branded welcome header
-The sign-in screen SHALL present a welcome header containing "Welcome to SerbisyoHub PH" branding and a compact version of the existing welcome illustration above the sign-in form, without pushing the form below the fold on common phone sizes.
+The sign-in screen SHALL present a welcome header containing "Welcome to Serbisyo" branding and a compact version of the existing welcome illustration above the sign-in form, without pushing the form below the fold on common phone sizes.
 
 #### Scenario: Sign-in screen renders
 - **WHEN** the merged sign-in screen is displayed
-- **THEN** the user sees the welcome artwork (smaller than the removed welcome page's) together with the "Welcome to SerbisyoHub PH" headline and the phone/email tabs in one scrollable view
+- **THEN** the user sees the welcome artwork (smaller than the removed welcome page's) together with the "Welcome to Serbisyo" headline and the phone/email tabs in one scrollable view
 
 ### Requirement: Direct path to sign-up
 From the merged sign-in screen, the "Sign Up" affordance SHALL navigate users directly to the signup screen without passing through any intermediate page.

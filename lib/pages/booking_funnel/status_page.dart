@@ -7,7 +7,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '/flutter_flow/flutter_flow_util.dart' hide LatLng;
 import '/index.dart';
+import '/l10n/app_localizations.dart';
 import '/main.dart';
+import '/components/cupertino_ui/app_button.dart';
 import '/components/user_avatar.dart';
 import '/theme/app_theme.dart';
 
@@ -66,6 +68,46 @@ class _StatusPageState extends State<StatusPage>
 
   final Set<Polyline> _polylines = {};
 
+  static const int _kStageCount = 5;
+
+  List<_BookingStage> _buildStages(AppLocalizations l10n) => [
+        _BookingStage(
+          key: 'confirmed',
+          label: l10n.bfStatusConfirmed,
+          description: l10n.bfProviderAcceptedBooking,
+          icon: Icons.check_circle_outline_rounded,
+          estimatedMinutes: 2,
+        ),
+        _BookingStage(
+          key: 'en_route',
+          label: l10n.bfEnRoute,
+          description: l10n.bfHeadingToLocation,
+          icon: Icons.near_me_rounded,
+          estimatedMinutes: 15,
+        ),
+        _BookingStage(
+          key: 'on_site',
+          label: l10n.bfOnSite,
+          description: l10n.bfProviderArrived,
+          icon: Icons.location_on_rounded,
+          estimatedMinutes: 5,
+        ),
+        _BookingStage(
+          key: 'in_progress',
+          label: l10n.bfInProgress,
+          description: l10n.bfProviderWorking,
+          icon: Icons.build_circle_rounded,
+          estimatedMinutes: 30,
+        ),
+        _BookingStage(
+          key: 'completed',
+          label: l10n.bfStatusCompleted,
+          description: l10n.bfServiceCompleted,
+          icon: Icons.task_alt_rounded,
+          estimatedMinutes: null,
+        ),
+      ];
+
   bool get _isTerminal {
     final s = _currentStatus.toLowerCase();
     return s == 'completed' ||
@@ -77,48 +119,10 @@ class _StatusPageState extends State<StatusPage>
 
   int get _activeStageIndex => _stageIndexForStatus(_currentStatus);
 
-  static const _stages = <_BookingStage>[
-    _BookingStage(
-      key: 'confirmed',
-      label: 'Confirmed',
-      description: 'Provider has accepted your booking',
-      icon: Icons.check_circle_outline_rounded,
-      estimatedMinutes: 2,
-    ),
-    _BookingStage(
-      key: 'en_route',
-      label: 'Provider En Route',
-      description: 'Heading to your location',
-      icon: Icons.near_me_rounded,
-      estimatedMinutes: 15,
-    ),
-    _BookingStage(
-      key: 'on_site',
-      label: 'On Site',
-      description: 'Provider has arrived at your location',
-      icon: Icons.location_on_rounded,
-      estimatedMinutes: 5,
-    ),
-    _BookingStage(
-      key: 'in_progress',
-      label: 'Service In Progress',
-      description: 'Provider is working on your request',
-      icon: Icons.build_circle_rounded,
-      estimatedMinutes: 30,
-    ),
-    _BookingStage(
-      key: 'completed',
-      label: 'Completed',
-      description: 'Service has been completed',
-      icon: Icons.task_alt_rounded,
-      estimatedMinutes: null,
-    ),
-  ];
-
   int _stageIndexForStatus(String s) {
     final lower = s.toLowerCase();
     if (lower == 'booking cancelled' || lower == 'cancelled') return -1;
-    if (lower == 'completed') return _stages.length - 1;
+    if (lower == 'completed') return _kStageCount - 1;
     if (lower == 'in progress' || lower == 'in_progress') return 3;
     if (lower == 'on site' || lower == 'arrived') return 2;
     if (lower == 'en route' || lower == 'booking confirmed') return 1;
@@ -283,10 +287,9 @@ class _StatusPageState extends State<StatusPage>
     final reference = widget.bookingReference;
     if (reference == null || reference.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content:
-              Text('Review will be available once this booking is synced.'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.bfReviewAfterSync),
+          duration: const Duration(seconds: 2),
         ),
       );
       return;
@@ -302,19 +305,21 @@ class _StatusPageState extends State<StatusPage>
     // No invoice surface exists client-side yet (web-only endpoint); degrade
     // gracefully instead of dead-tapping.
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Your invoice will be available shortly.'),
-        duration: Duration(seconds: 2),
+      SnackBar(
+        content: Text(AppLocalizations.of(context)!.bfInvoiceSoon),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = AppTheme.of(context);
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
     final sheetHeight =
         MediaQuery.sizeOf(context).height * _sheetHeightFactor;
+    final stages = _buildStages(l10n);
 
     final scaffold = Scaffold(
       backgroundColor: theme.primaryBackground,
@@ -364,7 +369,7 @@ class _StatusPageState extends State<StatusPage>
               padding: const EdgeInsets.only(left: 16, top: 16),
               child: _FloatingCircleButton(
                 icon: Icons.chevron_left_rounded,
-                tooltip: 'Back',
+                tooltip: l10n.bfBack,
                 onTap: _handleBack,
               ),
             ),
@@ -396,7 +401,8 @@ class _StatusPageState extends State<StatusPage>
               height: sheetHeight,
               bottomInset: bottomPadding,
               theme: theme,
-              stages: _stages,
+              l10n: l10n,
+              stages: stages,
               activeStageIndex: _activeStageIndex,
               pulseValue: _pulseController,
               isTerminal: _isTerminal,
@@ -480,6 +486,7 @@ class _ProviderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = AppTheme.of(context);
     return Container(
       padding: const EdgeInsets.all(10),
@@ -532,13 +539,13 @@ class _ProviderCard extends StatelessWidget {
           const SizedBox(width: 8),
           _MapActionButton(
             icon: Icons.call_rounded,
-            tooltip: 'Call',
+            tooltip: l10n.bfCall,
             onTap: onContact,
           ),
           const SizedBox(width: 6),
           _MapActionButton(
             icon: Icons.chat_bubble_rounded,
-            tooltip: 'Message',
+            tooltip: l10n.bfMessage,
             onTap: onContact,
           ),
         ],
@@ -587,6 +594,7 @@ class _TrackingSheet extends StatelessWidget {
     required this.height,
     required this.bottomInset,
     required this.theme,
+    required this.l10n,
     required this.stages,
     required this.activeStageIndex,
     required this.pulseValue,
@@ -606,6 +614,7 @@ class _TrackingSheet extends StatelessWidget {
   final double height;
   final double bottomInset;
   final AppThemeData theme;
+  final AppLocalizations l10n;
   final List<_BookingStage> stages;
   final int activeStageIndex;
   final Animation<double> pulseValue;
@@ -663,7 +672,7 @@ class _TrackingSheet extends StatelessWidget {
               ),
               if (etaSeconds > 0)
                 Text(
-                  'Approximately ${_formatEta(etaSeconds)}',
+                  l10n.bfApproxEta(_formatEta(etaSeconds)),
                   style: theme.bodySmall.override(
                     color: theme.primary,
                     fontWeight: FontWeight.w600,
@@ -671,7 +680,7 @@ class _TrackingSheet extends StatelessWidget {
                 ),
             ] else
               Text(
-                'This booking has been ${status.toLowerCase()}.',
+                l10n.bfBookingStatusText(status.toLowerCase()),
                 style: theme.bodySmall.override(
                   color: theme.secondaryText,
                 ),
@@ -693,14 +702,14 @@ class _TrackingSheet extends StatelessWidget {
               children: [
                 _InfoBadge(
                   icon: Icons.calendar_today_rounded,
-                  label: 'Booking date',
+                  label: l10n.bfBookingDate,
                   value:
                       '${bookingDate.month}/${bookingDate.day}/${bookingDate.year}',
                 ),
                 if ((bookingReference ?? '').isNotEmpty)
                   _InfoBadge(
                     icon: Icons.tag_rounded,
-                    label: 'Reference',
+                    label: l10n.bfReference,
                     value: bookingReference!.length > 8
                         ? bookingReference!.substring(0, 8).toUpperCase()
                         : bookingReference!,
@@ -712,38 +721,42 @@ class _TrackingSheet extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 height: 52,
-                child: FilledButton.icon(
+                child: AppButton(
                   onPressed: onWriteReview,
-                  icon: const Icon(Icons.rate_review_rounded, size: 19),
-                  label: Text(
-                    'Write a Review',
-                    style: theme.titleSmall.override(
-                      font: GoogleFonts.plusJakartaSans(
-                        fontWeight: FontWeight.w700,
+                  backgroundColor: AppThemeData.successBrand,
+                  foregroundColor: Colors.white,
+                  borderRadius: AppThemeData.radiusMd,
+                  width: double.infinity,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.rate_review_rounded,
+                          size: 19, color: Colors.white),
+                      const SizedBox(width: 6),
+                      Text(
+                        l10n.bfWriteAReview,
+                        style: theme.titleSmall.override(
+                          font: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
-                      color: Colors.white,
-                    ),
-                  ),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppThemeData.successTeal,
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppThemeData.radiusMd),
-                    ),
+                    ],
                   ),
                 ),
               ),
               const SizedBox(height: 6),
               Center(
-                child: TextButton(
+                child: AppButton(
                   onPressed: onViewInvoice,
+                  variant: AppButtonVariant.text,
+                  foregroundColor: theme.primary,
                   child: Text(
-                    'View Invoice',
+                    l10n.bfViewInvoice,
                     style: theme.labelLarge.override(
                       font: GoogleFonts.plusJakartaSans(
                         fontWeight: FontWeight.w700,
                       ),
-                      color: theme.primary,
                     ),
                   ),
                 ),
@@ -1002,6 +1015,7 @@ class _BookingStatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final lower = status.toLowerCase();
     final Color bg;
     final Color fg;
@@ -1010,27 +1024,27 @@ class _BookingStatusChip extends StatelessWidget {
     if (lower == 'completed') {
       bg = const Color(0xFF16A34A).withValues(alpha: 0.12);
       fg = const Color(0xFF16A34A);
-      label = 'Completed';
+      label = l10n.bfStatusCompleted;
     } else if (lower == 'en route' || lower == 'booking confirmed') {
       bg = theme.primary.withValues(alpha: 0.12);
       fg = theme.primary;
-      label = 'En Route';
+      label = l10n.bfEnRoute;
     } else if (lower == 'on site' || lower == 'arrived') {
       bg = const Color(0xFFE65100).withValues(alpha: 0.12);
       fg = const Color(0xFFE65100);
-      label = 'On Site';
+      label = l10n.bfOnSite;
     } else if (lower == 'in progress' || lower == 'in_progress') {
       bg = const Color(0xFF7B1FA2).withValues(alpha: 0.12);
       fg = const Color(0xFF7B1FA2);
-      label = 'In Progress';
+      label = l10n.bfInProgress;
     } else if (lower == 'cancelled' || lower == 'booking cancelled') {
       bg = const Color(0xFFDC2626).withValues(alpha: 0.12);
       fg = const Color(0xFFDC2626);
-      label = 'Cancelled';
+      label = l10n.bfStatusCancelled;
     } else {
       bg = theme.secondaryText.withValues(alpha: 0.12);
       fg = theme.secondaryText;
-      label = 'Confirmed';
+      label = l10n.bfStatusConfirmed;
     }
 
     return Container(

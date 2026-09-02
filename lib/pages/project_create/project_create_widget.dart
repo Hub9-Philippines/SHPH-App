@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '/components/cupertino_ui/app_button.dart';
+import '/components/cupertino_ui/app_switch.dart';
+import '/components/cupertino_ui/app_text_field.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'project_create_model.dart';
 
@@ -18,6 +23,9 @@ class ProjectCreateWidget extends StatefulWidget {
 
 class _ProjectCreateWidgetState extends State<ProjectCreateWidget> {
   late ProjectCreateModel _model;
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
   final _titleCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
 
@@ -44,11 +52,13 @@ class _ProjectCreateWidgetState extends State<ProjectCreateWidget> {
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
-      appBar: AppBar(
-        backgroundColor: theme.primaryBackground,
-        title: Text('Create Project', style: theme.titleMedium),
-        centerTitle: true,
-        elevation: 0,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: CupertinoPageHeader(
+          backgroundColor: theme.primaryBackground,
+          title: _l10n.pcTitle,
+          titleStyle: theme.titleMedium,
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -63,17 +73,16 @@ class _ProjectCreateWidgetState extends State<ProjectCreateWidget> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                TextField(
+                AppTextField(
                   controller: _titleCtrl,
-                  decoration: const InputDecoration(labelText: 'Title'),
+                  label: _l10n.pcLabelTitle,
                   onChanged: (v) => _model.title = v,
                 ),
                 const SizedBox(height: 12),
-                TextField(
+                AppTextField(
                   controller: _descCtrl,
                   maxLines: 4,
-                  decoration:
-                      const InputDecoration(labelText: 'Description'),
+                  label: _l10n.pcLabelDescription,
                   onChanged: (v) => _model.description = v,
                 ),
                 const SizedBox(height: 12),
@@ -89,25 +98,24 @@ class _ProjectCreateWidgetState extends State<ProjectCreateWidget> {
                   onChanged: (v) =>
                       setState(() => _model.category = v),
                   decoration: InputDecoration(
-                    labelText: 'Category',
+                    labelText: _l10n.pcLabelCategory,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                 ),
                 const SizedBox(height: 12),
-                SwitchListTile(
-                  title: const Text('B2B Project'),
+                AppSwitchRow(
+                  title: _l10n.pcB2B,
                   value: _model.isB2b,
                   onChanged: (v) =>
                       setState(() => _model.isB2b = v),
                   activeColor: theme.primary,
-                  contentPadding: EdgeInsets.zero,
                 ),
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
-                  child: ElevatedButton(
+                  child: AppButton(
                     onPressed: !isValid || _model.isSubmitting
                         ? null
                         : () async {
@@ -120,25 +128,17 @@ class _ProjectCreateWidgetState extends State<ProjectCreateWidget> {
                               } else {
                                 ScaffoldMessenger.of(context)
                                     .showSnackBar(
-                                  const SnackBar(
+                                  SnackBar(
                                       content: Text(
-                                          'Failed to create project')),
+                                          _l10n.pcFailedCreate)),
                                 );
                               }
                             }
                           },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.primary,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    child: _model.isSubmitting
-                        ? SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: theme.onPrimary),
-                          )
-                        : const Text('Create Project'),
+                    backgroundColor: theme.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    loading: _model.isSubmitting,
+                    child: Text(_l10n.pcTitle),
                   ),
                 ),
               ],

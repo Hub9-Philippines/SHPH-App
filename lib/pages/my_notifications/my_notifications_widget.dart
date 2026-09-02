@@ -6,6 +6,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '/auth/auth_util.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
+import '/l10n/app_localizations.dart';
+
 import '/services/logging_service.dart';
 import '/services/notification_store.dart';
 import '/theme/app_theme.dart';
@@ -34,6 +36,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
   bool _isMarkingAllRead = false;
   NotificationFilter _filter = NotificationFilter.all;
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -126,8 +129,8 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not mark notifications as read.'),
+          SnackBar(
+            content: Text(_l10n.mnErrorMarkRead),
           ),
         );
       }
@@ -152,8 +155,8 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
       _loadNotifications();
       safeSetState(() {});
       messenger.showSnackBar(
-        const SnackBar(
-          content: Text('This notification has no linked destination yet.'),
+        SnackBar(
+          content: Text(_l10n.mnErrorNoDestination),
         ),
       );
       return;
@@ -312,9 +315,9 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                         return _buildMessageState(
                           context,
                           icon: Icons.error_outline_rounded,
-                          title: 'Error loading notifications',
+                          title: _l10n.errorLoadingNotifications,
                           subtitle:
-                              'Something went wrong while fetching your updates.',
+                              _l10n.errorLoadingSubtitle,
                         );
                       }
 
@@ -332,7 +335,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                                 child: _buildMessageState(
                                   context,
                                   icon: Icons.notifications_none_rounded,
-                                  title: 'No notifications',
+                                  title: _l10n.noNotifications,
                                   subtitle: _emptySubtitleFor(_filter),
                                 ),
                               ),
@@ -393,7 +396,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
           Expanded(
             child: Center(
               child: Text(
-                'Notification',
+                _l10n.mnTitle,
                 style: theme.titleMedium.override(
                   font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
                   color: theme.primaryText,
@@ -425,7 +428,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Notification settings',
+                _l10n.mnSettings,
                 style: AppTheme.of(sheetContext).titleMedium.override(
                       font: GoogleFonts.plusJakartaSans(
                           fontWeight: FontWeight.w700),
@@ -436,7 +439,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                 leading: Icon(Icons.done_all_rounded,
                     color: AppTheme.of(sheetContext).primary),
                 title: Text(
-                  _isMarkingAllRead ? 'Marking...' : 'Mark all as read',
+                  _isMarkingAllRead ? _l10n.mnMarking : _l10n.mnMarkAllRead,
                   style: AppTheme.of(sheetContext).bodyLarge,
                 ),
                 onTap: () {
@@ -448,7 +451,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                 leading: Icon(Icons.tune_rounded,
                     color: AppTheme.of(sheetContext).primary),
                 title: Text(
-                  'Granular controls live inside each service update.',
+                  _l10n.mnGranularHint,
                   style: AppTheme.of(sheetContext).bodyMedium,
                 ),
               ),
@@ -462,10 +465,10 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
   Widget _buildFilterChips(BuildContext context) {
     final theme = AppTheme.of(context);
     final chips = <(NotificationFilter, String)>[
-      (NotificationFilter.all, 'All'),
-      (NotificationFilter.bookings, 'Bookings'),
-      (NotificationFilter.offers, 'Offers'),
-      (NotificationFilter.system, 'System'),
+      (NotificationFilter.all, _l10n.mnTabAll),
+      (NotificationFilter.bookings, _l10n.mnTabBookings),
+      (NotificationFilter.offers, _l10n.mnTabOffers),
+      (NotificationFilter.system, _l10n.mnTabSystem),
     ];
     return SizedBox(
       height: 40,
@@ -546,12 +549,12 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
 
   String _emptySubtitleFor(NotificationFilter filter) => switch (filter) {
         NotificationFilter.bookings =>
-          'Booking updates will land here as providers respond.',
+          _l10n.mnEmptyBookings,
         NotificationFilter.offers =>
-          'Promos and special offers will show up here.',
+          _l10n.mnEmptyOffers,
         NotificationFilter.system =>
-          'System updates will appear here when available.',
-        NotificationFilter.all => 'You are all caught up right now.',
+          _l10n.mnEmptySystem,
+        NotificationFilter.all => _l10n.noNotificationsSubtitle,
       };
 
   Widget _buildMessageState(
@@ -686,7 +689,7 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
                   Text(
                     notification.body.trim().isNotEmpty
                         ? notification.body
-                        : 'Open this update to see more details.',
+                        : _l10n.mnOpenDetails,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: theme.bodySmall.override(
@@ -738,23 +741,23 @@ class _MyNotificationsWidgetState extends State<MyNotificationsWidget> {
 
   String _formatTime(DateTime? dateTime) {
     if (dateTime == null) {
-      return 'Just now';
+      return _l10n.justNow;
     }
 
     final now = DateTime.now();
     final difference = now.difference(dateTime);
 
     if (difference.inMinutes < 1) {
-      return 'Just now';
+      return _l10n.msJustNow;
     }
     if (difference.inHours < 1) {
-      return '${difference.inMinutes}m ago';
+      return _l10n.mnMinutesAgo(difference.inMinutes);
     }
     if (difference.inDays < 1) {
-      return '${difference.inHours}h ago';
+      return _l10n.mnHoursAgo(difference.inHours);
     }
     if (difference.inDays < 7) {
-      return '${difference.inDays}d ago';
+      return _l10n.mnDaysAgo(difference.inDays);
     }
     return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
   }

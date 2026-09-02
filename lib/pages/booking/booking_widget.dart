@@ -3,10 +3,13 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '/backend/supabase/database/tables/addresses.dart';
 import '/components/back_button/back_button_widget.dart';
+import '/components/cupertino_ui/app_pickers.dart';
+import '/components/cupertino_ui/app_text_field.dart';
 import '/components/edit_address/edit_address_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'booking_model.dart';
 
@@ -39,6 +42,8 @@ class _BookingWidgetState extends State<BookingWidget> {
   late BookingModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -52,7 +57,7 @@ class _BookingWidgetState extends State<BookingWidget> {
   }
 
   Future<void> _pickDate() async {
-    final selectedDate = await showDatePicker(
+    final selectedDate = await showAppDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime.now(),
@@ -67,7 +72,7 @@ class _BookingWidgetState extends State<BookingWidget> {
   }
 
   Future<void> _pickTime() async {
-    final selectedTime = await showTimePicker(
+    final selectedTime = await showAppTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
     );
@@ -96,22 +101,22 @@ class _BookingWidgetState extends State<BookingWidget> {
 
   Future<void> _proceedToPayment() async {
     if (widget.serviceId == null) {
-      setState(() => _model.errorMessage = 'Service ID is required');
+      setState(() => _model.errorMessage = _l10n.bkErrServiceId);
       return;
     }
 
     if (_model.selectedDate == null) {
-      setState(() => _model.errorMessage = 'Please select a date');
+      setState(() => _model.errorMessage = _l10n.bkErrSelectDate);
       return;
     }
 
     if (_model.selectedTime == null) {
-      setState(() => _model.errorMessage = 'Please select a time');
+      setState(() => _model.errorMessage = _l10n.bkErrSelectTime);
       return;
     }
 
     if (_model.selectedAddress == null) {
-      setState(() => _model.errorMessage = 'Please select an address');
+      setState(() => _model.errorMessage = _l10n.bkErrSelectAddress);
       return;
     }
 
@@ -176,7 +181,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Book Service',
+                                _l10n.bkTitle,
                                 style: AppTheme.of(context).titleLarge.override(
                                       font: GoogleFonts.plusJakartaSans(
                                         fontWeight: FontWeight.w700,
@@ -185,7 +190,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                                     ),
                                   ),
                                   Text(
-                                    'Choose your schedule and location before payment.',
+                                    _l10n.bkSubtitle,
                                     style: AppTheme.of(context).bodySmall.override(
                                           font: GoogleFonts.plusJakartaSans(),
                                           color: AppTheme.of(context).secondaryText,
@@ -209,13 +214,13 @@ class _BookingWidgetState extends State<BookingWidget> {
                       const SizedBox(height: 18),
                       _buildStepCard(
                         step: '1',
-                        title: 'Select Date',
-                        subtitle: 'Pick the day you want the provider to arrive.',
+                        title: _l10n.bkSelectDate,
+                        subtitle: _l10n.bkSelectDateSub,
                         child: _buildActionTile(
                           icon: Icons.calendar_today_rounded,
                           label: _model.selectedDate != null
                               ? _formatDate(_model.selectedDate!)
-                              : 'Select a date',
+                              : _l10n.bkSelectDateAction,
                           isSelected: _model.selectedDate != null,
                           onTap: _pickDate,
                         ),
@@ -223,13 +228,13 @@ class _BookingWidgetState extends State<BookingWidget> {
                       const SizedBox(height: 18),
                       _buildStepCard(
                         step: '2',
-                        title: 'Select Time',
-                        subtitle: 'Choose your preferred appointment window.',
+                        title: _l10n.bkSelectTime,
+                        subtitle: _l10n.bkSelectTimeSub,
                         child: _buildActionTile(
                           icon: Icons.access_time_rounded,
                           label: _model.selectedTime != null
                               ? _model.selectedTime!.format(context)
-                              : 'Select a time',
+                              : _l10n.bkSelectTimeAction,
                           isSelected: _model.selectedTime != null,
                           onTap: _pickTime,
                         ),
@@ -237,8 +242,8 @@ class _BookingWidgetState extends State<BookingWidget> {
                       const SizedBox(height: 18),
                       _buildStepCard(
                         step: '3',
-                        title: 'Service Address',
-                        subtitle: 'Tell the provider exactly where the work happens.',
+                        title: _l10n.bkServiceAddress,
+                        subtitle: _l10n.bkServiceAddressSub,
                         child: _buildActionTile(
                           icon: Icons.location_on_rounded,
                           label: _selectedAddressTitle,
@@ -250,36 +255,20 @@ class _BookingWidgetState extends State<BookingWidget> {
                       const SizedBox(height: 18),
                       _buildStepCard(
                         step: '4',
-                        title: 'Additional Notes',
-                        subtitle:
-                            'Share instructions, landmarks, or preparation details.',
-                        child: TextFormField(
+                        title: _l10n.bkAdditionalNotes,
+                        subtitle: _l10n.bkAdditionalNotesSub,
+                        child: AppTextField(
                           controller: _model.notesController,
                           maxLines: 4,
-                          decoration: InputDecoration(
-                            hintText: 'Add any special instructions...',
-                            hintStyle: AppTheme.of(context).bodySmall.override(
-                                  font: GoogleFonts.plusJakartaSans(),
-                                  color: AppTheme.of(context).textTertiary,
-                                ),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color: AppTheme.of(context).border,
-                                width: 1,
-                              ),
-                              borderRadius: BorderRadius.circular(18),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color: AppTheme.of(context).primary,
-                                width: 1.4,
-                              ),
-                              borderRadius: BorderRadius.circular(18),
-                            ),
-                            filled: true,
-                            fillColor: AppTheme.of(context).surfaceAlt,
-                            contentPadding: const EdgeInsets.all(16),
-                          ),
+                          placeholder: _l10n.bkNotesPlaceholder,
+                          placeholderStyle:
+                              AppTheme.of(context).bodySmall.override(
+                                    font: GoogleFonts.plusJakartaSans(),
+                                    color: AppTheme.of(context).textTertiary,
+                                  ),
+                          radius: 18,
+                          fillColor: AppTheme.of(context).surfaceAlt,
+                          padding: const EdgeInsets.all(16),
                         ),
                       ),
                     ],
@@ -334,7 +323,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
-                      widget.category ?? 'Service',
+                      widget.category ?? _l10n.bkFallbackService,
                       style: AppTheme.of(context).labelMedium.override(
                             font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w700,
@@ -345,7 +334,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    widget.serviceName ?? 'Service',
+                    widget.serviceName ?? _l10n.bkFallbackService,
                     style: AppTheme.of(context).titleLarge.override(
                           font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
@@ -601,7 +590,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Total',
+                          _l10n.bkTotal,
                           style: AppTheme.of(context).bodySmall.override(
                                 font: GoogleFonts.plusJakartaSans(),
                                 color: AppTheme.of(context).secondaryText,
@@ -624,7 +613,7 @@ class _BookingWidgetState extends State<BookingWidget> {
                     flex: 2,
                     child: FFButtonWidget(
                       onPressed: _proceedToPayment,
-                      text: 'Proceed to Payment',
+                      text: _l10n.bkProceed,
                       options: FFButtonOptions(
                         width: double.infinity,
                         height: 54,
@@ -666,12 +655,12 @@ class _BookingWidgetState extends State<BookingWidget> {
 
   String get _selectedAddressTitle {
     if (_model.selectedAddress == null) {
-      return 'Select service address';
+      return _l10n.bkSelectServiceAddress;
     }
 
     return _model.selectedAddress!.addressLine2?.trim().isNotEmpty == true
         ? _model.selectedAddress!.addressLine2!.trim()
-        : 'Selected address';
+        : _l10n.bkSelectedAddress;
   }
 
   String? get _selectedAddressSubtitle {

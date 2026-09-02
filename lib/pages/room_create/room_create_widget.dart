@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '/components/cupertino_ui/app_button.dart';
+import '/components/cupertino_ui/app_pickers.dart';
+import '/components/cupertino_ui/app_text_field.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'room_create_model.dart';
 
@@ -18,6 +23,9 @@ class RoomCreateWidget extends StatefulWidget {
 
 class _RoomCreateWidgetState extends State<RoomCreateWidget> {
   late RoomCreateModel _model;
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
   final _titleCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
   final _menuCtrl = TextEditingController();
@@ -44,7 +52,7 @@ class _RoomCreateWidgetState extends State<RoomCreateWidget> {
   }
 
   Future<void> _pickDate() async {
-    final date = await showDatePicker(
+    final date = await showAppDatePicker(
       context: context,
       initialDate: DateTime.now().add(const Duration(days: 1)),
       firstDate: DateTime.now(),
@@ -57,7 +65,7 @@ class _RoomCreateWidgetState extends State<RoomCreateWidget> {
   }
 
   Future<void> _pickTime() async {
-    final time = await showTimePicker(
+    final time = await showAppTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
     );
@@ -78,11 +86,13 @@ class _RoomCreateWidgetState extends State<RoomCreateWidget> {
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
-      appBar: AppBar(
-        backgroundColor: theme.primaryBackground,
-        title: Text('Create Room', style: theme.titleMedium),
-        centerTitle: true,
-        elevation: 0,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(44),
+        child: CupertinoPageHeader(
+          backgroundColor: theme.primaryBackground,
+          title: _l10n.rcTitle,
+          titleStyle: theme.titleMedium,
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -97,33 +107,32 @@ class _RoomCreateWidgetState extends State<RoomCreateWidget> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                TextField(
+                AppTextField(
                   controller: _titleCtrl,
-                  decoration: const InputDecoration(labelText: 'Title'),
+                  label: _l10n.rcLabelTitle,
                   onChanged: (v) => _model.title = v,
                 ),
                 const SizedBox(height: 12),
-                TextField(
+                AppTextField(
                   controller: _descCtrl,
                   maxLines: 3,
-                  decoration: const InputDecoration(labelText: 'Description'),
+                  label: _l10n.rcLabelDescription,
                   onChanged: (v) => _model.description = v,
                 ),
                 const SizedBox(height: 12),
-                TextField(
+                AppTextField(
                   controller: _menuCtrl,
                   maxLines: 2,
-                  decoration:
-                      const InputDecoration(labelText: 'Menu / Service'),
+                  label: _l10n.rcLabelMenuService,
                   onChanged: (v) => _model.menuOrService = v,
                 ),
                 const SizedBox(height: 12),
                 InkWell(
                   onTap: _pickDate,
                   child: InputDecorator(
-                    decoration: const InputDecoration(labelText: 'Event Date'),
+                    decoration: InputDecoration(labelText: _l10n.rcLabelEventDate),
                     child: Text(_model.eventDate.isEmpty
-                        ? 'Tap to select'
+                        ? _l10n.rcTapToSelect
                         : _model.eventDate),
                   ),
                 ),
@@ -131,67 +140,58 @@ class _RoomCreateWidgetState extends State<RoomCreateWidget> {
                 InkWell(
                   onTap: _pickTime,
                   child: InputDecorator(
-                    decoration: const InputDecoration(labelText: 'Event Time'),
+                    decoration: InputDecoration(labelText: _l10n.rcLabelEventTime),
                     child: Text(_model.eventTime.isEmpty
-                        ? 'Tap to select'
+                        ? _l10n.rcTapToSelect
                         : _model.eventTime),
                   ),
                 ),
                 const SizedBox(height: 12),
-                TextField(
+                AppTextField(
                   controller: _locationCtrl,
-                  decoration: const InputDecoration(labelText: 'Location'),
+                  label: _l10n.rcLabelLocation,
                   onChanged: (v) => _model.eventLocation = v,
                 ),
                 const SizedBox(height: 12),
-                TextField(
+                AppTextField(
                   controller: _headsCtrl,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Heads Required'),
+                  label: _l10n.rcHeadsRequired,
                   onChanged: (v) =>
                       _model.headsRequired = int.tryParse(v) ?? 3,
                 ),
                 const SizedBox(height: 12),
-                TextField(
+                AppTextField(
                   controller: _priceCtrl,
                   keyboardType:
                       const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(labelText: 'Price per Head'),
+                  label: _l10n.rcPricePerHead,
                   onChanged: (v) =>
                       _model.pricePerHead = double.tryParse(v) ?? 100.0,
                 ),
                 const SizedBox(height: 24),
-                SizedBox(
+                AppButton(
                   width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: !isValid || _model.isSubmitting
-                        ? null
-                        : () async {
-                            final result = await _model.submit();
-                            if (mounted) {
-                              if (result != null && result['id'] != null) {
-                                context.replace('/rooms/${result['id']}');
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text('Failed to create room')),
-                                );
-                              }
+                  backgroundColor: theme.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  loading: _model.isSubmitting,
+                  loadingColor: theme.onPrimary,
+                  onPressed: !isValid || _model.isSubmitting
+                      ? null
+                      : () async {
+                          final result = await _model.submit();
+                          if (mounted) {
+                            if (result != null && result['id'] != null) {
+                              context.replace('/rooms/${result['id']}');
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text(_l10n.rcFailedCreate)),
+                              );
                             }
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.primary,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    child: _model.isSubmitting
-                        ? SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: theme.onPrimary),
-                          )
-                        : const Text('Create Room'),
-                  ),
+                          }
+                        },
+                  child: Text(_l10n.rcTitle),
                 ),
               ],
             ),

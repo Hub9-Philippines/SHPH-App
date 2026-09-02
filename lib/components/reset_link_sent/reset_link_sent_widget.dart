@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
 import '/theme/app_theme.dart';
+import '/l10n/app_localizations.dart';
 import 'reset_link_sent_model.dart';
 
 export 'reset_link_sent_model.dart';
@@ -16,6 +17,8 @@ class ResetLinkSentWidget extends StatefulWidget {
 
 class _ResetLinkSentWidgetState extends State<ResetLinkSentWidget> {
   late ResetLinkSentModel _model;
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void setState(VoidCallback callback) {
@@ -61,7 +64,7 @@ class _ResetLinkSentWidgetState extends State<ResetLinkSentWidget> {
                 ),
                 Expanded(
                   child: Text(
-                    'Reset link sent!',
+                    _l10n.rlsTitle,
                     style: AppTheme.of(context).bodyMedium.override(
                           font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w600,
@@ -81,7 +84,7 @@ class _ResetLinkSentWidgetState extends State<ResetLinkSentWidget> {
             Padding(
               padding: const EdgeInsetsDirectional.fromSTEB(0, 8, 0, 0),
               child: Text(
-                'We\'ve sent a password reset link to your email address. Please check your inbox and follow the instructions to reset your password.',
+                _l10n.rlsBody,
                 style: AppTheme.of(context).bodySmall.override(
                       font: GoogleFonts.plusJakartaSans(
                         fontWeight:

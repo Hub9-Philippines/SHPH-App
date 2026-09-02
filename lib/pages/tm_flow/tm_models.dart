@@ -5,6 +5,7 @@ class TMSubCategoryOption {
   const TMSubCategoryOption({
     required this.id,
     required this.title,
+    this.titleKey,
     required this.subtitle,
     required this.icon,
     required this.estimateMin,
@@ -13,6 +14,7 @@ class TMSubCategoryOption {
 
   final String id;
   final String title;
+  final String? titleKey;
   final String subtitle;
   final IconData icon;
   final double estimateMin;

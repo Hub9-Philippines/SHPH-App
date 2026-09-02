@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 
 class SectionHeader extends StatelessWidget {
@@ -10,7 +11,7 @@ class SectionHeader extends StatelessWidget {
     this.seeAllRoute,
     this.onSeeAll,
     this.padding,
-    this.seeAllLabel = 'See all',
+    this.seeAllLabel,
   });
 
   final String title;
@@ -19,10 +20,12 @@ class SectionHeader extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
 
   /// Link text for the trailing action (e.g. 'View All').
-  final String seeAllLabel;
+  final String? seeAllLabel;
 
   @override
   Widget build(BuildContext context) {
+    final _l10n = AppLocalizations.of(context)!;
+    final effectiveSeeAllLabel = seeAllLabel ?? _l10n.ccSeeAll;
     final showSeeAll = seeAllRoute != null || onSeeAll != null;
     return Padding(
       padding: padding ?? EdgeInsets.zero,
@@ -41,7 +44,7 @@ class SectionHeader extends StatelessWidget {
             GestureDetector(
               onTap: onSeeAll ?? () => Navigator.pushNamed(context, seeAllRoute!),
               child: Text(
-                seeAllLabel,
+                effectiveSeeAllLabel,
                 style: AppTheme.of(context).bodySmall.override(
                       font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                       color: AppTheme.of(context).primaryBrandText,

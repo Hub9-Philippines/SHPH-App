@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
 
+import '/l10n/app_localizations.dart';
 import '/models/service_listing.dart';
 
 import 'tm_models.dart';
 
-List<TMSubCategoryOption> tmSubCategoriesForService(ServiceListing service) {
+List<TMSubCategoryOption> tmSubCategoriesForService(
+  ServiceListing service,
+  AppLocalizations l10n,
+) {
   final fingerprint =
       '${service.title} ${service.categoryName ?? ''}'.toLowerCase();
 
   if (fingerprint.contains('lock')) {
-    return const [
+    return [
       TMSubCategoryOption(
         id: 'home_lockout',
         title: 'Home Lockout',
-        subtitle: 'Door unlocking, basic lock access, and urgent entry help.',
+        titleKey: 'tmSubHomeLockout',
+        subtitle: l10n.tmCatHomeLockout,
         icon: Icons.key_rounded,
         estimateMin: 400,
         estimateMax: 600,
@@ -21,7 +26,8 @@ List<TMSubCategoryOption> tmSubCategoriesForService(ServiceListing service) {
       TMSubCategoryOption(
         id: 'lock_repair',
         title: 'Lock Repair',
-        subtitle: 'Minor repairs, stuck cylinders, and latch adjustments.',
+        titleKey: 'tmSubLockRepair',
+        subtitle: l10n.tmCatLockRepair,
         icon: Icons.lock_open_rounded,
         estimateMin: 550,
         estimateMax: 900,
@@ -29,7 +35,8 @@ List<TMSubCategoryOption> tmSubCategoriesForService(ServiceListing service) {
       TMSubCategoryOption(
         id: 'lock_replacement',
         title: 'Lock Replacement',
-        subtitle: 'Replace damaged locks. Hardware cost may be added later.',
+        titleKey: 'tmSubLockReplace',
+        subtitle: l10n.tmCatLockReplacement,
         icon: Icons.door_front_door_rounded,
         estimateMin: 700,
         estimateMax: 1200,
@@ -38,11 +45,12 @@ List<TMSubCategoryOption> tmSubCategoriesForService(ServiceListing service) {
   }
 
   if (fingerprint.contains('plumb')) {
-    return const [
+    return [
       TMSubCategoryOption(
         id: 'pipe_leak',
         title: 'Pipe Leak Repair',
-        subtitle: 'Urgent leak isolation, sealing, and connector replacement.',
+        titleKey: 'tmSubPipeLeak',
+        subtitle: l10n.tmCatPipeLeak,
         icon: Icons.water_drop_rounded,
         estimateMin: 500,
         estimateMax: 850,
@@ -50,7 +58,8 @@ List<TMSubCategoryOption> tmSubCategoriesForService(ServiceListing service) {
       TMSubCategoryOption(
         id: 'faucet_issue',
         title: 'Faucet / Valve Issue',
-        subtitle: 'Loose fittings, weak flow, and valve troubleshooting.',
+        titleKey: 'tmSubFaucetValve',
+        subtitle: l10n.tmCatFaucetIssue,
         icon: Icons.plumbing_rounded,
         estimateMin: 450,
         estimateMax: 800,
@@ -58,7 +67,8 @@ List<TMSubCategoryOption> tmSubCategoriesForService(ServiceListing service) {
       TMSubCategoryOption(
         id: 'drain_clog',
         title: 'Drain Clog Clearing',
-        subtitle: 'Sink, bathroom, and floor drain unclogging support.',
+        titleKey: 'tmSubDrainClog',
+        subtitle: l10n.tmCatDrainClog,
         icon: Icons.cleaning_services_rounded,
         estimateMin: 600,
         estimateMax: 950,
@@ -67,11 +77,12 @@ List<TMSubCategoryOption> tmSubCategoriesForService(ServiceListing service) {
   }
 
   if (fingerprint.contains('electric')) {
-    return const [
+    return [
       TMSubCategoryOption(
         id: 'power_outlet_issue',
         title: 'Outlet / Switch Issue',
-        subtitle: 'Fault isolation, rewiring checks, and safe restoration.',
+        titleKey: 'tmSubOutletSwitch',
+        subtitle: l10n.tmCatOutletIssue,
         icon: Icons.power_outlined,
         estimateMin: 500,
         estimateMax: 850,
@@ -79,7 +90,8 @@ List<TMSubCategoryOption> tmSubCategoriesForService(ServiceListing service) {
       TMSubCategoryOption(
         id: 'breaker_trip',
         title: 'Breaker Trip Investigation',
-        subtitle: 'Short circuit diagnostics and load troubleshooting.',
+        titleKey: 'tmSubBreakerTrip',
+        subtitle: l10n.tmCatBreakerTrip,
         icon: Icons.electrical_services_rounded,
         estimateMin: 650,
         estimateMax: 1100,
@@ -87,7 +99,8 @@ List<TMSubCategoryOption> tmSubCategoriesForService(ServiceListing service) {
       TMSubCategoryOption(
         id: 'lighting_issue',
         title: 'Lighting Repair',
-        subtitle: 'Fixture checks, ballast replacement, and rewiring.',
+        titleKey: 'tmSubLightingRepair',
+        subtitle: l10n.tmCatLighting,
         icon: Icons.lightbulb_rounded,
         estimateMin: 450,
         estimateMax: 780,
@@ -96,11 +109,12 @@ List<TMSubCategoryOption> tmSubCategoriesForService(ServiceListing service) {
   }
 
   if (fingerprint.contains('appliance')) {
-    return const [
+    return [
       TMSubCategoryOption(
         id: 'washer_issue',
         title: 'Washer / Dryer Issue',
-        subtitle: 'Diagnostics, disassembly, and repair recommendations.',
+        titleKey: 'tmSubWasherDryer',
+        subtitle: l10n.tmCatWasherDryer,
         icon: Icons.local_laundry_service_rounded,
         estimateMin: 650,
         estimateMax: 1200,
@@ -108,7 +122,8 @@ List<TMSubCategoryOption> tmSubCategoriesForService(ServiceListing service) {
       TMSubCategoryOption(
         id: 'refrigerator_issue',
         title: 'Refrigerator Issue',
-        subtitle: 'Cooling, leakage, or electrical troubleshooting visit.',
+        titleKey: 'tmSubRefrigerator',
+        subtitle: l10n.tmCatRefrigerator,
         icon: Icons.kitchen_rounded,
         estimateMin: 700,
         estimateMax: 1400,
@@ -116,7 +131,8 @@ List<TMSubCategoryOption> tmSubCategoriesForService(ServiceListing service) {
       TMSubCategoryOption(
         id: 'small_appliance_repair',
         title: 'Small Appliance Repair',
-        subtitle: 'Inspection and repair of common home appliances.',
+        titleKey: 'tmSubSmallAppliance',
+        subtitle: l10n.tmCatSmallAppliance,
         icon: Icons.home_repair_service_rounded,
         estimateMin: 500,
         estimateMax: 900,
@@ -124,11 +140,12 @@ List<TMSubCategoryOption> tmSubCategoriesForService(ServiceListing service) {
     ];
   }
 
-  return const [
+  return [
     TMSubCategoryOption(
       id: 'quick_repair',
       title: 'Quick Repair Visit',
-      subtitle: 'Fast troubleshooting and basic repair support.',
+      titleKey: 'tmSubQuickRepair',
+      subtitle: l10n.tmCatQuickRepair,
       icon: Icons.build_circle_rounded,
       estimateMin: 450,
       estimateMax: 750,
@@ -136,7 +153,8 @@ List<TMSubCategoryOption> tmSubCategoriesForService(ServiceListing service) {
     TMSubCategoryOption(
       id: 'diagnostic_visit',
       title: 'Diagnostic Visit',
-      subtitle: 'Problem isolation before labor and materials are finalized.',
+      titleKey: 'tmSubDiagnostic',
+      subtitle: l10n.tmCatDiagnostic,
       icon: Icons.manage_search_rounded,
       estimateMin: 400,
       estimateMax: 650,
@@ -144,7 +162,8 @@ List<TMSubCategoryOption> tmSubCategoriesForService(ServiceListing service) {
     TMSubCategoryOption(
       id: 'urgent_assistance',
       title: 'Urgent Assistance',
-      subtitle: 'Immediate help for time-sensitive home service issues.',
+      titleKey: 'tmSubUrgent',
+      subtitle: l10n.tmCatUrgentAssistance,
       icon: Icons.crisis_alert_rounded,
       estimateMin: 550,
       estimateMax: 950,

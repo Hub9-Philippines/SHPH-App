@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import '../../components/categories_widget/categories_widget.dart';
 import 'category_model.dart';
@@ -19,6 +20,7 @@ class CategoryWidget extends StatefulWidget {
 }
 
 class _CategoryWidgetState extends State<CategoryWidget> {
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
   late CategoryModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
@@ -58,7 +60,7 @@ class _CategoryWidgetState extends State<CategoryWidget> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Categories',
+                                  _l10n.ctgTitle,
                                   style: AppTheme.of(context)
                                       .headlineSmall
                                       .override(
@@ -70,7 +72,7 @@ class _CategoryWidgetState extends State<CategoryWidget> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'Jump into the service type you need most.',
+                                  _l10n.ctgSubtitle,
                                   style:
                                       AppTheme.of(context).bodySmall.override(
                                             font: GoogleFonts.plusJakartaSans(),

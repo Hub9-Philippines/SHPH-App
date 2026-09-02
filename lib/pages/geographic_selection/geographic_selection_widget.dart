@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/components/cupertino_ui/app_activity_indicator.dart';
+import '/components/cupertino_ui/app_text_field.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'geographic_selection_model.dart';
 
@@ -29,6 +33,8 @@ class GeographicSelectionWidget extends StatefulWidget {
 class _GeographicSelectionWidgetState extends State<GeographicSelectionWidget> {
   late GeographicSelectionModel _model;
 
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -53,12 +59,13 @@ class _GeographicSelectionWidgetState extends State<GeographicSelectionWidget> {
           },
           child: Scaffold(
             backgroundColor: AppTheme.of(context).primaryBackground,
-            appBar: AppBar(
-              backgroundColor: AppTheme.of(context).primaryBackground,
-              automaticallyImplyLeading: true,
-              title: Text(
-                _model.getTitle(widget.selectionType),
-                style: AppTheme.of(context).titleLarge.override(
+            appBar: PreferredSize(
+              preferredSize: const Size.fromHeight(44),
+              child: CupertinoPageHeader(
+                backgroundColor: AppTheme.of(context).primaryBackground,
+                automaticallyImplyLeading: true,
+                title: _getTitle(widget.selectionType),
+                titleStyle: AppTheme.of(context).titleLarge.override(
                       font: GoogleFonts.plusJakartaSans(
                         fontWeight: AppTheme.of(context).titleLarge.fontWeight,
                         fontStyle: AppTheme.of(context).titleLarge.fontStyle,
@@ -68,8 +75,6 @@ class _GeographicSelectionWidgetState extends State<GeographicSelectionWidget> {
                       fontStyle: AppTheme.of(context).titleLarge.fontStyle,
                     ),
               ),
-              centerTitle: true,
-              elevation: 0,
             ),
             body: SafeArea(
               top: true,
@@ -97,20 +102,17 @@ class _GeographicSelectionWidgetState extends State<GeographicSelectionWidget> {
                             ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: TextField(
+                              child: AppTextField(
                                 onChanged: (value) {
                                   _model.filterItems(value);
                                 },
-                                decoration: InputDecoration(
-                                  hintText: 'Search...',
-                                  hintStyle: AppTheme.of(context)
-                                      .bodyMedium
-                                      .override(
-                                        color:
-                                            AppTheme.of(context).secondaryText,
-                                      ),
-                                  border: InputBorder.none,
-                                ),
+                                placeholder: _l10n.geSearch,
+                                placeholderStyle: AppTheme.of(context)
+                                    .bodyMedium
+                                    .override(
+                                      color:
+                                          AppTheme.of(context).secondaryText,
+                                    ),
                                 style: AppTheme.of(context).bodyMedium,
                               ),
                             ),
@@ -122,12 +124,12 @@ class _GeographicSelectionWidgetState extends State<GeographicSelectionWidget> {
                   Expanded(
                     child: _model.isLoading
                         ? const Center(
-                            child: CircularProgressIndicator(),
+                            child: AppActivityIndicator(),
                           )
                         : _model.groupedItems.isEmpty
                             ? Center(
                                 child: Text(
-                                  'No items found',
+                                  _l10n.geNoItemsFound,
                                   style: AppTheme.of(context).bodyMedium,
                                 ),
                               )
@@ -194,4 +196,17 @@ class _GeographicSelectionWidgetState extends State<GeographicSelectionWidget> {
           ),
         ),
       );
+
+  String _getTitle(GeographicSelectionType type) {
+    switch (type) {
+      case GeographicSelectionType.region:
+        return _l10n.geTitleRegion;
+      case GeographicSelectionType.province:
+        return _l10n.geTitleProvince;
+      case GeographicSelectionType.cityMunicipality:
+        return _l10n.geTitleCity;
+      case GeographicSelectionType.barangay:
+        return _l10n.geTitleBarangay;
+    }
+  }
 }

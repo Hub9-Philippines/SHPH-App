@@ -1,5 +1,8 @@
+import 'package:intl/intl.dart';
+
 import '/api/models/booking.dart';
 import '/api/resources/bookings_api.dart';
+import '/l10n/app_localizations.dart';
 import '/services/logging_service.dart';
 
 class WalletService {
@@ -8,7 +11,10 @@ class WalletService {
 
   final _bookingsApi = ShphBookingsApi.instance;
 
-  Future<Map<String, dynamic>> getWalletData() async {
+  Future<Map<String, dynamic>> getWalletData({
+    required AppLocalizations l10n,
+    required String locale,
+  }) async {
     try {
       final userBookings = await _bookingsApi.listUserBookings();
       final providerBookings = await _bookingsApi.listBookings();
@@ -20,7 +26,7 @@ class WalletService {
         if (booking.status != 'completed') continue;
         final amount = booking.totalPrice ?? booking.agreedPrice ?? 0.0;
         totalSpent += amount;
-        allTransactions.add(_txFromBooking(booking, 'debit'));
+        allTransactions.add(_txFromBooking(booking, 'debit', l10n, locale));
       }
 
       var totalEarnings = 0.0;
@@ -28,7 +34,7 @@ class WalletService {
         if (booking.status != 'completed') continue;
         final amount = booking.totalPrice ?? booking.agreedPrice ?? 0.0;
         totalEarnings += amount;
-        allTransactions.add(_txFromBooking(booking, 'credit'));
+        allTransactions.add(_txFromBooking(booking, 'credit', l10n, locale));
       }
 
       allTransactions.sort((a, b) {
@@ -53,19 +59,24 @@ class WalletService {
     }
   }
 
-  Map<String, dynamic> _txFromBooking(ShphBooking booking, String type) {
+  Map<String, dynamic> _txFromBooking(
+    ShphBooking booking,
+    String type,
+    AppLocalizations l10n,
+    String locale,
+  ) {
     final amount = booking.totalPrice ?? booking.agreedPrice ?? 0.0;
-    final serviceName = booking.listingTitle ?? 'Unknown Service';
+    final serviceName = booking.listingTitle ?? l10n.wtUnknownService;
     final rawDate = booking.scheduledAt ?? booking.createdAt;
-    final date = _formatDate(rawDate);
+    final date = _formatDate(rawDate, l10n, locale);
     final clientName =
-        booking.clientProfile?['display_name']?.toString() ?? 'Client';
+        booking.clientProfile?['display_name']?.toString() ?? l10n.wtClient;
 
     return {
       'type': type,
       'description': type == 'debit'
-          ? 'Payment to Provider — $serviceName'
-          : 'Service Payment — $serviceName ($clientName)',
+          ? l10n.wtDebitDesc(serviceName)
+          : l10n.wtCreditDesc(serviceName, clientName),
       'date': date,
       'amount': amount,
       'bookingId': booking.id,
@@ -80,15 +91,11 @@ class WalletService {
         'transactions': <Map<String, dynamic>>[],
       };
 
-  String _formatDate(String? dateStr) {
-    if (dateStr == null) return 'N/A';
+  String _formatDate(String? dateStr, AppLocalizations l10n, String locale) {
+    if (dateStr == null) return l10n.wtDateNa;
     final date = DateTime.tryParse(dateStr);
-    if (date == null) return 'N/A';
-    final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
-    return '${months[date.month - 1]} ${date.day}, ${date.year}';
+    if (date == null) return l10n.wtDateNa;
+    return DateFormat('MMM d, y', locale).format(date);
   }
 
   DateTime? _parseDate(String? dateStr) {

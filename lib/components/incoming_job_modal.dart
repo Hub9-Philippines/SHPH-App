@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '/components/cupertino_ui/app_button.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 
 class IncomingJobModal extends StatefulWidget {
@@ -65,6 +67,8 @@ class IncomingJobModal extends StatefulWidget {
 class _IncomingJobModalState extends State<IncomingJobModal> {
   late int _countdown;
 
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -129,7 +133,7 @@ class _IncomingJobModalState extends State<IncomingJobModal> {
             ),
           ),
           const SizedBox(height: 16),
-          Text('New Job Request', style: theme.titleLarge),
+          Text(_l10n.ccNewJobRequest, style: theme.titleLarge),
           const SizedBox(height: 4),
           Text(widget.category, style: TextStyle(color: theme.primary, fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
@@ -163,17 +167,17 @@ class _IncomingJobModalState extends State<IncomingJobModal> {
               Expanded(
                 child: SizedBox(
                   height: 50,
-                  child: OutlinedButton(
+                  child: AppButton(
                     onPressed: () {
                       widget.onDecline?.call();
                       Navigator.of(context).pop();
                     },
-                    style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      side: BorderSide(color: theme.error),
-                      foregroundColor: theme.error,
-                    ),
-                    child: const Text('Decline', style: TextStyle(fontWeight: FontWeight.w600)),
+                    variant: AppButtonVariant.outlined,
+                    borderRadius: 14,
+                    borderSide: BorderSide(color: theme.error),
+                    foregroundColor: theme.error,
+                    child: Text(_l10n.ccDecline,
+                        style: const TextStyle(fontWeight: FontWeight.w600)),
                   ),
                 ),
               ),
@@ -181,17 +185,16 @@ class _IncomingJobModalState extends State<IncomingJobModal> {
               Expanded(
                 child: SizedBox(
                   height: 50,
-                  child: ElevatedButton(
+                  child: AppButton(
                     onPressed: () {
                       widget.onAccept?.call();
                       Navigator.of(context).pop();
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.primary,
-                      foregroundColor: theme.onPrimary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    ),
-                    child: const Text('Accept', style: TextStyle(fontWeight: FontWeight.w600)),
+                    backgroundColor: theme.primary,
+                    foregroundColor: theme.onPrimary,
+                    borderRadius: 14,
+                    child: Text(_l10n.ccAccept,
+                        style: const TextStyle(fontWeight: FontWeight.w600)),
                   ),
                 ),
               ),

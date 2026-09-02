@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import '/components/cupertino_ui/app_button.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/components/instant_dispatch_section.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -10,6 +11,7 @@ import '/pages/geographic_selection/geographic_selection_widget.dart';
 import '/models/service_listing.dart';
 import '/utils/emergency_categories.dart';
 import '/services/logging_service.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import '/utils/geo_utils.dart';
 import '../../pages/booking_funnel/booking_controller.dart';
@@ -47,12 +49,14 @@ class _ServicesScreenState extends State<ServicesScreen> {
   late ServicesModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
-  static const Map<String, String> _filterLabels = {
-    'recommended': 'Recommended',
-    'topRated': 'Top rated',
-    'lowestPrice': 'Lowest price',
-    'nearest': 'Nearest first',
-  };
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
+  Map<String, String> get _filterLabels => {
+        'recommended': _l10n.svFilterRecommended,
+        'topRated': _l10n.svFilterTopRated,
+        'lowestPrice': _l10n.svFilterLowestPrice,
+        'nearest': _l10n.svFilterNearest,
+      };
 
   @override
   void initState() {
@@ -224,7 +228,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Services',
+                    _l10n.bfServices,
                     style: AppTheme.of(context).titleLarge.override(
                           font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
@@ -233,7 +237,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                         ),
                   ),
                   Text(
-                    'Find the right pro for the job.',
+                    _l10n.svSubtitle,
                     style: AppTheme.of(context).bodySmall.override(
                           font: GoogleFonts.plusJakartaSans(),
                           color: const Color(0xFF6F7B86),
@@ -256,8 +260,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
     final matches = _model.filteredServices;
     if (matches.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No dispatch-ready pros nearby yet.'),
+        SnackBar(
+          content: Text(_l10n.svNoDispatchPros),
           duration: Duration(seconds: 2),
         ),
       );
@@ -271,9 +275,11 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
   Widget _buildLocationPill(BuildContext context) {
     final theme = AppTheme.of(context);
-    final label = FFAppState().selectedAddressLabel.isNotEmpty
-        ? FFAppState().selectedAddressLabel
-        : 'Set location';
+    final label = FFAppState().selectedLocationMode == 'device'
+        ? _l10n.hmCurrentDeviceLocation
+        : FFAppState().selectedAddressLabel.isNotEmpty
+            ? FFAppState().selectedAddressLabel
+            : _l10n.svSetLocation;
     return Material(
       color: theme.primary.withValues(alpha: 0.10),
       borderRadius: BorderRadius.circular(AppThemeData.radiusPill),
@@ -354,7 +360,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   );
                 },
                 decoration: InputDecoration(
-                  hintText: 'Search services or categories...',
+                  hintText: _l10n.svSearchPlaceholder,
                   hintStyle: AppTheme.of(context).bodySmall.override(
                         font: GoogleFonts.plusJakartaSans(),
                         color: const Color(0xFF93A0AC),
@@ -419,7 +425,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
           Text(
             selectedCategory != null && selectedCategory != 'All'
                 ? selectedCategory
-                : 'Explore every service',
+                : _l10n.svExploreEveryService,
             style: AppTheme.of(context).headlineSmall.override(
                   font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                   color: Colors.white,
@@ -428,8 +434,9 @@ class _ServicesScreenState extends State<ServicesScreen> {
           const SizedBox(height: 6),
           Text(
             selectedFilter != null
-                ? '$count services sorted by ${_filterLabels[selectedFilter] ?? selectedFilter}'
-                : '$count services ready to book',
+                ? _l10n.svCountSorted(
+                    count, _filterLabels[selectedFilter] ?? selectedFilter)
+                : _l10n.svCountReady(count),
             style: AppTheme.of(context).bodyMedium.override(
                   font: GoogleFonts.plusJakartaSans(),
                   color: Colors.white.withValues(alpha: 0.86),
@@ -444,13 +451,13 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 context,
                 icon: Icons.tune_rounded,
                 label: selectedFilter == null
-                    ? 'Smart ranking'
+                    ? _l10n.svSmartRanking
                     : _filterLabels[selectedFilter] ?? selectedFilter,
               ),
               _summaryPill(
                 context,
                 icon: Icons.category_rounded,
-                label: selectedCategory ?? 'All categories',
+                label: selectedCategory ?? _l10n.svAllCategories,
               ),
             ],
           ),
@@ -512,7 +519,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                       ),
                       const SizedBox(width: 4),
                     ],
-                    Text(category),
+                    Text(category == 'All' ? _l10n.spAll : category),
                   ],
                 ),
                 selected: isSelected,
@@ -549,12 +556,12 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
   Widget _buildSortRow(BuildContext context) {
     final theme = AppTheme.of(context);
-    const options = <(String?, String)>[
-      (null, 'Default'),
-      ('recommended', 'Recommended'),
-      ('topRated', 'Top rated'),
-      ('lowestPrice', 'Lowest price'),
-      ('nearest', 'Nearest first'),
+    final options = <(String?, String)>[
+      (null, _l10n.spDefault),
+      ('recommended', _l10n.svFilterRecommended),
+      ('topRated', _l10n.svFilterTopRated),
+      ('lowestPrice', _l10n.svFilterLowestPrice),
+      ('nearest', _l10n.svFilterNearest),
     ];
     return SizedBox(
       height: 40,
@@ -659,8 +666,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   const SizedBox(height: 18),
                   Text(
                     hasCategoryFilter
-                        ? 'No services available'
-                        : 'No services found',
+                        ? _l10n.svNoServicesAvailable
+                        : _l10n.svNoServicesFound,
                     textAlign: TextAlign.center,
                     style: AppTheme.of(context).titleMedium.override(
                           font: GoogleFonts.plusJakartaSans(
@@ -672,8 +679,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   const SizedBox(height: 8),
                   Text(
                     hasCategoryFilter
-                        ? 'That category does not have live listings right now. Try another category or clear the filter.'
-                        : 'Try a broader keyword or switch the category filter.',
+                        ? _l10n.svNoCategoryListings
+                        : _l10n.svTryBroaderKeyword,
                     textAlign: TextAlign.center,
                     style: AppTheme.of(context).bodySmall.override(
                           font: GoogleFonts.plusJakartaSans(),
@@ -681,7 +688,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                         ),
                   ),
                   const SizedBox(height: 18),
-                  FilledButton(
+                  AppButton(
                     onPressed: () {
                       setState(() {
                         _model.selectedCategory = null;
@@ -691,7 +698,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                         _model.applyFilters();
                       });
                     },
-                    child: const Text('Reset filters'),
+                    child: Text(_l10n.spResetFilters),
                   ),
                 ],
               ),
@@ -735,12 +742,16 @@ class _ServicesScreenState extends State<ServicesScreen> {
         cleaningType: ServiceType.standard,
         paymentMethod: BookingPaymentMethod.gcash,
         address: BookingAddress(
-          label: appState.selectedAddressLabel.isNotEmpty
-              ? appState.selectedAddressLabel
-              : 'Pinned location',
-          line1: appState.selectedAddressLine1.isNotEmpty
-              ? appState.selectedAddressLine1
-              : 'Pinned address',
+          label: appState.selectedLocationMode == 'device'
+              ? _l10n.hmCurrentDeviceLocation
+              : appState.selectedAddressLabel.isNotEmpty
+                  ? appState.selectedAddressLabel
+                  : _l10n.bfPinnedLocation,
+          line1: appState.selectedLocationMode == 'device'
+              ? _l10n.svPinnedAddress
+              : appState.selectedAddressLine1.isNotEmpty
+                  ? appState.selectedAddressLine1
+                  : _l10n.svPinnedAddress,
           city: appState.selectedAddressCity.isNotEmpty
               ? appState.selectedAddressCity
               : 'Metro Manila',
@@ -788,26 +799,26 @@ class _ServicesScreenState extends State<ServicesScreen> {
             ],
           ),
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Oversized square showcase.
                     Stack(
                       children: [
                         ClipRRect(
                           borderRadius:
-                              BorderRadius.circular(AppThemeData.radiusMd),
+                              BorderRadius.circular(AppThemeData.radiusSm),
                           child: _ServiceCardImage(
                             imageUrl: service['imageUrl'] as String?,
                           ),
                         ),
                         Positioned(
-                          top: 6,
-                          right: 6,
+                          top: 4,
+                          right: 4,
                           child: Material(
                             color: Colors.white.withValues(alpha: 0.92),
                             borderRadius:
@@ -826,7 +837,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                               borderRadius:
                                   BorderRadius.circular(AppThemeData.radiusPill),
                               child: Padding(
-                                padding: const EdgeInsets.all(5),
+                                padding: const EdgeInsets.all(4),
                                 child: Icon(
                                   _model.favorites.contains(service['id'] as int)
                                       ? Icons.favorite_rounded
@@ -835,7 +846,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                                           .contains(service['id'] as int)
                                       ? const Color(0xFFE2557B)
                                       : const Color(0xFF8A97A4),
-                                  size: 16,
+                                  size: 14,
                                 ),
                               ),
                             ),
@@ -843,10 +854,11 @@ class _ServicesScreenState extends State<ServicesScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Row(
                             children: [
@@ -858,6 +870,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                                   style: theme.titleSmall.override(
                                     font: GoogleFonts.plusJakartaSans(
                                       fontWeight: FontWeight.w700,
+                                      fontSize: 13,
                                     ),
                                     color: theme.primaryText,
                                   ),
@@ -865,30 +878,36 @@ class _ServicesScreenState extends State<ServicesScreen> {
                               ),
                               const SizedBox(width: 4),
                               Icon(Icons.verified_rounded,
-                                  size: 15, color: theme.primary),
+                                  size: 14, color: theme.primary),
                             ],
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 3),
                           Row(
                             children: [
                               const Icon(Icons.near_me_rounded,
-                                  size: 13, color: Color(0xFF6F7B86)),
+                                  size: 12, color: Color(0xFF6F7B86)),
                               const SizedBox(width: 3),
-                              Text(
-                                service['distanceText'] as String? ??
-                                    'Distance unknown',
-                                style: theme.labelSmall.override(
-                                  font: GoogleFonts.plusJakartaSans(),
-                                  color: theme.secondaryText,
+                              Expanded(
+                                child: Text(
+                                  service['distanceText'] as String? ??
+                                      _l10n.svDistanceUnknown,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.labelSmall.override(
+                                    font: GoogleFonts.plusJakartaSans(
+                                      fontSize: 10,
+                                    ),
+                                    color: theme.secondaryText,
+                                  ),
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: 5),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
+                              horizontal: 7,
+                              vertical: 2.5,
                             ),
                             decoration: BoxDecoration(
                               color: const Color(0xFFFFF4D6),
@@ -899,7 +918,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 const Icon(Icons.star_rounded,
-                                    size: 13, color: Color(0xFFF59E0B)),
+                                    size: 12, color: Color(0xFFF59E0B)),
                                 const SizedBox(width: 3),
                                 Text(
                                   '${(service['rating'] as double).toStringAsFixed(1)}'
@@ -907,6 +926,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                                   style: theme.labelSmall.override(
                                     font: GoogleFonts.plusJakartaSans(
                                       fontWeight: FontWeight.w700,
+                                      fontSize: 10,
                                     ),
                                     color: const Color(0xFF8A6A00),
                                   ),
@@ -919,40 +939,45 @@ class _ServicesScreenState extends State<ServicesScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
-                if ((service['description'] as String? ?? '').isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: Text(
-                      service['description'] as String,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.bodySmall.override(
-                        font: GoogleFonts.plusJakartaSans(),
-                        color: theme.secondaryText,
+                if ((service['description'] as String? ?? '').isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    service['description'] as String,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.bodySmall.override(
+                      font: GoogleFonts.plusJakartaSans(
+                        fontSize: 10.5,
                       ),
+                      color: theme.secondaryText,
                     ),
                   ),
+                ],
+                const SizedBox(height: 10),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            'Starting Fee',
+                            _l10n.svStartingFee,
                             style: theme.labelSmall.override(
-                              font: GoogleFonts.plusJakartaSans(),
+                              font: GoogleFonts.plusJakartaSans(
+                                fontSize: 9.5,
+                              ),
                               color: theme.secondaryText,
                             ),
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: 1),
                           Text(
                             service['price'] as String,
                             style: theme.titleSmall.override(
                               font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w800,
+                                fontSize: 13.5,
                               ),
                               color: theme.primary,
                             ),
@@ -960,30 +985,35 @@ class _ServicesScreenState extends State<ServicesScreen> {
                         ],
                       ),
                     ),
-                    FilledButton.icon(
+                    AppButton(
                       onPressed: () =>
                           _openExpressCheckout(context, service),
-                      icon: const Icon(Icons.arrow_forward_rounded, size: 16),
-                      label: Text(
-                        'Book Now',
-                        style: theme.labelLarge.override(
-                          font: GoogleFonts.plusJakartaSans(
-                            fontWeight: FontWeight.w700,
-                          ),
-                          color: Colors.white,
-                        ),
+                      backgroundColor: theme.primary,
+                      foregroundColor: Colors.white,
+                      borderRadius: AppThemeData.radiusSm,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppThemeData.spaceMd,
+                        vertical: 9,
                       ),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: theme.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppThemeData.spaceLg,
-                          vertical: 14,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(AppThemeData.radiusMd),
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _l10n.ccBookNow,
+                            style: theme.labelLarge.override(
+                              font: GoogleFonts.plusJakartaSans(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 11.5,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 14,
+                            color: Colors.white,
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -1000,7 +1030,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
 class _ServiceCardImage extends StatelessWidget {
   const _ServiceCardImage({required this.imageUrl});
 
-  static const double size = 104;
+  static const double size = 84;
 
   final String? imageUrl;
 

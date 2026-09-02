@@ -94,3 +94,5 @@ temp_*.txt
 # npm modules
 /backend/node_modules/
 /backend/aws/cdk/node_modules/
+/provider-landing/node_modules/
+/provider-landing/.next/

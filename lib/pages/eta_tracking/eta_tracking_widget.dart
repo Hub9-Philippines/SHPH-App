@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '/components/cupertino_ui/app_activity_indicator.dart';
+import '/components/cupertino_ui/app_button.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'eta_tracking_model.dart';
 
@@ -21,6 +25,8 @@ class EtaTrackingWidget extends StatefulWidget {
 class _EtaTrackingWidgetState extends State<EtaTrackingWidget> {
   late EtaTrackingModel _model;
 
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -40,14 +46,16 @@ class _EtaTrackingWidgetState extends State<EtaTrackingWidget> {
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
-      appBar: AppBar(
-        backgroundColor: theme.primaryBackground,
-        title: Text('Tracking', style: theme.titleMedium),
-        centerTitle: true,
-        elevation: 0,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: CupertinoPageHeader(
+          backgroundColor: theme.primaryBackground,
+          title: _l10n.etTitle,
+          titleStyle: theme.titleMedium,
+        ),
       ),
       body: _model.isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: AppActivityIndicator())
           : _model.isExpired
               ? Center(
                   child: Padding(
@@ -58,11 +66,11 @@ class _EtaTrackingWidgetState extends State<EtaTrackingWidget> {
                         Icon(Icons.timer_off,
                             size: 64, color: theme.secondaryText),
                         const SizedBox(height: 16),
-                        Text('Link Expired',
+                        Text(_l10n.etLinkExpired,
                             style: theme.titleLarge),
                         const SizedBox(height: 8),
                         Text(
-                          'This tracking link is no longer valid.',
+                          _l10n.etLinkInvalid,
                           style: theme.bodyMedium.copyWith(
                               color: theme.secondaryText),
                           textAlign: TextAlign.center,
@@ -78,18 +86,16 @@ class _EtaTrackingWidgetState extends State<EtaTrackingWidget> {
                           Icon(Icons.error_outline,
                               size: 64, color: theme.error),
                           const SizedBox(height: 16),
-                          Text('Something went wrong',
+                          Text(_l10n.etSomethingWrong,
                               style: theme.titleLarge),
                           const SizedBox(height: 8),
-                          ElevatedButton(
+                          AppButton(
                             onPressed: () {
                               _model.loadTracking(widget.token)
                                   .then((_) => safeSetState(() {}));
                             },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: theme.primary,
-                            ),
-                            child: const Text('Retry'),
+                            backgroundColor: theme.primary,
+                            child: Text(_l10n.etRetry),
                           ),
                         ],
                       ),
@@ -170,7 +176,7 @@ class _EtaTrackingWidgetState extends State<EtaTrackingWidget> {
                                     size: 48,
                                     color: theme.secondaryText),
                                 const SizedBox(height: 8),
-                                Text('Map View',
+                                Text(_l10n.etMapView,
                                     style: theme.bodyMedium.copyWith(
                                         color: theme.secondaryText)),
                               ],

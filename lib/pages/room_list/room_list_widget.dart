@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '/components/cupertino_ui/app_activity_indicator.dart';
+import '/components/cupertino_ui/app_button.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'room_list_model.dart';
 
@@ -19,6 +23,8 @@ class RoomListWidget extends StatefulWidget {
 class _RoomListWidgetState extends State<RoomListWidget> {
   late RoomListModel _model;
 
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
   Color _statusColor(String status, AppThemeData theme) => switch (status) {
         'open' => theme.success,
         'locked' => theme.warning,
@@ -29,11 +35,11 @@ class _RoomListWidgetState extends State<RoomListWidget> {
       };
 
   String _statusLabel(String status) => switch (status) {
-        'open' => 'Open',
-        'locked' => 'Locked',
-        'settled' => 'Settled',
-        'cancelled' => 'Cancelled',
-        'expired' => 'Expired',
+        'open' => _l10n.rlStatusOpen,
+        'locked' => _l10n.rlStatusLocked,
+        'settled' => _l10n.rlStatusSettled,
+        'cancelled' => _l10n.rlStatusCancelled,
+        'expired' => _l10n.rlStatusExpired,
         _ => status,
       };
 
@@ -56,20 +62,22 @@ class _RoomListWidgetState extends State<RoomListWidget> {
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
-      appBar: AppBar(
-        backgroundColor: theme.primaryBackground,
-        title: Text('Rooms', style: theme.titleMedium),
-        centerTitle: true,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => context.push('/rooms/create'),
-          ),
-        ],
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: CupertinoPageHeader(
+          backgroundColor: theme.primaryBackground,
+          title: _l10n.rlRooms,
+          titleStyle: theme.titleMedium,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () => context.push('/rooms/create'),
+            ),
+          ],
+        ),
       ),
       body: _model.isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: AppActivityIndicator())
           : _model.rooms.isEmpty
               ? Center(
                   child: Column(
@@ -78,14 +86,12 @@ class _RoomListWidgetState extends State<RoomListWidget> {
                       Icon(Icons.meeting_room,
                           size: 64, color: theme.secondaryText),
                       const SizedBox(height: 16),
-                      Text('No rooms yet', style: theme.bodyMedium),
+                      Text(_l10n.rlNoRoomsYet, style: theme.bodyMedium),
                       const SizedBox(height: 16),
-                      ElevatedButton(
+                      AppButton(
                         onPressed: () => context.push('/rooms/create'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: theme.primary,
-                        ),
-                        child: const Text('Create Room'),
+                        backgroundColor: theme.primary,
+                        child: Text(_l10n.rlCreateRoom),
                       ),
                     ],
                   ),
@@ -158,7 +164,10 @@ class _RoomListWidgetState extends State<RoomListWidget> {
                                         size: 16, color: theme.secondaryText),
                                     const SizedBox(width: 4),
                                     Text(
-                                      '${room['seats_remaining'] ?? '?'}/${room['heads_required'] ?? '?'} seats',
+                                      _l10n.rlSeats(
+                                        room['heads_required'] ?? '?',
+                                        room['seats_remaining'] ?? '?',
+                                      ),
                                       style: theme.bodySmall?.copyWith(
                                           color: theme.secondaryText),
                                     ),

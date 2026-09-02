@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 
 /// Per-status action grammar for booking cards and detail footers.
 ///
 /// - Pending/active: filled royal-blue primary + outlined secondary.
-/// - Completed: filled teal primary + muted gray secondary.
+/// - Completed: filled violet primary + muted gray secondary.
 /// - Canceled (and any unrecognized status): a single low-contrast
 ///   "View Details" text link.
 class BookingActionRow extends StatelessWidget {
@@ -51,6 +52,7 @@ class BookingActionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final _l10n = AppLocalizations.of(context)!;
     final normalized = status.trim().toLowerCase();
 
     if (_isCompleted(normalized)) {
@@ -58,9 +60,9 @@ class BookingActionRow extends StatelessWidget {
         children: [
           Expanded(
             child: _FilledAction(
-              label: 'Write Review',
+              label: _l10n.ccWriteReview,
               icon: Icons.rate_review_rounded,
-              background: AppThemeData.successTeal,
+              background: AppThemeData.successBrand,
               foreground: Colors.white,
               onPressed: onReview,
             ),
@@ -71,7 +73,7 @@ class BookingActionRow extends StatelessWidget {
               onPressed: onBookAgain,
               icon: const Icon(Icons.replay_rounded, size: 16),
               label: Text(
-                'Book Again',
+                _l10n.ccBookAgain,
                 style: theme.labelMedium.override(
                   font: GoogleFonts.plusJakartaSans(
                     fontWeight: FontWeight.w600,
@@ -105,7 +107,7 @@ class BookingActionRow extends StatelessWidget {
             color: theme.textTertiary,
           ),
           label: Text(
-            'View Details',
+            _l10n.ccViewDetails,
             style: theme.labelMedium.override(
               font: GoogleFonts.plusJakartaSans(),
               color: theme.textTertiary,
@@ -122,7 +124,7 @@ class BookingActionRow extends StatelessWidget {
       children: [
         Expanded(
           child: _FilledAction(
-            label: 'Track Service',
+            label: _l10n.ccTrackService,
             icon: Icons.location_searching_rounded,
             background: AppThemeData.actionPrimary,
             foreground: Colors.white,
@@ -135,7 +137,7 @@ class BookingActionRow extends StatelessWidget {
             onPressed: onReschedule,
             icon: const Icon(Icons.edit_calendar_rounded, size: 16),
             label: Text(
-              'Reschedule',
+              _l10n.ccReschedule,
               style: theme.labelMedium.override(
                 font: GoogleFonts.plusJakartaSans(
                   fontWeight: FontWeight.w600,

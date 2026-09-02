@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '/api/resources/auth_api.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import 'otp_page_widget.dart' show OtpPageWidget;
 
 class OtpPageModel extends FlutterFlowModel<OtpPageWidget> {
@@ -18,9 +19,9 @@ class OtpPageModel extends FlutterFlowModel<OtpPageWidget> {
   @override
   void initState(BuildContext context) {}
 
-  Future<void> sendCode() async {
+  Future<void> sendCode(AppLocalizations l10n) async {
     if (phone.trim().isEmpty) {
-      error = 'Please enter a phone number';
+      error = l10n.otpErrEnterPhone;
       return;
     }
     loading = true;
@@ -31,15 +32,15 @@ class OtpPageModel extends FlutterFlowModel<OtpPageWidget> {
       codeSent = true;
       _startCooldown();
     } catch (e) {
-      error = 'Failed to send code.';
+      error = l10n.otpErrSendFailed;
     } finally {
       loading = false;
     }
   }
 
-  Future<bool> verify() async {
+  Future<bool> verify(AppLocalizations l10n) async {
     if (code.trim().length != 6) {
-      error = 'Please enter the 6-digit code';
+      error = l10n.otpErrEnterCode;
       return false;
     }
     loading = true;
@@ -49,7 +50,7 @@ class OtpPageModel extends FlutterFlowModel<OtpPageWidget> {
           .verifyOtpPin(phoneNumber: phone.trim(), pin: code.trim());
       return true;
     } catch (e) {
-      error = 'Invalid code.';
+      error = l10n.otpErrInvalidCode;
       return false;
     } finally {
       loading = false;

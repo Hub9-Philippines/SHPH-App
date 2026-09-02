@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/components/back_button/back_button_widget.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/components/reset_link_sent/reset_link_sent_widget.dart';
 import '/flutter_flow/custom_functions.dart' as functions;
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'set_password_model.dart';
 
@@ -28,6 +30,8 @@ class _SetPasswordWidgetState extends State<SetPasswordWidget> {
   late SetPasswordModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -54,17 +58,17 @@ class _SetPasswordWidgetState extends State<SetPasswordWidget> {
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: AppTheme.of(context).primaryBackground,
-        appBar: AppBar(
-          backgroundColor: AppTheme.of(context).primaryBackground,
-          automaticallyImplyLeading: false,
-          leading: wrapWithModel(
-            model: _model.backButtonModel,
-            updateCallback: () => safeSetState(() {}),
-            child: const BackButtonWidget(),
-          ),
-          title: Text(
-            'Forgot Password',
-            style: AppTheme.of(context).titleLarge.override(
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(56),
+          child: CupertinoPageHeader(
+            title: _l10n.spwTitle,
+            backgroundColor: AppTheme.of(context).primaryBackground,
+            leading: wrapWithModel(
+              model: _model.backButtonModel,
+              updateCallback: () => safeSetState(() {}),
+              child: const BackButtonWidget(),
+            ),
+            titleStyle: AppTheme.of(context).titleLarge.override(
                   font: GoogleFonts.plusJakartaSans(
                     fontWeight:
                         AppTheme.of(context).titleLarge.fontWeight,
@@ -77,9 +81,6 @@ class _SetPasswordWidgetState extends State<SetPasswordWidget> {
                   fontStyle: AppTheme.of(context).titleLarge.fontStyle,
                 ),
           ),
-          actions: const [],
-          centerTitle: true,
-          elevation: 0,
         ),
         body: SafeArea(
           top: true,
@@ -98,7 +99,7 @@ class _SetPasswordWidgetState extends State<SetPasswordWidget> {
                         padding:
                             const EdgeInsetsDirectional.fromSTEB(0, 24, 0, 0),
                         child: Text(
-                          'Forgot Password',
+                          _l10n.spwTitle,
                           style: AppTheme.of(context)
                               .displaySmall
                               .override(
@@ -124,7 +125,7 @@ class _SetPasswordWidgetState extends State<SetPasswordWidget> {
                         padding:
                             const EdgeInsetsDirectional.fromSTEB(0, 8, 0, 0),
                         child: Text(
-                          'Don\'t worry! It happens. Please enter the email address associated with your account.',
+                          _l10n.spwSubtitle,
                           style: AppTheme.of(context)
                               .bodyMedium
                               .override(
@@ -183,7 +184,7 @@ class _SetPasswordWidgetState extends State<SetPasswordWidget> {
                                     obscureText: false,
                                     decoration: InputDecoration(
                                       isDense: true,
-                                      labelText: 'Email',
+                                      labelText: _l10n.spwEmail,
                                       labelStyle: AppTheme.of(context)
                                           .bodyLarge
                                           .override(
@@ -325,7 +326,7 @@ class _SetPasswordWidgetState extends State<SetPasswordWidget> {
                                 ),
                                 if (!_model.isEmailvalid)
                                   Text(
-                                    'Invalid email',
+                                    _l10n.spwInvalidEmail,
                                     style: AppTheme.of(context)
                                         .bodySmall
                                         .override(
@@ -389,7 +390,7 @@ class _SetPasswordWidgetState extends State<SetPasswordWidget> {
                                         ),
                                     );
                                   },
-                            text: 'Send Reset Link',
+                            text: _l10n.spwSendReset,
                             options: FFButtonOptions(
                               width: double.infinity,
                               height: 52,
@@ -431,7 +432,7 @@ class _SetPasswordWidgetState extends State<SetPasswordWidget> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              'Remember your password? ',
+                              _l10n.spwRememberPassword,
                               style: AppTheme.of(context)
                                   .bodyMedium
                                   .override(
@@ -463,7 +464,7 @@ class _SetPasswordWidgetState extends State<SetPasswordWidget> {
                                 await context.pushNamed(SignupWidget.routeName);
                               },
                               child: Text(
-                                'Sign In',
+                                _l10n.siSignIn,
                                 style: AppTheme.of(context)
                                     .bodyMedium
                                     .override(

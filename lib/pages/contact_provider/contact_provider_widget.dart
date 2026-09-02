@@ -3,9 +3,11 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/backend/supabase/database/tables/profiles.dart';
+import '/components/cupertino_ui/app_text_field.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
+import '/l10n/app_localizations.dart';
 import '/services/chat_service.dart';
 import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
@@ -54,6 +56,8 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
   String? _providerPhone;
   String? _providerPhotoUrl;
   String? _providerDisplayName;
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -117,8 +121,8 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
     if (providerId == null || providerId.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('This provider cannot be contacted yet.'),
+          SnackBar(
+            content: Text(_l10n.cpCannotContact),
           ),
         );
       }
@@ -133,7 +137,7 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
       );
       if (thread == null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not open chat right now.')),
+          SnackBar(content: Text(_l10n.cpCouldNotOpenChat)),
         );
       }
       return thread;
@@ -146,7 +150,7 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not open chat right now.')),
+          SnackBar(content: Text(_l10n.cpCouldNotOpenChat)),
         );
       }
       return null;
@@ -179,7 +183,7 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
         );
         if (!sent && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Message could not be sent.')),
+            SnackBar(content: Text(_l10n.cpMessageNotSent)),
           );
         }
       }
@@ -237,7 +241,7 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
     if (phone.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No mobile number available')),
+          SnackBar(content: Text(_l10n.cpNoMobile)),
         );
       }
       return;
@@ -254,7 +258,7 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not launch phone dialer')),
+          SnackBar(content: Text(_l10n.cpCouldNotOpenDialer)),
         );
       }
     }
@@ -301,7 +305,7 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Contact Provider',
+                              _l10n.cpTitle,
                               style: AppTheme.of(context).titleLarge.override(
                                     font: GoogleFonts.plusJakartaSans(
                                       fontWeight: FontWeight.w700,
@@ -310,7 +314,9 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
                                   ),
                             ),
                             Text(
-                              'Reach out to ${_providerDisplayName ?? widget.providerName} about service details or availability.',
+                              _l10n.cpSubtitle(
+                                _providerDisplayName ?? widget.providerName,
+                              ),
                               style: AppTheme.of(context).bodySmall.override(
                                     font: GoogleFonts.plusJakartaSans(),
                                     color: const Color(0xFF64748B),
@@ -335,7 +341,7 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
                         ],
                         const SizedBox(height: 18),
                         Text(
-                          'Contact options',
+                          _l10n.cpContactOptions,
                           style: AppTheme.of(context).titleMedium.override(
                                 font: GoogleFonts.plusJakartaSans(
                                   fontWeight: FontWeight.w700,
@@ -349,7 +355,7 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
                             Expanded(
                               child: FFButtonWidget(
                                 onPressed: _callProvider,
-                                text: 'Call',
+                                text: _l10n.cpCall,
                                 icon: const FaIcon(
                                   FontAwesomeIcons.phone,
                                   size: 16,
@@ -373,7 +379,9 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
                             Expanded(
                               child: FFButtonWidget(
                                 onPressed: _isOpeningChat ? null : _startChat,
-                                text: _isOpeningChat ? 'Opening...' : 'Chat',
+                                text: _isOpeningChat
+                                    ? _l10n.cpOpening
+                                    : _l10n.cpChat,
                                 icon: const FaIcon(
                                   FontAwesomeIcons.comment,
                                   size: 16,
@@ -415,7 +423,7 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Send a message',
+                                  _l10n.cpSendMessageTitle,
                                   style:
                                       AppTheme.of(context).titleMedium.override(
                                             font: GoogleFonts.plusJakartaSans(
@@ -426,47 +434,39 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  'This sends your message straight into the existing in-app chat thread.',
+                                  _l10n.cpSendMessageSub,
                                   style: AppTheme.of(context).bodySmall.override(
                                         font: GoogleFonts.plusJakartaSans(),
                                         color: const Color(0xFF64748B),
                                       ),
                                 ),
                                 const SizedBox(height: 16),
-                                TextFormField(
+                                AppTextField(
                                   controller: _model.subjectController,
-                                  decoration: InputDecoration(
-                                    labelText: 'Subject',
-                                    hintText: 'What is this about?',
-                                    filled: true,
-                                    fillColor: const Color(0xFFF8FAFC),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                  ),
+                                  label: _l10n.cpSubject,
+                                  placeholder: _l10n.cpSubjectPlaceholder,
+                                  fillColor: const Color(0xFFF8FAFC),
+                                  radius: 16,
                                   validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
-                                      return 'Please enter a subject';
+                                    if (value == null ||
+                                        value.trim().isEmpty) {
+                                      return _l10n.cpSubjectRequired;
                                     }
                                     return null;
                                   },
                                 ),
                                 const SizedBox(height: 16),
-                                TextFormField(
+                                AppTextField(
                                   controller: _model.messageController,
                                   maxLines: 5,
-                                  decoration: InputDecoration(
-                                    labelText: 'Message',
-                                    hintText: 'Write your message here...',
-                                    filled: true,
-                                    fillColor: const Color(0xFFF8FAFC),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                  ),
+                                  label: _l10n.cpMessage,
+                                  placeholder: _l10n.cpMessagePlaceholder,
+                                  fillColor: const Color(0xFFF8FAFC),
+                                  radius: 16,
                                   validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
-                                      return 'Please enter a message';
+                                    if (value == null ||
+                                        value.trim().isEmpty) {
+                                      return _l10n.cpMessageRequired;
                                     }
                                     return null;
                                   },
@@ -474,7 +474,7 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
                                 const SizedBox(height: 20),
                                 FFButtonWidget(
                                   onPressed: _isSending ? null : _sendMessage,
-                                  text: _isSending ? 'Sending...' : 'Send Message',
+                                  text: _isSending ? _l10n.cpSending : _l10n.cpSendMessage,
                                   options: FFButtonOptions(
                                     width: double.infinity,
                                     height: 54,
@@ -565,7 +565,7 @@ font: GoogleFonts.plusJakartaSans(
                   Text(
                     (_providerPhone ?? '').trim().isNotEmpty
                         ? _providerPhone!
-                        : 'Phone number unavailable',
+                        : _l10n.cpPhoneUnavailable,
                     style: AppTheme.of(context).bodySmall.override(
                           font: GoogleFonts.plusJakartaSans(),
                           color: const Color(0xFF64748B),
@@ -603,7 +603,7 @@ font: GoogleFonts.plusJakartaSans(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Service details',
+              _l10n.cpServiceDetails,
               style: AppTheme.of(context).titleSmall.override(
                     font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: const Color(0xFF14213D),

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/components/cupertino_ui/app_activity_indicator.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'provider_profile_model.dart';
 
@@ -22,6 +25,8 @@ class ProviderProfileWidget extends StatefulWidget {
 class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
   late ProviderProfileModel _model;
 
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -41,14 +46,16 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
-      appBar: AppBar(
-        backgroundColor: theme.primaryBackground,
-        title: Text('Provider Profile', style: theme.titleMedium),
-        centerTitle: true,
-        elevation: 0,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: CupertinoPageHeader(
+          backgroundColor: theme.primaryBackground,
+          title: _l10n.ppfTitle,
+          titleStyle: theme.titleMedium,
+        ),
       ),
       body: _model.isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: AppActivityIndicator())
           : _model.provider == null
               ? _buildError(theme)
               : _buildContent(context, theme),
@@ -65,7 +72,7 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
             Icon(Icons.person_off_rounded,
                 size: 64, color: theme.textTertiary),
             const SizedBox(height: 16),
-            Text('Provider not found',
+            Text(_l10n.ppfNotFound,
                 style: GoogleFonts.plusJakartaSans(
                     color: theme.primaryText,
                     fontSize: 18,
@@ -80,7 +87,7 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
     final p = _model.provider!;
     final name = p['display_name']?.toString() ??
         p['first_name']?.toString() ??
-        'Provider';
+        _l10n.ppfProvider;
     final photo = p['photo_url']?.toString() ?? p['photo']?.toString();
     final bio = p['bio_details']?.toString() ?? p['bio']?.toString();
     final rating = _avgRating();
@@ -92,14 +99,14 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
           _buildHero(context, theme, name, photo, bio, rating, isKycVerified),
           _buildStats(theme, rating),
           if (isKycVerified) _buildVerifiedBadge(theme),
-          _buildSectionHeader(theme, 'Services'),
+          _buildSectionHeader(theme, _l10n.ppfServices),
           if (_model.listings.isEmpty)
-            _buildEmpty(theme, 'No services posted yet.')
+            _buildEmpty(theme, _l10n.ppfNoServices)
           else
             _buildServicesGrid(context, theme),
-          _buildSectionHeader(theme, 'Reviews'),
+          _buildSectionHeader(theme, _l10n.ppfReviews),
           if (_model.reviews.isEmpty)
-            _buildEmpty(theme, 'No reviews yet.')
+            _buildEmpty(theme, _l10n.ppfNoReviews)
           else
             _buildReviewsList(theme),
         ],
@@ -123,15 +130,14 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
         children: [
           CircleAvatar(
             radius: 40,
+            backgroundColor: Colors.white.withValues(alpha: 0.18),
             backgroundImage:
                 photo != null ? NetworkImage(photo) : null,
             child: photo == null
-                ? Text(
-                    name.isNotEmpty ? name[0].toUpperCase() : '?',
-                    style: GoogleFonts.plusJakartaSans(
-                        color: theme.onPrimary,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w600),
+                ? Icon(
+                    Icons.person_rounded,
+                    size: 40,
+                    color: theme.onPrimary,
                   )
                 : null,
           ),
@@ -159,9 +165,9 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
         children: [
-          _statItem(theme, rating.toStringAsFixed(1), 'Rating'),
-          _statItem(theme, _model.reviews.length.toString(), 'Reviews'),
-          _statItem(theme, _model.listings.length.toString(), 'Services'),
+          _statItem(theme, rating.toStringAsFixed(1), _l10n.ppfRating),
+          _statItem(theme, _model.reviews.length.toString(), _l10n.ppfReviews),
+          _statItem(theme, _model.listings.length.toString(), _l10n.ppfServices),
         ],
       ),
     );
@@ -200,7 +206,7 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
             Icon(Icons.verified_rounded,
                 size: 16, color: theme.success),
             const SizedBox(width: 6),
-            Text('KYC Verified',
+            Text(_l10n.ppfKycVerified,
                 style: GoogleFonts.plusJakartaSans(
                     color: theme.success,
                     fontSize: 12,
@@ -351,7 +357,7 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(r['reviewerName']?.toString() ?? 'Anonymous',
+                    Text(r['reviewerName']?.toString() ?? _l10n.ppfAnonymous,
                         style: GoogleFonts.plusJakartaSans(
                             color: theme.primaryText,
                             fontSize: 14,

@@ -5,8 +5,11 @@ import 'package:google_fonts/google_fonts.dart';
 import '/auth/base_auth_user_provider.dart';
 import '/backend/supabase/database/tables/payment_methods.dart';
 import '/components/back_button/back_button_widget.dart';
+import '/components/cupertino_ui/app_text_field.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'add_ewallet_payment_model.dart';
 
@@ -33,6 +36,8 @@ class _AddEwalletPaymentWidgetState extends State<AddEwalletPaymentWidget> {
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final _formKey = GlobalKey<FormState>();
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -64,7 +69,7 @@ class _AddEwalletPaymentWidgetState extends State<AddEwalletPaymentWidget> {
     final userId = currentUser?.uid;
     if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User not authenticated')),
+        SnackBar(content: Text(_l10n.pmNotAuthenticated)),
       );
       return;
     }
@@ -110,14 +115,14 @@ class _AddEwalletPaymentWidgetState extends State<AddEwalletPaymentWidget> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text(widget.paymentMethod != null
-                  ? 'E-wallet updated successfully'
-                  : 'E-wallet added successfully')),
+                  ? _l10n.pewUpdated
+                  : _l10n.pewAdded)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving e-wallet: $e')),
+          SnackBar(content: Text(_l10n.pewSaveError(e))),
         );
       }
     }
@@ -132,25 +137,22 @@ class _AddEwalletPaymentWidgetState extends State<AddEwalletPaymentWidget> {
         child: Scaffold(
           key: scaffoldKey,
           backgroundColor: AppTheme.of(context).primaryBackground,
-          appBar: AppBar(
-            backgroundColor: AppTheme.of(context).primaryBackground,
-            automaticallyImplyLeading: false,
-            leading: wrapWithModel(
-              model: _model.backButtonModel,
-              updateCallback: () => safeSetState(() {}),
-              child: const BackButtonWidget(),
-            ),
-            title: Text(
-              'Add E-Wallet',
-              style: AppTheme.of(context).titleLarge.override(
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(56),
+            child: CupertinoPageHeader(
+              title: _l10n.pewTitle,
+              backgroundColor: AppTheme.of(context).primaryBackground,
+              leading: wrapWithModel(
+                model: _model.backButtonModel,
+                updateCallback: () => safeSetState(() {}),
+                child: const BackButtonWidget(),
+              ),
+              titleStyle: AppTheme.of(context).titleLarge.override(
                     font: GoogleFonts.plusJakartaSans(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
             ),
-            actions: const [],
-            centerTitle: true,
-            elevation: 0,
           ),
           body: SafeArea(
             top: true,
@@ -163,7 +165,7 @@ class _AddEwalletPaymentWidgetState extends State<AddEwalletPaymentWidget> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'E-Wallet Information',
+                        _l10n.pewInfoHeader,
                         style: AppTheme.of(context).titleMedium.override(
                               font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.bold,
@@ -174,7 +176,7 @@ class _AddEwalletPaymentWidgetState extends State<AddEwalletPaymentWidget> {
                       DropdownButtonFormField<String>(
                         initialValue: _model.selectedProvider,
                         decoration: InputDecoration(
-                          labelText: 'Provider',
+                          labelText: _l10n.pewProvider,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -195,7 +197,7 @@ class _AddEwalletPaymentWidgetState extends State<AddEwalletPaymentWidget> {
                         },
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please select provider';
+                            return _l10n.pewSelectProvider;
                           }
                           return null;
                         },
@@ -210,7 +212,7 @@ class _AddEwalletPaymentWidgetState extends State<AddEwalletPaymentWidget> {
                         ],
                         maxLength: 13,
                         decoration: InputDecoration(
-                          labelText: 'Phone Number',
+                          labelText: _l10n.pewPhoneNumber,
                           hintText: '0917 123 4567',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -218,29 +220,25 @@ class _AddEwalletPaymentWidgetState extends State<AddEwalletPaymentWidget> {
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter phone number';
+                            return _l10n.pewEnterPhone;
                           }
                           final digits = value.replaceAll(' ', '');
                           if (digits.length != 11) {
-                            return 'Please enter a valid 11-digit phone number';
+                            return _l10n.pewValidPhone;
                           }
                           return null;
                         },
                       ),
                       const SizedBox(height: 16),
-                      TextFormField(
+                      AppTextField(
                         controller: _model.accountNameController,
                         textCapitalization: TextCapitalization.words,
-                        decoration: InputDecoration(
-                          labelText: 'Account Name',
-                          hintText: 'John Doe',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
+                        label: _l10n.pewAccountName,
+                        placeholder: 'John Doe',
+                        radius: 12,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter account name';
+                            return _l10n.pewEnterAccountName;
                           }
                           return null;
                         },
@@ -253,13 +251,13 @@ class _AddEwalletPaymentWidgetState extends State<AddEwalletPaymentWidget> {
                             _model.isDefault = value ?? false;
                           });
                         },
-                        title: const Text('Set as default payment method'),
+                        title: Text(_l10n.pmSetDefaultFull),
                         controlAffinity: ListTileControlAffinity.leading,
                       ),
                       const SizedBox(height: 24),
                       FFButtonWidget(
                         onPressed: _saveEwallet,
-                        text: 'Add E-Wallet',
+                        text: _l10n.pewTitle,
                         options: FFButtonOptions(
                           width: double.infinity,
                           color: AppTheme.of(context).primary,

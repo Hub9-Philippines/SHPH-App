@@ -150,16 +150,27 @@ class ApiRowMapper {
     return ProfilesRow({
       'id': data['id']?.toString() ?? '',
       'role': data['role']?.toString() ?? 'client',
-      'display_name': data['display_name'],
+      'display_name': data['display_name'] ??
+          data['name'] ??
+          data['full_name'] ??
+          ((data['first_name'] != null)
+              ? '${data['first_name']} ${data['last_name'] ?? ''}'.trim()
+              : null),
       'email': data['email'],
       'phone_number': data['phone_number'] ?? data['phone'],
       'photo_url': data['photo_url'] ?? data['photo'],
       'face_scan_url': data['face_scan_url'] ?? data['photo_url'] ?? data['photo'],
       'bio_details': data['bio_details'] ?? data['bio'],
-      'first_name': data['first_name'],
-      'last_name': data['last_name'],
+      'first_name': data['first_name'] ?? data['firstName'],
+      'last_name': data['last_name'] ?? data['lastName'],
       'verification_status': data['verification_status'] ?? 'pending',
-      'is_profile_complete': data['is_profile_complete'] ?? false,
+      'is_profile_complete': data['is_profile_complete'] == true ||
+          (data['display_name'] != null &&
+              data['display_name'].toString().trim().isNotEmpty) ||
+          (data['name'] != null &&
+              data['name'].toString().trim().isNotEmpty) ||
+          (data['first_name'] != null &&
+              data['first_name'].toString().trim().isNotEmpty),
       'is_verified': data['is_verified'] ?? false,
       'is_face_verified': data['is_face_verified'] ?? false,
       'created_at': data['created_at'] ?? DateTime.now().toIso8601String(),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 
 /// Wide promotional banner for the Explore feed (section 2).
@@ -9,14 +10,14 @@ import '/theme/app_theme.dart';
 class HeroOfferBanner extends StatelessWidget {
   const HeroOfferBanner({
     super.key,
-    this.title = 'Explore Seasonal Deals',
-    this.highlight = 'Get 60% OFF!',
+    this.title,
+    this.highlight,
     this.imageAsset,
     this.onBookNow,
   });
 
-  final String title;
-  final String highlight;
+  final String? title;
+  final String? highlight;
 
   /// Optional technician/marketing artwork; omitted renders the icon badge.
   final String? imageAsset;
@@ -25,6 +26,9 @@ class HeroOfferBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final _l10n = AppLocalizations.of(context)!;
+    final effectiveTitle = title ?? _l10n.ccSeasonalDeals;
+    final effectiveHighlight = highlight ?? _l10n.cc60Off;
     return Container(
       // Grid: no horizontal margin owned here — the feed supplies the 16px
       // grid and the 24px block separator around this banner.
@@ -52,7 +56,7 @@ class HeroOfferBanner extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    effectiveTitle,
                     style: theme.headlineSmall.override(
                       font: GoogleFonts.plusJakartaSans(
                         fontWeight: FontWeight.w800,
@@ -63,7 +67,7 @@ class HeroOfferBanner extends StatelessWidget {
                   ),
                   const SizedBox(height: AppThemeData.spaceXs),
                   Text(
-                    highlight,
+                    effectiveHighlight,
                     style: theme.titleMedium.override(
                       font: GoogleFonts.plusJakartaSans(
                         fontWeight: FontWeight.w800,
@@ -84,7 +88,7 @@ class HeroOfferBanner extends StatelessWidget {
                           vertical: 10,
                         ),
                         child: Text(
-                          'Book Now',
+                          _l10n.ccBookNow,
                           style: theme.titleSmall.override(
                             font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w700,

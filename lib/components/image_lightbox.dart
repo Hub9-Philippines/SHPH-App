@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '/components/cupertino_ui/cupertino_page_header.dart';
+
 class ImageLightbox extends StatefulWidget {
   const ImageLightbox({
     super.key,
@@ -54,19 +56,18 @@ class _ImageLightboxState extends State<ImageLightbox>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close_rounded, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: CupertinoPageHeader(
+          title: '',
+          backgroundColor: Colors.transparent,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+              onPressed: _resetZoom,
+            ),
+          ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
-            onPressed: _resetZoom,
-          ),
-        ],
       ),
       body: GestureDetector(
         onDoubleTap: _resetZoom,

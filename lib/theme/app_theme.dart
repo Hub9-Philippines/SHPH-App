@@ -1,3 +1,8 @@
+import 'package:flutter/cupertino.dart'
+    show
+        CupertinoPageTransitionsBuilder,
+        CupertinoThemeData,
+        CupertinoTextThemeData;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -40,6 +45,26 @@ class AppTheme {
     return ThemeData(
       brightness: Brightness.light,
       useMaterial3: false,
+      pageTransitionsTheme: PageTransitionsTheme(
+        builders: {
+          for (final platform in TargetPlatform.values)
+            platform: const CupertinoPageTransitionsBuilder(),
+        },
+      ),
+      cupertinoOverrideTheme: CupertinoThemeData(
+        brightness: Brightness.light,
+        primaryColor: data.primary,
+        scaffoldBackgroundColor: data.primaryBackground,
+        barBackgroundColor: data.primaryBackground,
+        textTheme: CupertinoTextThemeData(
+          primaryColor: data.primary,
+          textStyle: GoogleFonts.plusJakartaSans(
+            color: data.primaryText,
+            fontSize: 16,
+          ),
+        ),
+      ),
+      materialTapTargetSize: MaterialTapTargetSize.padded,
       colorScheme: ColorScheme.light(
         primary: data.primary,
         secondary: data.secondary,
@@ -50,6 +75,20 @@ class AppTheme {
       ),
       scaffoldBackgroundColor: data.primaryBackground,
       textTheme: _buildTextTheme(data, Brightness.light),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: data.primaryDark,
+        contentTextStyle: GoogleFonts.plusJakartaSans(
+          color: Colors.white,
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
+shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppThemeData.radiusPill),
+        ),
+        elevation: 6,
+        insetPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      ),
       appBarTheme: AppBarTheme(
         backgroundColor: data.primaryBackground,
         foregroundColor: data.primaryText,
@@ -68,7 +107,7 @@ class AppTheme {
           foregroundColor: data.onPrimary,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppThemeData.radiusMd),
           ),
         ),
       ),
@@ -100,6 +139,26 @@ class AppTheme {
     return ThemeData(
       brightness: Brightness.dark,
       useMaterial3: false,
+      pageTransitionsTheme: PageTransitionsTheme(
+        builders: {
+          for (final platform in TargetPlatform.values)
+            platform: const CupertinoPageTransitionsBuilder(),
+        },
+      ),
+      cupertinoOverrideTheme: CupertinoThemeData(
+        brightness: Brightness.dark,
+        primaryColor: data.primary,
+        scaffoldBackgroundColor: data.primaryBackground,
+        barBackgroundColor: data.primaryBackground,
+        textTheme: CupertinoTextThemeData(
+          primaryColor: data.primary,
+          textStyle: GoogleFonts.plusJakartaSans(
+            color: data.primaryText,
+            fontSize: 16,
+          ),
+        ),
+      ),
+      materialTapTargetSize: MaterialTapTargetSize.padded,
       colorScheme: ColorScheme.dark(
         primary: data.primary,
         secondary: data.secondary,
@@ -110,6 +169,20 @@ class AppTheme {
       ),
       scaffoldBackgroundColor: data.primaryBackground,
       textTheme: _buildTextTheme(data, Brightness.dark),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: data.primaryDark,
+        contentTextStyle: GoogleFonts.plusJakartaSans(
+          color: Colors.white,
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppThemeData.radiusPill),
+        ),
+        elevation: 6,
+        insetPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      ),
       appBarTheme: AppBarTheme(
         backgroundColor: data.primaryBackground,
         foregroundColor: data.primaryText,
@@ -327,31 +400,31 @@ class AppThemeData {
   static const Color accentBlue = Color(0xFF2563EB);
   static const Color accentPurple = Color(0xFF7C5CFC);
   static const Color accentYellow = Color(0xFFF59E0B);
-  static const Color accentTeal = Color(0xFF0D9488);
+  static const Color accentIndigo = Color(0xFF6366F1);
   static const Color accentSky = Color(0xFF0EA5E9);
   static const Color accentNavy = Color(0xFF1E3A8A);
   static const Color accentBlueGray = Color(0xFF475569);
   static const Color destructiveCrimson = Color(0xFFE11D48);
 
   // Booking lifecycle action colors (list cards, tracking, confirmation).
-  // Primary actions use royal blue; success/complete states use brand teal;
+  // Primary actions use royal blue; success/complete states use violet;
   // destructive/cancel affordances use soft red (distinct from `error`,
   // which stays reserved for form/validation errors). Pending/warning
   // highlights reuse [accentYellow] (amber #F59E0B).
   static const Color actionPrimary = accentNavy;
-  static const Color successTeal = Color(0xFF0D808A);
+  static const Color successBrand = Color(0xFF7C5CFC);
   static const Color destructiveSoft = Color(0xFFEF4444);
 
   // Brand gradients owned by the theme (white text sits on both, identical
   // across light/dark by design).
   static const List<Color> profileHeroGradient = [
-    Color(0xFF0D808A),
-    Color(0xFF26C6DA),
+    Color(0xFF4F46E5),
+    Color(0xFF7C5CFC),
   ];
   static const List<Color> settingsBannerGradient = [
-    Color(0xFF17212B),
-    Color(0xFF23384D),
-    Color(0xFF2F5368),
+    Color(0xFF1E1B4B),
+    Color(0xFF312E81),
+    Color(0xFF4338CA),
   ];
 
   // Marketing surface colors (Explore banners/badges) — single source so
@@ -369,8 +442,8 @@ class AppThemeData {
   static const Color ratingBadgeGreenBg = Color(0xFFE7F6EC);
 
   // Status pill colors (matching web --shph-status-* tokens)
-  static const Color statusConfirmed = Color(0xFF0D6D78);
-  static const Color statusConfirmedBg = Color(0xFFD4F0EF);
+  static const Color statusConfirmed = Color(0xFF4338CA);
+  static const Color statusConfirmedBg = Color(0xFFE0E7FF);
   static const Color statusActive = Color(0xFF166534);
   static const Color statusActiveBg = Color(0xFFE7F6EC);
   static const Color statusCompleted = Color(0xFF475569);
@@ -393,7 +466,7 @@ class AppThemeData {
   factory AppThemeData.light() => AppThemeData(
       primary: const Color(0xFF1E3A8A),
       onPrimary: const Color(0xFFFFFFFF),
-      secondary: const Color(0xFF39D2C0),
+      secondary: const Color(0xFF7C5CFC),
       tertiary: const Color(0xFFEE8B60),
       alternate: const Color(0xFFE0E3E7),
       primaryText: const Color(0xFF0F172A),
@@ -402,17 +475,17 @@ class AppThemeData {
       secondaryBackground: const Color(0xFFF7F7F7),
       bgPage: const Color(0xFFF8FAFC),
       accent1: const Color(0x4C4B39EF),
-      accent2: const Color(0x4D39D2C0),
+      accent2: const Color(0x4D7C5CFC),
       accent3: const Color(0x4DEE8B60),
       accent4: const Color(0xCCFFFFFF),
-      success: const Color(0xFF249689),
+      success: const Color(0xFF7C5CFC),
       warning: const Color(0xFFF9CF58),
       error: const Color(0xFFDC2626),
       info: const Color(0xFF1E3A8A),
-      iconBackground: const Color(0xFFD4F0EF),
-      primaryLight: const Color(0xFFD4F0EF),
-      primaryDark: const Color(0xFF49B8C4),
-      primaryBrandText: const Color(0xFF0D6D78),
+      iconBackground: const Color(0xFFE0E7FF),
+      primaryLight: const Color(0xFFE0E7FF),
+      primaryDark: const Color(0xFF4338CA),
+      primaryBrandText: const Color(0xFF4F46E5),
       surfaceAlt: const Color(0xFFF1F5F9),
       border: const Color(0xFFE2E8F0),
       textTertiary: const Color(0xFF94A3B8),
@@ -421,7 +494,7 @@ class AppThemeData {
   factory AppThemeData.dark() => AppThemeData(
       primary: const Color(0xFF1E3A8A),
       onPrimary: const Color(0xFFFFFFFF),
-      secondary: const Color(0xFF39D2C0),
+      secondary: const Color(0xFF7C5CFC),
       tertiary: const Color(0xFFEE8B60),
       alternate: const Color(0xFFE0E3E7),
       primaryText: const Color(0xFFFFFFFF),
@@ -430,17 +503,17 @@ class AppThemeData {
       secondaryBackground: const Color(0xFF14181B),
       bgPage: const Color(0xFF0F172A),
       accent1: const Color(0x4C4B39EF),
-      accent2: const Color(0x4D39D2C0),
+      accent2: const Color(0x4D7C5CFC),
       accent3: const Color(0x4DEE8B60),
       accent4: const Color(0xB2262D34),
-      success: const Color(0xFF249689),
+      success: const Color(0xFF7C5CFC),
       warning: const Color(0xFFF9CF58),
       error: const Color(0xFFDC2626),
       info: const Color(0xFF1E3A8A),
       iconBackground: const Color(0xFFF34966),
-      primaryLight: const Color(0xFF1A3D3C),
-      primaryDark: const Color(0xFF49B8C4),
-      primaryBrandText: const Color(0xFF63CBD6),
+      primaryLight: const Color(0xFF1E1B4B),
+      primaryDark: const Color(0xFF4338CA),
+      primaryBrandText: const Color(0xFFA5B4FC),
       surfaceAlt: const Color(0xFF2A2A3C),
       border: const Color(0xFF3A3A4E),
       textTertiary: const Color(0xFF94A3B8),

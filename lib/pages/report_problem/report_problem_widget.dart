@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+import '/components/cupertino_ui/app_button.dart';
+import '/components/cupertino_ui/app_text_field.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'report_problem_model.dart';
 
@@ -27,6 +32,15 @@ class _ReportProblemWidgetState extends State<ReportProblemWidget> {
     'Other',
   ];
 
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
+  String _rpCategoryLabel(String cat) => switch (cat) {
+        'Booking' => _l10n.rpCategoryBooking,
+        'Payment' => _l10n.rpCategoryPayment,
+        'Account' => _l10n.rpCategoryAccount,
+        _ => _l10n.rpCategoryOther,
+      };
+
   @override
   void initState() {
     super.initState();
@@ -46,11 +60,13 @@ class _ReportProblemWidgetState extends State<ReportProblemWidget> {
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
-      appBar: AppBar(
-        backgroundColor: theme.primaryBackground,
-        title: Text('Report a Problem', style: theme.titleMedium),
-        centerTitle: true,
-        elevation: 0,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: CupertinoPageHeader(
+          backgroundColor: theme.primaryBackground,
+          title: _l10n.rpTitle,
+          titleStyle: theme.titleMedium,
+        ),
       ),
       body: _model.success == true
           ? Center(
@@ -62,22 +78,20 @@ class _ReportProblemWidgetState extends State<ReportProblemWidget> {
                     Icon(Icons.check_circle,
                         size: 64, color: theme.success),
                     const SizedBox(height: 16),
-                    Text('Ticket Submitted',
+                    Text(_l10n.rpTicketSubmitted,
                         style: theme.titleLarge),
                     const SizedBox(height: 8),
                     Text(
-                      'We\'ll get back to you as soon as possible.',
+                      _l10n.rpWillRespond,
                       style: theme.bodyMedium.copyWith(
                           color: theme.secondaryText),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 24),
-                    ElevatedButton(
+                    AppButton(
                       onPressed: () => context.pop(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.primary,
-                      ),
-                      child: const Text('Back'),
+                      backgroundColor: theme.primary,
+                      child: Text(_l10n.rpBack),
                     ),
                   ],
                 ),
@@ -97,14 +111,14 @@ class _ReportProblemWidgetState extends State<ReportProblemWidget> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Category', style: theme.titleSmall),
+                      Text(_l10n.rpCategory, style: theme.titleSmall),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
                         value: _model.category,
                         items: _categories
                             .map((c) => DropdownMenuItem(
                                   value: c,
-                                  child: Text(c),
+                                  child: Text(_rpCategoryLabel(c)),
                                 ))
                             .toList(),
                         onChanged: (v) =>
@@ -118,20 +132,16 @@ class _ReportProblemWidgetState extends State<ReportProblemWidget> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      Text('Describe your issue',
+                      Text(_l10n.rpDescribeIssue,
                           style: theme.titleSmall),
                       const SizedBox(height: 8),
-                      TextField(
+                      AppTextField(
                         controller: _messageCtrl,
                         maxLines: 5,
                         maxLength: 2000,
-                        decoration: InputDecoration(
-                          hintText:
-                              'Tell us what happened... (min 10 characters)',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
+                        maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                        placeholder: _l10n.rpPlaceholder,
+                        radius: 8,
                         onChanged: (v) {
                           _model.message = v;
                           safeSetState(() {});
@@ -140,7 +150,7 @@ class _ReportProblemWidgetState extends State<ReportProblemWidget> {
                       const SizedBox(height: 24),
                       SizedBox(
                         width: double.infinity,
-                        child: ElevatedButton(
+                        child: AppButton(
                           onPressed: _model.message.length >= 10 &&
                                   !_model.isSubmitting
                               ? () async {
@@ -148,20 +158,11 @@ class _ReportProblemWidgetState extends State<ReportProblemWidget> {
                                   if (mounted) safeSetState(() {});
                                 }
                               : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.primary,
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 14),
-                          ),
-                          child: _model.isSubmitting
-                              ? SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: theme.onPrimary),
-                                )
-                              : const Text('Submit Ticket'),
+                          backgroundColor: theme.primary,
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 14),
+                          loading: _model.isSubmitting,
+                          child: Text(_l10n.rpSubmit),
                         ),
                       ),
                       if (_model.message.isNotEmpty &&
@@ -169,7 +170,7 @@ class _ReportProblemWidgetState extends State<ReportProblemWidget> {
                         Padding(
                           padding: const EdgeInsets.only(top: 8),
                           child: Text(
-                            'Please provide at least 10 characters',
+                            _l10n.rpMinChars,
                             style: theme.bodySmall
                                 .copyWith(color: theme.error),
                           ),

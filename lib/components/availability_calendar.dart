@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
 import '/theme/app_theme.dart';
 
@@ -64,10 +65,8 @@ class _AvailabilityCalendarState extends State<AvailabilityCalendar> {
 
   Widget _buildHeader(BuildContext context) {
     final theme = AppTheme.of(context);
-    final months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
-    ];
+    final locale = Localizations.localeOf(context).toString();
+    final monthYear = DateFormat('MMMM yyyy', locale).format(_focusedMonth);
 
     return Row(
       children: [
@@ -81,7 +80,7 @@ class _AvailabilityCalendarState extends State<AvailabilityCalendar> {
         ),
         Expanded(
           child: Text(
-            '${months[_focusedMonth.month - 1]} ${_focusedMonth.year}',
+            monthYear,
             textAlign: TextAlign.center,
             style: GoogleFonts.plusJakartaSans(
               fontWeight: FontWeight.w600,
@@ -104,7 +103,11 @@ class _AvailabilityCalendarState extends State<AvailabilityCalendar> {
 
   Widget _buildWeekdayHeaders(BuildContext context) {
     final theme = AppTheme.of(context);
-    const headers = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    final locale = Localizations.localeOf(context).toString();
+    final fmt = DateFormat.E(locale);
+    // First day of a known week whose first weekday is Sunday (2020-01-05).
+    final sun = DateTime(2020, 1, 5);
+    final headers = List.generate(7, (i) => fmt.format(sun.add(Duration(days: i))));
     return Row(
       children: headers.map((h) => Expanded(
         child: Text(

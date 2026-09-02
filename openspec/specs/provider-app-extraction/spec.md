@@ -1,6 +1,6 @@
 ## Purpose
 
-Defines the behavior contract for the standalone SerbisyoHub Provider app extracted from this codebase: it serves provider accounts exclusively, carries over today's provider capabilities without functional loss, and points client accounts back to the SerbisyoHub client app.
+Defines the behavior contract for the standalone Serbisyo Provider app extracted from this codebase: it serves provider accounts exclusively, carries over today's provider capabilities without functional loss, and points client accounts back to the Serbisyo client app.
 
 ### Requirement: Provider-only account experience
 The Provider app SHALL treat every signed-in session as a service-provider session and MUST NOT offer client booking surfaces (service browsing, booking funnel as a customer).
@@ -11,7 +11,7 @@ The Provider app SHALL treat every signed-in session as a service-provider sessi
 
 #### Scenario: Client-only account signs in
 - **WHEN** an account with no provider capabilities signs in to the Provider app
-- **THEN** the app displays a notice directing the user to the SerbisyoHub client app instead of entering the provider shell
+- **THEN** the app displays a notice directing the user to the Serbisyo client app instead of entering the provider shell
 
 ### Requirement: Provider capability parity
 The Provider app SHALL carry over the provider features available before the split: incoming job requests and bids management, schedule/availability calendar, earnings dashboard and history, own-service listing (create/edit/manage), provider analytics, reviews of the provider's work, and the provider KYC/identity-verification flow.
@@ -32,7 +32,7 @@ The Provider app SHALL carry over the provider features available before the spl
 The Provider app SHALL be distributed under its own application ID/package name so it installs side-by-side with the client app, with its own store listing metadata.
 
 #### Scenario: Both apps installed on one device
-- **WHEN** a device has both the SerbisyoHub client app and the Provider app installed
+- **WHEN** a device has both the Serbisyo client app and the Provider app installed
 - **THEN** neither installation replaces or conflicts with the other
 
 ### Requirement: Shared backend contract

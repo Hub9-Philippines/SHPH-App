@@ -9,6 +9,7 @@ import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_place_picker.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'pin_location_model.dart';
 
@@ -31,6 +32,8 @@ class PinLocationWidget extends StatefulWidget {
 
 class _PinLocationWidgetState extends State<PinLocationWidget> {
   late PinLocationModel _model;
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
   LatLng? currentUserLocationValue;
@@ -88,7 +91,7 @@ class _PinLocationWidgetState extends State<PinLocationWidget> {
                         onSelect: (place) async {
                           safeSetState(() => _model.placePickerValue = place);
                         },
-                        defaultText: 'Search a location',
+                        defaultText: _l10n.plSearchLocation,
                         icon: const Icon(
                           Icons.search_rounded,
                           color: Color(0xE357636C),
@@ -323,9 +326,9 @@ class _PinLocationWidgetState extends State<PinLocationWidget> {
                                 final center = _model.googleMapsCenter;
                                 if (center == null) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
+                                    SnackBar(
                                       content: Text(
-                                          'Please select a location on the map'),
+                                          _l10n.plNoLocation),
                                     ),
                                   );
                                   return;
@@ -345,7 +348,7 @@ class _PinLocationWidgetState extends State<PinLocationWidget> {
                                   'address': address,
                                 });
                               },
-                              text: 'Submit',
+                              text: _l10n.plSubmit,
                               options: FFButtonOptions(
                                 width: 200,
                                 height: 50,

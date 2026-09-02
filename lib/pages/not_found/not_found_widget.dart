@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'not_found_model.dart';
 
@@ -18,6 +19,8 @@ class NotFoundWidget extends StatefulWidget {
 
 class _NotFoundWidgetState extends State<NotFoundWidget> {
   late NotFoundModel _model;
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -54,12 +57,12 @@ class _NotFoundWidgetState extends State<NotFoundWidget> {
                     color: theme.primary, size: 48),
               ),
               const SizedBox(height: 24),
-              Text('Page Not Found',
+              Text(_l10n.nfTitle,
                   style: theme.titleLarge
                       ?.copyWith(fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               Text(
-                'The page you\'re looking for doesn\'t exist or has been moved.',
+                _l10n.nfBody,
                 style: theme.bodyMedium?.copyWith(color: theme.secondaryText),
                 textAlign: TextAlign.center,
               ),
@@ -67,7 +70,7 @@ class _NotFoundWidgetState extends State<NotFoundWidget> {
               FilledButton.icon(
                 onPressed: () => context.go('/'),
                 icon: const Icon(Icons.home_rounded, size: 18),
-                label: const Text('Go Home'),
+                label: Text(_l10n.nfGoHome),
               ),
             ],
           ),

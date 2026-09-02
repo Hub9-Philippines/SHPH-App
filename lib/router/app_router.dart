@@ -9,10 +9,12 @@ import '/backend/supabase/database/tables/payment_methods.dart';
 import '/flutter_flow/lat_lng.dart';
 import '/index.dart';
 import '/main.dart';
+import '/main/home/home_redesign_widget.dart';
 import '/models/service_listing.dart';
 import '/pages/booking_funnel/booking_models.dart';
 import '/pages/booking_funnel/booking_success_screen.dart';
 import '/pages/geographic_selection/geographic_selection_widget.dart';
+import '/services/client_kyc_service.dart';
 
 // Helper retained for potential future role checks; provider lifecycle removed.
 Future<Map<String, dynamic>?> _fetchUserProfile(String userId) async {
@@ -59,6 +61,9 @@ const List<String> _clientOnlyPaths = [
   '/wallet',
   '/payment-methods',
   '/addresses',
+  '/kyc-onboarding',
+  '/kyc-documents',
+  '/kyc-liveness',
 ];
 
 _RouteGates _gatesForPath(String path) {
@@ -133,7 +138,7 @@ class AppRouter {
                   disableResizeToAvoidBottomInset: true,
                 );
               }
-              return const HomeWidget();
+              return const HomeRedesignWidget();
             },
           ),
           GoRoute(
@@ -227,17 +232,6 @@ class AppRouter {
                 return const NavBarPage(initialPage: 'Category');
               }
               return const CategoryWidget();
-            },
-          ),
-          GoRoute(
-            path: ExploreWidget.routePath,
-            name: ExploreWidget.routeName,
-            builder: (context, state) {
-              final queryParams = state.uri.queryParameters;
-              if (queryParams.isEmpty) {
-                return const NavBarPage(initialPage: 'Explore');
-              }
-              return const ExploreWidget();
             },
           ),
           GoRoute(
@@ -469,6 +463,27 @@ class AppRouter {
             path: LanguageSettingsWidget.routePath,
             name: LanguageSettingsWidget.routeName,
             builder: (context, state) => const LanguageSettingsWidget(),
+          ),
+          GoRoute(
+            path: KycOnboardingWidget.routePath,
+            name: KycOnboardingWidget.routeName,
+            builder: (context, state) => const KycOnboardingWidget(),
+          ),
+          GoRoute(
+            path: KycDocumentWidget.routePath,
+            name: KycDocumentWidget.routeName,
+            builder: (context, state) => const KycDocumentWidget(),
+          ),
+          GoRoute(
+            path: KycFaceLivenessWidget.routePath,
+            name: KycFaceLivenessWidget.routeName,
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return KycFaceLivenessWidget(
+                idFront: extra?['idFront'] as ClientKycFile?,
+                idBack: extra?['idBack'] as ClientKycFile?,
+              );
+            },
           ),
           GoRoute(
             path: SecuritySettingsWidget.routePath,

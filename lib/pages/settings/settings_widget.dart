@@ -3,10 +3,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '/auth/auth_util.dart';
-import '/components/screen_header.dart';
+import '/components/back_button/back_button_widget.dart';
+import '/components/cupertino_ui/app_feedback.dart';
 import '/components/tinted_menu_tile.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'settings_model.dart';
 
@@ -26,6 +28,8 @@ class _SettingsWidgetState extends State<SettingsWidget> {
   late SettingsModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -44,29 +48,19 @@ class _SettingsWidgetState extends State<SettingsWidget> {
       await launchUrl(uri);
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not launch URL')),
+        SnackBar(content: Text(_l10n.seCouldNotLaunchUrl)),
       );
     }
   }
 
   Future<void> _handleLogout() async {
-    final confirm = await showDialog<bool>(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: const Text('Log out'),
-            content: const Text('Are you sure you want to log out?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext, false),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext, true),
-                child: const Text('Log out'),
-              ),
-            ],
-          ),
-        ) ??
+    final confirm = await AppFeedback.confirmDialog(
+            context: context,
+            title: _l10n.seLogOut,
+            message: _l10n.seLogOutConfirm,
+            confirmText: _l10n.seLogOut,
+            cancelText: _l10n.seCancel,
+          ) ??
         false;
 
     if (!confirm || !mounted) {
@@ -96,58 +90,92 @@ class _SettingsWidgetState extends State<SettingsWidget> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               children: [
-                const ScreenHeader(
-                  title: 'Settings',
-                  subtitle: 'Manage preferences, account, and support options.',
+                Row(
+                  children: [
+                    Material(
+                      color: AppTheme.of(context).primaryBackground,
+                      borderRadius: BorderRadius.circular(18),
+                      child: wrapWithModel(
+                        model: _model.backButtonModel,
+                        updateCallback: () => safeSetState(() {}),
+                        child: const BackButtonWidget(),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _l10n.seTitle,
+                            style: AppTheme.of(context).titleLarge.override(
+                                  font: GoogleFonts.plusJakartaSans(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                  color: AppTheme.of(context).primaryText,
+                                ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _l10n.seSubtitle,
+                            style: AppTheme.of(context).bodySmall.override(
+                                  font: GoogleFonts.plusJakartaSans(),
+                                  color: AppTheme.of(context).secondaryText,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 18),
                 _buildHeroCard(),
                 const SizedBox(height: 20),
                 _buildSection(
-                  title: 'General & Account Configuration',
+                  title: _l10n.seGeneralSection,
                   children: [
                     TintedMenuTile(
                       icon: Icons.language_rounded,
                       tint: AppThemeData.accentPurple,
-                      title: 'Language',
-                      subtitle: 'Choose the language used across the app',
+                      title: _l10n.seLanguage,
+                      subtitle: _l10n.seLanguageSubtitle,
                       onTap: () =>
                           context.pushNamed(LanguageSettingsWidget.routeName),
                     ),
                     TintedMenuTile(
                       icon: Icons.notifications_rounded,
                       tint: AppThemeData.accentYellow,
-                      title: 'Notifications',
-                      subtitle: 'Review booking, message, and payment updates',
+                      title: _l10n.seNotifications,
+                      subtitle: _l10n.seNotificationsSubtitle,
                       onTap: () =>
                           context.pushNamed(MyNotificationsWidget.routeName),
                     ),
                     TintedMenuTile(
                       icon: Icons.security_rounded,
-                      tint: AppThemeData.accentTeal,
-                      title: 'Security',
-                      subtitle: 'Password, login protection, and 2FA settings',
+                      tint: AppThemeData.accentIndigo,
+                      title: _l10n.seSecurity,
+                      subtitle: _l10n.seSecuritySubtitle,
                       onTap: () =>
                           context.pushNamed(SecuritySettingsWidget.routeName),
                     ),
                     TintedMenuTile(
                       icon: Icons.edit_rounded,
                       tint: AppThemeData.accentSky,
-                      title: 'Edit profile',
-                      subtitle: 'Update your personal registration information',
+                      title: _l10n.seEditProfile,
+                      subtitle: _l10n.seEditProfileSubtitle,
                       onTap: () => context.pushNamed(EditProfileWidget.routeName),
                     ),
                   ],
                 ),
                 const SizedBox(height: 20),
                 _buildSection(
-                  title: 'Legal & Feedback',
+                  title: _l10n.seLegalSection,
                   children: [
                     TintedMenuTile(
                       icon: Icons.add_comment_rounded,
                       tint: AppThemeData.accentBlue,
-                      title: 'Send feedback',
-                      subtitle: 'Open an email draft to share product feedback',
+                      title: _l10n.seSendFeedback,
+                      subtitle: _l10n.seSendFeedbackSubtitle,
                       onTap: () => _launchUrl(
                         'mailto:support@serbisyohubph.com?subject=SHPH%20Feedback',
                       ),
@@ -155,15 +183,15 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                     TintedMenuTile(
                       icon: Icons.description_rounded,
                       tint: AppThemeData.accentNavy,
-                      title: 'Terms of Service',
-                      subtitle: 'Read the terms governing your use of SerbisyoHub',
+                      title: _l10n.seTermsTitle,
+                      subtitle: _l10n.seTermsSubtitle,
                       onTap: () => context.pushNamed(TermsOfServiceWidget.routeName),
                     ),
                     TintedMenuTile(
                       icon: Icons.verified_user_rounded,
                       tint: AppThemeData.accentBlueGray,
-                      title: 'Privacy Policy',
-                      subtitle: 'Understand how we collect and use your data',
+                      title: _l10n.sePrivacyTitle,
+                      subtitle: _l10n.sePrivacySubtitle,
                       onTap: () => context.pushNamed(PrivacyPolicyWidget.routeName),
                     ),
                   ],
@@ -172,8 +200,8 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                 TintedMenuTile(
                   icon: Icons.logout_rounded,
                   tint: AppThemeData.destructiveCrimson,
-                  title: 'Log out',
-                  subtitle: 'Sign out of your account on this device',
+                  title: _l10n.seLogOut,
+                  subtitle: _l10n.seSignOutSubtitle,
                   titleColor: AppThemeData.destructiveCrimson,
                   onTap: _handleLogout,
                 ),
@@ -210,7 +238,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Control your app experience',
+                    _l10n.seHeroTitle,
                     style: AppTheme.of(context).titleLarge.override(
                           font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w700),
@@ -219,7 +247,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Appearance, security, notifications, and support all live here.',
+                    _l10n.seHeroSubtitle,
                     style: AppTheme.of(context).bodySmall.override(
                           font: GoogleFonts.plusJakartaSans(),
                           color: Colors.white.withValues(alpha: 0.82),

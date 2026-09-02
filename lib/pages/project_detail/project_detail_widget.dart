@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '/components/cupertino_ui/app_activity_indicator.dart';
+import '/components/cupertino_ui/app_button.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'project_detail_model.dart';
 
@@ -21,6 +25,8 @@ class ProjectDetailWidget extends StatefulWidget {
 class _ProjectDetailWidgetState extends State<ProjectDetailWidget> {
   late ProjectDetailModel _model;
 
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
   Color _statusColor(String status, AppThemeData theme) => switch (status) {
         'draft' => theme.textTertiary,
         'quoted' => theme.primary,
@@ -32,12 +38,12 @@ class _ProjectDetailWidgetState extends State<ProjectDetailWidget> {
       };
 
   String _statusLabel(String status) => switch (status) {
-        'draft' => 'Draft',
-        'quoted' => 'Quoted',
-        'matching' => 'Matching',
-        'committed' => 'Committed',
-        'cancelled' => 'Cancelled',
-        'expired' => 'Expired',
+        'draft' => _l10n.pjStatusDraft,
+        'quoted' => _l10n.pjStatusQuoted,
+        'matching' => _l10n.pjStatusMatching,
+        'committed' => _l10n.pjStatusCommitted,
+        'cancelled' => _l10n.pjStatusCancelled,
+        'expired' => _l10n.pjStatusExpired,
         _ => status,
       };
 
@@ -63,17 +69,19 @@ class _ProjectDetailWidgetState extends State<ProjectDetailWidget> {
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
-      appBar: AppBar(
-        backgroundColor: theme.primaryBackground,
-        title: Text('Project Details', style: theme.titleMedium),
-        centerTitle: true,
-        elevation: 0,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(44),
+        child: CupertinoPageHeader(
+          backgroundColor: theme.primaryBackground,
+          title: _l10n.pdTitle,
+          titleStyle: theme.titleMedium,
+        ),
       ),
       body: _model.isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: AppActivityIndicator())
           : project == null
               ? Center(
-                  child: Text('Project not found',
+                  child: Text(_l10n.pdProjectNotFound,
                       style: theme.bodyMedium))
               : ListView(
                   padding: const EdgeInsets.all(16),
@@ -136,26 +144,29 @@ class _ProjectDetailWidgetState extends State<ProjectDetailWidget> {
                             _infoRow(
                               theme,
                               Icons.attach_money,
-                              'Budget: \$${project['estimated_budget_min'] ?? '?'} - \$${project['estimated_budget_max'] ?? '?'}',
+                              _l10n.pdBudget(
+                                project['estimated_budget_min'] ?? '?',
+                                project['estimated_budget_max'] ?? '?',
+                              ),
                             ),
                           if (project['estimated_headcount'] != null)
                             _infoRow(
                               theme,
                               Icons.people,
-                              'Headcount: ${project['estimated_headcount']}',
+                              _l10n.pdHeadcount(project['estimated_headcount']),
                             ),
                           if (project['expires_at'] != null)
                             _infoRow(
                               theme,
                               Icons.schedule,
-                              'Expires: ${project['expires_at']}',
+                              _l10n.pdExpires(project['expires_at']),
                             ),
                         ],
                       ),
                     ),
                     if (roleLines.isNotEmpty) ...[
                       const SizedBox(height: 24),
-                      Text('Role Lines',
+                      Text(_l10n.pdRoleLines,
                           style: theme.titleSmall),
                       const SizedBox(height: 8),
                       ...roleLines.map((rl) {
@@ -189,7 +200,7 @@ class _ProjectDetailWidgetState extends State<ProjectDetailWidget> {
                                       padding:
                                           const EdgeInsets.all(16),
                                       child: Text(
-                                        'No prospects yet',
+                                        _l10n.pdNoProspects,
                                         style: theme.bodySmall
                                             ?.copyWith(
                                                 color: theme
@@ -215,7 +226,7 @@ class _ProjectDetailWidgetState extends State<ProjectDetailWidget> {
                                         style: theme.bodyMedium,
                                       ),
                                       subtitle: Text(
-                                        'Score: ${p['score'] ?? '?'}',
+                                        _l10n.pdScore(p['score'] ?? '?'),
                                         style: theme.bodySmall,
                                       ),
                                       trailing: Container(
@@ -260,7 +271,7 @@ class _ProjectDetailWidgetState extends State<ProjectDetailWidget> {
                     if (status == 'draft') ...[
                       SizedBox(
                         width: double.infinity,
-                        child: ElevatedButton.icon(
+                        child: AppButton(
                           onPressed: () async {
                             final result =
                                 await _model.quoteProject();
@@ -271,16 +282,19 @@ class _ProjectDetailWidgetState extends State<ProjectDetailWidget> {
                                 SnackBar(
                                     content: Text(
                                         result != null
-                                            ? 'Quote generated'
-                                            : 'Failed')),
+                                            ? _l10n.pdQuoteGenerated
+                                            : _l10n.pdFailed)),
                               );
                             }
                           },
-                          icon: const Icon(Icons.description,
-                              size: 18),
-                          label: const Text('Generate Quote'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.primary,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.description,
+                                  size: 18, color: Colors.white),
+                              SizedBox(width: 8),
+                              Text(_l10n.pdGenerateQuote),
+                            ],
                           ),
                         ),
                       ),
@@ -290,7 +304,9 @@ class _ProjectDetailWidgetState extends State<ProjectDetailWidget> {
                       const SizedBox(height: 8),
                       SizedBox(
                         width: double.infinity,
-                        child: TextButton.icon(
+                        child: AppButton(
+                          variant: AppButtonVariant.text,
+                          foregroundColor: theme.error,
                           onPressed: () async {
                             final ok =
                                 await _model.cancelProject();
@@ -299,11 +315,15 @@ class _ProjectDetailWidgetState extends State<ProjectDetailWidget> {
                               if (ok) context.pop();
                             }
                           },
-                          icon: Icon(Icons.cancel,
-                              size: 18, color: theme.error),
-                          label: Text('Cancel Project',
-                              style: TextStyle(
-                                  color: theme.error)),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.cancel,
+                                  size: 18, color: theme.error),
+                              const SizedBox(width: 8),
+                              Text(_l10n.pdCancelProject),
+                            ],
+                          ),
                         ),
                       ),
                     ],

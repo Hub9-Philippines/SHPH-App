@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/components/cupertino_ui/app_button.dart';
+import '/components/cupertino_ui/app_text_field.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'ai_booking_composer_model.dart';
 
@@ -20,6 +24,8 @@ class AiBookingComposerWidget extends StatefulWidget {
 
 class _AiBookingComposerWidgetState extends State<AiBookingComposerWidget> {
   late AiBookingComposerModel _model;
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -41,14 +47,13 @@ class _AiBookingComposerWidgetState extends State<AiBookingComposerWidget> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         backgroundColor: theme.primaryBackground,
-        appBar: AppBar(
-          backgroundColor: theme.primaryBackground,
-          title: Text(
-            'AI Booking Composer',
-            style: theme.titleLarge,
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(44),
+          child: CupertinoPageHeader(
+            title: _l10n.abcTitle,
+            backgroundColor: theme.primaryBackground,
+            titleStyle: theme.titleLarge,
           ),
-          centerTitle: true,
-          elevation: 0,
         ),
         body: Padding(
           padding: const EdgeInsets.all(16),
@@ -60,70 +65,60 @@ class _AiBookingComposerWidgetState extends State<AiBookingComposerWidget> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Describe what you need',
+                        _l10n.abcDescribe,
                         style: theme.titleMedium.override(
                           fontWeight: FontWeight.w600,
                           color: theme.primaryText,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      TextField(
+                      AppTextField(
                         controller: _model.promptController,
                         maxLines: 5,
-                        decoration: InputDecoration(
-                          hintText:
-                              'e.g., I need a plumber to fix a leaking pipe under my kitchen sink',
-                          hintStyle: GoogleFonts.plusJakartaSans(
-                            color: theme.textTertiary,
-                            fontSize: 14,
-                          ),
-                          filled: true,
-                          fillColor: theme.secondaryBackground,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.all(16),
+                        placeholder:
+                            _l10n.abcPlaceholder,
+                        placeholderStyle: GoogleFonts.plusJakartaSans(
+                          color: theme.textTertiary,
+                          fontSize: 14,
                         ),
+                        fillColor: theme.secondaryBackground,
+                        radius: 12,
+                        padding: const EdgeInsets.all(16),
                         style: GoogleFonts.plusJakartaSans(
                           color: theme.primaryText,
                           fontSize: 14,
                         ),
                       ),
                       const SizedBox(height: 16),
-                      SizedBox(
+                      AppButton(
                         width: double.infinity,
                         height: 48,
-                        child: FilledButton.icon(
-                          onPressed: _model.isLoading
-                              ? null
-                              : () async {
-                                  await _model.composeBooking();
-                                  safeSetState(() {});
-                                },
-                          icon: _model.isLoading
-                              ? SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: theme.onPrimary,
-                                  ),
-                                )
-                              : const Icon(Icons.auto_awesome_rounded),
-                          label: Text(
-                            _model.isLoading ? 'Analyzing...' : 'Compose Booking',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontWeight: FontWeight.w600,
-                              color: theme.onPrimary,
+                        borderRadius: 12,
+                        loading: _model.isLoading,
+                        onPressed: _model.isLoading
+                            ? null
+                            : () async {
+                                await _model.composeBooking();
+                                safeSetState(() {});
+                              },
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.auto_awesome_rounded,
+                              color: Colors.white,
+                              size: 20,
                             ),
-                          ),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: theme.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                            const SizedBox(width: 8),
+                            Text(
+                              _model.isLoading
+                                  ? _l10n.abcAnalyzing
+                                  : _l10n.abcCompose,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          ),
+                          ],
                         ),
                       ),
                       if (_model.bookingData != null) ...[
@@ -154,7 +149,7 @@ class _AiBookingComposerWidgetState extends State<AiBookingComposerWidget> {
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
-          'Could not extract booking details. Please try again with more specific information.',
+          _l10n.abcExtractError,
           style: GoogleFonts.plusJakartaSans(
             color: theme.error,
             fontSize: 14,
@@ -176,7 +171,7 @@ class _AiBookingComposerWidgetState extends State<AiBookingComposerWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Extracted Details',
+            _l10n.abcExtracted,
             style: theme.titleMedium.override(
               fontWeight: FontWeight.w600,
               color: theme.primaryText,

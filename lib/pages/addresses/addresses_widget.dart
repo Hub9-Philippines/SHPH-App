@@ -3,9 +3,13 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '/api/models/address.dart';
 import '/components/back_button/back_button_widget.dart';
+import '/components/cupertino_ui/app_activity_indicator.dart';
+import '/components/cupertino_ui/app_feedback.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
+import '/l10n/app_localizations.dart';
 import '/services/addresses_service.dart';
 import '/theme/app_theme.dart';
 import 'addresses_model.dart';
@@ -28,6 +32,8 @@ class _AddressesWidgetState extends State<AddressesWidget> {
   bool _didLoadOnce = false;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -65,7 +71,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
               backgroundColor: loadingTheme.secondaryBackground,
               appBar: _buildAppBar(),
               body: const Center(
-                child: CircularProgressIndicator(),
+                child: AppActivityIndicator(),
               ),
             );
           }
@@ -100,8 +106,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                           ),
                           padding: const EdgeInsets.fromLTRB(20, 16, 20, 140),
                           children: [
-                            _buildHeader(addresses),
-                            const SizedBox(height: 18),
+                            const SizedBox(height: 4),
                             if (addresses.isEmpty)
                               _buildEmptyState()
                             else
@@ -128,7 +133,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                               safeSetState(() {});
                             }
                           },
-                          text: 'Add new address',
+                          text: _l10n.adAddNewAddress,
                           icon: const Icon(
                             Icons.add_location_alt_outlined,
                             size: 20,
@@ -165,129 +170,24 @@ class _AddressesWidgetState extends State<AddressesWidget> {
         },
       );
 
-  PreferredSizeWidget _buildAppBar() => AppBar(
-        backgroundColor: AppTheme.of(context).secondaryBackground,
-        automaticallyImplyLeading: false,
-        leading: wrapWithModel(
-          model: _model.backButtonModel,
-          updateCallback: () => safeSetState(() {}),
-          child: const BackButtonWidget(),
-        ),
-        title: Text(
-          'Addresses',
-          style: AppTheme.of(context).titleLarge.override(
+  PreferredSizeWidget _buildAppBar() => PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: CupertinoPageHeader(
+          backgroundColor: AppTheme.of(context).secondaryBackground,
+          leading: wrapWithModel(
+            model: _model.backButtonModel,
+            updateCallback: () => safeSetState(() {}),
+            child: const BackButtonWidget(),
+          ),
+          title: _l10n.adTitle,
+          titleStyle: AppTheme.of(context).titleLarge.override(
                 font: GoogleFonts.plusJakartaSans(
                   fontWeight: FontWeight.w700,
                 ),
                 color: AppTheme.of(context).primaryText,
               ),
         ),
-        centerTitle: true,
-        elevation: 0,
       );
-
-  Widget _buildHeader(List<ShphAddress> addresses) {
-    final defaultAddressCount =
-        addresses.where((address) => address.isDefault).length;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF16202A),
-            Color(0xFF1F3447),
-            Color(0xFF2B4A63),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x1A16202A),
-            blurRadius: 24,
-            offset: Offset(0, 14),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: const Icon(
-                  Icons.route_rounded,
-                  color: Colors.white,
-                  size: 26,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Saved places',
-                      style: AppTheme.of(context).titleLarge.override(
-                            font: GoogleFonts.plusJakartaSans(
-                              fontWeight: FontWeight.w700,
-                            ),
-                            color: Colors.white,
-                          ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Keep your booking flow fast by storing your key locations.',
-                      style: AppTheme.of(context).bodySmall.override(
-                            font: GoogleFonts.plusJakartaSans(),
-                            color: Colors.white.withValues(alpha: 0.82),
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          Row(
-            children: [
-              Expanded(
-                child: _AddressHeaderMetric(
-                  label: 'Total',
-                  value: '${addresses.length}',
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _AddressHeaderMetric(
-                  label: 'Default',
-                  value: '$defaultAddressCount',
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _AddressHeaderMetric(
-                  label: 'Selected',
-                  value: FFAppState().selectedLocationMode == 'saved'
-                      ? 'Saved'
-                      : 'Device',
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildEmptyState() {
     final theme = AppTheme.of(context);
@@ -316,7 +216,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
             ),
             const SizedBox(height: 18),
             Text(
-              'No addresses yet',
+              _l10n.adNoAddressesYet,
               style: AppTheme.of(context).titleMedium.override(
                     font: GoogleFonts.plusJakartaSans(
                       fontWeight: FontWeight.w700,
@@ -326,7 +226,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Add your home, work, or favorite places so future bookings are quicker.',
+              _l10n.adEmptySubtitle,
               textAlign: TextAlign.center,
               style: AppTheme.of(context).bodySmall.override(
                     font: GoogleFonts.plusJakartaSans(),
@@ -397,8 +297,8 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                                 child: Text(
                                   address.label?.trim().isNotEmpty == true
                                       ? address.label!.trim()
-                                      : 'Saved address',
-                                  maxLines: 1,
+                                       : _l10n.adSavedAddress,
+                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style:
                                       AppTheme.of(context).titleMedium.override(
@@ -437,45 +337,45 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                                   }
                                 },
                                 itemBuilder: (context) => [
-                                  const PopupMenuItem(
-                                    value: 'edit',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.edit_outlined, size: 20),
-                                        SizedBox(width: 12),
-                                        Text('Edit'),
-                                      ],
-                                    ),
-                                  ),
-                                  if (!isDefault)
-                                    const PopupMenuItem(
-                                      value: 'default',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.star_outline_rounded,
-                                              size: 20),
-                                          SizedBox(width: 12),
-                                          Text('Set as default'),
-                                        ],
-                                      ),
-                                    ),
-                                  const PopupMenuItem(
-                                    value: 'delete',
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          Icons.delete_outline_rounded,
-                                          size: 20,
-                                          color: Colors.red,
-                                        ),
-                                        SizedBox(width: 12),
-                                        Text(
-                                          'Delete',
-                                          style: TextStyle(color: Colors.red),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                                   PopupMenuItem(
+                                     value: 'edit',
+                                     child: Row(
+                                       children: [
+                                         Icon(Icons.edit_outlined, size: 20),
+                                         SizedBox(width: 12),
+                                         Text(_l10n.adEdit),
+                                       ],
+                                     ),
+                                   ),
+                                   if (!isDefault)
+                                     PopupMenuItem(
+                                       value: 'default',
+                                       child: Row(
+                                         children: [
+                                           Icon(Icons.star_outline_rounded,
+                                               size: 20),
+                                           SizedBox(width: 12),
+                                           Text(_l10n.adSetAsDefault),
+                                         ],
+                                       ),
+                                     ),
+                                   PopupMenuItem(
+                                     value: 'delete',
+                                     child: Row(
+                                       children: [
+                                         Icon(
+                                           Icons.delete_outline_rounded,
+                                           size: 20,
+                                           color: Colors.red,
+                                         ),
+                                         SizedBox(width: 12),
+                                         Text(
+                                           _l10n.adDelete,
+                                           style: TextStyle(color: Colors.red),
+                                         ),
+                                       ],
+                                     ),
+                                   ),
                                 ],
                               ),
                             ],
@@ -486,10 +386,10 @@ class _AddressesWidgetState extends State<AddressesWidget> {
                             runSpacing: 8,
                             children: [
                               if (isDefault)
-                                _buildPill('Default', AppTheme.of(context).primaryBrandText),
+                                _buildPill(_l10n.adDefault, AppTheme.of(context).primaryBrandText),
                               if (isSelected)
                                 _buildPill(
-                                    'Selected', AppTheme.of(context).primary),
+                                    _l10n.adSelected, AppTheme.of(context).primary),
                             ],
                           ),
                         ],
@@ -582,7 +482,7 @@ class _AddressesWidgetState extends State<AddressesWidget> {
       if (updated == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Error setting default address')),
+            SnackBar(content: Text(_l10n.adErrorSetDefault)),
           );
         }
         return;
@@ -593,40 +493,26 @@ class _AddressesWidgetState extends State<AddressesWidget> {
       if (mounted) {
         safeSetState(() {});
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Default address updated')),
+          SnackBar(content: Text(_l10n.adDefaultUpdated)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error setting default address: $e')),
+          SnackBar(content: Text(_l10n.adErrorSetDefaultDetail(e.toString()))),
         );
       }
     }
   }
 
   Future<void> _showDeleteConfirmation(ShphAddress address) async {
-    final confirm = await showDialog<bool>(
+    final confirm = await AppFeedback.confirmDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete address'),
-        content: Text(
-          'Are you sure you want to delete ${address.label ?? 'this address'}?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(
-              'Delete',
-              style: TextStyle(color: AppTheme.of(context).error),
-            ),
-          ),
-        ],
-      ),
+      title: _l10n.adDeleteTitle,
+      message:
+          _l10n.adDeleteConfirm(address.label ?? _l10n.adSavedAddress),
+      confirmText: _l10n.adDelete,
+      destructive: true,
     );
 
     if (confirm != true) {
@@ -654,13 +540,13 @@ class _AddressesWidgetState extends State<AddressesWidget> {
       if (mounted) {
         safeSetState(() {});
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Address deleted successfully')),
+          SnackBar(content: Text(_l10n.adDeletedSuccess)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error deleting address: $e')),
+          SnackBar(content: Text(_l10n.adErrorDeleteDetail(e.toString()))),
         );
       }
     }
@@ -671,7 +557,11 @@ class _AddressesWidgetState extends State<AddressesWidget> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          '${address.label?.trim().isNotEmpty == true ? address.label!.trim() : 'Saved address'} selected for bookings',
+          _l10n.adSelectedForBookings(
+            address.label?.trim().isNotEmpty == true
+                ? address.label!.trim()
+                : _l10n.adSavedAddress,
+          ),
         ),
       ),
     );
@@ -690,47 +580,5 @@ class _AddressesWidgetState extends State<AddressesWidget> {
       default:
         return Icons.location_on_rounded;
     }
-  }
-}
-
-class _AddressHeaderMetric extends StatelessWidget {
-  const _AddressHeaderMetric({
-    required this.label,
-    required this.value,
-  });
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: AppTheme.of(context).titleMedium.override(
-                  font: GoogleFonts.plusJakartaSans(
-                    fontWeight: FontWeight.w700,
-                  ),
-                  color: Colors.white,
-                ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: AppTheme.of(context).bodySmall.override(
-                  font: GoogleFonts.plusJakartaSans(),
-                  color: Colors.white.withValues(alpha: 0.78),
-                ),
-          ),
-        ],
-      ),
-    );
   }
 }

@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/components/back_button/back_button_widget.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import '/l10n/app_localizations.dart';
+
 import '/theme/app_theme.dart';
 import 'call_history_details_page_model.dart';
 
@@ -39,6 +42,7 @@ class CallHistoryDetailsPageWidget extends StatefulWidget {
 class _CallHistoryDetailsPageWidgetState extends State<CallHistoryDetailsPageWidget> {
   late CallHistoryDetailsPageModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -60,7 +64,7 @@ class _CallHistoryDetailsPageWidgetState extends State<CallHistoryDetailsPageWid
   }
 
   String _formatDateTime(DateTime? dateTime) {
-    if (dateTime == null) return 'Unknown';
+    if (dateTime == null) return _l10n.chdUnknown;
     return '${dateTime.day}/${dateTime.month}/${dateTime.year} at ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
 
@@ -73,21 +77,20 @@ class _CallHistoryDetailsPageWidgetState extends State<CallHistoryDetailsPageWid
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: AppTheme.of(context).primaryBackground,
-        appBar: AppBar(
-          backgroundColor: AppTheme.of(context).primaryBackground,
-          automaticallyImplyLeading: false,
-          leading: wrapWithModel(
-            model: _model.backButtonModel,
-            updateCallback: () => safeSetState(() {}),
-            child: const BackButtonWidget(),
-          ),
-          title: Text(
-            'Call Details',
-            style: AppTheme.of(context).titleLarge.override(
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(56),
+          child: CupertinoPageHeader(
+            backgroundColor: AppTheme.of(context).primaryBackground,
+            leading: wrapWithModel(
+              model: _model.backButtonModel,
+              updateCallback: () => safeSetState(() {}),
+              child: const BackButtonWidget(),
+            ),
+            title: _l10n.chdTitle,
+            titleStyle: AppTheme.of(context).titleLarge.override(
                   font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
                 ),
           ),
-          elevation: 0,
         ),
         body: SafeArea(
           top: true,
@@ -128,7 +131,7 @@ class _CallHistoryDetailsPageWidgetState extends State<CallHistoryDetailsPageWid
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        widget.providerName ?? 'Unknown Provider',
+                        widget.providerName ?? _l10n.chdUnknownProvider,
                         style: AppTheme.of(context).headlineMedium.override(
                               font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
                             ),
@@ -177,7 +180,7 @@ class _CallHistoryDetailsPageWidgetState extends State<CallHistoryDetailsPageWid
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Call Information',
+                          _l10n.chdInfoTitle,
                           style: AppTheme.of(context).titleMedium.override(
                                 font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
                               ),
@@ -185,7 +188,7 @@ class _CallHistoryDetailsPageWidgetState extends State<CallHistoryDetailsPageWid
                         const SizedBox(height: 16),
                         _buildDetailRow(
                           context,
-                          'Status',
+                          _l10n.chdStatus,
                           widget.callStatus?.toUpperCase() ?? 'UNKNOWN',
                           statusColor: widget.callStatus == 'missed'
                               ? AppTheme.of(context).error
@@ -196,13 +199,13 @@ class _CallHistoryDetailsPageWidgetState extends State<CallHistoryDetailsPageWid
                         const SizedBox(height: 12),
                         _buildDetailRow(
                           context,
-                          'Duration',
+                          _l10n.chdDuration,
                           _formatDuration(widget.durationSeconds),
                         ),
                         const SizedBox(height: 12),
                         _buildDetailRow(
                           context,
-                          'Date & Time',
+                          _l10n.chdDateTitle,
                           _formatDateTime(widget.createdAt),
                         ),
                       ],
@@ -222,7 +225,7 @@ class _CallHistoryDetailsPageWidgetState extends State<CallHistoryDetailsPageWid
                             // Call back action
                             debugPrint('Call back: ${widget.providerName}');
                           },
-                          text: 'Call Back',
+                          text: _l10n.chdCallBack,
                           icon: const Icon(
                             Icons.phone,
                             size: 20,
@@ -248,7 +251,7 @@ class _CallHistoryDetailsPageWidgetState extends State<CallHistoryDetailsPageWid
                             // Message action
                             debugPrint('Message: ${widget.providerName}');
                           },
-                          text: 'Message',
+                          text: _l10n.chdMessage,
                           icon: const Icon(
                             Icons.chat_bubble_outline,
                             size: 20,

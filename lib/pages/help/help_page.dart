@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'chatbot_page.dart';
 
@@ -16,26 +18,22 @@ class HelpPage extends StatefulWidget {
 }
 
 class _HelpPageState extends State<HelpPage> {
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
-      appBar: AppBar(
-        backgroundColor: theme.primaryBackground,
-        title: Text(
-          'Help & Support',
-          style: theme.titleLarge.override(
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: CupertinoPageHeader(
+          title: _l10n.hpTitle,
+          backgroundColor: theme.primaryBackground,
+          titleStyle: theme.titleLarge.override(
             font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
           ),
-        ),
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_rounded,
-            color: theme.primaryText,
-          ),
-          onPressed: () => context.pop(),
         ),
       ),
       body: ListView(
@@ -43,7 +41,7 @@ class _HelpPageState extends State<HelpPage> {
         children: [
           _FaqSection(
             theme: theme,
-            title: 'Booking',
+            title: _l10n.hpBooking,
             items: [
               _FaqItem(
                 question: 'How do I book a service?',
@@ -65,7 +63,7 @@ class _HelpPageState extends State<HelpPage> {
           const SizedBox(height: 16),
           _FaqSection(
             theme: theme,
-            title: 'Payment',
+            title: _l10n.hpPayment,
             items: [
               _FaqItem(
                 question: 'What payment methods are accepted?',
@@ -82,7 +80,7 @@ class _HelpPageState extends State<HelpPage> {
           const SizedBox(height: 16),
           _FaqSection(
             theme: theme,
-            title: 'Account',
+            title: _l10n.hpAccount,
             items: [
               _FaqItem(
                 question: 'How do I update my profile?',
@@ -104,7 +102,7 @@ class _HelpPageState extends State<HelpPage> {
           const SizedBox(height: 16),
           _FaqSection(
             theme: theme,
-            title: 'Providers',
+            title: _l10n.hpProviders,
             items: [
               _FaqItem(
                 question: 'How are providers verified?',
@@ -125,7 +123,7 @@ class _HelpPageState extends State<HelpPage> {
         backgroundColor: theme.primary,
         foregroundColor: theme.onPrimary,
         icon: const Icon(Icons.chat_rounded),
-        label: const Text('Chat with us'),
+        label: Text(_l10n.hpChatWithUs),
       ),
     );
   }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/components/cupertino_ui/app_text_field.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'chat_page_model.dart';
 
@@ -28,6 +30,9 @@ class ChatPageWidget extends StatefulWidget {
 
 class _ChatPageWidgetState extends State<ChatPageWidget> {
   late ChatPageModel _model;
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -143,7 +148,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.providerName ?? 'Conversation',
+                      widget.providerName ?? _l10n.ckConversation,
                       style: AppTheme.of(context).titleMedium.override(
                             font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w700,
@@ -156,8 +161,8 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                     const SizedBox(height: 4),
                     Text(
                       _model.messages.isEmpty
-                          ? 'Start the conversation'
-                          : 'Connected to this thread',
+                          ? _l10n.ckStartConversation
+                          : _l10n.ckConnected,
                       style: AppTheme.of(context).bodySmall.override(
                             font: GoogleFonts.plusJakartaSans(),
                             color: AppTheme.of(context).secondaryText,
@@ -174,7 +179,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  'Chat',
+                  _l10n.ckChat,
                   style: AppTheme.of(context).labelSmall.override(
                         font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                         color: AppTheme.of(context).primary,
@@ -229,7 +234,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
               ),
               const SizedBox(height: 18),
               Text(
-                'No messages yet',
+                _l10n.ckNoMessages,
                 style: AppTheme.of(context).titleMedium.override(
                       font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                       color: AppTheme.of(context).primaryText,
@@ -237,7 +242,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Send the first message to coordinate service details, arrival timing, or updates.',
+                _l10n.ckEmptySubtitle,
                 style: AppTheme.of(context).bodyMedium.override(
                       font: GoogleFonts.plusJakartaSans(),
                       color: AppTheme.of(context).secondaryText,
@@ -342,7 +347,7 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                   if (!isMe) ...[
                     const SizedBox(height: 6),
                     Text(
-                      widget.providerName ?? 'Contact',
+                      widget.providerName ?? _l10n.ckContact,
                       style: AppTheme.of(context).labelSmall.override(
                             font: GoogleFonts.plusJakartaSans(),
                             color: AppTheme.of(context).textTertiary,
@@ -373,23 +378,20 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
                     borderRadius: BorderRadius.circular(26),
                     boxShadow: AppThemeData.shadowLg,
                   ),
-                  child: TextField(
+                  child: AppTextField(
                     controller: _messageController,
                     minLines: 1,
                     maxLines: 5,
                     textInputAction: TextInputAction.newline,
                     onSubmitted: (_) => _sendMessage(),
-                    decoration: InputDecoration(
-                      hintText: 'Write a message...',
-                      hintStyle: AppTheme.of(context).bodyMedium.override(
-                            font: GoogleFonts.plusJakartaSans(),
-                            color: AppTheme.of(context).textTertiary,
-                          ),
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      isCollapsed: true,
-                    ),
+                    placeholder: _l10n.ckWriteMessage,
+                    placeholderStyle:
+                        AppTheme.of(context).bodyMedium.override(
+                              font: GoogleFonts.plusJakartaSans(),
+                              color: AppTheme.of(context).textTertiary,
+                            ),
+                    radius: 26,
+                    fillColor: AppTheme.of(context).primaryBackground,
                     style: AppTheme.of(context).bodyMedium.override(
                           font: GoogleFonts.plusJakartaSans(),
                           color: AppTheme.of(context).primaryText,
@@ -456,12 +458,12 @@ class _ChatPageWidgetState extends State<ChatPageWidget> {
   String _statusLabel(String? status) {
     switch (status) {
       case 'sending':
-        return 'Sending';
+        return _l10n.ckSending;
       case 'failed':
-        return 'Failed';
+        return _l10n.ckFailed;
       case 'sent':
       case 'delivered':
-        return 'Sent';
+        return _l10n.ckSent;
       default:
         return '';
     }

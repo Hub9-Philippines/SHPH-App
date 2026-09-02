@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/components/cupertino_ui/app_activity_indicator.dart';
 import '/components/screen_header.dart';
 import '/components/soft_card.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/theme/app_theme.dart';
+import '/l10n/app_localizations.dart';
 import 'wallet_model.dart';
 
 export 'wallet_model.dart';
@@ -21,16 +23,30 @@ class WalletWidget extends StatefulWidget {
 
 class _WalletWidgetState extends State<WalletWidget> {
   late WalletModel _model;
+  bool _loadedOnce = false;
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
     super.initState();
     _model = WalletModel();
-    _loadWalletData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_loadedOnce) {
+      _loadedOnce = true;
+      _loadWalletData();
+    }
   }
 
   Future<void> _loadWalletData() async {
-    await _model.loadTransactions();
+    await _model.loadTransactions(
+      l10n: _l10n,
+      locale: Localizations.localeOf(context).toLanguageTag(),
+    );
     safeSetState(() {});
   }
 
@@ -49,10 +65,10 @@ class _WalletWidgetState extends State<WalletWidget> {
       body: SafeArea(
         child: Column(
           children: [
-            const ScreenHeader(title: 'Wallet'),
+            ScreenHeader(title: _l10n.wlTitle),
             if (_model.isLoading)
               const Expanded(
-                child: Center(child: CircularProgressIndicator()),
+                child: Center(child: AppActivityIndicator()),
               )
             else
               Expanded(
@@ -98,7 +114,7 @@ class _WalletWidgetState extends State<WalletWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Available Balance',
+            _l10n.wlBalance,
             style: GoogleFonts.plusJakartaSans(
               color: theme.onPrimary.withValues(alpha: 0.8),
               fontSize: 14,
@@ -116,9 +132,9 @@ class _WalletWidgetState extends State<WalletWidget> {
           const SizedBox(height: 16),
           Row(
             children: [
-              _buildBalanceBadge(context, 'Earnings', _model.totalEarnings),
+              _buildBalanceBadge(context, _l10n.wlEarnings, _model.totalEarnings),
               const SizedBox(width: 16),
-              _buildBalanceBadge(context, 'Spent', _model.totalSpent),
+              _buildBalanceBadge(context, _l10n.wlSpent, _model.totalSpent),
             ],
           ),
         ],
@@ -166,11 +182,11 @@ class _WalletWidgetState extends State<WalletWidget> {
 
     return Row(
       children: [
-        Expanded(child: _buildActionButton(context, Icons.add_rounded, 'Top Up', () {})),
-        const SizedBox(width: 12),
-        Expanded(child: _buildActionButton(context, Icons.send_rounded, 'Send', () {})),
-        const SizedBox(width: 12),
-        Expanded(child: _buildActionButton(context, Icons.download_rounded, 'Withdraw', () {})),
+        Expanded(child: _buildActionButton(context, Icons.add_rounded, _l10n.wlTopUp, () {})),
+        const SizedBox(width: 8),
+        Expanded(child: _buildActionButton(context, Icons.send_rounded, _l10n.wlSend, () {})),
+        const SizedBox(width: 8),
+        Expanded(child: _buildActionButton(context, Icons.download_rounded, _l10n.wlWithdraw, () {})),
       ],
     );
   }
@@ -204,7 +220,7 @@ class _WalletWidgetState extends State<WalletWidget> {
     return Row(
       children: [
         Text(
-          'Transactions',
+          _l10n.wlTransactions,
           style: theme.titleMedium.override(
             fontWeight: FontWeight.w600,
             color: theme.primaryText,
@@ -212,7 +228,7 @@ class _WalletWidgetState extends State<WalletWidget> {
         ),
         const Spacer(),
         Text(
-          'See all',
+          _l10n.wlSeeAll,
           style: theme.bodySmall.override(
             color: theme.primary,
             fontWeight: FontWeight.w600,

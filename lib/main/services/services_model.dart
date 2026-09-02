@@ -5,6 +5,7 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/services/logging_service.dart';
 import '/services/nearby_pro_mock_data.dart';
 import '/utils/emergency_categories.dart';
+import '/utils/tagalog_service_keywords.dart';
 import 'services_widget.dart' show ServicesScreen;
 
 class ServicesModel extends FlutterFlowModel<ServicesScreen> {
@@ -150,10 +151,11 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
     }
 
     if (searchQuery.isNotEmpty) {
+      final terms = expandTagalogQuery(searchQuery);
       filteredServices = filteredServices.where((service) {
-        final query = searchQuery.toLowerCase();
-        return (service['title'] as String).toLowerCase().contains(query) ||
-            (service['category'] as String).toLowerCase().contains(query);
+        final title = (service['title'] as String).toLowerCase();
+        final category = (service['category'] as String).toLowerCase();
+        return terms.any((term) => title.contains(term) || category.contains(term));
       }).toList();
     }
 

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import '/components/cupertino_ui/app_button.dart';
 import '/components/screen_header.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import '../booking_funnel/widgets/booking_flow_route.dart';
 import 'tm_broadcast_screen.dart';
@@ -23,6 +25,7 @@ class TMEstimateScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final controller = context.watch<TMFlowController>();
 
     return Scaffold(
@@ -31,7 +34,7 @@ class TMEstimateScreen extends StatelessWidget {
         top: false,
         child: Column(
           children: [
-            const ScreenHeader(title: 'Estimate'),
+            ScreenHeader(title: l10n.tmEstimate),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
@@ -99,7 +102,7 @@ class TMEstimateScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Estimated service fee',
+                            l10n.tmEstimatedServiceFee,
                             style: theme.labelLarge.override(
                               color: theme.primary,
                               fontWeight: FontWeight.w700,
@@ -117,7 +120,7 @@ class TMEstimateScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 10),
                           Text(
-                            'Final charges may change depending on distance, job complexity, and hardware parts approved during the visit.',
+                            l10n.tmFinalChargesMayChange,
                             style: theme.bodySmall.override(
                               color: theme.secondaryText,
                             ),
@@ -129,24 +132,22 @@ class TMEstimateScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 18),
-              const _InfoCard(
+              _InfoCard(
                 icon: Icons.timer_outlined,
-                title: 'On-demand dispatch',
-                subtitle:
-                    'We will search for nearby providers first before falling back to a wider search radius.',
+                title: l10n.tmOnDemandDispatch,
+                subtitle: l10n.tmSearchNearbyFirst,
               ),
               const SizedBox(height: 12),
-              const _InfoCard(
+              _InfoCard(
                 icon: Icons.receipt_long_rounded,
-                title: 'Time + materials',
-                subtitle:
-                    'Labor is estimated up front. Hardware and parts can be added only if you approve them later.',
+                title: l10n.tmTimePlusMaterials,
+                subtitle: l10n.tmLaborEstimatedUpfront,
               ),
               const Spacer(),
               SizedBox(
                 width: double.infinity,
                 height: 56,
-                child: ElevatedButton(
+                child: AppButton(
                   onPressed: () {
                     Navigator.of(context).push(
                       buildBookingFlowRoute(
@@ -157,17 +158,13 @@ class TMEstimateScreen extends StatelessWidget {
                       ),
                     );
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.primary,
-                    foregroundColor: theme.onPrimary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                  ),
+                  backgroundColor: theme.primary,
+                  foregroundColor: theme.onPrimary,
+                  borderRadius: 18,
+                  width: double.infinity,
                   child: Text(
-                    'Find Provider',
+                    l10n.tmFindProvider,
                     style: theme.titleMedium.override(
-                      color: theme.onPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ),

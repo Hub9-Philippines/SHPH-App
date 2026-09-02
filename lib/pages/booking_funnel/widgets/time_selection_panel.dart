@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/components/cupertino_ui/app_button.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import '../booking_models.dart';
 
@@ -29,7 +31,8 @@ class TimeSelectionPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
-    final scheduleSummary = _buildSummary();
+    final l10n = AppLocalizations.of(context)!;
+    final scheduleSummary = _buildSummary(l10n);
 
     return Container(
       width: double.infinity,
@@ -70,7 +73,7 @@ class TimeSelectionPanel extends StatelessWidget {
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
-              'Choose timing',
+              l10n.bfChooseTiming,
               style: theme.labelMedium.override(
                 color: theme.primary,
                 fontWeight: FontWeight.w700,
@@ -79,14 +82,14 @@ class TimeSelectionPanel extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'When do you need ${serviceTitle.toLowerCase()}?',
+            l10n.bfWhenNeedService(serviceTitle.toLowerCase()),
             style: theme.titleMedium.override(
               font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            'Pick the dispatch speed that fits this request best.',
+            l10n.bfPickDispatchSpeed,
             style: theme.bodySmall.override(
               color: theme.secondaryText,
             ),
@@ -126,16 +129,16 @@ class TimeSelectionPanel extends StatelessWidget {
           ],
           const SizedBox(height: 14),
           _TimeCard(
-            title: 'Right Now',
-            subtitle: 'Instant dispatch',
+            title: l10n.bfRightNowTitle,
+            subtitle: l10n.bfInstantDispatch,
             icon: Icons.bolt_rounded,
             selected: urgency == BookingUrgency.rightNow,
             onTap: () => onUrgencyChanged(BookingUrgency.rightNow),
           ),
           const SizedBox(height: 10),
           _TimeCard(
-            title: 'Later Today',
-            subtitle: 'Pick a specific time',
+            title: l10n.bfLaterTodayTitle,
+            subtitle: l10n.bfPickSpecificTime,
             icon: Icons.schedule_rounded,
             selected: urgency == BookingUrgency.laterToday,
             onTap: () async {
@@ -145,8 +148,8 @@ class TimeSelectionPanel extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           _TimeCard(
-            title: 'Schedule Another Day',
-            subtitle: 'Choose any future slot',
+            title: l10n.bfScheduleAnotherDay,
+            subtitle: l10n.bfChooseAnyFutureSlot,
             icon: Icons.calendar_month_rounded,
             selected: urgency == BookingUrgency.scheduled,
             onTap: () async {
@@ -158,19 +161,15 @@ class TimeSelectionPanel extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             height: 58,
-            child: ElevatedButton(
+            child: AppButton(
               onPressed: onNext,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.primary,
-                foregroundColor: theme.onPrimary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
-                ),
-              ),
+              backgroundColor: theme.primary,
+              foregroundColor: theme.onPrimary,
+              borderRadius: 18,
+              width: double.infinity,
               child: Text(
-                'Continue to setup',
+                l10n.bfContinueToSetup,
                 style: theme.titleMedium.override(
-                  color: theme.onPrimary,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -181,12 +180,12 @@ class TimeSelectionPanel extends StatelessWidget {
     );
   }
 
-  String? _buildSummary() {
+  String? _buildSummary(AppLocalizations l10n) {
     if (urgency == BookingUrgency.rightNow) {
-      return 'Instant dispatch';
+      return l10n.bfInstantDispatch;
     }
     if (urgency == BookingUrgency.laterToday && scheduledTime != null) {
-      return 'Today at ${formatTimeOfDay(scheduledTime!)}';
+      return l10n.bfTodayAtTime(formatTimeOfDay(scheduledTime!));
     }
     if (urgency == BookingUrgency.scheduled &&
         scheduledDate != null &&

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/components/cupertino_ui/app_activity_indicator.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'category_detail_model.dart';
 
@@ -27,6 +30,8 @@ class CategoryDetailWidget extends StatefulWidget {
 class _CategoryDetailWidgetState extends State<CategoryDetailWidget> {
   late CategoryDetailModel _model;
 
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -48,15 +53,16 @@ class _CategoryDetailWidgetState extends State<CategoryDetailWidget> {
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
-      appBar: AppBar(
-        backgroundColor: theme.primaryBackground,
-        title: Text(_model.categoryName ?? widget.categoryName,
-            style: theme.titleMedium),
-        centerTitle: true,
-        elevation: 0,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: CupertinoPageHeader(
+          backgroundColor: theme.primaryBackground,
+          title: _model.categoryName ?? widget.categoryName,
+          titleStyle: theme.titleMedium,
+        ),
       ),
       body: _model.isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: AppActivityIndicator())
           : _model.listings.isEmpty
               ? _buildEmpty(theme)
               : _buildList(context, theme),
@@ -73,13 +79,13 @@ class _CategoryDetailWidgetState extends State<CategoryDetailWidget> {
             Icon(Icons.search_off_rounded,
                 size: 64, color: theme.textTertiary),
             const SizedBox(height: 16),
-            Text('No services found in this category',
+            Text(_l10n.catdNoServices,
                 style: GoogleFonts.plusJakartaSans(
                     color: theme.primaryText,
                     fontSize: 16,
                     fontWeight: FontWeight.w500)),
             const SizedBox(height: 8),
-            Text('Check back later or browse other categories.',
+            Text(_l10n.catdCheckLater,
                 style: GoogleFonts.plusJakartaSans(
                     color: theme.secondaryText, fontSize: 14)),
           ],

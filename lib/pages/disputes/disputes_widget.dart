@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '/components/cupertino_ui/app_activity_indicator.dart';
+import '/components/cupertino_ui/app_button.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'disputes_model.dart';
 
@@ -18,6 +22,8 @@ class DisputesWidget extends StatefulWidget {
 
 class _DisputesWidgetState extends State<DisputesWidget> {
   late DisputesModel _model;
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -43,12 +49,12 @@ class _DisputesWidgetState extends State<DisputesWidget> {
       };
 
   String _statusLabel(String status) => switch (status) {
-        'open' => 'Open',
-        'under_review' => 'Under Review',
-        'resolved' => 'Resolved',
-        'rejected' => 'Rejected',
-        'closed' => 'Closed',
-        'escalated' => 'Escalated',
+        'open' => _l10n.dpStatusOpen,
+        'under_review' => _l10n.dpStatusReview,
+        'resolved' => _l10n.dpStatusResolved,
+        'rejected' => _l10n.dpStatusRejected,
+        'closed' => _l10n.dpStatusClosed,
+        'escalated' => _l10n.dpStatusEscalated,
         _ => status,
       };
 
@@ -68,14 +74,16 @@ class _DisputesWidgetState extends State<DisputesWidget> {
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
-      appBar: AppBar(
-        backgroundColor: theme.primaryBackground,
-        title: Text('My Disputes', style: theme.titleMedium),
-        centerTitle: true,
-        elevation: 0,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: CupertinoPageHeader(
+          backgroundColor: theme.primaryBackground,
+          title: _l10n.dpTitle,
+          titleStyle: theme.titleMedium,
+        ),
       ),
       body: _model.isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: AppActivityIndicator())
           : _model.disputes.isEmpty
               ? Center(
                   child: Column(
@@ -84,7 +92,7 @@ class _DisputesWidgetState extends State<DisputesWidget> {
                       Icon(Icons.verified_user,
                           size: 64, color: theme.secondaryText),
                       const SizedBox(height: 16),
-                      Text('No disputes', style: theme.bodyMedium),
+                      Text(_l10n.dpNoDisputes, style: theme.bodyMedium),
                     ],
                   ),
                 )
@@ -152,9 +160,10 @@ class _DisputesWidgetState extends State<DisputesWidget> {
                                   ),
                                   if (bookingId.isNotEmpty) ...[
                                     const Spacer(),
-                                    TextButton(
+                                    AppButton(
                                       onPressed: () {},
-                                      child: const Text('View Booking'),
+                                      variant: AppButtonVariant.text,
+                                      child: Text(_l10n.dpViewBooking),
                                     ),
                                   ],
                                 ],

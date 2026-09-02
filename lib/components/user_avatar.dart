@@ -16,15 +16,6 @@ class UserAvatar extends StatelessWidget {
   final double size;
   final double? fontSize;
 
-  String get _initials {
-    if (name == null || name!.trim().isEmpty) return '?';
-    final parts = name!.trim().split(RegExp(r'\s+'));
-    if (parts.length >= 2) {
-      return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
-    }
-    return parts.first[0].toUpperCase();
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
@@ -36,15 +27,15 @@ class UserAvatar extends StatelessWidget {
           width: size,
           height: size,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _buildInitials(theme),
+          errorBuilder: (_, __, ___) => _buildPlaceholder(theme),
         ),
       );
     }
 
-    return _buildInitials(theme);
+    return _buildPlaceholder(theme);
   }
 
-  Widget _buildInitials(AppThemeData theme) {
+  Widget _buildPlaceholder(AppThemeData theme) {
     return Container(
       width: size,
       height: size,
@@ -53,13 +44,11 @@ class UserAvatar extends StatelessWidget {
         shape: BoxShape.circle,
       ),
       alignment: Alignment.center,
-      child: Text(
-        _initials,
-        style: TextStyle(
-          color: theme.primary,
-          fontWeight: FontWeight.w600,
-          fontSize: fontSize ?? size * 0.4,
-        ),
+      child: Icon(
+        Icons.person_rounded,
+        size: fontSize ?? size * 0.55,
+        color: theme.primary,
+        semanticLabel: name,
       ),
     );
   }

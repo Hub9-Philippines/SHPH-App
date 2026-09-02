@@ -22,6 +22,10 @@ export '/pages/forgot_password/forgot_password_widget.dart'
     show ForgotPasswordWidget;
 export '/pages/language_settings/language_settings_widget.dart'
     show LanguageSettingsWidget;
+export '/pages/kyc/kyc_document_widget.dart' show KycDocumentWidget;
+export '/pages/kyc/kyc_face_liveness_widget.dart'
+    show KycFaceLivenessWidget;
+export '/pages/kyc/kyc_onboarding_widget.dart' show KycOnboardingWidget;
 export '/pages/my_notifications/my_notifications_widget.dart'
     show MyNotificationsWidget;
 export '/pages/my_reviews/my_reviews_widget.dart' show MyReviewsWidget;
@@ -43,7 +47,6 @@ export '/pages/signup/signup_widget.dart' show SignupWidget;
 export '/pages/splash/splash_widget.dart' show SplashWidget;
 export 'main/bookings/bookings_widget.dart' show BookingsWidget;
 export 'main/category/category_widget.dart' show CategoryWidget;
-export 'main/explore/explore_widget.dart' show ExploreWidget;
 export 'main/home/home_widget.dart' show HomeWidget;
 export 'main/messages/messages_widget.dart' show MessagesWidget;
 export 'main/payment_methods/add_card_payment_widget.dart'
@@ -89,3 +92,4 @@ export 'pages/project_detail/project_detail_widget.dart' show ProjectDetailWidge
 export 'pages/write_review/write_review_widget.dart' show WriteReviewWidget;
 export 'pages/otp_page/otp_page_widget.dart' show OtpPageWidget;
 export 'pages/not_found/not_found_widget.dart' show NotFoundWidget;
+export 'components/prototype_components.dart';

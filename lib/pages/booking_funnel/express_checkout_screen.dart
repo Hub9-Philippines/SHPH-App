@@ -5,6 +5,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart' as gmaps;
 import 'package:provider/provider.dart';
 
 import '/app_state.dart';
+import '/l10n/app_localizations.dart';
 import '/models/service_listing.dart';
 import 'booking_controller.dart';
 import 'booking_models.dart';
@@ -72,6 +73,7 @@ class ExpressCheckoutScreen extends StatelessWidget {
     BuildContext context,
     BookingFlowController controller,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final urgency = controller.draft.urgency;
 
     // ASAP: bypass buffer, go straight to LiveMatchingScreen
@@ -91,10 +93,7 @@ class ExpressCheckoutScreen extends StatelessWidget {
           if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text(
-                'Our closest professional needs at least 2 hours to prepare '
-                'and travel to your location. Please adjust your time selection.',
-              ),
+              content: Text(l10n.bfProviderPrepTime),
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -104,13 +103,13 @@ class ExpressCheckoutScreen extends StatelessWidget {
     }
 
     // Schedule or within-range: proceed with reservation
-    final success = await controller.attachReservationToken();
+    final success = await controller.attachReservationToken(l10n);
     if (!context.mounted) return;
     if (!success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            controller.lastError ?? 'Could not reserve. Please try again.',
+            controller.lastError ?? l10n.bfCouldNotReserve,
           ),
         ),
       );
@@ -132,14 +131,14 @@ class ExpressCheckoutScreen extends StatelessWidget {
     BuildContext context,
     BookingFlowController controller,
   ) async {
-    final success = await controller.attachLiveSearchToken();
+    final l10n = AppLocalizations.of(context)!;
+    final success = await controller.attachLiveSearchToken(l10n);
     if (!context.mounted) return;
     if (!success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            controller.lastError ??
-                'Could not start live matching. Please try again.',
+            controller.lastError ?? l10n.bfCouldNotStartLiveMatching,
           ),
         ),
       );
@@ -152,7 +151,7 @@ class ExpressCheckoutScreen extends StatelessWidget {
             value: controller,
             child: LiveMatchingScreen(
               bookingDate: _liveMatchingDate(controller.draft),
-              serviceTitle: controller.selectedServiceLabel,
+              serviceTitle: controller.selectedServiceLabel(l10n),
             ),
           ),
         ),

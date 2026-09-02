@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/components/booking_action_row.dart';
+import '/components/refreshable_page.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'bookings_model.dart';
 
@@ -20,7 +22,9 @@ class BookingsWidget extends StatefulWidget {
   State<BookingsWidget> createState() => _BookingsWidgetState();
 }
 
-class _BookingsWidgetState extends State<BookingsWidget> {
+class _BookingsWidgetState extends State<BookingsWidget>
+    with RefreshablePage<BookingsWidget> {
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
   late BookingsModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final searchController = TextEditingController();
@@ -34,6 +38,12 @@ class _BookingsWidgetState extends State<BookingsWidget> {
         safeSetState(() {});
       }
     };
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _model.setLocalization(_l10n);
   }
 
   @override
@@ -70,29 +80,7 @@ class _BookingsWidgetState extends State<BookingsWidget> {
                   ),
                 ),
                 Expanded(
-                  child: RefreshIndicator(
-                    color: AppTheme.of(context).primary,
-                    onRefresh: () => _model.reloadBookings(),
-                    child: _model.errorMessage != null
-                        ? _pullableState(
-                            context,
-                            _buildErrorState(context),
-                          )
-                        : _model.isLoading
-                            ? ListView.separated(
-                                physics: const BouncingScrollPhysics(
-                                  parent: AlwaysScrollableScrollPhysics(),
-                                ),
-                                padding: const EdgeInsets.fromLTRB(
-                                    16, 16, 16, 24),
-                                itemCount: 3,
-                                separatorBuilder: (_, __) =>
-                                    const SizedBox(height: 12),
-                                itemBuilder: (_, __) =>
-                                    const BookingCardSkeleton(),
-                              )
-                            : _buildFilteredResults(context),
-                  ),
+                  child: _buildRefreshableContent(context),
                 ),
               ],
             ),
@@ -107,7 +95,7 @@ class _BookingsWidgetState extends State<BookingsWidget> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Bookings',
+                  _l10n.bkfTitle,
                   style: AppTheme.of(context).headlineSmall.override(
                         font: GoogleFonts.plusJakartaSans(
                           fontWeight: FontWeight.w700,
@@ -117,7 +105,7 @@ class _BookingsWidgetState extends State<BookingsWidget> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Track active work, completed visits, and next steps.',
+                  _l10n.bkfSubtitle,
                   style: AppTheme.of(context).bodySmall.override(
                         font: GoogleFonts.plusJakartaSans(),
                         color: AppTheme.of(context).secondaryText,
@@ -135,7 +123,9 @@ class _BookingsWidgetState extends State<BookingsWidget> {
             icon: const Icon(Icons.refresh_rounded),
           ),
         ],
-      );  Widget _buildSearchBar(BuildContext context) {
+      );
+
+  Widget _buildSearchBar(BuildContext context) {
     final theme = AppTheme.of(context);
     return TextField(
       controller: searchController,
@@ -147,7 +137,7 @@ class _BookingsWidgetState extends State<BookingsWidget> {
       ),
       decoration: InputDecoration(
         isDense: true,
-        hintText: 'Search services or providers',
+        hintText: _l10n.exSearchPlaceholder,
         hintStyle: theme.bodyMedium.override(
           font: GoogleFonts.plusJakartaSans(),
           color: theme.textTertiary,
@@ -190,10 +180,10 @@ class _BookingsWidgetState extends State<BookingsWidget> {
   Widget _buildFilterChips(BuildContext context) {
     final theme = AppTheme.of(context);
     final chips = <BookingsFilter, String>{
-      BookingsFilter.all: 'All',
-      BookingsFilter.pending: 'Pending',
-      BookingsFilter.completed: 'Completed',
-      BookingsFilter.canceled: 'Canceled',
+      BookingsFilter.all: _l10n.spAll,
+      BookingsFilter.pending: _l10n.bkfPending,
+      BookingsFilter.completed: _l10n.bkfCompleted,
+      BookingsFilter.canceled: _l10n.bkfCanceled,
     };
     return SizedBox(
       height: 40,
@@ -236,36 +226,52 @@ class _BookingsWidgetState extends State<BookingsWidget> {
     );
   }
 
-  /// Wraps non-scrollable states (error/empty) so the pull-to-refresh
-  /// gesture stays available, matching Profile's always-scrollable feel.
-  Widget _pullableState(BuildContext context, Widget child) => LayoutBuilder(
-        builder: (context, constraints) => SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: constraints.maxHeight),
-            child: child,
-          ),
+  @override
+  Future<void> onRefresh() => _model.reloadBookings();
+
+  /// Pull-to-refresh content: a bouncy, always-scrollable
+  /// `CustomScrollView` via [RefreshablePage.wrapWithRefresh]. Error,
+  /// loading, empty, and populated states all render as slivers so the
+  /// refresh gesture stays available.
+  Widget _buildRefreshableContent(BuildContext context) {
+    final slivers = <Widget>[
+      if (_model.errorMessage != null)
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: _buildErrorState(context),
+        )
+      else if (_model.isLoading)
+        _bookingsListSliver(
+          itemCount: 3,
+          itemBuilder: (_, __) => const BookingCardSkeleton(),
+        )
+      else if (_model.filteredBookings.isEmpty)
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: _buildEmptyState(context),
+        )
+      else
+        _bookingsListSliver(
+          itemCount: _model.filteredBookings.length,
+          itemBuilder: (context, index) =>
+              _buildBookingCard(context, _model.filteredBookings[index]),
+        ),
+    ];
+    return wrapWithRefresh(slivers: slivers);
+  }
+
+  SliverPadding _bookingsListSliver({
+    required int itemCount,
+    required NullableIndexedWidgetBuilder itemBuilder,
+  }) =>
+      SliverPadding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        sliver: SliverList.separated(
+          itemCount: itemCount,
+          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          itemBuilder: itemBuilder,
         ),
       );
-
-  Widget _buildFilteredResults(BuildContext context) {
-    final items = _model.filteredBookings;
-    if (items.isEmpty) {
-      return _pullableState(context, _buildEmptyState(context));
-    }
-    return ListView.separated(
-      physics: const BouncingScrollPhysics(
-        parent: AlwaysScrollableScrollPhysics(),
-      ),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-      itemCount: items.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (context, index) => _buildBookingCard(
-        context,
-        items[index],
-      ),
-    );
-  }
 
   Widget _buildBookingCard(BuildContext context, BookingItem booking) {
     final theme = AppTheme.of(context);
@@ -424,9 +430,9 @@ class _BookingsWidgetState extends State<BookingsWidget> {
 
   void _showRescheduleComingSoon() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Rescheduling is coming soon.'),
-        duration: Duration(seconds: 2),
+      SnackBar(
+        content: Text(_l10n.bkfRescheduleSoon),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -479,6 +485,7 @@ class _BookingsWidgetState extends State<BookingsWidget> {
     final theme = AppTheme.of(context);
     final (heading, description) = _model.emptyStateCopy(
       hasSearchQuery: _model.searchQuery.isNotEmpty,
+      l10n: _l10n,
     );
     return Center(
       child: Padding(
@@ -500,7 +507,7 @@ class _BookingsWidgetState extends State<BookingsWidget> {
                 width: 64,
                 height: 64,
                 decoration: BoxDecoration(
-                  color: AppThemeData.successTeal.withValues(alpha: 0.12),
+                  color: AppThemeData.successBrand.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Icon(
@@ -515,7 +522,7 @@ class _BookingsWidgetState extends State<BookingsWidget> {
                             Icons.event_busy_rounded,
                           BookingsFilter.all => Icons.inbox_rounded,
                         },
-                  color: AppThemeData.successTeal,
+                  color: AppThemeData.successBrand,
                   size: 30,
                 ),
               ),
@@ -565,7 +572,7 @@ class _BookingsWidgetState extends State<BookingsWidget> {
               Icon(Icons.error_outline_rounded, size: 48, color: theme.error),
               const SizedBox(height: 16),
               Text(
-                _model.errorMessage ?? 'Something went wrong',
+                _model.errorMessage ?? _l10n.ccSomethingWrong,
                 textAlign: TextAlign.center,
                 style: theme.bodyMedium.override(
                   font: GoogleFonts.plusJakartaSans(),
@@ -578,7 +585,7 @@ class _BookingsWidgetState extends State<BookingsWidget> {
                   backgroundColor: theme.primary,
                   foregroundColor: theme.onPrimary,
                 ),
-                child: const Text('Retry'),
+                child: Text(_l10n.retry),
               ),
             ],
           ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '/l10n/app_localizations.dart';
 import '/services/logging_service.dart';
 import '/services/wallet_service.dart';
 
@@ -10,10 +11,14 @@ class WalletModel {
   List<Map<String, dynamic>> transactions = [];
   bool isLoading = false;
 
-  Future<void> loadTransactions() async {
+  Future<void> loadTransactions({
+    required AppLocalizations l10n,
+    required String locale,
+  }) async {
     isLoading = true;
     try {
-      final data = await WalletService.instance.getWalletData();
+      final data = await WalletService.instance
+          .getWalletData(l10n: l10n, locale: locale);
       balance = (data['balance'] as num?)?.toDouble() ?? 0.0;
       totalEarnings = (data['totalEarnings'] as num?)?.toDouble() ?? 0.0;
       totalSpent = (data['totalSpent'] as num?)?.toDouble() ?? 0.0;

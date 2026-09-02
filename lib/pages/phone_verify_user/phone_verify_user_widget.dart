@@ -8,8 +8,10 @@ import 'package:provider/provider.dart';
 import '/auth/post_auth_navigation_flow.dart';
 import '/auth/auth_util.dart';
 import '/auth/test_auth_user.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import '/l10n/app_localizations.dart';
 import '/services/auth_service.dart';
 import '/services/error_handler.dart';
 import '/theme/app_theme.dart';
@@ -32,6 +34,8 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
   late PhoneVerifyUserModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -58,16 +62,12 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: AppTheme.of(context).primaryBackground,
-        appBar: AppBar(
-          backgroundColor: AppTheme.of(context).primaryBackground,
-          automaticallyImplyLeading: false,
-          leading: IconButton(
-            onPressed: () => context.pop(),
-            icon: const Icon(Icons.arrow_back_rounded),
-          ),
-          title: Text(
-            'Phone Verification',
-            style: AppTheme.of(context).titleLarge.override(
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(56),
+          child: CupertinoPageHeader(
+            backgroundColor: AppTheme.of(context).primaryBackground,
+            title: _l10n.phvTitle,
+            titleStyle: AppTheme.of(context).titleLarge.override(
                   font: GoogleFonts.plusJakartaSans(
                     fontWeight:
                         AppTheme.of(context).titleLarge.fontWeight,
@@ -80,9 +80,6 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                   fontStyle: AppTheme.of(context).titleLarge.fontStyle,
                 ),
           ),
-          actions: const [],
-          centerTitle: true,
-          elevation: 0,
         ),
         body: SafeArea(
           top: true,
@@ -100,7 +97,7 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                       padding:
                           const EdgeInsetsDirectional.fromSTEB(0, 40, 0, 16),
                       child: Text(
-                        'Enter verification code',
+                        _l10n.phvEnterCode,
                         style: AppTheme.of(context)
                             .headlineMedium
                             .override(
@@ -126,7 +123,7 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                       padding:
                           const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 32),
                       child: Text(
-                        'We\'ve sent a 6-digit code to your phone number. Please enter it below.',
+                        _l10n.phvSentCode,
                         textAlign: TextAlign.center,
                         style: AppTheme.of(context).bodyMedium.override(
                               font: GoogleFonts.plusJakartaSans(
@@ -223,16 +220,16 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                           final smsCodeVal = _model.pinCodeValue;
                           if (smsCodeVal.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Enter SMS verification code.'),
+                              SnackBar(
+                                content: Text(_l10n.phvErrEnterCode),
                               ),
                             );
                             return;
                           }
                           if (smsCodeVal.length != 6) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Code must be 6 digits.'),
+                              SnackBar(
+                                content: Text(_l10n.phvErrCodeDigits),
                               ),
                             );
                             return;
@@ -279,7 +276,7 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                               );
                             }
                           } catch (e) {
-                            final message = ErrorHandler.describeError(e);
+                            final message = ErrorHandler.describeError(e, _l10n);
                             if (!context.mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text(message)),
@@ -300,7 +297,7 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                             userId: verifiedUser.uid,
                           );
                         },
-                        text: 'Verify',
+                        text: _l10n.phvVerify,
                         options: FFButtonOptions(
                           width: double.infinity,
                           height: 50,
@@ -339,7 +336,7 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                       padding:
                           const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 8),
                       child: Text(
-                        'Didn\'t receive the code?',
+                        _l10n.phvDidntReceive,
                         style: AppTheme.of(context).bodySmall.override(
                               font: GoogleFonts.plusJakartaSans(
                                 fontWeight: AppTheme.of(context)
@@ -377,9 +374,8 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                         if (phoneNumberVal.isEmpty ||
                             !phoneNumberVal.startsWith('+')) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                  'Phone Number is required and has to start with +.'),
+                            SnackBar(
+                              content: Text(_l10n.siPhoneNumberRequired),
                             ),
                           );
                           return;
@@ -406,7 +402,7 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                             );
                           }
                         } catch (e) {
-                          final message = ErrorHandler.describeError(e);
+                          final message = ErrorHandler.describeError(e, _l10n);
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text(message)),
@@ -414,7 +410,7 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
                         }
                       },
                       child: Text(
-                        'Resend Code',
+                        _l10n.phvResendCode,
                         style: AppTheme.of(context).bodySmall.override(
                               font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w600,

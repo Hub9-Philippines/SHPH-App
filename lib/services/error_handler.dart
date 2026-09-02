@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 import '/api/shph_api_exception.dart';
+import '/l10n/app_localizations.dart';
 import 'logging_service.dart';
 
 /// Centralized error handling for the application
@@ -13,10 +14,6 @@ class ErrorHandler {
   ErrorHandler._internal();
   static final ErrorHandler _instance = ErrorHandler._internal();
 
-  /// Message shown when a request never reaches the server.
-  static const String connectionErrorMessage =
-      'Cannot reach the server. Check your internet connection and try again.';
-
   /// Global scaffold messenger key for showing snackbars
   static GlobalKey<ScaffoldMessengerState>? scaffoldMessengerKey;
 
@@ -26,6 +23,7 @@ class ErrorHandler {
     Duration duration = const Duration(seconds: 4),
     VoidCallback? onRetry,
     String? actionLabel,
+    AppLocalizations? l10n,
   }) {
     LoggingService.warning(message, tag: 'ErrorHandler');
 
@@ -38,7 +36,7 @@ class ErrorHandler {
           duration: duration,
           action: onRetry != null
               ? SnackBarAction(
-                  label: actionLabel ?? 'Retry',
+                  label: actionLabel ?? (l10n?.retry ?? 'Retry'),
                   textColor: Colors.white,
                   onPressed: onRetry,
                 )
@@ -106,8 +104,9 @@ class ErrorHandler {
     BuildContext context, {
     required String title,
     required String message,
-    String actionLabel = 'OK',
+    String? actionLabel,
     VoidCallback? onConfirm,
+    AppLocalizations? l10n,
   }) {
     LoggingService.error(message, tag: 'ErrorHandler');
 
@@ -122,7 +121,7 @@ class ErrorHandler {
               Navigator.of(context).pop();
               onConfirm?.call();
             },
-            child: Text(actionLabel),
+            child: Text(actionLabel ?? (l10n?.ccOK ?? 'OK')),
           ),
         ],
       ),
@@ -134,8 +133,9 @@ class ErrorHandler {
     BuildContext context, {
     required String title,
     required String message,
-    String confirmLabel = 'Confirm',
-    String cancelLabel = 'Cancel',
+    String? confirmLabel,
+    String? cancelLabel,
+    AppLocalizations? l10n,
   }) => showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -144,11 +144,11 @@ class ErrorHandler {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text(cancelLabel),
+            child: Text(cancelLabel ?? (l10n?.ccCancel ?? 'Cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text(confirmLabel),
+            child: Text(confirmLabel ?? (l10n?.ccConfirm ?? 'Confirm')),
           ),
         ],
       ),
@@ -160,8 +160,9 @@ class ErrorHandler {
     StackTrace? stackTrace,
     String? customMessage,
     VoidCallback? onRetry,
+    AppLocalizations? l10n,
   }) {
-    final message = customMessage ?? _getErrorMessage(exception);
+    final message = customMessage ?? _getErrorMessage(exception, l10n);
 
     LoggingService.error(
       message,
@@ -170,33 +171,35 @@ class ErrorHandler {
       stackTrace: stackTrace,
     );
 
-    showError(message, onRetry: onRetry);
+    showError(message, onRetry: onRetry, l10n: l10n);
   }
 
   /// Parse exception to user-friendly message
-  static String _getErrorMessage(Object exception) {
+  static String _getErrorMessage(Object exception, [AppLocalizations? l10n]) {
     if (exception is FormatException) {
-      return 'Invalid format: ${exception.message}';
+      return l10n?.ehInvalidFormat ?? 'Invalid format. Please try again.';
     } else if (exception is ArgumentError) {
-      return 'Invalid argument: ${exception.message}';
+      return l10n?.ehInvalidArgument ?? 'Invalid input. Please try again.';
     } else {
-      return exception.toString();
+      return l10n?.ehGenericError ?? 'Something went wrong. Please try again.';
     }
   }
 
   /// Map an exception to a user-facing message.
   ///
-  /// Connection-level failures (no HTTP response ever received) map to
-  /// [connectionErrorMessage]; `ShphApiException` surfaces its (already
+  /// Connection-level failures (no HTTP response ever received) map to the
+  /// connection message; `ShphApiException` surfaces its (already
   /// DRF-unwrapped) message; anything else falls back to a generic message.
-  static String describeError(Object exception) {
+  static String describeError(Object exception, [AppLocalizations? l10n]) {
     if (exception is ShphApiException) {
       if (exception.statusCode == null) {
-        return connectionErrorMessage;
+        return l10n?.ehConnectionError ??
+            'Cannot reach the server. Check your internet connection and try again.';
       }
       final message = exception.message.trim();
       return message.isEmpty
-          ? 'Something went wrong. Please try again.'
+          ? (l10n?.ehGenericError ??
+              'Something went wrong. Please try again.')
           : message;
     }
     if (exception is DioException) {
@@ -208,10 +211,12 @@ class ErrorHandler {
           (exception.response == null &&
               exception.type == DioExceptionType.unknown);
       if (isConnectionFailure) {
-        return connectionErrorMessage;
+        return l10n?.ehConnectionError ??
+            'Cannot reach the server. Check your internet connection and try again.';
       }
-      return 'Something went wrong. Please try again.';
+      return l10n?.ehGenericError ??
+          'Something went wrong. Please try again.';
     }
-    return 'Something went wrong. Please try again.';
+    return l10n?.ehGenericError ?? 'Something went wrong. Please try again.';
   }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/components/cupertino_ui/app_button.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import '../booking_models.dart';
 
@@ -19,6 +21,7 @@ class LocationConfirmationPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       width: double.infinity,
@@ -59,7 +62,7 @@ class LocationConfirmationPanel extends StatelessWidget {
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
-              'Pinned location',
+              l10n.bfPinnedLocation,
               style: theme.labelMedium.override(
                 color: theme.primary,
                 fontWeight: FontWeight.w700,
@@ -68,14 +71,14 @@ class LocationConfirmationPanel extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Confirm service location',
+            l10n.bfConfirmServiceLocation,
             style: theme.titleMedium.override(
               font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            'Make sure the provider is headed to the right place before choosing the time.',
+            l10n.bfConfirmRightPlace,
             style: theme.bodySmall.override(
               color: theme.secondaryText,
             ),
@@ -110,7 +113,7 @@ class LocationConfirmationPanel extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Drop-off point',
+                        l10n.bfDropOffPoint,
                         style: theme.labelMedium.override(
                           color: theme.secondaryText,
                           fontWeight: FontWeight.w600,
@@ -140,34 +143,26 @@ class LocationConfirmationPanel extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: OutlinedButton(
+                child: AppButton(
                   onPressed: onEdit,
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(56),
-                    side: BorderSide(color: theme.alternate),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                  ),
-                  child: const Text('Edit pin'),
+                  variant: AppButtonVariant.outlined,
+                  borderSide: BorderSide(color: theme.alternate),
+                  height: 56,
+                  borderRadius: 18,
+                  child: Text(l10n.bfEditPin),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: ElevatedButton(
+                child: AppButton(
                   onPressed: onConfirm,
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(56),
-                    backgroundColor: theme.primary,
-                    foregroundColor: theme.onPrimary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                  ),
+                  backgroundColor: theme.primary,
+                  foregroundColor: theme.onPrimary,
+                  height: 56,
+                  borderRadius: 18,
                   child: Text(
-                    'Continue',
+                    l10n.bfContinue,
                     style: theme.titleSmall.override(
-                      color: theme.onPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ),

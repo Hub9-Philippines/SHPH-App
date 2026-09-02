@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 
 /// Persistent quick-book scaffold area: urgency micro-copy beside the
@@ -14,6 +15,7 @@ class QuickBookBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final _l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         color: theme.primaryBackground,
@@ -31,7 +33,7 @@ class QuickBookBar extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Emergencies can\'t wait.',
+                    _l10n.ccEmergenciesWait,
                     style: theme.labelLarge.override(
                       font: GoogleFonts.plusJakartaSans(
                         fontWeight: FontWeight.w700,
@@ -41,7 +43,7 @@ class QuickBookBar extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Get a verified pro dispatched right now.',
+                    _l10n.ccVerifiedPro,
                     style: theme.bodySmall.override(
                       font: GoogleFonts.plusJakartaSans(),
                       color: theme.secondaryText,
@@ -55,7 +57,7 @@ class QuickBookBar extends StatelessWidget {
               onPressed: onUrgentAssistance,
               icon: const Icon(Icons.bolt_rounded, size: 19),
               label: Text(
-                'Urgent Assistance',
+                _l10n.ccUrgentAssistance,
                 style: theme.labelLarge.override(
                   font:
                       GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),

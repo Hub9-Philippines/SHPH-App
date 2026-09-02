@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '/components/cupertino_ui/app_activity_indicator.dart';
+import '/components/cupertino_ui/app_button.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'project_list_model.dart';
 
@@ -19,6 +23,8 @@ class ProjectListWidget extends StatefulWidget {
 class _ProjectListWidgetState extends State<ProjectListWidget> {
   late ProjectListModel _model;
 
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
   Color _statusColor(String status, AppThemeData theme) => switch (status) {
         'draft' => theme.textTertiary,
         'quoted' => theme.primary,
@@ -30,12 +36,12 @@ class _ProjectListWidgetState extends State<ProjectListWidget> {
       };
 
   String _statusLabel(String status) => switch (status) {
-        'draft' => 'Draft',
-        'quoted' => 'Quoted',
-        'matching' => 'Matching',
-        'committed' => 'Committed',
-        'cancelled' => 'Cancelled',
-        'expired' => 'Expired',
+        'draft' => _l10n.pjStatusDraft,
+        'quoted' => _l10n.pjStatusQuoted,
+        'matching' => _l10n.pjStatusMatching,
+        'committed' => _l10n.pjStatusCommitted,
+        'cancelled' => _l10n.pjStatusCancelled,
+        'expired' => _l10n.pjStatusExpired,
         _ => status,
       };
 
@@ -58,20 +64,22 @@ class _ProjectListWidgetState extends State<ProjectListWidget> {
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
-      appBar: AppBar(
-        backgroundColor: theme.primaryBackground,
-        title: Text('Projects', style: theme.titleMedium),
-        centerTitle: true,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => context.push('/projects/create'),
-          ),
-        ],
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: CupertinoPageHeader(
+          backgroundColor: theme.primaryBackground,
+          title: _l10n.plProjects,
+          titleStyle: theme.titleMedium,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () => context.push('/projects/create'),
+            ),
+          ],
+        ),
       ),
       body: _model.isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: AppActivityIndicator())
           : _model.projects.isEmpty
               ? Center(
                   child: Column(
@@ -80,14 +88,12 @@ class _ProjectListWidgetState extends State<ProjectListWidget> {
                       Icon(Icons.work_outline,
                           size: 64, color: theme.secondaryText),
                       const SizedBox(height: 16),
-                      Text('No projects yet', style: theme.bodyMedium),
+                      Text(_l10n.plNoProjects, style: theme.bodyMedium),
                       const SizedBox(height: 16),
-                      ElevatedButton(
+                      AppButton(
                         onPressed: () => context.push('/projects/create'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: theme.primary,
-                        ),
-                        child: const Text('Create a Project'),
+                        backgroundColor: theme.primary,
+                        child: Text(_l10n.plCreateProject),
                       ),
                     ],
                   ),

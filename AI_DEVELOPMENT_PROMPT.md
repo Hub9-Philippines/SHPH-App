@@ -1,7 +1,7 @@
-# SerbisyoHub PH - AI Development Prompt
+# Serbisyo - AI Development Prompt
 
 ## Project Overview
-SerbisyoHub PH is a service marketplace mobile application built with Flutter that connects Filipino service providers (pros) with customers. The app features phone authentication, EKYC verification, service bookings, real-time chat, and a comprehensive pro dashboard.
+Serbisyo is a service marketplace mobile application built with Flutter that connects Filipino service providers (pros) with customers. The app features phone authentication, EKYC verification, service bookings, real-time chat, and a comprehensive pro dashboard.
 
 ## Technology Stack
 

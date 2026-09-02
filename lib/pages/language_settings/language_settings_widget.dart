@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'language_settings_model.dart';
 
@@ -20,21 +21,15 @@ class LanguageSettingsWidget extends StatefulWidget {
 
 class _LanguageSettingsWidgetState extends State<LanguageSettingsWidget> {
   late LanguageSettingsModel _model;
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
   final scaffoldKey = GlobalKey<ScaffoldState>();
   String _selectedLanguage = 'English';
   String _selectedLocale = 'en';
 
   static const List<Map<String, String>> _languages = [
     {'code': 'en', 'name': 'English', 'flag': 'EN'},
-    {'code': 'es', 'name': 'Spanish', 'flag': 'ES'},
-    {'code': 'fr', 'name': 'French', 'flag': 'FR'},
-    {'code': 'de', 'name': 'German', 'flag': 'DE'},
-    {'code': 'it', 'name': 'Italian', 'flag': 'IT'},
-    {'code': 'pt', 'name': 'Portuguese', 'flag': 'PT'},
-    {'code': 'zh', 'name': 'Chinese', 'flag': 'ZH'},
-    {'code': 'ja', 'name': 'Japanese', 'flag': 'JA'},
-    {'code': 'ko', 'name': 'Korean', 'flag': 'KO'},
-    {'code': 'ar', 'name': 'Arabic', 'flag': 'AR'},
+    {'code': 'fil', 'name': 'Filipino', 'flag': 'FIL'},
   ];
 
   @override
@@ -70,7 +65,7 @@ class _LanguageSettingsWidgetState extends State<LanguageSettingsWidget> {
       _selectedLocale = newCode!;
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Language changed to $language')),
+      SnackBar(content: Text(_l10n.lgChanged(language))),
     );
   }
 
@@ -111,7 +106,7 @@ class _LanguageSettingsWidgetState extends State<LanguageSettingsWidget> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Language',
+                              _l10n.lgTitle,
                               style: AppTheme.of(context).titleLarge.override(
                                     font: GoogleFonts.plusJakartaSans(
                                       fontWeight: FontWeight.w700,
@@ -120,7 +115,7 @@ class _LanguageSettingsWidgetState extends State<LanguageSettingsWidget> {
                                   ),
                             ),
                             Text(
-                              'Choose the preferred language for your app experience.',
+                              _l10n.lgSubtitle,
                               style: AppTheme.of(context).bodySmall.override(
                                     font: GoogleFonts.plusJakartaSans(),
                                     color: const Color(0xFF64748B),
@@ -162,7 +157,7 @@ class _LanguageSettingsWidgetState extends State<LanguageSettingsWidget> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Current language',
+                              _l10n.lgCurrent,
                               style: AppTheme.of(context).bodySmall.override(
                                     font: GoogleFonts.plusJakartaSans(),
                                     color: Colors.white.withValues(alpha: 0.82),
@@ -204,70 +199,71 @@ class _LanguageSettingsWidgetState extends State<LanguageSettingsWidget> {
     Map<String, String> language,
     bool isSelected,
   ) =>
-      Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _saveLanguage(language['name']!),
+      Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
           borderRadius: BorderRadius.circular(24),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: isSelected
-                    ? AppTheme.of(context).primary
-                    : const Color(0xFFE2E8F0),
-                width: isSelected ? 1.6 : 1,
-              ),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x12000000),
-                  blurRadius: 18,
-                  offset: Offset(0, 10),
-                ),
-              ],
+          border: Border.all(
+            color: isSelected
+                ? AppTheme.of(context).primary
+                : const Color(0xFFE2E8F0),
+            width: isSelected ? 1.6 : 1,
+          ),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x12000000),
+              blurRadius: 18,
+              offset: Offset(0, 10),
             ),
-            child: ListTile(
-              onTap: () => _saveLanguage(language['name']!),
-              leading: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppTheme.of(context).primary.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Center(
-                  child: Text(
-                    language['flag']!,
-                    style: AppTheme.of(context).labelLarge.override(
-                          font: GoogleFonts.plusJakartaSans(
-                            fontWeight: FontWeight.w700,
-                          ),
-                          color: AppTheme.of(context).primary,
+          ],
+        ),
+        // ListTile paints ink on the nearest Material ancestor; a rounded
+        // white Material here keeps the ripple visible above the card's
+        // DecoratedBox background (framework assertion fix).
+        child: Material(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          clipBehavior: Clip.antiAlias,
+          child: ListTile(
+            onTap: () => _saveLanguage(language['name']!),
+            leading: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppTheme.of(context).primary.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Center(
+                child: Text(
+                  language['flag']!,
+                  style: AppTheme.of(context).labelLarge.override(
+                        font: GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w700,
                         ),
-                  ),
+                        color: AppTheme.of(context).primary,
+                      ),
                 ),
               ),
-              title: Text(
-                language['name']!,
-                style: AppTheme.of(context).titleMedium.override(
-                      font: GoogleFonts.plusJakartaSans(
-                        fontWeight: FontWeight.w700,
-                      ),
-                      color: const Color(0xFF14213D),
-                    ),
-              ),
-              trailing: isSelected
-                  ? Icon(
-                      Icons.check_circle_rounded,
-                      color: AppTheme.of(context).primary,
-                      size: 28,
-                    )
-                  : const Icon(
-                      Icons.chevron_right_rounded,
-                      color: Color(0xFF94A3B8),
-                    ),
             ),
+            title: Text(
+              language['name']!,
+              style: AppTheme.of(context).titleMedium.override(
+                    font: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w700,
+                    ),
+                    color: const Color(0xFF14213D),
+                  ),
+            ),
+            trailing: isSelected
+                ? Icon(
+                    Icons.check_circle_rounded,
+                    color: AppTheme.of(context).primary,
+                    size: 28,
+                  )
+                : const Icon(
+                    Icons.chevron_right_rounded,
+                    color: Color(0xFF94A3B8),
+                  ),
           ),
         ),
       );

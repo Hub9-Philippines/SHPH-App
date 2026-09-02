@@ -6,6 +6,7 @@ import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
+import '/l10n/app_localizations.dart';
 import '/services/bookings_service.dart';
 import '/services/payment_controller.dart';
 import '/theme/app_theme.dart';
@@ -47,6 +48,8 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   String? _selectedPaymentMethod;
 
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -63,7 +66,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
     if (_selectedPaymentMethod == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Please select a payment method'),
+          content: Text(_l10n.bpSelectMethod),
           backgroundColor: AppTheme.of(context).error,
         ),
       );
@@ -92,7 +95,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
             _goToSuccess(booking.id);
           } else {
             _model.isLoading = false;
-            _model.errorMessage = 'Failed to create booking.';
+            _model.errorMessage = _l10n.bpFailedCreate;
           }
         }
         return;
@@ -108,11 +111,12 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
           amount: amount,
           currency: 'PHP',
           description: widget.serviceName ?? 'Service Booking',
+          l10n: _l10n,
         );
         if (result.status != PaymentStatus.success) {
           if (mounted) {
             _model.isLoading = false;
-            _model.errorMessage = result.errorMessage ?? 'Payment failed';
+            _model.errorMessage = result.errorMessage ?? _l10n.bpPaymentFailed;
           }
           return;
         }
@@ -129,11 +133,12 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
           amount: amount,
           currency: 'PHP',
           description: widget.serviceName ?? 'Service Booking',
+          l10n: _l10n,
         );
         if (result.status != PaymentStatus.success) {
           if (mounted) {
             _model.isLoading = false;
-            _model.errorMessage = result.errorMessage ?? 'Payment failed';
+            _model.errorMessage = result.errorMessage ?? _l10n.bpPaymentFailed;
           }
           return;
         }
@@ -184,7 +189,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
   String _scheduledText() {
     final date = DateTime.tryParse(widget.bookingDate ?? '');
     if (date == null) {
-      return 'You will confirm a slot shortly';
+      return _l10n.bpConfirmSlot;
     }
     final time = _resolveBookingDateTime();
     final hour = time.hour % 12 == 0 ? 12 : time.hour % 12;
@@ -257,7 +262,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Select Payment',
+                                _l10n.bpSelectPayment,
                                 style: AppTheme.of(context).titleLarge.override(
                                       font: GoogleFonts.plusJakartaSans(
                                         fontWeight: FontWeight.w700,
@@ -266,7 +271,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                                     ),
                               ),
                               Text(
-                                'Review the booking and choose how you want to pay.',
+                                _l10n.bpSelectPaymentSubtitle,
                                 style: AppTheme.of(context).bodySmall.override(
                                       font: GoogleFonts.plusJakartaSans(),
                                       color: AppTheme.of(context).secondaryText,
@@ -293,7 +298,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                       _buildEscrowNotice(context),
                       const SizedBox(height: 18),
                       Text(
-                        'Choose how you want to pay',
+                        _l10n.bpChooseHowToPay,
                                 style: AppTheme.of(context).titleMedium.override(
                                       font: GoogleFonts.plusJakartaSans(
                                         fontWeight: FontWeight.w700,
@@ -303,7 +308,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'Card, wallet, and QR payments are protected through escrow until the job is completed.',
+                                _l10n.bpEscrowSubtitle,
                                 style: AppTheme.of(context).bodySmall.override(
                                       font: GoogleFonts.plusJakartaSans(),
                                       color: AppTheme.of(context).secondaryText,
@@ -313,32 +318,32 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                       _buildPaymentOption(
                         value: 'card',
                         icon: Icons.credit_card_rounded,
-                        label: 'Credit / Debit Card',
-                        sublabel: 'Visa, Mastercard',
+                        label: _l10n.bpCard,
+                        sublabel: _l10n.bpCardSub,
                         tint: AppTheme.of(context).primary,
                       ),
                       const SizedBox(height: 12),
                       _buildPaymentOption(
                         value: 'ewallet',
                         icon: Icons.account_balance_wallet_rounded,
-                        label: 'E-Wallets',
-                        sublabel: 'GCash, Maya',
+                        label: _l10n.bpEwallet,
+                        sublabel: _l10n.bpEwalletSub,
                         tint: AppTheme.of(context).success,
                       ),
                       const SizedBox(height: 12),
                       _buildPaymentOption(
                         value: 'qr',
                         icon: Icons.qr_code_rounded,
-                        label: 'QR Ph Code',
-                        sublabel: 'Standard Philippine digital QR',
+                        label: _l10n.bpQr,
+                        sublabel: _l10n.bpQrSub,
                         tint: AppTheme.of(context).tertiary,
                       ),
                       const SizedBox(height: 12),
                       _buildPaymentOption(
                         value: 'cash',
                         icon: Icons.payments_rounded,
-                        label: 'Cash on Completion',
-                        sublabel: 'Pay the pro directly after the job',
+                        label: _l10n.bpCash,
+                        sublabel: _l10n.bpCashSub,
                         tint: AppTheme.of(context).error,
                       ),
                     ],
@@ -395,7 +400,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
-                      widget.category ?? 'Service',
+                      widget.category ?? _l10n.bkFallbackService,
                       style: AppTheme.of(context).labelMedium.override(
                             font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w700,
@@ -406,7 +411,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    widget.serviceName ?? 'Service',
+                    widget.serviceName ?? _l10n.bkFallbackService,
                     style: AppTheme.of(context).titleLarge.override(
                           font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
@@ -443,7 +448,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Booking summary',
+              _l10n.bpSummaryTitle,
               style: AppTheme.of(context).titleMedium.override(
                     font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: AppTheme.of(context).primaryText,
@@ -452,20 +457,20 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
             const SizedBox(height: 14),
             _summaryRow(
               icon: Icons.calendar_today_rounded,
-              label: 'Date',
+              label: _l10n.bpDate,
               value: _formattedBookingDate,
             ),
             const SizedBox(height: 12),
             _summaryRow(
               icon: Icons.access_time_rounded,
-              label: 'Time',
-              value: widget.bookingTime ?? 'Not set',
+              label: _l10n.bpTime,
+              value: widget.bookingTime ?? _l10n.bpNotSet,
             ),
             if ((widget.notes ?? '').trim().isNotEmpty) ...[
               const SizedBox(height: 12),
               _summaryRow(
                 icon: Icons.sticky_note_2_outlined,
-                label: 'Notes',
+                label: _l10n.bpNotes,
                 value: widget.notes!.trim(),
               ),
             ],
@@ -543,7 +548,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Card, e-wallet, and QR payments are held in escrow. The provider receives the funds only after you confirm the work is done from your bookings page.',
+                _l10n.bpEscrowNotice,
                 style: AppTheme.of(context).bodySmall.override(
                       font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w500),
                       color: const Color(0xFF17426E),
@@ -688,7 +693,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Total',
+                          _l10n.bpTotal,
                           style: AppTheme.of(context).bodySmall.override(
                                 font: GoogleFonts.plusJakartaSans(),
                                 color: AppTheme.of(context).secondaryText,
@@ -712,7 +717,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                     child: FFButtonWidget(
                       onPressed: _model.isLoading ? null : _confirmPayment,
                       text:
-                          _model.isLoading ? 'Processing...' : 'Confirm Payment',
+                          _model.isLoading ? _l10n.bpProcessing : _l10n.bpConfirm,
                       options: FFButtonOptions(
                         width: double.infinity,
                         height: 54,
@@ -750,7 +755,7 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
 
   String get _formattedBookingDate {
     if (widget.bookingDate == null) {
-      return 'Not set';
+      return _l10n.bpNotSet;
     }
 
     final date = DateTime.tryParse(widget.bookingDate!);

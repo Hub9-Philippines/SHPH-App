@@ -8,10 +8,13 @@ import '/auth/base_auth_user_provider.dart';
 import '/auth/post_auth_navigation_flow.dart';
 import '/auth/auth_util.dart';
 import '/components/back_button/back_button_widget.dart';
+import '/components/cupertino_ui/app_button.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/custom_functions.dart' as functions;
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
+import '/l10n/app_localizations.dart';
 import '/services/error_handler.dart';
 import '/theme/app_theme.dart';
 import '../../auth/shph_auth/shph_auth_manager.dart';
@@ -34,6 +37,8 @@ class _SigninWidgetState extends State<SigninWidget>
   late SigninModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -81,15 +86,17 @@ class _SigninWidgetState extends State<SigninWidget>
         child: Scaffold(
           key: scaffoldKey,
           backgroundColor: theme.primaryBackground,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            automaticallyImplyLeading: false,
-            leading: wrapWithModel(
-              model: _model.backButtonModel,
-              updateCallback: () => safeSetState(() {}),
-              child: const BackButtonWidget(),
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(56),
+            child: CupertinoPageHeader(
+              title: '',
+              backgroundColor: Colors.transparent,
+              leading: wrapWithModel(
+                model: _model.backButtonModel,
+                updateCallback: () => safeSetState(() {}),
+                child: const BackButtonWidget(),
+              ),
             ),
-            elevation: 0,
           ),
           body: SafeArea(
             top: true,
@@ -128,7 +135,7 @@ class _SigninWidgetState extends State<SigninWidget>
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
-          'Welcome to SerbisyoHub PH',
+          _l10n.siWelcome,
           textAlign: TextAlign.center,
           style: theme.headlineLarge.copyWith(
             fontWeight: FontWeight.bold,
@@ -136,7 +143,7 @@ class _SigninWidgetState extends State<SigninWidget>
         ),
         const SizedBox(height: 8),
         Text(
-          'Sign in to continue with your home services.',
+          _l10n.siWelcomeSubtitle,
           textAlign: TextAlign.center,
           style: theme.bodyMedium.copyWith(
             color: AppTheme.of(context).secondaryText,
@@ -177,7 +184,7 @@ class _SigninWidgetState extends State<SigninWidget>
                       : null,
                 ),
                 child: Text(
-                  'Phone',
+                  _l10n.siPhone,
                   textAlign: TextAlign.center,
                   style: theme.bodyMedium.copyWith(
                     fontWeight: _model.tabBarCurrentIndex == 0
@@ -212,7 +219,7 @@ class _SigninWidgetState extends State<SigninWidget>
                       : null,
                 ),
                 child: Text(
-                  'Email',
+                  _l10n.siEmail,
                   textAlign: TextAlign.center,
                   style: theme.bodyMedium.copyWith(
                     fontWeight: _model.tabBarCurrentIndex == 1
@@ -236,7 +243,7 @@ class _SigninWidgetState extends State<SigninWidget>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Mobile number',
+          _l10n.siMobileNumber,
           style: theme.bodyMedium.copyWith(
             fontWeight: FontWeight.w500,
             color: theme.primaryText,
@@ -332,14 +339,12 @@ class _SigninWidgetState extends State<SigninWidget>
                       if (phoneNumberVal.isEmpty ||
                           !phoneNumberVal.startsWith('+')) {
                         _model.isPhoneLoginLoading = false;
-                        _model.errorMessage =
-                            'Phone Number is required and has to start with +.';
+                        _model.errorMessage = _l10n.siPhoneNumberRequired;
                         safeSetState(() {});
                         if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                                'Phone Number is required and has to start with +.'),
+                          SnackBar(
+                            content: Text(_l10n.siPhoneNumberRequired),
                           ),
                         );
                         return;
@@ -359,14 +364,14 @@ class _SigninWidgetState extends State<SigninWidget>
                         );
                       } catch (e) {
                         _model.isPhoneLoginLoading = false;
-                        final message = ErrorHandler.describeError(e);
+                        final message = ErrorHandler.describeError(e, _l10n);
                         _model.errorMessage = message;
                         safeSetState(() {});
                         if (!context.mounted) return;
                         ErrorHandler.showError(message);
                       }
                     },
-          text: _model.isPhoneLoginLoading ? 'Signing In...' : 'Sign In',
+          text: _model.isPhoneLoginLoading ? _l10n.siSigningIn : _l10n.siSignIn,
           options: FFButtonOptions(
             width: double.infinity,
             height: 52,
@@ -386,20 +391,20 @@ class _SigninWidgetState extends State<SigninWidget>
         const SizedBox(height: 16),
         _SocialButton(
           icon: Icons.g_mobiledata_rounded,
-          label: 'Continue with Google',
+          label: _l10n.siContinueWithGoogle,
           onTap: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Google sign-in coming soon')),
+              SnackBar(content: Text(_l10n.siGoogleComingSoon)),
             );
           },
         ),
         const SizedBox(height: 10),
         _SocialButton(
           icon: Icons.apple_rounded,
-          label: 'Continue with Apple',
+          label: _l10n.siContinueWithApple,
           onTap: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Apple sign-in coming soon')),
+              SnackBar(content: Text(_l10n.siAppleComingSoon)),
             );
           },
         ),
@@ -410,7 +415,7 @@ class _SigninWidgetState extends State<SigninWidget>
             GestureDetector(
               onTap: () => context.goNamed(ForgotPasswordWidget.routeName),
               child: Text(
-                'Forgot password',
+                _l10n.siForgotPassword,
                 style: theme.bodyMedium.copyWith(
                   fontWeight: FontWeight.w600,
                   color: theme.primary,
@@ -424,13 +429,14 @@ class _SigninWidgetState extends State<SigninWidget>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              "Don't have an account yet? ",
+              _l10n.siNoAccountYet,
               style: theme.bodyMedium.copyWith(color: theme.secondaryText),
             ),
+            const SizedBox(width: 4),
             GestureDetector(
               onTap: () => context.goNamed(SignupWidget.routeName),
               child: Text(
-                'Sign Up',
+                _l10n.siSignUp,
                 style: theme.bodyMedium.copyWith(
                   fontWeight: FontWeight.w600,
                   color: theme.primary,
@@ -448,7 +454,7 @@ class _SigninWidgetState extends State<SigninWidget>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Email',
+          _l10n.siEmail,
           style: theme.bodyMedium.copyWith(
             fontWeight: FontWeight.w500,
             color: theme.primaryText,
@@ -471,8 +477,6 @@ class _SigninWidgetState extends State<SigninWidget>
           textInputAction: TextInputAction.next,
           obscureText: false,
           decoration: InputDecoration(
-            labelText: 'Email address',
-            labelStyle: theme.bodyLarge.copyWith(color: theme.secondaryText),
             hintText: 'you@example.com',
             hintStyle: theme.bodyLarge.copyWith(color: theme.secondaryText),
             enabledBorder: OutlineInputBorder(
@@ -513,13 +517,13 @@ class _SigninWidgetState extends State<SigninWidget>
           Padding(
             padding: const EdgeInsets.only(top: 6),
             child: Text(
-              'Invalid email',
+              _l10n.siInvalidEmail,
               style: theme.bodySmall.copyWith(color: theme.error),
             ),
           ),
         const SizedBox(height: 16),
         Text(
-          'Password',
+          _l10n.siPassword,
           style: theme.bodyMedium.copyWith(
             fontWeight: FontWeight.w500,
             color: theme.primaryText,
@@ -538,18 +542,20 @@ class _SigninWidgetState extends State<SigninWidget>
           textInputAction: TextInputAction.done,
           obscureText: !_model.passwordTextFieldVisibility,
           decoration: InputDecoration(
-            labelText: 'Enter your password',
-            labelStyle: theme.bodyLarge.copyWith(color: theme.secondaryText),
             hintText: '••••••••',
             hintStyle: theme.bodyLarge.copyWith(color: theme.secondaryText),
             enabledBorder: OutlineInputBorder(
-              borderSide:
-                  BorderSide(color: theme.alternate, width: 1),
+              borderSide: BorderSide(
+                color: theme.alternate,
+                width: 1,
+              ),
               borderRadius: BorderRadius.circular(12),
             ),
             focusedBorder: OutlineInputBorder(
-              borderSide:
-                  BorderSide(color: theme.alternate, width: 1.5),
+              borderSide: BorderSide(
+                color: theme.primary,
+                width: 1.5,
+              ),
               borderRadius: BorderRadius.circular(12),
             ),
             errorBorder: OutlineInputBorder(
@@ -613,7 +619,7 @@ class _SigninWidgetState extends State<SigninWidget>
                         );
                         if (user == null) {
                           _model.isEmailLoginLoading = false;
-                          _model.errorMessage = 'Invalid email or password';
+                          _model.errorMessage = _l10n.siInvalidEmailOrPassword;
                           safeSetState(() {});
                           return;
                         }
@@ -625,14 +631,14 @@ class _SigninWidgetState extends State<SigninWidget>
                         );
                       } catch (e) {
                         _model.isEmailLoginLoading = false;
-                        final message = ErrorHandler.describeError(e);
+                        final message = ErrorHandler.describeError(e, _l10n);
                         _model.errorMessage = message;
                         safeSetState(() {});
                         if (!context.mounted) return;
                         ErrorHandler.showError(message);
                       }
                     },
-          text: _model.isEmailLoginLoading ? 'Signing In...' : 'Sign In',
+          text: _model.isEmailLoginLoading ? _l10n.siSigningIn : _l10n.siSignIn,
           options: FFButtonOptions(
             width: double.infinity,
             height: 52,
@@ -652,20 +658,20 @@ class _SigninWidgetState extends State<SigninWidget>
         const SizedBox(height: 16),
         _SocialButton(
           icon: Icons.g_mobiledata_rounded,
-          label: 'Continue with Google',
+          label: _l10n.siContinueWithGoogle,
           onTap: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Google sign-in coming soon')),
+              SnackBar(content: Text(_l10n.siGoogleComingSoon)),
             );
           },
         ),
         const SizedBox(height: 10),
         _SocialButton(
           icon: Icons.apple_rounded,
-          label: 'Continue with Apple',
+          label: _l10n.siContinueWithApple,
           onTap: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Apple sign-in coming soon')),
+              SnackBar(content: Text(_l10n.siAppleComingSoon)),
             );
           },
         ),
@@ -676,7 +682,7 @@ class _SigninWidgetState extends State<SigninWidget>
             GestureDetector(
               onTap: () => context.goNamed(ForgotPasswordWidget.routeName),
               child: Text(
-                'Forgot password',
+                _l10n.siForgotPassword,
                 style: theme.bodyMedium.copyWith(
                   fontWeight: FontWeight.w600,
                   color: theme.primary,
@@ -690,13 +696,14 @@ class _SigninWidgetState extends State<SigninWidget>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              "Don't have an account yet? ",
+              _l10n.siNoAccountYet,
               style: theme.bodyMedium.copyWith(color: theme.secondaryText),
             ),
+            const SizedBox(width: 4),
             GestureDetector(
               onTap: () => context.goNamed(SignupWidget.routeName),
               child: Text(
-                'Sign Up',
+                _l10n.siSignUp,
                 style: theme.bodyMedium.copyWith(
                   fontWeight: FontWeight.w600,
                   color: theme.primary,
@@ -720,7 +727,7 @@ class _OrDivider extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            'or continue with',
+            AppLocalizations.of(context)!.siOrContinueWith,
             style: theme.bodySmall.copyWith(color: theme.secondaryText),
           ),
         ),
@@ -747,15 +754,24 @@ class _SocialButton extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       height: 48,
-      child: OutlinedButton.icon(
+      child: AppButton(
         onPressed: onTap,
-        icon: Icon(icon, size: 22),
-        label: Text(label),
-        style: OutlinedButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          side: BorderSide(color: theme.alternate),
+        variant: AppButtonVariant.outlined,
+        borderRadius: 12,
+        borderSide: BorderSide(color: theme.alternate),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 22, color: theme.primaryText),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: theme.bodyMedium.copyWith(
+                color: theme.primaryText,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       ),
     );

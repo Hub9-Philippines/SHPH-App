@@ -3,8 +3,10 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '/backend/supabase/supabase.dart';
 import '/components/back_button/back_button_widget.dart';
+import '/components/cupertino_ui/app_activity_indicator.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
+import '/l10n/app_localizations.dart';
 import '/services/favorites_service.dart';
 import '/theme/app_theme.dart';
 import 'favorites_model.dart';
@@ -25,6 +27,8 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
   late FavoritesModel _model;
   late Future<List<ServiceListingsRow>> _favoritesFuture;
   final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -79,7 +83,7 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Favorites',
+                              _l10n.favTitle,
                               style: AppTheme.of(context).titleLarge.override(
                                     font: GoogleFonts.plusJakartaSans(
                                       fontWeight: FontWeight.w700,
@@ -88,7 +92,7 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
                                   ),
                             ),
                             Text(
-                              'Quick access to the services you want to revisit.',
+                              _l10n.favSubtitle,
                               style: AppTheme.of(context).bodySmall.override(
                                     font: GoogleFonts.plusJakartaSans(),
                                     color: AppTheme.of(context).secondaryText,
@@ -105,16 +109,15 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
                     future: _favoritesFuture,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
+                        return const Center(child: AppActivityIndicator());
                       }
 
                       if (snapshot.hasError) {
                         return _buildMessageState(
                           context,
                           icon: Icons.error_outline_rounded,
-                          title: 'Error loading favorites',
-                          subtitle:
-                              'Something went wrong while loading your saved services.',
+                          title: _l10n.favErrorTitle,
+                          subtitle: _l10n.favErrorSub,
                         );
                       }
 
@@ -123,9 +126,8 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
                         return _buildMessageState(
                           context,
                           icon: Icons.favorite_border_rounded,
-                          title: 'No favorites yet',
-                          subtitle:
-                              'Save the services you love so they are easy to book again.',
+                          title: _l10n.favNoTitle,
+                          subtitle: _l10n.favNoSub,
                         );
                       }
 
@@ -209,16 +211,16 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
           extra: <String, dynamic>{
             'serviceId': service.id,
             'serviceName': service.title,
-            'category': service.categoryName ?? 'Service',
+            'category': service.categoryName ?? _l10n.favService,
             'price': _formatPrice(service.basePrice, service.priceUnit),
             'rating': _parseRating(service.rating),
             'reviewCount': service.reviewCount ?? 0,
             'imageUrl': service.thumbnail ?? '',
             'description': service.description ?? '',
             'providerId': service.provider?.toString() ?? '',
-            'providerName': service.providerName ?? 'Provider',
+            'providerName': service.providerName ?? _l10n.favProvider,
             'providerPhoto': service.providerPhoto,
-            'providerCategory': service.categoryName ?? 'Service',
+            'providerCategory': service.categoryName ?? _l10n.favService,
           },
         ),
         child: Container(
@@ -271,7 +273,7 @@ class _FavoritesWidgetState extends State<FavoritesWidget> {
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(
-                          service.categoryName ?? 'Service',
+                          service.categoryName ?? _l10n.favService,
                           style: AppTheme.of(context).labelSmall.override(
                                 font: GoogleFonts.plusJakartaSans(
                                   fontWeight: FontWeight.w700,

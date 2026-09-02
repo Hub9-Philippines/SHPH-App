@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 
 class StepUpPasswordModal extends StatefulWidget {
@@ -43,6 +44,8 @@ class _StepUpPasswordModalState extends State<StepUpPasswordModal> {
   bool _obscure = true;
   String? _error;
 
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -59,7 +62,7 @@ class _StepUpPasswordModalState extends State<StepUpPasswordModal> {
   Future<void> _confirm() async {
     final password = _passwordController.text.trim();
     if (password.isEmpty) {
-      setState(() => _error = 'Please enter your password.');
+      setState(() => _error = _l10n.ccEnterPassword);
       return;
     }
     setState(() { _loading = true; _error = null; });
@@ -69,7 +72,7 @@ class _StepUpPasswordModalState extends State<StepUpPasswordModal> {
         if (ok) {
           Navigator.of(context).pop(true);
         } else {
-          setState(() => _error = widget.errorMessage ?? 'Incorrect password.');
+          setState(() => _error = widget.errorMessage ?? _l10n.ccIncorrectPassword);
         }
       }
     } catch (e) {
@@ -106,7 +109,7 @@ class _StepUpPasswordModalState extends State<StepUpPasswordModal> {
           Text(widget.title, style: theme.titleLarge),
           const SizedBox(height: 8),
           Text(
-            'For your security, please confirm your password to continue.',
+            _l10n.ccConfirmPasswordTitle,
             style: TextStyle(color: theme.secondaryText, fontSize: 14),
           ),
           const SizedBox(height: 20),
@@ -115,7 +118,7 @@ class _StepUpPasswordModalState extends State<StepUpPasswordModal> {
             focusNode: _focusNode,
             obscureText: _obscure,
             decoration: InputDecoration(
-              labelText: 'Password',
+              labelText: _l10n.ccPasswordLabel,
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               filled: true,
               fillColor: theme.secondaryBackground,
@@ -143,7 +146,7 @@ class _StepUpPasswordModalState extends State<StepUpPasswordModal> {
               ),
               child: _loading
                 ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: theme.onPrimary))
-                : const Text('Confirm', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                : Text(_l10n.ccConfirm, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
             ),
           ),
           const SizedBox(height: 12),
@@ -151,7 +154,7 @@ class _StepUpPasswordModalState extends State<StepUpPasswordModal> {
             width: double.infinity,
             child: TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+              child: Text(_l10n.ccCancel),
             ),
           ),
           const SizedBox(height: 16),

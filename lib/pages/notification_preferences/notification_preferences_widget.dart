@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'notification_preferences_model.dart';
 
@@ -20,6 +21,8 @@ class NotificationPreferencesWidget extends StatefulWidget {
 class _NotificationPreferencesWidgetState
     extends State<NotificationPreferencesWidget> {
   late NotificationPreferencesModel _model;
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   static const _categories = [
     ('bookings', 'Bookings', Icons.calendar_today),
@@ -59,7 +62,7 @@ class _NotificationPreferencesWidgetState
       backgroundColor: theme.primaryBackground,
       appBar: AppBar(
         backgroundColor: theme.primaryBackground,
-        title: Text('Notification Settings', style: theme.titleMedium),
+        title: Text(_l10n.npTitle, style: theme.titleMedium),
         centerTitle: true,
         elevation: 0,
       ),
@@ -83,7 +86,7 @@ class _NotificationPreferencesWidgetState
                           Icon(Icons.notifications,
                               color: theme.primary, size: 20),
                           const SizedBox(width: 8),
-                          Text('Push Notifications',
+                          Text(_l10n.npPush,
                               style: theme.titleSmall),
                           const Spacer(),
                           Switch(

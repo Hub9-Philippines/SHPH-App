@@ -9,6 +9,7 @@ import '/components/star_rating.dart';
 import '/components/user_avatar.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
+import '/l10n/app_localizations.dart';
 import '/pages/booking_funnel/status_page.dart';
 import '/services/bookings_service.dart';
 import '/theme/app_theme.dart';
@@ -35,6 +36,8 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
   late BookingDetailsModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -50,7 +53,11 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
 
   Future<void> _loadBookingDetails() async {
     if (widget.bookingId == null) {
-      setState(() => _model.errorMessage = 'Booking ID is required');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() => _model.errorMessage = _l10n.bdBookingIdRequired);
+        }
+      });
       return;
     }
 
@@ -98,14 +105,14 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
       } else {
         setState(() {
           _model.isLoading = false;
-          _model.errorMessage = 'Booking not found';
+          _model.errorMessage = _l10n.bdBookingNotFound;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _model.isLoading = false;
-          _model.errorMessage = 'Failed to load booking: $e';
+          _model.errorMessage = _l10n.bdFailedLoadBooking(e);
         });
       }
     }
@@ -115,17 +122,16 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Cancel Booking'),
-        content:
-            const Text('Are you sure you want to cancel this booking?'),
+        title: Text(_l10n.bdCancelBooking),
+        content: Text(_l10n.bdCancelConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('No'),
+            child: Text(_l10n.bdNo),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Yes'),
+            child: Text(_l10n.bdYes),
           ),
         ],
       ),
@@ -140,16 +146,16 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
 
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Booking cancelled successfully'),
-            backgroundColor: AppThemeData.successTeal,
+          SnackBar(
+            content: Text(_l10n.bdCancelledSuccessfully),
+            backgroundColor: AppThemeData.successBrand,
           ),
         );
         Navigator.pop(context, true);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Failed to cancel booking'),
+            content: Text(_l10n.bdFailedCancelBooking),
             backgroundColor: AppTheme.of(context).error,
           ),
         );
@@ -178,7 +184,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
       ContactProviderWidget.routeName,
       extra: <String, dynamic>{
         'providerName':
-            listing?['provider_name'] as String? ?? 'Assigned Provider',
+            listing?['provider_name'] as String? ?? _l10n.bdAssignedProvider,
         'providerId': listing?['provider_id'] as String?,
         'providerPhoto': listing?['provider_photo'] as String?,
         'isVerified': false,
@@ -194,7 +200,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
           bookingDate: _model.booking!.bookingDate,
           providerName: _providerName,
           serviceTitle:
-              _model.serviceListing?['title'] as String? ?? 'Your booking',
+              _model.serviceListing?['title'] as String? ?? _l10n.bdYourBooking,
           bookingReference: _model.booking!.id,
         ),
       ),
@@ -202,7 +208,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
   }
 
   String get _providerName =>
-      _model.serviceListing?['provider_name'] as String? ?? 'Assigned Provider';
+      _model.serviceListing?['provider_name'] as String? ?? _l10n.bdAssignedProvider;
 
   @override
   Widget build(BuildContext context) => GestureDetector(
@@ -227,9 +233,9 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                     ? _buildMessageState(
                         context,
                         icon: Icons.error_outline_rounded,
-                        title: 'Could not load booking',
+                        title: _l10n.bdCouldNotLoadBooking,
                         subtitle: _model.errorMessage!,
-                        actionLabel: 'Retry',
+                        actionLabel: _l10n.bdRetry,
                         onPressed: _loadBookingDetails,
                         iconColor: AppTheme.of(context).error,
                       )
@@ -237,10 +243,9 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                         ? _buildMessageState(
                             context,
                             icon: Icons.inventory_2_outlined,
-                            title: 'No booking data',
-                            subtitle:
-                                'This booking could not be found or is no longer available.',
-                            actionLabel: 'Go back',
+                            title: _l10n.bdNoBookingData,
+                            subtitle: _l10n.bdBookingUnavailable,
+                            actionLabel: _l10n.bdGoBack,
                             onPressed: () => Navigator.of(context).maybePop(),
                             iconColor: AppTheme.of(context).secondaryText,
                           )
@@ -263,9 +268,8 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                                   const SizedBox(height: 18),
                                   _buildSectionCard(
                                     context,
-                                    title: 'Notes',
-                                    subtitle:
-                                        'Special instructions attached to this booking.',
+                                    title: _l10n.bdNotes,
+                                    subtitle: _l10n.bdNotesSubtitle,
                                     child: Text(
                                       _model.booking!.notes!,
                                       style: AppTheme.of(context)
@@ -332,7 +336,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                         StarRating(rating: rating, size: 15),
                         const SizedBox(width: 6),
                         Text(
-                          rating > 0 ? rating.toStringAsFixed(1) : 'New',
+                          rating > 0 ? rating.toStringAsFixed(1) : _l10n.bdNew,
                           style: theme.labelSmall.override(
                             font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w600,
@@ -345,7 +349,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                     const SizedBox(height: 4),
                     Text(
                       _model.serviceListing?['title'] as String? ??
-                          'Service professional',
+                          _l10n.bdServiceProfessional,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.bodySmall.override(
@@ -366,13 +370,13 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
             children: [
               _FloatingCircleButton(
                 icon: Icons.call_rounded,
-                tooltip: 'Call provider',
+                tooltip: _l10n.bdCallProvider,
                 onTap: () => _openContact(context: context),
               ),
               const SizedBox(width: 8),
               _FloatingCircleButton(
                 icon: Icons.chat_bubble_rounded,
-                tooltip: 'Message provider',
+                tooltip: _l10n.bdMessageProvider,
                 onTap: () => _openContact(context: context),
               ),
             ],
@@ -403,7 +407,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
             children: [
               Expanded(
                 child: Text(
-                  'Service progress',
+                  _l10n.bdServiceProgress,
                   style: theme.titleSmall.override(
                     font: GoogleFonts.plusJakartaSans(
                       fontWeight: FontWeight.w700,
@@ -423,7 +427,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
           if (booking.status.toLowerCase() == 'cancelled') ...[
             const SizedBox(height: 10),
             Text(
-              'This booking was cancelled.',
+              _l10n.bdThisBookingCancelled,
               style: theme.bodySmall.override(
                 font: GoogleFonts.plusJakartaSans(
                   fontWeight: FontWeight.w600,
@@ -451,26 +455,26 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
 
     return [
       BookingStep(
-        label: 'Booking placed',
+        label: _l10n.bdBookingPlaced,
         icon: Icons.receipt_long_rounded,
         timestamp: fmt(_rowField('created_at') ?? booking.createdAt.toString()),
       ),
-      const BookingStep(
-        label: 'Provider confirmed',
+      BookingStep(
+        label: _l10n.bdProviderConfirmed,
         icon: Icons.verified_rounded,
       ),
       BookingStep(
-        label: 'Arrived on site',
+        label: _l10n.bdArrivedOnSite,
         icon: Icons.directions_walk_rounded,
         timestamp: fmt(_rowField('arrived_at')),
       ),
       BookingStep(
-        label: 'Service in progress',
+        label: _l10n.bdServiceInProgress,
         icon: Icons.construction_rounded,
         timestamp: fmt(_rowField('started_at')),
       ),
-      const BookingStep(
-        label: 'Completed',
+      BookingStep(
+        label: _l10n.bdCompleted,
         icon: Icons.task_alt_rounded,
       ),
     ];
@@ -506,23 +510,23 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
     final booking = _model.booking!;
     return _buildSectionCard(
       context,
-      title: 'Booking information',
-      subtitle: 'Core scheduling, payment, and location details.',
+      title: _l10n.bdBookingInformation,
+      subtitle: _l10n.bdInfoSubtitle,
       child: Column(
         children: [
-          _buildInfoRow(context, 'Booking ID', booking.id.substring(0, 8)),
+          _buildInfoRow(context, _l10n.bdBookingId, booking.id.substring(0, 8)),
           _buildInfoRow(
             context,
-            'Date & Time',
+            _l10n.bdDateAndTime,
             '${booking.bookingDate.day}/${booking.bookingDate.month}/${booking.bookingDate.year} · ${booking.bookingTime}',
           ),
-          _buildInfoRow(context, 'Status', _formatStatus(booking.status)),
+          _buildInfoRow(context, _l10n.bdStatus, _formatStatus(booking.status)),
           _buildInfoRow(
             context,
-            'Payment status',
-            booking.paymentStatus ?? 'Pending',
+            _l10n.bdPaymentStatus,
+            booking.paymentStatus ?? _l10n.bdPending,
           ),
-          _buildInfoRow(context, 'Service location', _serviceLocationLine()),
+          _buildInfoRow(context, _l10n.bdServiceLocation, _serviceLocationLine()),
         ],
       ),
     );
@@ -543,7 +547,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
         return value;
       }
     }
-    return 'Shared with your provider after assignment';
+    return _l10n.bdSharedAfterAssignment;
   }
 
   Widget _buildTopBar(BuildContext context) => Row(
@@ -563,7 +567,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Booking Details',
+                  _l10n.bdBookingDetails,
                   style: AppTheme.of(context).titleLarge.override(
                         font: GoogleFonts.plusJakartaSans(
                           fontWeight: FontWeight.w700,
@@ -572,7 +576,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                       ),
                 ),
                 Text(
-                  'Review progress, schedule, and payment state.',
+                  _l10n.bdHeaderSubtitle,
                   style: AppTheme.of(context).bodySmall.override(
                         font: GoogleFonts.plusJakartaSans(),
                         color: AppTheme.of(context).secondaryText,
@@ -608,7 +612,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                     : null,
                 icon: const Icon(Icons.map_rounded, size: 20),
                 label: Text(
-                  'Track on Map',
+                  _l10n.bdTrackOnMap,
                   style: theme.titleSmall.override(
                     font:
                         GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
@@ -630,7 +634,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                 onPressed: _cancelBooking,
                 icon: const Icon(Icons.close_rounded, size: 18),
                 label: Text(
-                  'Cancel Booking',
+                  _l10n.bdCancelBooking,
                   style: theme.labelLarge.override(
                     font:
                         GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
@@ -725,19 +729,19 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
 
   String _formatStatus(String? status) {
     if (status == null) {
-      return 'Unknown';
+      return _l10n.bdUnknown;
     }
     switch (status.toLowerCase()) {
       case 'pending':
-        return 'Pending';
+        return _l10n.bdPending;
       case 'confirmed':
-        return 'Confirmed';
+        return _l10n.bdConfirmed;
       case 'in_progress':
-        return 'In Progress';
+        return _l10n.bdInProgress;
       case 'completed':
-        return 'Completed';
+        return _l10n.bdCompleted;
       case 'cancelled':
-        return 'Cancelled';
+        return _l10n.bdCancelled;
       default:
         return status;
     }

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '/components/cupertino_ui/app_button.dart';
+import '/components/cupertino_ui/app_text_field.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/components/star_rating.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'write_review_model.dart';
 
@@ -27,6 +31,8 @@ class WriteReviewWidget extends StatefulWidget {
 class _WriteReviewWidgetState extends State<WriteReviewWidget> {
   late WriteReviewModel _model;
 
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -45,11 +51,12 @@ class _WriteReviewWidgetState extends State<WriteReviewWidget> {
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
-      appBar: AppBar(
-        backgroundColor: theme.primaryBackground,
-        title: const Text('Write a Review'),
-        centerTitle: true,
-        elevation: 0,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(44),
+        child: CupertinoPageHeader(
+          backgroundColor: theme.primaryBackground,
+          title: _l10n.wrTitle,
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(24),
@@ -59,7 +66,7 @@ class _WriteReviewWidgetState extends State<WriteReviewWidget> {
                 style: theme.titleMedium, textAlign: TextAlign.center),
             const SizedBox(height: 24),
           ],
-          Text('How was your experience?',
+          Text(_l10n.wrExperience,
               style: theme.bodyMedium, textAlign: TextAlign.center),
           const SizedBox(height: 16),
           Center(
@@ -70,20 +77,14 @@ class _WriteReviewWidgetState extends State<WriteReviewWidget> {
             ),
           ),
           const SizedBox(height: 24),
-          Text('Tell us more (optional)',
+          Text(_l10n.wrTellMore,
               style: theme.bodyMedium, textAlign: TextAlign.center),
           const SizedBox(height: 8),
-          TextField(
+          AppTextField(
             maxLines: 5,
-            maxLength: 1000,
-            decoration: InputDecoration(
-              hintText: 'Share details about your experience...',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              filled: true,
-              fillColor: theme.secondaryBackground,
-            ),
+            placeholder: _l10n.wrPlaceholder,
+            radius: 12,
+            fillColor: theme.secondaryBackground,
             onChanged: (v) => _model.comment = v,
           ),
           if (_model.error != null) ...[
@@ -94,13 +95,15 @@ class _WriteReviewWidgetState extends State<WriteReviewWidget> {
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton.icon(
+            child: AppButton(
+              loading: _model.submitting,
+              padding: const EdgeInsets.symmetric(vertical: 16),
               onPressed: () async {
-                final ok = await _model.submitReview(widget.bookingId);
+                final ok = await _model.submitReview(widget.bookingId, _l10n);
                 if (mounted) {
                   if (ok) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Review submitted!')),
+                      SnackBar(content: Text(_l10n.wrSubmitted)),
                     );
                     context.pop();
                   } else {
@@ -108,16 +111,13 @@ class _WriteReviewWidgetState extends State<WriteReviewWidget> {
                   }
                 }
               },
-              icon: _model.submitting
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.star, size: 18),
-              label: const Text('Submit Review'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.primary,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.star, size: 18, color: Colors.white),
+                  SizedBox(width: 8),
+                  Text(_l10n.wrSubmit),
+                ],
               ),
             ),
           ),

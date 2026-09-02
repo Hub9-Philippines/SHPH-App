@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '/components/cupertino_ui/app_activity_indicator.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'subcategory_model.dart';
 
@@ -26,6 +29,8 @@ class SubcategoryWidget extends StatefulWidget {
 class _SubcategoryWidgetState extends State<SubcategoryWidget> {
   late SubcategoryModel _model;
 
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -45,14 +50,16 @@ class _SubcategoryWidgetState extends State<SubcategoryWidget> {
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
-      appBar: AppBar(
-        backgroundColor: theme.primaryBackground,
-        title: Text(widget.categoryName, style: theme.titleMedium),
-        centerTitle: true,
-        elevation: 0,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: CupertinoPageHeader(
+          backgroundColor: theme.primaryBackground,
+          title: widget.categoryName,
+          titleStyle: theme.titleMedium,
+        ),
       ),
       body: _model.isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: AppActivityIndicator())
           : _model.subcategories.isEmpty
               ? Center(
                   child: Column(
@@ -61,7 +68,7 @@ class _SubcategoryWidgetState extends State<SubcategoryWidget> {
                       Icon(Icons.category,
                           size: 64, color: theme.secondaryText),
                       const SizedBox(height: 16),
-                      Text('No services available in this category',
+                      Text(_l10n.subcatNoServices,
                           style: theme.bodyMedium),
                     ],
                   ),

@@ -67,7 +67,7 @@ class AIBookingComposerService {
 
   String _buildSystemPrompt() {
     return '''
-You are a booking assistant for a home services platform in the Philippines called SerbisyoHub PH.
+You are a booking assistant for a home services platform in the Philippines called Serbisyo.
 Extract structured data from the user's request. 
 Return ONLY valid JSON with these fields:
 - service_name: the type of service needed (e.g., "Plumbing Repair", "Aircon Cleaning")

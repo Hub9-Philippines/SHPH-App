@@ -2,6 +2,8 @@
 
 Project-specific instructions (backend, architecture, commands, gotchas): @AGENTS.md
 
+Design system reference (color/layout tokens, shared components, typography, safe-area rules): @docs/design-system.md
+
 Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
 
 **Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.

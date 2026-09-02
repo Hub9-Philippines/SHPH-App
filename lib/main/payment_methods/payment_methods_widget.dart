@@ -1,12 +1,15 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/backend/supabase/database/tables/payment_methods.dart';
+import '/components/cupertino_ui/app_button.dart';
 import '/components/screen_header.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'payment_methods_model.dart';
 
@@ -27,6 +30,8 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
   late Future<List<PaymentMethodsRow>> _paymentMethodsFuture;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -90,7 +95,7 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Payment Methods',
+                                _l10n.pmTitle,
                                 style:
                                     AppTheme.of(context).titleLarge.override(
                                           font: GoogleFonts.plusJakartaSans(
@@ -99,7 +104,7 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
                                         ),
                               ),
                               Text(
-                                'Manage how you pay for bookings.',
+                                _l10n.pmSubtitle,
                                 style:
                                     AppTheme.of(context).bodySmall.override(
                                           font: GoogleFonts.plusJakartaSans(),
@@ -123,8 +128,6 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
                         ),
                         padding: const EdgeInsets.fromLTRB(20, 12, 20, 130),
                         children: [
-                          _buildHeader(context, snapshot.data ?? []),
-                          const SizedBox(height: 18),
                           if (snapshot.connectionState ==
                               ConnectionState.waiting) ...[
                             const PaymentMethodCardSkeleton(),
@@ -155,59 +158,6 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
         ),
       );
 
-  Widget _buildHeader(BuildContext context, List<PaymentMethodsRow> methods) {
-    final defaultCount = methods.where((method) => method.isDefault).length;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF17212B),
-            Color(0xFF23384D),
-            Color(0xFF2F5368),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(28),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Wallet setup',
-            style: AppTheme.of(context).titleLarge.override(
-                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
-                  color: Colors.white,
-                ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Store your cards and e-wallets for a faster checkout experience.',
-            style: AppTheme.of(context).bodyMedium.override(
-                  font: GoogleFonts.plusJakartaSans(),
-                  color: Colors.white.withValues(alpha: 0.82),
-                ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child:
-                    _WalletMetric(label: 'Saved', value: '${methods.length}'),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _WalletMetric(label: 'Default', value: '$defaultCount'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildPaymentCard(BuildContext context, PaymentMethodsRow method) {
     late final String title;
     late final String subtitle;
@@ -216,14 +166,14 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
 
     if (method.type == 'card') {
       title =
-          '${method.provider ?? 'Card'} ending in ${method.lastFour ?? '****'}';
+          '${method.provider ?? 'Card'} ${_l10n.pmEndingIn(method.lastFour ?? '****')}';
       subtitle =
-          'Expires ${method.expiryMonth ?? '--'}/${method.expiryYear ?? '----'}';
+          _l10n.pmExpires(method.expiryMonth ?? '--', method.expiryYear ?? '----');
       icon = Icons.credit_card_rounded;
       tint = const Color(0xFF1B74E4);
     } else {
-      title = method.provider ?? 'E-Wallet';
-      subtitle = method.phoneNumber ?? 'No phone number';
+      title = method.provider ?? _l10n.pmEwallet;
+      subtitle = method.phoneNumber ?? _l10n.pmNoPhone;
       icon = Icons.account_balance_wallet_rounded;
       tint = const Color(0xFF0F8A6C);
     }
@@ -286,7 +236,7 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(
-                          'Default',
+                          _l10n.adDefault,
                           style: AppTheme.of(context).labelSmall.override(
                                 color: tint,
                                 fontWeight: FontWeight.w700,
@@ -342,7 +292,7 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
             ),
             const SizedBox(height: 18),
             Text(
-              'No payment methods yet',
+              _l10n.pmEmptyTitle,
               style: AppTheme.of(context).titleMedium.override(
                     font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     color: AppTheme.of(context).primaryText,
@@ -350,7 +300,7 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Add a card or e-wallet so checkout is faster when you book.',
+              _l10n.pmEmptySubtitle,
               textAlign: TextAlign.center,
               style: AppTheme.of(context).bodySmall.override(
                     color: AppTheme.of(context).secondaryText,
@@ -373,7 +323,7 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
             const Icon(Icons.error_outline_rounded, size: 48),
             const SizedBox(height: 12),
             Text(
-              'Error loading payment methods',
+              _l10n.pmErrorLoading,
               style: AppTheme.of(context).titleSmall,
             ),
             const SizedBox(height: 8),
@@ -385,9 +335,9 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
                   ),
             ),
             const SizedBox(height: 14),
-            FilledButton(
+            AppButton(
               onPressed: () => safeSetState(_loadPaymentMethods),
-              child: const Text('Retry'),
+              child: Text(_l10n.retry),
             ),
           ],
         ),
@@ -406,7 +356,7 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
             width: double.infinity,
             child: FFButtonWidget(
               onPressed: () => _showAddPaymentDialog(context),
-              text: 'Add Payment Method',
+              text: _l10n.pmAddTitle,
               icon: const Icon(Icons.add_rounded, size: 18),
               options: FFButtonOptions(
                 height: 54,
@@ -447,15 +397,15 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
             if (!method.isDefault)
               ListTile(
                 leading: const Icon(Icons.check_circle_outline_rounded),
-                title: const Text('Set as default'),
+                title: Text(_l10n.pmSetDefault),
                 onTap: () async {
                   Navigator.pop(context);
                   await _model.setAsDefault(method.id);
                   safeSetState(_loadPaymentMethods);
                   if (mounted) {
                     ScaffoldMessenger.of(this.context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Set as default payment method'),
+                      SnackBar(
+                        content: Text(_l10n.pmSetDefaultFull),
                       ),
                     );
                   }
@@ -463,7 +413,7 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
               ),
             ListTile(
               leading: const Icon(Icons.edit_outlined),
-              title: const Text('Edit'),
+              title: Text(_l10n.pmEdit),
               onTap: () async {
                 Navigator.pop(context);
                 if (method.type == 'card') {
@@ -483,14 +433,14 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
             ListTile(
               leading:
                   Icon(Icons.delete_outline_rounded, color: AppTheme.of(context).error),
-              title: Text('Remove', style: TextStyle(color: AppTheme.of(context).error)),
+              title: Text(_l10n.pmRemove, style: TextStyle(color: AppTheme.of(context).error)),
               onTap: () async {
                 Navigator.pop(context);
                 await _model.deletePaymentMethod(method.id);
                 safeSetState(_loadPaymentMethods);
                 if (mounted) {
                   ScaffoldMessenger.of(this.context).showSnackBar(
-                    const SnackBar(content: Text('Payment method removed')),
+                    SnackBar(content: Text(_l10n.pmRemoved)),
                   );
                 }
               },
@@ -502,16 +452,16 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
   }
 
   void _showAddPaymentDialog(BuildContext context) {
-    showDialog(
+    showCupertinoDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add Payment Method'),
+      builder: (context) => CupertinoAlertDialog(
+        title: Text(_l10n.pmAddTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
               leading: const Icon(Icons.credit_card_rounded),
-              title: const Text('Credit/Debit Card'),
+              title: Text(_l10n.pmCreditDebitCard),
               onTap: () {
                 Navigator.pop(context);
                 context.pushNamed(AddCardPaymentWidget.routeName).then((_) {
@@ -521,7 +471,7 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
             ),
             ListTile(
               leading: const Icon(Icons.account_balance_wallet_rounded),
-              title: const Text('E-Wallet (GCash, Maya)'),
+              title: Text(_l10n.pmEwalletOptions),
               onTap: () {
                 Navigator.pop(context);
                 context.pushNamed(AddEwalletPaymentWidget.routeName).then((_) {
@@ -532,49 +482,12 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
           ],
         ),
         actions: [
-          TextButton(
+          CupertinoDialogAction(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(_l10n.cancel),
           ),
         ],
       ),
     );
   }
-}
-
-class _WalletMetric extends StatelessWidget {
-  const _WalletMetric({
-    required this.label,
-    required this.value,
-  });
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.10),
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: AppTheme.of(context).titleMedium.override(
-                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
-                    color: Colors.white,
-                  ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: AppTheme.of(context).bodySmall.override(
-                    color: Colors.white.withValues(alpha: 0.8),
-                  ),
-            ),
-          ],
-        ),
-      );
 }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import '/components/cupertino_ui/app_button.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import '../booking_controller.dart';
 import '../booking_models.dart';
@@ -13,6 +15,7 @@ class BookingSetupScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = AppTheme.of(context);
 
     return Scaffold(
@@ -30,7 +33,7 @@ class BookingSetupScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Step 3 of 3',
+              l10n.bfStepOf(3),
               style: theme.labelMedium.override(
                 color: theme.primary,
                 fontWeight: FontWeight.w700,
@@ -38,7 +41,7 @@ class BookingSetupScreen extends StatelessWidget {
             ),
             const SizedBox(height: 2),
             Text(
-              'Service setup',
+              l10n.bfServiceSetup,
               style: theme.titleLarge.override(
                 font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
               ),
@@ -49,6 +52,7 @@ class BookingSetupScreen extends StatelessWidget {
       body: SafeArea(
         child: Consumer<BookingFlowController>(
           builder: (context, controller, _) {
+            final l10n = AppLocalizations.of(context)!;
             final quote = controller.quote;
             return Column(
               children: [
@@ -58,28 +62,29 @@ class BookingSetupScreen extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                     children: [
                       _SetupHero(
-                        subtitle:
-                            'Adjust the scope in seconds. Pricing updates live as you change settings.',
-                        urgencyLabel: controller.urgencyLabel,
+                        subtitle: l10n.bfAdjustScope,
+                        urgencyLabel: controller.urgencyLabel(l10n),
                       ),
                       const SizedBox(height: 16),
-                      const _SectionLabel(title: 'Service summary'),
+                      _SectionLabel(title: l10n.bfServiceSummary),
                       const SizedBox(height: 10),
                       _SummaryTile(controller: controller),
                       const SizedBox(height: 16),
-                      const _SectionLabel(title: 'Scope'),
+                      _SectionLabel(title: l10n.bfScope),
                       const SizedBox(height: 10),
                       _StepperRow(
                         title: controller.draft.serviceCategoryName == null
-                            ? 'Quantity'
+                            ? l10n.bfQuantity
                             : _quantityTitle(
                                 controller.draft.serviceCategoryName!,
+                                l10n,
                               ),
                         value: controller.draft.rooms.toString(),
                         hint: controller.draft.serviceCategoryName == null
-                            ? 'How many units or sessions do you need?'
+                            ? l10n.bfQuantityHintDefault
                             : _quantityHint(
                                 controller.draft.serviceCategoryName!,
+                                l10n,
                               ),
                         onMinus: controller.draft.rooms <= 1
                             ? null
@@ -89,20 +94,22 @@ class BookingSetupScreen extends StatelessWidget {
                             controller.setRooms(controller.draft.rooms + 1),
                       ),
                       const SizedBox(height: 16),
-                      const _SectionLabel(title: 'Service level'),
+                      _SectionLabel(title: l10n.bfServiceLevel),
                       const SizedBox(height: 10),
                       _ChoiceGroup(
                         title: _serviceLevelTitle(
                           controller.draft.serviceCategoryName,
+                          l10n,
                         ),
                         options: _serviceLevelOptions(
                           controller.draft.serviceCategoryName,
+                          l10n,
                         ),
                         selected: controller.draft.cleaningType,
                         onChanged: controller.setServiceType,
                       ),
                       const SizedBox(height: 18),
-                      const _SectionLabel(title: 'Live estimate'),
+                      _SectionLabel(title: l10n.bfLiveEstimate),
                       const SizedBox(height: 10),
                       _PriceBreakdown(quote: quote),
                     ],
@@ -115,7 +122,7 @@ class BookingSetupScreen extends StatelessWidget {
                     child: SizedBox(
                       width: double.infinity,
                       height: 56,
-                      child: ElevatedButton(
+                      child: AppButton(
                         onPressed: () {
                           final controller =
                               context.read<BookingFlowController>();
@@ -128,17 +135,12 @@ class BookingSetupScreen extends StatelessWidget {
                             ),
                           );
                         },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: theme.primary,
-                          foregroundColor: theme.onPrimary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
+                        backgroundColor: theme.primary,
+                        foregroundColor: theme.onPrimary,
+                        borderRadius: 16,
                         child: Text(
-                          'Continue to checkout',
+                          l10n.bfContinueToCheckout,
                           style: theme.titleMedium.override(
-                            color: theme.onPrimary,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -166,6 +168,7 @@ class _SetupHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = AppTheme.of(context);
 
     return Container(
@@ -198,7 +201,7 @@ class _SetupHero extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Finalize the job setup',
+                  l10n.bfFinalizeJobSetup,
                   style: theme.titleSmall.override(
                     fontWeight: FontWeight.w700,
                   ),
@@ -259,33 +262,36 @@ class _SetupProgress extends StatelessWidget {
   const _SetupProgress();
 
   @override
-  Widget build(BuildContext context) => const Padding(
-        padding: EdgeInsets.fromLTRB(16, 0, 16, 12),
-        child: Row(
-          children: [
-            Expanded(
-              child: _SetupStepPill(
-                title: 'Location',
-                done: true,
-              ),
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: _SetupStepPill(
+              title: l10n.bfLocation,
+              done: true,
             ),
-            SizedBox(width: 8),
-            Expanded(
-              child: _SetupStepPill(
-                title: 'Time',
-                done: true,
-              ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _SetupStepPill(
+              title: l10n.bfTime,
+              done: true,
             ),
-            SizedBox(width: 8),
-            Expanded(
-              child: _SetupStepPill(
-                title: 'Setup',
-                active: true,
-              ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _SetupStepPill(
+              title: l10n.bfSetup,
+              active: true,
             ),
-          ],
-        ),
-      );
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _SetupStepPill extends StatelessWidget {
@@ -358,6 +364,7 @@ class _SummaryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = AppTheme.of(context);
     final draft = controller.draft;
 
@@ -385,14 +392,14 @@ class _SummaryTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Service',
+                  l10n.bfService,
                   style: theme.labelMedium.override(
                     color: theme.secondaryText,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  controller.selectedServiceLabel,
+                  controller.selectedServiceLabel(l10n),
                   style: theme.bodyLarge.override(
                     fontWeight: FontWeight.w700,
                   ),
@@ -408,7 +415,7 @@ class _SummaryTile extends StatelessWidget {
                 ],
                 const SizedBox(height: 2),
                 Text(
-                  controller.urgencyLabel,
+                  controller.urgencyLabel(l10n),
                   style: theme.bodySmall.override(
                     color: theme.secondaryText,
                   ),
@@ -582,49 +589,52 @@ class _ChoiceGroup extends StatelessWidget {
   }
 }
 
-String _serviceLevelTitle(String? categoryName) {
+String _serviceLevelTitle(String? categoryName, AppLocalizations l10n) {
   final normalized = (categoryName ?? '').toLowerCase();
   if (normalized.contains('clean')) {
-    return 'Cleaning type';
+    return l10n.bfCleaningType;
   }
-  return 'Service level';
+  return l10n.bfServiceLevel;
 }
 
-String _quantityTitle(String categoryName) {
+String _quantityTitle(String categoryName, AppLocalizations l10n) {
   final normalized = categoryName.toLowerCase();
   if (normalized.contains('clean')) {
-    return 'Rooms';
+    return l10n.bfRooms;
   }
   if (normalized.contains('repair') || normalized.contains('install')) {
-    return 'Items';
+    return l10n.bfItems;
   }
-  return 'Quantity';
+  return l10n.bfQuantity;
 }
 
-String _quantityHint(String categoryName) {
+String _quantityHint(String categoryName, AppLocalizations l10n) {
   final normalized = categoryName.toLowerCase();
   if (normalized.contains('clean')) {
-    return 'How many rooms do you want serviced?';
+    return l10n.bfQuantityHintRooms;
   }
   if (normalized.contains('repair') || normalized.contains('install')) {
-    return 'How many items or tasks should be covered?';
+    return l10n.bfQuantityHintItems;
   }
-  return 'How many units, rooms, or tasks do you need?';
+  return l10n.bfQuantityHintDefault;
 }
 
-List<(ServiceType, String)> _serviceLevelOptions(String? categoryName) {
+List<(ServiceType, String)> _serviceLevelOptions(
+  String? categoryName,
+  AppLocalizations l10n,
+) {
   final normalized = (categoryName ?? '').toLowerCase();
   if (normalized.contains('clean')) {
-    return const [
-      (ServiceType.standard, 'Standard'),
-      (ServiceType.deep, 'Deep'),
-      (ServiceType.premium, 'Premium'),
+    return [
+      (ServiceType.standard, l10n.bfLevelStandard),
+      (ServiceType.deep, l10n.bfLevelDeep),
+      (ServiceType.premium, l10n.bfLevelPremium),
     ];
   }
-  return const [
-    (ServiceType.standard, 'Basic'),
-    (ServiceType.deep, 'Priority'),
-    (ServiceType.premium, 'Express'),
+  return [
+    (ServiceType.standard, l10n.bfLevelBasic),
+    (ServiceType.deep, l10n.bfLevelPriority),
+    (ServiceType.premium, l10n.bfLevelExpress),
   ];
 }
 
@@ -635,6 +645,7 @@ class _PriceBreakdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = AppTheme.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
@@ -645,12 +656,12 @@ class _PriceBreakdown extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _row(context, 'Base service', quote.basePrice),
-          _row(context, 'Scope', quote.roomSubtotal),
-          _row(context, 'Service level', quote.cleaningTypeAdjustment),
-          _row(context, 'Rush factor', quote.urgencyAdjustment),
+          _row(context, l10n.bfBaseService, quote.basePrice),
+          _row(context, l10n.bfScope, quote.roomSubtotal),
+          _row(context, l10n.bfServiceLevel, quote.cleaningTypeAdjustment),
+          _row(context, l10n.bfRushFactor, quote.urgencyAdjustment),
           const Divider(height: 24),
-          _row(context, 'Total', quote.total, bold: true),
+          _row(context, l10n.bfTotal, quote.total, bold: true),
         ],
       ),
     );

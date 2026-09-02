@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/components/cupertino_ui/app_button.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'booking_success_model.dart';
 
@@ -23,6 +25,8 @@ class _BookingSuccessWidgetState extends State<BookingSuccessWidget>
   late BookingSuccessModel _model;
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -110,7 +114,7 @@ class _BookingSuccessWidgetState extends State<BookingSuccessWidget>
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            'Booking Confirmed',
+                            _l10n.bsTitle,
                             textAlign: TextAlign.center,
                             style: AppTheme.of(context).headlineMedium.override(
                                   font: GoogleFonts.plusJakartaSans(
@@ -121,7 +125,7 @@ class _BookingSuccessWidgetState extends State<BookingSuccessWidget>
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Your request has been created successfully and the provider will be notified shortly.',
+                            _l10n.bsSubtitle,
                             textAlign: TextAlign.center,
                             style: AppTheme.of(context).bodyMedium.override(
                                   font: GoogleFonts.plusJakartaSans(),
@@ -134,18 +138,16 @@ class _BookingSuccessWidgetState extends State<BookingSuccessWidget>
                     const SizedBox(height: 22),
                     _buildInfoCard(
                       icon: Icons.notifications_active_rounded,
-                      title: 'What happens next',
-                      description:
-                          'You can track the request from your bookings page and we will keep you updated as the status changes.',
+                      title: _l10n.bsNextTitle,
+                      description: _l10n.bsNextDesc,
                       accent: AppTheme.of(context).primary,
                       background: const Color(0xFFF6FBFF),
                     ),
                     const SizedBox(height: 16),
                     _buildInfoCard(
                       icon: Icons.shield_outlined,
-                      title: 'Payment protection',
-                      description:
-                          'Escrow-enabled payments stay protected until the work is completed and confirmed.',
+                      title: _l10n.bsProtectionTitle,
+                      description: _l10n.bsProtectionDesc,
                       accent: const Color(0xFF1B74E4),
                       background: const Color(0xFFEAF4FF),
                     ),
@@ -154,7 +156,7 @@ class _BookingSuccessWidgetState extends State<BookingSuccessWidget>
                       onPressed: () {
                         context.go('/bookings');
                       },
-                      text: 'View Bookings',
+                      text: _l10n.bsViewBookings,
                       options: FFButtonOptions(
                         width: double.infinity,
                         height: 56,
@@ -169,25 +171,23 @@ class _BookingSuccessWidgetState extends State<BookingSuccessWidget>
                       ),
                     ),
                     const SizedBox(height: 14),
-                    OutlinedButton(
+                    AppButton(
                       onPressed: () {
                         context.go('/home');
                       },
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 52),
-                        side: BorderSide(
-                          color: AppTheme.of(context).primary.withValues(
-                                alpha: 0.18,
-                              ),
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
-                        ),
+                      variant: AppButtonVariant.outlined,
+                      borderSide: BorderSide(
+                        color: AppTheme.of(context).primary.withValues(
+                              alpha: 0.18,
+                            ),
                       ),
+                      width: double.infinity,
+                      height: 52,
+                      borderRadius: 18,
+                      foregroundColor: AppTheme.of(context).primary,
                       child: Text(
-                        'Back to Home',
+                        _l10n.bsBackHome,
                         style: AppTheme.of(context).bodyMedium.override(
-                              color: AppTheme.of(context).primary,
                               font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,
                               ),

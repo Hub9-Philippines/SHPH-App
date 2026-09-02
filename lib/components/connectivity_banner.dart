@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 
+import '/l10n/app_localizations.dart';
+
 class ConnectivityBanner extends StatelessWidget {
   const ConnectivityBanner({required this.isOffline, super.key});
 
   final bool isOffline;
 
   @override
-  Widget build(BuildContext context) => AnimatedSlide(
+  Widget build(BuildContext context) => SafeArea(
+    bottom: false,
+    child: AnimatedSlide(
       duration: const Duration(milliseconds: 300),
       offset: isOffline ? Offset.zero : const Offset(0, -2),
       child: AnimatedContainer(
@@ -25,7 +29,7 @@ class ConnectivityBanner extends StatelessWidget {
                   const Icon(Icons.wifi_off_rounded, color: Colors.white, size: 16),
                   const SizedBox(width: 8),
                   Text(
-                    'No internet connection',
+                    AppLocalizations.of(context)!.ccNoInternet,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 13,
@@ -38,5 +42,6 @@ class ConnectivityBanner extends StatelessWidget {
               )
             : const SizedBox.shrink(),
       ),
-    );
+    ),
+  );
 }

@@ -1,103 +1,181 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 
 /// Full-width purple referral banner closing the Explore feed (section 5).
 class InviteEarnBanner extends StatelessWidget {
   const InviteEarnBanner({
     super.key,
-    this.title = 'Invite & Earn',
-    this.subtitle = 'Refer a friend and get a PHP 100 cash bonus '
-        'when they complete their first booking.',
-    this.shareLabel = 'Share Link',
+    this.title,
+    this.subtitle,
+    this.shareLabel,
     this.onShare,
   });
 
-  final String title;
-  final String subtitle;
-  final String shareLabel;
+  final String? title;
+  final String? subtitle;
+  final String? shareLabel;
   final VoidCallback? onShare;
 
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final _l10n = AppLocalizations.of(context)!;
+    final effectiveTitle = title ?? _l10n.ccInviteEarn;
+    final effectiveSubtitle = subtitle ?? _l10n.ccInviteSubtitle;
+    final effectiveShareLabel = shareLabel ?? _l10n.ccShareLink;
     return Container(
-      // Grid: horizontal inset owned here (16px); vertical rhythm supplied
-      // by the host feed's block separators.
       margin: const EdgeInsets.symmetric(horizontal: AppThemeData.spaceLg),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: AppThemeData.referralGradient,
+          colors: [
+            Color(0xFF0F172A),
+            Color(0xFF1E293B),
+            Color(0xFF1E3A8A),
+          ],
         ),
-        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.12),
+          width: 1,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x220F172A),
+            blurRadius: 18,
+            offset: Offset(0, 8),
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      child: Stack(
+        clipBehavior: Clip.antiAlias,
+        children: [
+          Positioned(
+            top: -24,
+            right: -24,
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF38BDF8).withValues(alpha: 0.22),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -15,
+            right: 12,
+            child: Icon(
+              Icons.card_giftcard_rounded,
+              size: 80,
+              color: Colors.white.withValues(alpha: 0.05),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.16),
-                    borderRadius: BorderRadius.circular(12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
                   ),
-                  child: const Icon(
-                    Icons.card_giftcard_rounded,
-                    color: Colors.white,
-                    size: 22,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.12),
+                    borderRadius:
+                        BorderRadius.circular(AppThemeData.radiusPill),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.18),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.stars_rounded,
+                        size: 13,
+                        color: Color(0xFFFCD34D),
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        'REFERRAL PROGRAM',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.9,
+                          color: const Color(0xFFFCD34D),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: theme.titleMedium.override(
-                      font: GoogleFonts.plusJakartaSans(
+                const SizedBox(height: 12),
+                Text(
+                  effectiveTitle,
+                  style: theme.titleMedium.override(
+                    font: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 18,
+                    ),
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  effectiveSubtitle,
+                  style: theme.bodySmall.override(
+                    font: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w400,
+                    ),
+                    color: const Color(0xFFCBD5E1),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                SizedBox(
+                  height: 38,
+                  child: ElevatedButton.icon(
+                    onPressed: onShare,
+                    icon: const Icon(
+                      Icons.share_rounded,
+                      size: 15,
+                      color: Color(0xFF0F172A),
+                    ),
+                    label: Text(effectiveShareLabel),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFF0F172A),
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppThemeData.radiusSm),
+                      ),
+                      textStyle: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
                         fontWeight: FontWeight.w800,
                       ),
-                      color: Colors.white,
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-            Text(
-              subtitle,
-              style: theme.bodySmall.override(
-                font: GoogleFonts.plusJakartaSans(),
-                color: Colors.white.withValues(alpha: 0.9),
-              ),
-            ),
-            const SizedBox(height: 14),
-            SizedBox(
-              height: 38,
-              child: OutlinedButton.icon(
-                onPressed: onShare,
-                icon: const Icon(Icons.ios_share_rounded, size: 16),
-                label: Text(shareLabel),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  side: BorderSide(color: Colors.white.withValues(alpha: 0.7)),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  textStyle: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

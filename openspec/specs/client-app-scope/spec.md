@@ -1,6 +1,6 @@
 ## Purpose
 
-Defines the behavior contract for this repository as the dedicated SerbisyoHub client app: every account created or signed in here is treated as a client, the navigation surface is exclusively client-facing, provider-only screens are unreachable, and users with provider accounts are directed to the Provider app.
+Defines the behavior contract for this repository as the dedicated Serbisyo client app: every account created or signed in here is treated as a client, the navigation surface is exclusively client-facing, provider-only screens are unreachable, and users with provider accounts are directed to the Provider app.
 
 ### Requirement: Client-only account creation
 The signup flow SHALL offer only client accounts; it MUST NOT present a role selection for "service provider" at signup, onboarding, or profile creation.
@@ -32,7 +32,7 @@ The router SHALL NOT expose routes for provider-only experiences (provider dashb
 - **THEN** the user lands on the client home screen with no crash, blank page, or provider UI
 
 ### Requirement: Provider account sign-in guidance
-When an account that has provider capabilities signs in to the client app, the app SHALL show an explanatory notice directing the user to the SerbisyoHub Provider app instead of rendering provider features.
+When an account that has provider capabilities signs in to the client app, the app SHALL show an explanatory notice directing the user to the Serbisyo Provider app instead of rendering provider features.
 
 #### Scenario: Existing provider signs in on the client app
 - **WHEN** sign-in succeeds for an account whose backend role includes provider capabilities

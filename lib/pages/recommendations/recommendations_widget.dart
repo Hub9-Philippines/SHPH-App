@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/components/cupertino_ui/app_activity_indicator.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'recommendations_model.dart';
 
@@ -19,6 +22,8 @@ class RecommendationsWidget extends StatefulWidget {
 
 class _RecommendationsWidgetState extends State<RecommendationsWidget> {
   late RecommendationsModel _model;
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -39,14 +44,16 @@ class _RecommendationsWidgetState extends State<RecommendationsWidget> {
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
-      appBar: AppBar(
-        backgroundColor: theme.primaryBackground,
-        title: Text('Recommendations', style: theme.titleMedium),
-        centerTitle: true,
-        elevation: 0,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: CupertinoPageHeader(
+          backgroundColor: theme.primaryBackground,
+          title: _l10n.rcmTitle,
+          titleStyle: theme.titleMedium,
+        ),
       ),
       body: _model.isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: AppActivityIndicator())
           : RefreshIndicator(
               onRefresh: () async {
                 await _model.loadRecommendations();
@@ -59,11 +66,11 @@ class _RecommendationsWidgetState extends State<RecommendationsWidget> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (_model.trending.isNotEmpty)
-                      _buildSection(context, theme, 'Trending Now',
+                      _buildSection(context, theme, _l10n.rcmTrending,
                           _model.trending, true),
                     if (_model.nearYou.isNotEmpty) ...[
                       const SizedBox(height: 24),
-                      _buildSection(context, theme, 'Near You',
+                      _buildSection(context, theme, _l10n.rcmNearYou,
                           _model.nearYou, false),
                     ],
                     if (_model.categoryPicks.isNotEmpty) ...[
@@ -209,7 +216,7 @@ class _RecommendationsWidgetState extends State<RecommendationsWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Picked for You',
+        Text(_l10n.rcmPicked,
             style: GoogleFonts.plusJakartaSans(
                 color: theme.primaryText,
                 fontSize: 18,
@@ -270,13 +277,13 @@ class _RecommendationsWidgetState extends State<RecommendationsWidget> {
             Icon(Icons.explore_rounded,
                 size: 64, color: theme.textTertiary),
             const SizedBox(height: 16),
-            Text('No recommendations yet',
+            Text(_l10n.rcmNoRecs,
                 style: GoogleFonts.plusJakartaSans(
                     color: theme.primaryText,
                     fontSize: 18,
                     fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
-            Text('Browse services to get personalized picks.',
+            Text(_l10n.rcmBrowse,
                 style: GoogleFonts.plusJakartaSans(
                     color: theme.secondaryText, fontSize: 14)),
           ],

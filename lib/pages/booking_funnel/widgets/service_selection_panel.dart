@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/l10n/app_localizations.dart';
 import '/models/service_listing.dart';
 import '/pages/search_page/search_page_widget.dart';
 import '/services/service_listing_service.dart';
@@ -29,6 +30,7 @@ class _ServiceSelectionPanelState extends State<ServiceSelectionPanel> {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       decoration: BoxDecoration(
@@ -56,7 +58,7 @@ class _ServiceSelectionPanelState extends State<ServiceSelectionPanel> {
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
-                'Quick book',
+                l10n.bfQuickBook,
                 style: theme.labelMedium.override(
                   color: theme.primary,
                   fontWeight: FontWeight.w700,
@@ -65,14 +67,14 @@ class _ServiceSelectionPanelState extends State<ServiceSelectionPanel> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Pick a service',
+              l10n.bfPickAService,
               style: theme.titleLarge.override(
                 font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              'Tap any service to instantly configure your booking.',
+              l10n.bfTapServiceConfigure,
               textAlign: TextAlign.center,
               style: theme.bodyMedium.override(color: theme.secondaryText),
             ),
@@ -89,9 +91,9 @@ class _ServiceSelectionPanelState extends State<ServiceSelectionPanel> {
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     child: Text(
-                      'Could not load services. Pull down to retry.',
-                      style:
-                          theme.bodySmall.override(color: theme.secondaryText),
+                      l10n.bfCouldNotLoadServices,
+                      style: theme.bodySmall
+                          .override(color: theme.secondaryText),
                     ),
                   );
                 }
@@ -108,7 +110,7 @@ class _ServiceSelectionPanelState extends State<ServiceSelectionPanel> {
                         router.pushNamed(SearchPageWidget.routeName);
                       },
                       icon: const Icon(Icons.search_rounded, size: 18),
-                      label: const Text('Search all services →'),
+                      label: Text(l10n.bfSearchAllServices),
                     ),
                   ],
                 );

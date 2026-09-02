@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/components/cupertino_ui/app_switch.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 
 class ProviderStatusToggle extends StatelessWidget {
@@ -18,6 +20,7 @@ class ProviderStatusToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final _l10n = AppLocalizations.of(context)!;
 
     if (compact) {
       return GestureDetector(
@@ -41,7 +44,7 @@ class ProviderStatusToggle extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               Text(
-                isOnline ? 'Online' : 'Offline',
+                isOnline ? _l10n.ccOnline : _l10n.ccOffline,
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -84,7 +87,7 @@ class ProviderStatusToggle extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isOnline ? 'You\'re Online' : 'You\'re Offline',
+                  isOnline ? _l10n.ccYouOnline : _l10n.ccYouOffline,
                   style: theme.titleSmall.override(
                     font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                     color: theme.primaryText,
@@ -93,14 +96,14 @@ class ProviderStatusToggle extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   isOnline
-                      ? 'Ready to receive service requests'
-                      : 'New requests won\'t reach you',
+                      ? _l10n.ccReadyRequests
+                      : _l10n.ccNoNewRequests,
                   style: theme.bodySmall.override(color: theme.textTertiary),
                 ),
               ],
             ),
           ),
-          Switch(
+          AppSwitch(
             value: isOnline,
             activeColor: theme.success,
             onChanged: onToggle,

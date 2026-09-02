@@ -56,17 +56,17 @@ class _CupertinoSlidingWidgetMessagesState
 
   @override
   Widget build(BuildContext context) {
-    final primary = AppTheme.of(context).primary;
+    final theme = AppTheme.of(context);
     return SizedBox(
       width: widget.width ?? 320,
       height: widget.height ?? 50,
       child: cupertino.CupertinoSlidingSegmentedControl<int>(
-        backgroundColor: AppTheme.of(context).surfaceAlt,
-        thumbColor: AppTheme.of(context).primaryBackground,
+        backgroundColor: theme.surfaceAlt,
+        thumbColor: theme.primaryBackground,
         groupValue: _currentPage,
         children: {
-          0: _buildSegment("Chats", 0, primary),
-          1: _buildSegment("Calls history", 1, primary),
+          0: _buildSegment(theme, "Chats", 0),
+          1: _buildSegment(theme, "Calls history", 1),
         },
         onValueChanged: (int? value) {
           // 3. Only trigger if the value actually changes
@@ -79,14 +79,16 @@ class _CupertinoSlidingWidgetMessagesState
     );
   }
 
-  Widget _buildSegment(String label, int index, Color primary) {
+  Widget _buildSegment(AppThemeData theme, String label, int index) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Text(
         label,
         style: GoogleFonts.plusJakartaSans(
           fontWeight: FontWeight.w700,
-          color: _currentPage == index ? primary : const Color(0xFF757575),
+          color: _currentPage == index
+              ? theme.primary
+              : theme.secondaryText,
         ),
       ),
     );

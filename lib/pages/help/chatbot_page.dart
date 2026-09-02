@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '/auth/auth_util.dart';
 import '/components/screen_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/services/ai_service.dart';
 import '/theme/app_theme.dart';
 
@@ -37,6 +38,8 @@ class _ChatbotPageState extends State<ChatbotPage> {
   bool _isLoading = false;
   String _systemPrompt = '';
   bool _apiConfigured = false;
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -147,8 +150,8 @@ Use the user's name when addressing them. If asked something you don't know, say
                 ),
                 Expanded(
                   child: ScreenHeader(
-                    title: 'Chat Assistant',
-                    subtitle: _isLoading ? 'Typing...' : 'Online',
+                    title: _l10n.cbTitle,
+                    subtitle: _isLoading ? _l10n.cbTyping : _l10n.cbOnline,
                     padding: const EdgeInsets.fromLTRB(0, 12, 20, 18),
                   ),
                 ),
@@ -180,8 +183,8 @@ Use the user's name when addressing them. If asked something you don't know, say
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    'Getting answer...',
+                    Text(
+                      _l10n.cbGettingAnswer,
                     style:
                         theme.labelSmall.override(color: theme.secondaryText),
                   ),
@@ -207,7 +210,7 @@ Use the user's name when addressing them. If asked something you don't know, say
                     textInputAction: TextInputAction.send,
                     onSubmitted: (_) => _sendMessage(),
                     decoration: InputDecoration(
-                      hintText: 'Type a message...',
+                      hintText: _l10n.cbHint,
                       filled: true,
                       fillColor: theme.secondaryBackground,
                       border: OutlineInputBorder(

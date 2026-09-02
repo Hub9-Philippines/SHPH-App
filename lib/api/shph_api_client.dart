@@ -152,6 +152,8 @@ class ShphApiClient {
     Object? data,
     Map<String, dynamic>? queryParameters,
     Options? options,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
   }) async {
     try {
       return await dio.post<T>(
@@ -159,6 +161,8 @@ class ShphApiClient {
         data: data,
         queryParameters: queryParameters,
         options: options,
+        onSendProgress: onSendProgress,
+        onReceiveProgress: onReceiveProgress,
       );
     } on DioException catch (e) {
       throw ShphApiException.fromDio(e);

@@ -5,6 +5,7 @@ import '/api/resources/auth_api.dart';
 import '/api/resources/sessions_api.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
 import 'security_settings_model.dart';
@@ -24,6 +25,8 @@ class SecuritySettingsWidget extends StatefulWidget {
 class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
   late SecuritySettingsModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -68,9 +71,8 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-                'Password reset link sent to your email. Use it to set a new password.'),
+          SnackBar(
+            content: Text(_l10n.ssPasswordResetSent),
           ),
         );
         _currentPasswordController.clear();
@@ -86,7 +88,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error changing password: $e')),
+          SnackBar(content: Text(_l10n.ssErrorPasswordReset(e))),
         );
       }
     } finally {
@@ -154,8 +156,8 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
       // SHPH API does not expose TOTP MFA enrollment; notify user.
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('2FA enrollment is not available yet.'),
+          SnackBar(
+            content: Text(_l10n.ss2FAEnrollmentUnavailable),
           ),
         );
       }
@@ -169,7 +171,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
       if (mounted) {
         setState(() => _model.twoFactorEnabled = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error enrolling 2FA: $e')),
+          SnackBar(content: Text(_l10n.ssErrorEnrolling2FA(e))),
         );
       }
     } finally {
@@ -189,8 +191,8 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
       // SHPH API does not expose TOTP MFA management.
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('2FA management is not available yet.'),
+          SnackBar(
+            content: Text(_l10n.ss2FAManagementUnavailable),
           ),
         );
       }
@@ -203,7 +205,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error disabling 2FA: $e')),
+          SnackBar(content: Text(_l10n.ssErrorDisabling2FA(e))),
         );
       }
     } finally {
@@ -227,19 +229,19 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
       final difference = DateTime.now().difference(date);
 
       if (difference.inMinutes < 1) {
-        return 'Just now';
+        return _l10n.ssJustNow;
       }
       if (difference.inHours < 1) {
-        return '${difference.inMinutes} minutes ago';
+        return _l10n.ssMinutesAgo(difference.inMinutes);
       }
       if (difference.inDays < 1) {
-        return '${difference.inHours} hours ago';
+        return _l10n.ssHoursAgo(difference.inHours);
       }
       if (difference.inDays == 1) {
-        return 'Yesterday';
+        return _l10n.ssYesterday;
       }
       if (difference.inDays < 7) {
-        return '${difference.inDays} days ago';
+        return _l10n.ssDaysAgo(difference.inDays);
       }
       return '${date.day}/${date.month}/${date.year}';
     } catch (_) {
@@ -277,7 +279,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Security',
+                            _l10n.ssSecurity,
                             style: AppTheme.of(context).titleLarge.override(
                                   font: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.w700,
@@ -286,7 +288,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                                 ),
                           ),
                           Text(
-                            'Protect your account, password, and sign-in access.',
+                            _l10n.ssSubtitle,
                             style: AppTheme.of(context).bodySmall.override(
                                   font: GoogleFonts.plusJakartaSans(),
                                   color: AppTheme.of(context).secondaryText,
@@ -301,15 +303,15 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                 _buildHeroCard(),
                 const SizedBox(height: 18),
                 _buildSection(
-                  title: 'Password',
+                  title: _l10n.ssPassword,
                   child: Form(
                     key: _formKey,
                     child: Column(
                       children: [
                         _buildPasswordField(
                           controller: _currentPasswordController,
-                          label: 'Current password',
-                          hint: 'Enter current password',
+                          label: _l10n.ssCurrentPassword,
+                          hint: _l10n.ssEnterCurrentPassword,
                           obscureText: !_model.showCurrentPassword,
                           toggle: () => safeSetState(
                             () => _model.showCurrentPassword =
@@ -318,7 +320,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                           isVisible: _model.showCurrentPassword,
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return 'Current password is required';
+                              return _l10n.ssCurrentPasswordRequired;
                             }
                             return null;
                           },
@@ -326,8 +328,8 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                         const SizedBox(height: 14),
                         _buildPasswordField(
                           controller: _newPasswordController,
-                          label: 'New password',
-                          hint: 'Enter new password',
+                          label: _l10n.ssNewPassword,
+                          hint: _l10n.ssEnterNewPassword,
                           obscureText: !_model.showNewPassword,
                           toggle: () => safeSetState(
                             () => _model.showNewPassword =
@@ -336,10 +338,10 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                           isVisible: _model.showNewPassword,
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return 'New password is required';
+                              return _l10n.ssNewPasswordRequired;
                             }
                             if (value.trim().length < 8) {
-                              return 'Password must be at least 8 characters';
+                              return _l10n.ssPasswordMinLength;
                             }
                             return null;
                           },
@@ -347,8 +349,8 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                         const SizedBox(height: 14),
                         _buildPasswordField(
                           controller: _confirmPasswordController,
-                          label: 'Confirm new password',
-                          hint: 'Re-enter your new password',
+                          label: _l10n.ssConfirmNewPassword,
+                          hint: _l10n.ssReenterNewPassword,
                           obscureText: !_model.showConfirmPassword,
                           toggle: () => safeSetState(
                             () => _model.showConfirmPassword =
@@ -357,10 +359,10 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                           isVisible: _model.showConfirmPassword,
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return 'Please confirm your password';
+                              return _l10n.ssConfirmPasswordRequired;
                             }
                             if (value != _newPasswordController.text) {
-                              return 'Passwords do not match';
+                              return _l10n.ssPasswordsDoNotMatch;
                             }
                             return null;
                           },
@@ -388,7 +390,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                                     ),
                                   )
                                 : Text(
-                                    'Change Password',
+                                    _l10n.ssChangePassword,
                                     style: AppTheme.of(context)
                                         .titleSmall
                                         .override(
@@ -406,14 +408,13 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                 ),
                 const SizedBox(height: 18),
                 _buildSection(
-                  title: 'Two-Factor Authentication',
+                  title: _l10n.ssTwoFactorAuth,
                   child: Column(
                     children: [
                       _buildInfoRow(
                         icon: Icons.verified_user_outlined,
-                        title: 'Secure your login',
-                        subtitle:
-                            'Use an authenticator app to add a second step during sign in.',
+                        title: _l10n.ssSecureYourLogin,
+                        subtitle: _l10n.ssAuthenticatorApp,
                         trailing: Switch.adaptive(
                           value: _model.twoFactorEnabled,
                           onChanged: _isProcessingMfa ? null : _toggle2FA,
@@ -429,7 +430,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                 ),
                 const SizedBox(height: 18),
                 _buildSection(
-                  title: 'Login Activity',
+                  title: _l10n.ssLoginActivity,
                   child: _isLoadingSessions
                       ? const Padding(
                           padding: EdgeInsets.symmetric(vertical: 18),
@@ -496,7 +497,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Keep your account protected',
+                    _l10n.ssHeroTitle,
                     style: AppTheme.of(context).titleMedium.override(
                           font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                           color: Colors.white,
@@ -504,7 +505,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Manage password strength, 2FA, and recent account access in one place.',
+                    _l10n.ssHeroSubtitle,
                     style: AppTheme.of(context).bodySmall.override(
                           font: GoogleFonts.plusJakartaSans(),
                           color: Colors.white.withValues(alpha: 0.84),
@@ -649,7 +650,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
           border: Border.all(color: AppTheme.of(context).border),
         ),
         child: Text(
-          'No active sessions were returned for this account yet.',
+          _l10n.ssNoActiveSessions,
           style: AppTheme.of(context).bodyMedium.override(
                 font: GoogleFonts.plusJakartaSans(),
                 color: AppTheme.of(context).secondaryText,
@@ -698,7 +699,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                     children: [
                       Expanded(
                         child: Text(
-                          isCurrent ? 'Current device' : 'Other sign-in',
+                          isCurrent ? _l10n.ssCurrentDevice : _l10n.ssOtherSignIn,
                           style: AppTheme.of(context).titleSmall.override(
                                 font: GoogleFonts.plusJakartaSans(
                                   fontWeight: FontWeight.w700,
@@ -718,7 +719,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
-                            'Active now',
+                            _l10n.ssActiveNow,
                             style: AppTheme.of(context).labelSmall.override(
                                   font: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.w700,
@@ -733,7 +734,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                   Text(
                     session['provider']?.toString() ??
                         session['device_name']?.toString() ??
-                        'Unknown device',
+                        _l10n.ssUnknownDevice,
                     style: AppTheme.of(context).bodyMedium.override(
                           font: GoogleFonts.plusJakartaSans(),
                           color: const Color(0xFF334155),
@@ -745,7 +746,7 @@ class _SecuritySettingsWidgetState extends State<SecuritySettingsWidget> {
                           .isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(
-                      'Last active ${_formatDate(session['created_at']?.toString() ?? session['createdAt']?.toString() ?? '')}',
+                      _l10n.ssLastActive(_formatDate(session['created_at']?.toString() ?? session['createdAt']?.toString() ?? '')),
                       style: AppTheme.of(context).bodySmall.override(
                             font: GoogleFonts.plusJakartaSans(),
                             color: AppTheme.of(context).secondaryText,

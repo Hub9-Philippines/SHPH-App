@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '/app_state.dart';
+import '/l10n/app_localizations.dart';
 import '/models/service_listing.dart';
 import '/services/logging_service.dart';
 import '/services/nearby_pro_mock_data.dart';
@@ -177,33 +178,34 @@ class BookingFlowController extends ChangeNotifier {
     notifyListeners();
   }
 
-  String get urgencyLabel => switch (_draft.urgency) {
-        BookingUrgency.rightNow => 'Right now',
-        BookingUrgency.laterToday => 'Later today',
-        BookingUrgency.scheduled => 'Scheduled',
+  String urgencyLabel(AppLocalizations l10n) => switch (_draft.urgency) {
+        BookingUrgency.rightNow => l10n.bfRightNow,
+        BookingUrgency.laterToday => l10n.bfLaterToday,
+        BookingUrgency.scheduled => l10n.bfScheduled,
       };
 
-  String get paymentLabel => switch (_draft.paymentMethod) {
+  String paymentLabel(AppLocalizations l10n) => switch (_draft.paymentMethod) {
         BookingPaymentMethod.gcash => 'GCash',
         BookingPaymentMethod.card => 'Card',
         BookingPaymentMethod.maya => 'Maya',
         BookingPaymentMethod.qrPh => 'QR Ph',
-        BookingPaymentMethod.cod => 'Cash',
+        BookingPaymentMethod.cod => l10n.bfCash,
       };
 
-  String get cleaningTypeLabel => switch (_draft.cleaningType) {
-        ServiceType.standard => 'Standard clean',
-        ServiceType.deep => 'Deep clean',
-        ServiceType.premium => 'Premium clean',
+  String cleaningTypeLabel(AppLocalizations l10n) => switch (_draft.cleaningType) {
+        ServiceType.standard => l10n.bfStandardClean,
+        ServiceType.deep => l10n.bfDeepClean,
+        ServiceType.premium => l10n.bfPremiumClean,
       };
 
-  String get selectedServiceLabel => _draft.serviceTitle ?? 'Choose a service';
+  String selectedServiceLabel(AppLocalizations l10n) =>
+      _draft.serviceTitle ?? l10n.bfChooseAService;
 
   bool get hasSelectedService => _draft.serviceListingId != null;
 
-  Future<bool> attachLiveSearchToken() async {
+  Future<bool> attachLiveSearchToken(AppLocalizations l10n) async {
     if (!hasSelectedService) {
-      lastError = 'Please choose a service before continuing.';
+      lastError = l10n.bfPleaseChooseService;
       notifyListeners();
       return false;
     }
@@ -240,7 +242,7 @@ class BookingFlowController extends ChangeNotifier {
       const nearbyThresholdKm = 10.0;
       final mockNearby = NearbyProMockData.instance.generateNearbyPros(
         serviceId: _draft.serviceListingId ?? 0,
-        category: _draft.serviceCategoryName ?? 'Service',
+        category: _draft.serviceCategoryName ?? l10n.bfService,
         count: 3,
       );
       final hasProviderNearby = mockNearby.any((pro) {
@@ -254,9 +256,7 @@ class BookingFlowController extends ChangeNotifier {
       });
 
       if (!hasProviderNearby) {
-        lastError =
-            'No providers available within 10 km of your location. '
-            'Try expanding your search area or scheduling for later.';
+        lastError = l10n.bfNoProvidersNearby;
         isSubmitting = false;
         notifyListeners();
         return false;
@@ -275,9 +275,9 @@ class BookingFlowController extends ChangeNotifier {
     }
   }
 
-  Future<bool> attachReservationToken() async {
+  Future<bool> attachReservationToken(AppLocalizations l10n) async {
     if (!hasSelectedService) {
-      lastError = 'Please choose a service before continuing.';
+      lastError = l10n.bfPleaseChooseService;
       notifyListeners();
       return false;
     }

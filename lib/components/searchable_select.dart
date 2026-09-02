@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '/components/cupertino_ui/app_text_field.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 
 class SearchableSelect extends StatefulWidget {
@@ -32,6 +34,8 @@ class _SearchableSelectState extends State<SearchableSelect> {
   final searchController = TextEditingController();
   bool open = false;
   String searchQuery = '';
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   String get _selectedLabel {
     for (final item in widget.items) {
@@ -90,7 +94,7 @@ class _SearchableSelectState extends State<SearchableSelect> {
                         _selectedLabel.isNotEmpty
                             ? _selectedLabel
                             : widget.placeholder ??
-                                'Select ${widget.label.toLowerCase()}',
+                                _l10n.ccSelect(widget.label.toLowerCase()),
                         style: TextStyle(
                           fontSize: 14,
                           color: _selectedLabel.isNotEmpty
@@ -129,16 +133,11 @@ class _SearchableSelectState extends State<SearchableSelect> {
           children: [
             Padding(
               padding: const EdgeInsets.all(12),
-              child: TextField(
+              child:               AppTextField(
                 controller: searchController,
-                decoration: InputDecoration(
-                  hintText: 'Search...',
-                  prefixIcon: const Icon(Icons.search, size: 20),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                ),
+                placeholder: _l10n.ccSearch,
+                prefixIcon: Icons.search,
+                radius: 10,
                 onChanged: (v) => setState(() => searchQuery = v),
               ),
             ),

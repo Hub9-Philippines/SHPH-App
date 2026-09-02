@@ -1,94 +1,42 @@
 import 'package:flutter/material.dart';
 
-import '/components/password_validation_item/password_validation_item_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/index.dart';
 import 'create_profile_widget.dart' show CreateProfileWidget;
 
+/// State for the redesigned profile-completion step. Keeps the controllers,
+/// avatar upload state, and submission flags so the page stays testable.
 class CreateProfileModel extends FlutterFlowModel<CreateProfileWidget> {
-  ///  Local state fields for this page.
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController lastNameController = TextEditingController();
+  final TextEditingController bioController = TextEditingController();
 
-  bool isPasswordValid = false;
+  /// Photo chosen from the picker, staged before upload.
+  List<int>? pickedPhotoBytes;
+  String? pickedPhotoName;
 
-  bool isEmailvalid = true;
+  /// Final photo URL after a successful `uploadPhoto` call.
+  String? uploadedPhotoUrl;
 
-  bool firsthasValue = false;
+  bool isUploading = false;
+  double uploadProgress = 0;
+  bool isSubmitting = false;
 
-  bool lasthasValue = false;
-
-  bool isFocusOnPassword = false;
-
-  ///  State fields for stateful widgets in this page.
-
-  // State field(s) for FirstNameTextField widget.
-  FocusNode? firstNameTextFieldFocusNode;
-  TextEditingController? firstNameTextFieldTextController;
-  String? Function(BuildContext, String?)?
-      firstNameTextFieldTextControllerValidator;
-  // State field(s) for LastNameTextField widget.
-  FocusNode? lastNameTextFieldFocusNode;
-  TextEditingController? lastNameTextFieldTextController;
-  String? Function(BuildContext, String?)?
-      lastNameTextFieldTextControllerValidator;
-  // State field(s) for EmailTextField widget.
-  FocusNode? emailTextFieldFocusNode;
-  TextEditingController? emailTextFieldTextController;
-  String? Function(BuildContext, String?)?
-      emailTextFieldTextControllerValidator;
-  // State field(s) for PasswordTextField widget.
-  FocusNode? passwordTextFieldFocusNode;
-  TextEditingController? passwordTextFieldTextController;
-  late bool passwordTextFieldVisibility;
-  String? Function(BuildContext, String?)?
-      passwordTextFieldTextControllerValidator;
-  // Model for PasswordValidation_Item component.
-  late PasswordValidationItemModel passwordValidationItemModel1;
-  // Model for PasswordValidation_Item component.
-  late PasswordValidationItemModel passwordValidationItemModel2;
-  // Model for PasswordValidation_Item component.
-  late PasswordValidationItemModel passwordValidationItemModel3;
-  // Model for PasswordValidation_Item component.
-  late PasswordValidationItemModel passwordValidationItemModel4;
-  // Model for PasswordValidation_Item component.
-  late PasswordValidationItemModel passwordValidationItemModel5;
-  // State field(s) for Checkbox widget.
-  bool? checkboxValue;
-  // Stores action output result for [Custom Action - insertProfileWithDebug] action in Button widget.
-  String? register;
-
-  @override
-  void initState(BuildContext context) {
-    passwordTextFieldVisibility = false;
-    passwordValidationItemModel1 =
-        createModel(context, PasswordValidationItemModel.new);
-    passwordValidationItemModel2 =
-        createModel(context, PasswordValidationItemModel.new);
-    passwordValidationItemModel3 =
-        createModel(context, PasswordValidationItemModel.new);
-    passwordValidationItemModel4 =
-        createModel(context, PasswordValidationItemModel.new);
-    passwordValidationItemModel5 =
-        createModel(context, PasswordValidationItemModel.new);
+  /// The share of required profile fields (first + last name) that are
+  /// filled, matching the web completion step's progress indicator.
+  double get progress {
+    var filled = 0;
+    if (firstNameController.text.trim().isNotEmpty) filled += 1;
+    if (lastNameController.text.trim().isNotEmpty) filled += 1;
+    return filled / 2;
   }
 
   @override
+  void initState(BuildContext context) {}
+
+  @override
   void dispose() {
-    firstNameTextFieldFocusNode?.dispose();
-    firstNameTextFieldTextController?.dispose();
-
-    lastNameTextFieldFocusNode?.dispose();
-    lastNameTextFieldTextController?.dispose();
-
-    emailTextFieldFocusNode?.dispose();
-    emailTextFieldTextController?.dispose();
-
-    passwordTextFieldFocusNode?.dispose();
-    passwordTextFieldTextController?.dispose();
-
-    passwordValidationItemModel1.dispose();
-    passwordValidationItemModel2.dispose();
-    passwordValidationItemModel3.dispose();
-    passwordValidationItemModel4.dispose();
-    passwordValidationItemModel5.dispose();
+    firstNameController.dispose();
+    lastNameController.dispose();
+    bioController.dispose();
   }
 }

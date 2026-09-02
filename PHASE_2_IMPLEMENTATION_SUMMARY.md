@@ -1,7 +1,7 @@
 # Phase 2 REST API Integration - Implementation Summary
 
 ## Overview
-Implemented comprehensive Phase 2 REST API integration for SerbisyoHub PH Flutter app with bridge pattern architecture. When `ApiConfig.preferShphApi = true`, the app now uses SHPH REST API as primary backend with Supabase as automatic fallback.
+Implemented comprehensive Phase 2 REST API integration for Serbisyo Flutter app with bridge pattern architecture. When `ApiConfig.preferShphApi = true`, the app now uses SHPH REST API as primary backend with Supabase as automatic fallback.
 
 ## Architecture
 

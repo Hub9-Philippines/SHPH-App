@@ -25,6 +25,19 @@
 
 ---
 
+> **Latest color change (2026-08-29):** Teal is retired across the brand. The theme
+> now uses the **blue + violet** palettes (`primary` royal blue `#1E3A8A` / `accentPurple`
+> violet `#7C5CFC`). All teal tokens were replaced in `lib/theme/app_theme.dart`
+> (`secondary`→`#7C5CFC`, `primaryLight`/`iconBackground`→`#E0E7FF`,
+> `primaryDark`→`#4338CA`, `primaryBrandText`→`#4F46E5`, `success`→`#7C5CFC`,
+> `statusConfirmed`/bg→`#4338CA`/`#E0E7FF`, `profileHeroGradient`→indigo→violet,
+> `settingsBannerGradient`→indigo series), and `successTeal`/`accentTeal` were renamed
+> to `successBrand`/`accentIndigo`. Historical comparison tables below in this doc
+> still describe the earlier teal rollout for the record; the current tokens live in
+> `docs/design-system.md` and `lib/theme/app_theme.dart`.
+
+---
+
 ## 2. Design System Alignment
 
 ### 2.1 Colors
@@ -188,7 +201,7 @@ Standardize on a 4px base unit scale: 4, 8, 12, 16, 20, 24, 32, 40, 48, 56, 64.
 
 | Task | Files | Status |
 |------|-------|--------|
-| 5.1 Splash screen | `pages/splash/splash_widget.dart` | ✅ Branding text ("SerbisyoHub PH" + tagline) added, GoogleFonts import, white text on primary bg |
+| 5.1 Splash screen | `pages/splash/splash_widget.dart` | ✅ Branding text ("Serbisyo" + tagline) added, GoogleFonts import, white text on primary bg |
 | 5.2 Onboarding | `pages/onboarding/onboarding_widget.dart` | ✅ `Color(0x1E368EFF)` → `primary.withValues(alpha: 0.12)`, `Color(0xFF7C7C7C)` → `alternate`, `dotColor(0x13368EFF)` → `primary.withValues(alpha: 0.08)`, `Colors.white` → `primaryText`, elevation 0→2 |
 | 5.3 Sign options | `pages/sign_options/sign_options_widget.dart` | ✅ Empty AppBar removed, top padding adjusted |
 | 5.4 Sign in | `pages/signin/signin_widget.dart` | ✅ `Color(0xFF889096)` → `secondaryText` |
@@ -797,6 +810,50 @@ Comparison against `C:\Users\Administrator\dev\shph-web` (Vue 3 + Ionic 8).
 | Task | Status |
 |------|--------|
 | Restored from pre-Phase 6 commit `8d34b3d` | ✅ Done |
+
+---
+
+## 14. App Localization (en/fil Taglish) — Complete ✅
+
+**Goal:** Replace all hardcoded English display strings with `AppLocalizations` lookups, supporting English + Tagalog (Taglish) with exact ARB key parity.
+
+### 14.1 Localization Batches Completed
+
+| Batch | Scope | Keys Added | Files Wired | Status |
+|-------|-------|------------|-------------|--------|
+| 3.1–3.18 | Screen-by-screen: booking_funnel, tm_flow, address_form, booking_details, security_settings, signin, search_page, settings, booking_payment, product_page, edit_profile, create_profile, signup, otp_page, phone_verify, sessions, biometric, addresses, geographic_selection, pin_location, rooms, chat, projects, on_demand, legal, reviews, help, eta, provider_profile, favorites, categories, AI composer, splash, onboarding, KYC, wallet | ~600+ | 75+ page/widget files | ✅ Done |
+| 4.1 | Shared components (`lib/components/`) — 67 `cc*` keys | 67 | 25+ components | ✅ Done |
+| 4.2 | Bottom-tab + provider dashboard (`lib/main/`) — 166 keys (`sv*`, `pf*`, `pm*`, `pew*`, `pca*`, `ms*`, `hm*`, `ex*`, `ctg*`, `bkf*`) | 166 | 10 main tab pages | ✅ Done |
+| 4.3 | Services & Auth messages (`lib/services/`, `lib/auth/`) — 18 keys (`eh*`, `au*`, `pan*`, `pmt*`, `wt*`) | 18 | 5 service/auth files | ✅ Done |
+| 4.4 | App state location labels + helpers — 2 keys (`hmSavedAddresses`, `bfAddress`) | 2 | 7 files (home, services, search, booking_flow, checkout, edit_address, address_form) | ✅ Done |
+| 4.5 | Full-lib re-audit catch-all — ~65 keys | 65 | ~20 files (bookings_model, tm_catalog, tm_active_job, tm_broadcast, tm_payment, live_matching, product_page, chat_detail, search_page, booking_payment, checkout, booking_success, notifications, dispatch fallbacks) | ✅ Done |
+
+### 14.2 Total Keys & Coverage
+
+- **Total ARB keys**: ~920 (English + Tagalog parity)
+- **All user-facing display strings localized**: Yes (excluding recorded policy items: backend wire values, enum codes, currency symbols, proper nouns, demo data, debug logs, pure API data)
+- **ARB parity**: ✅ Exact key match between `app_en.arb` and `app_fil.arb`
+- **gen-l10n**: ✅ Clean regeneration
+- **flutter analyze**: ✅ 0 errors (737 info baseline)
+
+### 14.3 Taglish Style Decisions
+
+- Short, conversational Filipino-English mix (e.g., `"Reset link sent!"` → `"Naipadala na ang reset link!"`, `"Just now"` → `"Kakalang"`)
+- Currency amounts, brand names (GCash, Visa, Mastercard, Maya, Serbisyo), proper nouns kept English
+- Time formats use `intl` `DateFormat` with locale-aware month names (Task 4.1)
+- Time-ago formats: compact (`{n}m ago`, `{n}h ago`) per user preference; chat uses `"Kakalang"` for "Just now"
+
+### 14.4 Verification Checklist
+
+- [x] All 10 bottom-tab / provider dashboard screens localized
+- [x] All 25+ shared components localized
+- [x] All 75+ page/widget screens localized
+- [x] Service/auth error/toast messages localized
+- [x] Location labels device-mode branch (`hmCurrentDeviceLocation`)
+- [x] ARB parity confirmed (en/fil exact key set)
+- [x] `flutter gen-l10n` clean
+- [x] `flutter analyze` 0 errors
+- [ ] Debug APK smoke-test fil locale (Settings, Explore/Home, Booking flow, Profile, Toast/Dialog) — **user to verify**
 | `GoogleFonts.poppins` → `GoogleFonts.plusJakartaSans` | ✅ Done |
 | `shadowElevated` → `shadowLg` | ✅ Done |
 | File was corrupted by `-NoNewline` write; fixed by re-extracting from git | ✅ Done |
@@ -947,7 +1004,7 @@ OpenSpec change: explore-redesign-and-signin-merge.
 | Task | Files | Status |
 |------|-------|--------|
 | Auth entry merge: splash + onboarding land on SigninWidget; both Sign-Up links go straight to signup; /signOptions kept as alias route to sign-in; lib/pages/sign_options/ deleted | lib/pages/splash/*, lib/pages/onboarding/*, lib/pages/signin/signin_widget.dart, lib/router/app_router.dart, lib/index.dart | âœ… Done |
-| Compact welcome header on sign-in: rounded welcome-graphic.png (150px) + "Welcome to SerbisyoHub PH" headline above Phone/Email tabs | lib/pages/signin/signin_widget.dart | âœ… Done |
+| Compact welcome header on sign-in: rounded welcome-graphic.png (150px) + "Welcome to Serbisyo" headline above Phone/Email tabs | lib/pages/signin/signin_widget.dart | âœ… Done |
 | Theme marketing constants (promo blues, referral purple, rating-badge green) | lib/theme/app_theme.dart | âœ… Done |
 | Shared category icon mapper extracted | lib/utils/category_icons.dart, lib/components/categories_widget/categories_widget.dart | âœ… Done |
 | New Explore components: HeroOfferBanner, ProviderProximityCard, InviteEarnBanner; SectionHeader gained seeAllLabel ("View All") | lib/components/ | âœ… Done |

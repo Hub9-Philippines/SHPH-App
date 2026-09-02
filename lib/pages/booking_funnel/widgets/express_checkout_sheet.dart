@@ -4,8 +4,12 @@ import 'package:provider/provider.dart';
 
 import '/app_state.dart';
 import '/backend/supabase/supabase.dart';
+import '/components/cupertino_ui/app_button.dart';
+import '/components/cupertino_ui/app_switch.dart';
+import '/components/cupertino_ui/app_text_field.dart';
 import '/components/edit_address/edit_address_widget.dart';
 import '/components/user_avatar.dart';
+import '/l10n/app_localizations.dart';
 import '/models/service_listing.dart';
 import '/theme/app_theme.dart';
 import '/utils/emergency_categories.dart';
@@ -143,9 +147,11 @@ class _ProgressLineTracker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final steps = [l10n.bfServices, l10n.bfLocation, l10n.bfPayment];
     return Row(
       children: [
-        for (var i = 0; i < kCheckoutSteps.length; i++) ...[
+        for (var i = 0; i < steps.length; i++) ...[
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,7 +165,7 @@ class _ProgressLineTracker extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  kCheckoutSteps[i],
+                  steps[i],
                   style: theme.labelSmall.override(
                     font: GoogleFonts.plusJakartaSans(
                       fontWeight: i == step ? FontWeight.w800 : FontWeight.w600,
@@ -170,7 +176,7 @@ class _ProgressLineTracker extends StatelessWidget {
               ],
             ),
           ),
-          if (i < kCheckoutSteps.length - 1) const SizedBox(width: 8),
+          if (i < steps.length - 1) const SizedBox(width: 8),
         ],
       ],
     );
@@ -185,6 +191,7 @@ class _SpecialistSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -196,7 +203,7 @@ class _SpecialistSummary extends StatelessWidget {
         children: [
           UserAvatar(
             photoUrl: service.providerPhoto,
-            name: service.providerName ?? 'Provider',
+            name: service.providerName ?? l10n.bfProvider,
             size: 44,
           ),
           const SizedBox(width: 10),
@@ -208,7 +215,7 @@ class _SpecialistSummary extends StatelessWidget {
                   children: [
                     Flexible(
                       child: Text(
-                        service.providerName ?? 'Assigned provider',
+                        service.providerName ?? l10n.bfAssignedProvider,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.labelLarge.override(
@@ -229,8 +236,11 @@ class _SpecialistSummary extends StatelessWidget {
                         size: 13, color: Color(0xFFF59E0B)),
                     const SizedBox(width: 3),
                     Text(
-                      '${service.ratingValue?.toStringAsFixed(1) ?? 'New'} · '
-                      '${service.reviewCount ?? 0} reviews',
+                      l10n.bfReviewsCount(
+                        service.ratingValue?.toStringAsFixed(1) ??
+                            l10n.bfNewProvider,
+                        service.reviewCount ?? 0,
+                      ),
                       style:
                           theme.labelSmall.override(color: theme.secondaryText),
                     ),
@@ -277,6 +287,7 @@ class _ServiceMatrix extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = AppTheme.of(context);
     final draft = controller.draft;
     final urgent = draft.urgency == BookingUrgency.rightNow ||
@@ -360,13 +371,13 @@ class _ServiceMatrix extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionTitle(title: 'Services'),
+        _SectionTitle(title: l10n.bfServices),
         const SizedBox(height: AppThemeData.spaceSm),
         row(
           checked: true,
           onChanged: (_) {},
           locked: true,
-          title: draft.serviceTitle ?? 'Selected service',
+          title: draft.serviceTitle ?? l10n.bfSelectedService,
           price:
               'PHP ${(controller.quote.basePrice).toStringAsFixed(0)}',
         ),
@@ -375,7 +386,7 @@ class _ServiceMatrix extends StatelessWidget {
           onChanged: (v) => controller.setUrgency(
             (v ?? false) ? BookingUrgency.rightNow : BookingUrgency.scheduled,
           ),
-          title: 'Express arrival',
+          title: l10n.bfExpressArrival,
           price:
               '+PHP ${controller.quote.urgencyAdjustment.toStringAsFixed(0)}',
           tag: 'FASTEST',
@@ -385,7 +396,7 @@ class _ServiceMatrix extends StatelessWidget {
           onChanged: (v) => controller.setServiceType(
             (v ?? false) ? ServiceType.deep : ServiceType.standard,
           ),
-          title: 'Deep clean upgrade',
+          title: l10n.bfDeepCleanUpgrade,
           price: '+PHP ${deepDelta.toStringAsFixed(0)}',
         ),
         row(
@@ -393,7 +404,7 @@ class _ServiceMatrix extends StatelessWidget {
           onChanged: (v) => controller.setServiceType(
             (v ?? false) ? ServiceType.premium : ServiceType.standard,
           ),
-          title: 'Premium materials',
+          title: l10n.bfPremiumMaterials,
           price: '+PHP ${premiumDelta.toStringAsFixed(0)}',
         ),
       ],
@@ -414,11 +425,12 @@ class _LocationContextCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final address = controller.draft.address;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionTitle(title: 'Service location'),
+        _SectionTitle(title: l10n.bfServiceLocation),
         const SizedBox(height: AppThemeData.spaceSm),
         Container(
           width: double.infinity,
@@ -460,7 +472,7 @@ class _LocationContextCard extends StatelessWidget {
                   GestureDetector(
                     onTap: onChangeAddress,
                     child: Text(
-                      'CHANGE',
+                      l10n.bfChange,
                       style: theme.labelSmall.override(
                         font: GoogleFonts.plusJakartaSans(
                           fontWeight: FontWeight.w800,
@@ -472,33 +484,21 @@ class _LocationContextCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: AppThemeData.spaceMd),
-              TextField(
+              AppTextField(
                 controller: TextEditingController(
                   text: controller.draft.landmarks,
                 ),
                 onChanged: controller.setLandmarks,
-                decoration: InputDecoration(
-                  hintText: 'Bldg / Room No., Floor or Landmarks (Optional)',
-                  hintStyle: theme.bodySmall.override(
-                    font: GoogleFonts.plusJakartaSans(),
-                    color: theme.textTertiary,
-                  ),
-                  filled: true,
-                  fillColor: theme.primaryBackground,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppThemeData.radiusMd),
-                    borderSide: BorderSide(color: theme.border),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppThemeData.radiusMd),
-                    borderSide: BorderSide(color: theme.primary),
-                  ),
+                placeholder: l10n.bfLandmarksPlaceholder,
+                placeholderStyle: theme.bodySmall.override(
+                  font: GoogleFonts.plusJakartaSans(),
+                  color: theme.textTertiary,
+                ),
+                radius: AppThemeData.radiusMd,
+                fillColor: theme.primaryBackground,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
                 ),
               ),
             ],
@@ -520,6 +520,7 @@ class _ArrivalCodeRowState extends State<_ArrivalCodeRow> {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Consumer<BookingFlowController>(
       builder: (context, controller, _) {
         return Container(
@@ -540,7 +541,7 @@ class _ArrivalCodeRowState extends State<_ArrivalCodeRow> {
                     Row(
                       children: [
                         Text(
-                          'Require Arrival Code',
+                          l10n.bfRequireArrivalCode,
                           style: theme.bodyMedium.override(
                             fontWeight: FontWeight.w700,
                             color: theme.primaryText,
@@ -553,10 +554,7 @@ class _ArrivalCodeRowState extends State<_ArrivalCodeRow> {
                             builder: (sheetContext) => Padding(
                               padding: const EdgeInsets.all(20),
                               child: Text(
-                                'Your provider must read you a one-time '
-                                'arrival code before starting work — '
-                                'protecting you from premature or '
-                                'unauthorized starts.',
+                                l10n.bfArrivalCodeInfo,
                                 style: theme.bodyMedium.override(
                                   color: theme.secondaryText,
                                 ),
@@ -570,7 +568,7 @@ class _ArrivalCodeRowState extends State<_ArrivalCodeRow> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Provider must confirm a one-time code to start.',
+                      l10n.bfProviderMustConfirmCode,
                       style: theme.bodySmall.override(
                         color: theme.secondaryText,
                       ),
@@ -578,11 +576,10 @@ class _ArrivalCodeRowState extends State<_ArrivalCodeRow> {
                   ],
                 ),
               ),
-              Switch.adaptive(
+              AppSwitch(
                 value: controller.draft.requireArrivalCode,
                 onChanged: controller.setRequireArrivalCode,
-                activeThumbColor: theme.primary,
-                activeTrackColor: theme.primary,
+                activeColor: theme.primary,
               ),
             ],
           ),
@@ -608,6 +605,7 @@ class _PaymentMatrix extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final draft = controller.draft;
     final isDigital = draft.paymentMethod != BookingPaymentMethod.cod;
 
@@ -649,19 +647,19 @@ class _PaymentMatrix extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionTitle(title: 'Payment method'),
+        _SectionTitle(title: l10n.bfPaymentMethod),
         const SizedBox(height: AppThemeData.spaceSm),
         Row(
           children: [
             tier(
-              label: 'Cash',
+              label: l10n.bfCash,
               selected: draft.paymentMethod == BookingPaymentMethod.cod,
               onTap: () => controller
                   .setPaymentMethod(BookingPaymentMethod.cod),
             ),
             const SizedBox(width: AppThemeData.spaceSm),
             tier(
-              label: 'Digital',
+              label: l10n.bfDigital,
               selected: isDigital && draft.paymentMethod != BookingPaymentMethod.cod,
               onTap: () => controller
                   .setPaymentMethod(BookingPaymentMethod.gcash),
@@ -749,11 +747,12 @@ class _CheckoutFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final categoryLabel =
         (controller.draft.serviceCategoryName ?? '').trim();
     final ctaLabel = categoryLabel.isEmpty
-        ? 'Book Now →'
-        : 'Book $categoryLabel Now →';
+        ? l10n.bfBookNow
+        : l10n.bfBookCategoryNow(categoryLabel);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -762,7 +761,7 @@ class _CheckoutFooter extends StatelessWidget {
         Row(
           children: [
             Text(
-              'Total Price Due:',
+              l10n.bfTotalPriceDue,
               style: theme.bodyLarge.override(
                 fontWeight: FontWeight.w600,
                 color: theme.secondaryText,
@@ -779,34 +778,42 @@ class _CheckoutFooter extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppThemeData.spaceMd),
-        SizedBox(
+        AppButton(
           width: double.infinity,
           height: 56,
-          child: FilledButton.icon(
-            onPressed: controller.isSubmitting ? null : onNextOrConfirm,
-            icon: controller.checkoutStep <
-                    BookingFlowController.checkoutStepCount - 1
-                ? null
-                : const Icon(Icons.bolt_rounded, size: 19),
-            label: Text(
-              controller.checkoutStep <
-                      BookingFlowController.checkoutStepCount - 1
-                  ? 'Continue'
-                  : (isScheduled
-                      ? 'Confirm & Reserve Slot'
-                      : ctaLabel),
-              style: theme.titleMedium.override(
-                font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
-                color: Colors.white,
-              ),
-            ),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppThemeData.actionPrimary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
-              ),
-            ),
-          ),
+          backgroundColor: AppThemeData.actionPrimary,
+          foregroundColor: Colors.white,
+          borderRadius: AppThemeData.radiusLg,
+          onPressed: controller.isSubmitting ? null : onNextOrConfirm,
+          child: controller.checkoutStep <
+                  BookingFlowController.checkoutStepCount - 1
+              ? Text(
+                  l10n.bfContinue,
+                  style: theme.titleMedium.override(
+                    font: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w800),
+                  ),
+                )
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.bolt_rounded, size: 19,
+                        color: Colors.white),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        isScheduled
+                            ? l10n.bfConfirmReserveSlot
+                            : ctaLabel,
+                        style: theme.titleMedium.override(
+                          font: GoogleFonts.plusJakartaSans(
+                              fontWeight: FontWeight.w800),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
         ),
       ],
     );
@@ -834,13 +841,14 @@ class _CheckoutSheets {
       ),
     );
     if (!context.mounted || result == null) return;
+    final l10n = AppLocalizations.of(context)!;
 
     final appState = FFAppState();
     controller.setAddress(
       BookingAddress(
         label: appState.selectedAddressLabel.isNotEmpty
             ? appState.selectedAddressLabel
-            : (result.addressLine2 ?? 'Address'),
+            : (result.addressLine2 ?? l10n.bfAddress),
         line1: appState.selectedAddressLine1.isNotEmpty
             ? appState.selectedAddressLine1
             : (result.addressLine1 ?? ''),

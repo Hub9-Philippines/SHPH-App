@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 
 /// Inline expedited-dispatch options shown when an emergency category is
@@ -15,14 +16,13 @@ class InstantDispatchSection extends StatelessWidget {
   final String categoryName;
   final ValueChanged<String> onDispatch;
 
-  static const List<({String label, String window})> _windows = [
-    (label: 'Within 15 min', window: '0-15'),
-    (label: '15–30 min', window: '15-30'),
-  ];
+  static const List<String> _windows = ['0-15', '15-30'];
 
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final _l10n = AppLocalizations.of(context)!;
+    final windowLabels = [_l10n.ccWithin15, _l10n.cc15to30];
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppThemeData.spaceLg),
@@ -60,7 +60,7 @@ class InstantDispatchSection extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Instant Dispatch',
+                      _l10n.ccInstantDispatch,
                       style: theme.titleSmall.override(
                         font: GoogleFonts.plusJakartaSans(
                           fontWeight: FontWeight.w800,
@@ -69,7 +69,7 @@ class InstantDispatchSection extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '$categoryName pros guaranteed at your door in 15–30 minutes.',
+                      _l10n.ccDispatchDesc(categoryName),
                       style: theme.bodySmall.override(
                         font: GoogleFonts.plusJakartaSans(),
                         color: theme.secondaryText,
@@ -87,9 +87,9 @@ class InstantDispatchSection extends StatelessWidget {
                 if (i > 0) const SizedBox(width: AppThemeData.spaceSm),
                 Expanded(
                   child: _DispatchChip(
-                    label: _windows[i].label,
-                    window: _windows[i].window,
-                    onTap: () => onDispatch(_windows[i].window),
+                    label: windowLabels[i],
+                    window: _windows[i],
+                    onTap: () => onDispatch(_windows[i]),
                   ),
                 ),
               ],

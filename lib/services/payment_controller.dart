@@ -4,6 +4,7 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:http/http.dart' as http;
 
 import '/api/api_config.dart';
+import '/l10n/app_localizations.dart';
 import '/services/logging_service.dart';
 
 enum PaymentProvider { stripe, maya }
@@ -42,6 +43,7 @@ class PaymentController {
     required String currency,
     String? description,
     Map<String, String>? metadata,
+    required AppLocalizations l10n,
   }) async {
     try {
       final clientSecret = await _fetchStripeClientSecret(
@@ -51,16 +53,16 @@ class PaymentController {
         metadata: metadata,
       );
       if (clientSecret == null) {
-        return const PaymentResult(
+        return PaymentResult(
           status: PaymentStatus.failed,
-          errorMessage: 'Failed to obtain payment client secret',
+          errorMessage: l10n.pmtFailedObtainClientSecret,
         );
       }
 
       await Stripe.instance.initPaymentSheet(
         paymentSheetParameters: SetupPaymentSheetParameters(
           paymentIntentClientSecret: clientSecret,
-          merchantDisplayName: 'SerbisyoHub',
+          merchantDisplayName: 'Serbisyo',
         ),
       );
 
@@ -75,14 +77,14 @@ class PaymentController {
           e.error.code == FailureCode.Canceled;
       return PaymentResult(
         status: isCancel ? PaymentStatus.cancelled : PaymentStatus.failed,
-        errorMessage: e.error.localizedMessage ?? 'Payment failed',
+        errorMessage: e.error.localizedMessage ?? l10n.pmtPaymentFailed,
       );
     } catch (e) {
       LoggingService.error('Stripe payment error: $e',
           tag: 'PaymentController');
       return PaymentResult(
         status: PaymentStatus.failed,
-        errorMessage: e.toString(),
+        errorMessage: l10n.pmtPaymentFailed,
       );
     }
   }
@@ -128,6 +130,7 @@ class PaymentController {
     required String currency,
     String? description,
     Map<String, String>? metadata,
+    required AppLocalizations l10n,
   }) async {
     try {
       final checkoutUrl = await _fetchMayaCheckoutUrl(
@@ -137,9 +140,9 @@ class PaymentController {
         metadata: metadata,
       );
       if (checkoutUrl == null) {
-        return const PaymentResult(
+        return PaymentResult(
           status: PaymentStatus.failed,
-          errorMessage: 'Failed to obtain Maya checkout URL',
+          errorMessage: l10n.pmtFailedObtainCheckoutUrl,
         );
       }
 
@@ -155,7 +158,7 @@ class PaymentController {
           tag: 'PaymentController');
       return PaymentResult(
         status: PaymentStatus.failed,
-        errorMessage: e.toString(),
+        errorMessage: l10n.pmtPaymentFailed,
       );
     }
   }

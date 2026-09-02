@@ -8,8 +8,10 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/flutter_flow/permissions_util.dart';
 import '/index.dart';
+import '/l10n/app_localizations.dart';
 import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
+import '/l10n/app_localizations.dart';
 import 'onboarding_model.dart';
 
 export 'onboarding_model.dart';
@@ -68,6 +70,107 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
     super.dispose();
   }
 
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
+  /// First onboarding slide: pick the in-app language (English/Filipino).
+  /// Choosing a language applies it instantly via [FFAppState.locale].
+  Widget _buildLanguageSlide(BuildContext context) {
+    final theme = AppTheme.of(context);
+    final current = FFAppState().locale;
+
+    Widget option(String label, String locale) {
+      final selected = current == locale;
+      return GestureDetector(
+        onTap: () {
+          FFAppState().locale = locale;
+          safeSetState(() {});
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          height: 88,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
+            color: selected
+                ? theme.primary.withValues(alpha: 0.08)
+                : theme.secondaryBackground,
+            border: Border.all(
+              color: selected ? theme.primary : theme.border,
+              width: 1.5,
+            ),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: theme.titleMedium.copyWith(
+                    color: selected ? theme.primary : theme.primaryText,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              if (selected)
+                Icon(
+                  Icons.check_circle,
+                  color: theme.primary,
+                  size: 24,
+                )
+              else
+                Icon(
+                  Icons.radio_button_unchecked,
+                  color: theme.border,
+                  size: 24,
+                ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsetsDirectional.fromSTEB(24, 0, 24, 0),
+      child: Column(
+        mainAxisSize: MainAxisSize.max,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            _l10n.chooseYourLanguage,
+            textAlign: TextAlign.center,
+            style: AppTheme.of(context).headlineMedium.override(
+                  font: GoogleFonts.plusJakartaSans(
+                    fontWeight: AppTheme.of(context).headlineMedium.fontWeight,
+                    fontStyle: AppTheme.of(context).headlineMedium.fontStyle,
+                  ),
+                  letterSpacing: 0,
+                  fontWeight: AppTheme.of(context).headlineMedium.fontWeight,
+                  fontStyle: AppTheme.of(context).headlineMedium.fontStyle,
+                ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            _l10n.chooseYourLanguageSubtitle,
+            textAlign: TextAlign.center,
+            style: AppTheme.of(context).bodyMedium.override(
+                  font: GoogleFonts.plusJakartaSans(
+                    fontWeight: AppTheme.of(context).bodyMedium.fontWeight,
+                    fontStyle: AppTheme.of(context).bodyMedium.fontStyle,
+                  ),
+                  letterSpacing: 0,
+                  fontWeight: AppTheme.of(context).bodyMedium.fontWeight,
+                  fontStyle: AppTheme.of(context).bodyMedium.fontStyle,
+                ),
+          ),
+          const SizedBox(height: 32),
+          option('English', 'en'),
+          const SizedBox(height: 12),
+          option('Filipino', 'fil'),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) => GestureDetector(
       onTap: () {
@@ -95,7 +198,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                         FFAppState().hasCompletedOnboarding = true;
                         context.goNamed(SigninWidget.routeName);
                       },
-                      text: 'Skip',
+                      text: _l10n.onbSkip,
                       options: FFButtonOptions(
                         height: 40,
                         padding: const EdgeInsetsDirectional.fromSTEB(
@@ -150,6 +253,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                               PageController(initialPage: 0),
                           scrollDirection: Axis.horizontal,
                           children: [
+                            _buildLanguageSlide(context),
                             Padding(
                               padding: const EdgeInsetsDirectional.fromSTEB(
                                   20, 0, 20, 0),
@@ -383,7 +487,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                           child: smooth_page_indicator.SmoothPageIndicator(
                             controller: _model.pageViewController ??=
                                 PageController(initialPage: 0),
-                            count: 3,
+                            count: 4,
                             axisDirection: Axis.horizontal,
                             onDotClicked: (i) async {
                               await _model.pageViewController!.animateToPage(
@@ -419,7 +523,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                     'Next button pressed, current page: ${_model.pageViewCurrentIndex}',
                     tag: 'Onboarding',
                   );
-                    if (_model.pageViewCurrentIndex.toString() == '2') {
+                    if (_model.pageViewCurrentIndex.toString() == '3') {
                       // Mark onboarding as completed when navigating from last page
                       FFAppState().hasCompletedOnboarding = true;
                       await context.pushNamed(SigninWidget.routeName);
@@ -430,7 +534,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                     );
                   }
                 },
-                text: 'Next',
+                text: _l10n.onbNext,
                 options: FFButtonOptions(
                   width: MediaQuery.sizeOf(context).width * 0.92,
                   height: 52,

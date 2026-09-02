@@ -2,7 +2,7 @@
 
 General behavioral guidelines for coding agents live in `CLAUDE.md`.
 
-Flutter mobile app for the SerbisyoHub PH marketplace (clients ↔ service providers). Reference/parity target is the Vue 3 + Ionic web app at `E:\Dev\shph-web` — check it when adding pages or matching UI behavior.
+Flutter mobile app for the Serbisyo marketplace (clients ↔ service providers). Reference/parity target is the Vue 3 + Ionic web app at `E:\Dev\shph-web` — check it when adding pages or matching UI behavior.
 
 ## Backend reality (read before touching data/auth)
 
@@ -18,7 +18,7 @@ Flutter mobile app for the SerbisyoHub PH marketplace (clients ↔ service provi
 - Bottom-tab pages + provider dashboard live in `lib/main/` (home, explore, category, bookings, messages, profile, pro_dashboard).
 - Shared widgets in `lib/components/` (ScreenHeader, ServiceCard, StatusPill, etc.). Use these instead of inlining new UI.
 - Routing: single `lib/router/app_router.dart` (GoRouter). State: `FFAppState()` (`lib/app_state.dart`) + `provider`; dedicated services in `lib/services/`.
-- Theming: `AppTheme.of(context)` / `AppThemeData` in `lib/theme/app_theme.dart`. **Always use theme tokens, never hardcoded hex/`Colors.*`** (dark mode depends on it). Status pills via `AppThemeData.statusColors()`. Font is `GoogleFonts.plusJakartaSans()` — `GoogleFonts.poppins` is banned.
+- Theming: `AppTheme.of(context)` / `AppThemeData` in `lib/theme/app_theme.dart`. **Always use theme tokens, never hardcoded hex/`Colors.*`** (dark mode depends on it). Status pills via `AppThemeData.statusColors()`. Font is `GoogleFonts.plusJakartaSans()` — `GoogleFonts.poppins` is banned. Full token + component reference: `docs/design-system.md`.
 - `analysis_options.yaml` excludes `lib/custom_code/**` and `lib/flutter_flow/custom_functions.dart` from analysis.
 
 ## Commands

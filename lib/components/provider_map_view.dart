@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 
 class ProviderMapView extends StatefulWidget {
@@ -9,15 +10,15 @@ class ProviderMapView extends StatefulWidget {
     this.providerLocation,
     this.clientLocation,
     this.polylinePoints,
-    this.providerLabel = 'You',
-    this.clientLabel = 'Client',
+    this.providerLabel,
+    this.clientLabel,
   });
 
   final LatLng? providerLocation;
   final LatLng? clientLocation;
   final List<LatLng>? polylinePoints;
-  final String providerLabel;
-  final String clientLabel;
+  final String? providerLabel;
+  final String? clientLabel;
 
   @override
   State<ProviderMapView> createState() => _ProviderMapViewState();
@@ -33,6 +34,11 @@ class _ProviderMapViewState extends State<ProviderMapView> {
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _updateOverlays();
   }
 
@@ -43,6 +49,9 @@ class _ProviderMapViewState extends State<ProviderMapView> {
   }
 
   void _updateOverlays() {
+    final _l10n = AppLocalizations.of(context)!;
+    final providerLabel = widget.providerLabel ?? _l10n.ccYou;
+    final clientLabel = widget.clientLabel ?? _l10n.ccClient;
     final markers = <Marker>{};
 
     if (widget.providerLocation != null) {
@@ -50,7 +59,7 @@ class _ProviderMapViewState extends State<ProviderMapView> {
         markerId: const MarkerId('provider'),
         position: widget.providerLocation!,
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-        infoWindow: InfoWindow(title: widget.providerLabel),
+        infoWindow: InfoWindow(title: providerLabel),
       ));
     }
 
@@ -59,7 +68,7 @@ class _ProviderMapViewState extends State<ProviderMapView> {
         markerId: const MarkerId('client'),
         position: widget.clientLocation!,
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-        infoWindow: InfoWindow(title: widget.clientLabel),
+        infoWindow: InfoWindow(title: clientLabel),
       ));
     }
 

@@ -1,4 +1,4 @@
-# Brand & Design Consistency Plan — SerbisyoHub PH Flutter App
+# Brand & Design Consistency Plan — Serbisyo Flutter App
 
 **Status:** Implemented (Flutter side complete 2026-08-15; web highlights pending)
 **Date:** 2026-08-09

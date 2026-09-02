@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 
 import '/api/shph_api.dart';
@@ -13,7 +16,9 @@ import 'auth/auth_manager_factory.dart';
 import 'auth/auth_util.dart';
 import 'auth/shph_auth/shph_user_provider.dart';
 import 'components/connectivity_banner.dart';
+import 'components/cupertino_ui/cupertino_theme_scope.dart';
 import 'flutter_flow/flutter_flow_util.dart';
+import '/main/home/home_redesign_widget.dart';
 import 'index.dart';
 import 'l10n/app_localizations.dart';
 import 'services/auth_service.dart';
@@ -24,6 +29,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   GoRouter.optionURLReflectsImperativeAPIs = true;
   usePathUrlStrategy();
+
+  // Enable intl DateFormat for the supported app locales (en + fil) so date
+  // pickers/calendars can localize month & weekday names.
+  await initializeDateFormatting('en', null);
+  await initializeDateFormatting('fil', null);
 
   // Initialize SHPH REST API client (OpenAPI-backed Dio layer)
   await initializeShphApi();
@@ -133,7 +143,12 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _syncLocale() {
-    final localeString = widget.appState.locale;
+    var localeString = widget.appState.locale;
+    // Only English and Filipino are offered/localized; anything else falls
+    // back to English so a stale stored locale can never break rendering.
+    if (localeString != 'en' && localeString != 'fil') {
+      localeString = 'en';
+    }
     final parts = localeString.split('_');
     final newLocale = Locale(parts.first, parts.length > 1 ? parts.last : '');
     if (newLocale != _locale) {
@@ -155,15 +170,7 @@ class _MyAppState extends State<MyApp> {
 
   List<Locale> get _supportedLocales => const [
         Locale('en', ''),
-        Locale('es', ''),
-        Locale('fr', ''),
-        Locale('de', ''),
-        Locale('it', ''),
-        Locale('pt', ''),
-        Locale('zh', ''),
-        Locale('ja', ''),
-        Locale('ko', ''),
-        Locale('ar', ''),
+        Locale('fil', ''),
       ];
 
   @override
@@ -173,10 +180,9 @@ class _MyAppState extends State<MyApp> {
         child: ChangeNotifierProvider<ConnectivityService>.value(
           value: widget.connectivityService ?? ConnectivityService(),
           child: Consumer<ConnectivityService>(
-            builder: (context, connectivity, _) {
-              return MaterialApp.router(
+            builder: (context, connectivity, _) => MaterialApp.router(
                 debugShowCheckedModeBanner: false,
-                title: 'SerbisyoHub PH',
+                title: 'Serbisyo',
                 locale: _locale,
                 localizationsDelegates: const [
                   GlobalMaterialLocalizations.delegate,
@@ -185,24 +191,21 @@ class _MyAppState extends State<MyApp> {
                   AppLocalizations.delegate,
                 ],
                 supportedLocales: _supportedLocales,
-                theme: ThemeData(
-                  brightness: Brightness.light,
-                  useMaterial3: false,
-                ),
-                darkTheme: ThemeData(
-                  brightness: Brightness.dark,
-                  useMaterial3: false,
-                ),
+                theme: AppTheme.lightTheme(),
+                darkTheme: AppTheme.darkTheme(),
                 themeMode: _themeMode,
                 routerConfig: _router,
                 scaffoldMessengerKey: ErrorHandler.scaffoldMessengerKey,
-                builder: (context, child) {
-                  return Stack(
+                builder: (context, child) =>
+                    CupertinoThemeScope(child: AnnotatedRegion<SystemUiOverlayStyle>(
+                  value: const SystemUiOverlayStyle(
+                    statusBarColor: Colors.transparent,
+                    statusBarIconBrightness: Brightness.dark,
+                    statusBarBrightness: Brightness.light,
+                  ),
+                  child: Stack(
                     children: [
-                      SafeArea(
-                        bottom: false,
-                        child: child ?? const SizedBox.shrink(),
-                      ),
+                      child ?? const SizedBox.shrink(),
                       Positioned(
                         top: 0,
                         left: 0,
@@ -212,10 +215,9 @@ class _MyAppState extends State<MyApp> {
                         ),
                       ),
                     ],
-                  );
-                },
-              );
-            },
+                  ),
+                )),
+              ),
           ),
         ),
       );
@@ -250,8 +252,7 @@ class _NavBarPageState extends State<NavBarPage> {
   }
 
   Map<String, Widget> get _tabs => const {
-        'Home': HomeWidget(),
-        'Explore': ExploreWidget(),
+        'Home': HomeRedesignWidget(),
         'Bookings': BookingsWidget(),
         'Messages': MessagesWidget(),
         'Profile': ProfileWidget(),
@@ -274,7 +275,10 @@ class _NavBarPageState extends State<NavBarPage> {
             decoration: BoxDecoration(
               color: AppTheme.of(context).error,
               borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: Colors.white, width: 1.5),
+              border: Border.all(
+                color: AppTheme.of(context).primaryBackground,
+                width: 1.5,
+              ),
             ),
             child: Text(
               count > 99 ? '99+' : count.toString(),
@@ -290,29 +294,23 @@ class _NavBarPageState extends State<NavBarPage> {
     );
   }
 
-  List<BottomNavigationBarItem> _buildNavItems(BuildContext context) =>
-      const [
-        BottomNavigationBarItem(
+  List<BottomNavigationBarItem> _buildNavItems(BuildContext context) => [
+        const BottomNavigationBarItem(
           icon: Icon(Icons.home_outlined, size: 24),
           label: 'Home',
           tooltip: '',
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.explore_outlined, size: 24),
-          label: 'Explore',
-          tooltip: '',
-        ),
-        BottomNavigationBarItem(
+        const BottomNavigationBarItem(
           icon: Icon(Icons.content_paste_outlined, size: 24),
           label: 'Bookings',
           tooltip: '',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.chat_outlined, size: 24),
+          icon: _buildMessagesIcon(context),
           label: 'Messages',
           tooltip: '',
         ),
-        BottomNavigationBarItem(
+        const BottomNavigationBarItem(
           icon: Icon(Icons.person_outline, size: 24),
           label: 'Profile',
           tooltip: '',
@@ -336,22 +334,24 @@ class _NavBarPageState extends State<NavBarPage> {
       bottomNavigationBar: ListenableBuilder(
         listenable: FFAppState(),
         builder: (context, _) {
-          final currentTabs = _tabs;
-          final idx = currentTabs.keys.toList().indexOf(_currentPageName);
+          final tabKeys = _tabs.keys.toList();
+          final rawIdx = tabKeys.indexOf(_currentPageName);
+          final safeIdx = rawIdx >= 0 ? rawIdx : 0;
           final items = _buildNavItems(context);
-          return BottomNavigationBar(
-            currentIndex: idx.clamp(0, items.length - 1),
-            onTap: (i) => safeSetState(() {
-              _currentPage = null;
-              _currentPageName = currentTabs.keys.toList()[i];
-            }),
-            backgroundColor: AppTheme.of(context).primaryBackground,
-            selectedItemColor: AppTheme.of(context).primary,
-            unselectedItemColor: AppTheme.of(context).secondaryText,
-            showSelectedLabels: true,
-            showUnselectedLabels: true,
-            type: BottomNavigationBarType.fixed,
-            items: items,
+          return SafeArea(
+            top: false,
+            child: CupertinoTabBar(
+              currentIndex: safeIdx.clamp(0, items.length - 1),
+              onTap: (i) => safeSetState(() {
+                _currentPage = null;
+                _currentPageName = tabKeys[i.clamp(0, tabKeys.length - 1)];
+              }),
+              backgroundColor: AppTheme.of(context).primaryBackground,
+              activeColor: AppTheme.of(context).primary,
+              inactiveColor: AppTheme.of(context).secondaryText,
+              iconSize: 24,
+              items: items,
+            ),
           );
         },
       ),

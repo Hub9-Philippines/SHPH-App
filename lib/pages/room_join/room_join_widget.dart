@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '/components/cupertino_ui/app_button.dart';
+import '/components/cupertino_ui/app_text_field.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'room_join_model.dart';
 
@@ -20,6 +24,9 @@ class RoomJoinWidget extends StatefulWidget {
 
 class _RoomJoinWidgetState extends State<RoomJoinWidget> {
   late RoomJoinModel _model;
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
   final _tokenCtrl = TextEditingController();
 
   @override
@@ -29,7 +36,11 @@ class _RoomJoinWidgetState extends State<RoomJoinWidget> {
     if (widget.initialToken != null && widget.initialToken!.isNotEmpty) {
       _tokenCtrl.text = widget.initialToken!;
       _model.token = widget.initialToken!;
-      _model.lookup().then((_) => safeSetState(() {}));
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _model.lookup(_l10n).then((_) => safeSetState(() {}));
+        }
+      });
     }
   }
 
@@ -50,11 +61,13 @@ class _RoomJoinWidgetState extends State<RoomJoinWidget> {
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
-      appBar: AppBar(
-        backgroundColor: theme.primaryBackground,
-        title: Text('Join Room', style: theme.titleMedium),
-        centerTitle: true,
-        elevation: 0,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: CupertinoPageHeader(
+          backgroundColor: theme.primaryBackground,
+          title: _l10n.rjTitle,
+          titleStyle: theme.titleMedium,
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -69,42 +82,30 @@ class _RoomJoinWidgetState extends State<RoomJoinWidget> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Enter Join Code',
+                Text(_l10n.rjEnterJoinCode,
                     style: theme.titleSmall),
                 const SizedBox(height: 8),
                 Row(
                   children: [
                     Expanded(
-                      child: TextField(
+                      child: AppTextField(
                         controller: _tokenCtrl,
-                        decoration: InputDecoration(
-                          hintText: 'Join code',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 12),
-                        ),
+                        placeholder: _l10n.rjJoinCodePlaceholder,
+                        radius: 8,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 12),
                         onChanged: (v) => _model.token = v,
                       ),
                     ),
                     const SizedBox(width: 8),
-                    ElevatedButton(
+                    AppButton(
                       onPressed: _model.isLookingUp
                           ? null
-                          : () => _model.lookup()
+                          : () => _model.lookup(_l10n)
                               .then((_) => safeSetState(() {})),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.primary,
-                      ),
-                      child: _model.isLookingUp
-                          ? SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: theme.onPrimary),
-                            )
-                          : const Text('Look Up'),
+                      backgroundColor: theme.primary,
+                      loading: _model.isLookingUp,
+                      child: Text(_l10n.rjLookUp),
                     ),
                   ],
                 ),
@@ -137,7 +138,10 @@ class _RoomJoinWidgetState extends State<RoomJoinWidget> {
                           ?.copyWith(color: theme.secondaryText)),
                   const SizedBox(height: 8),
                   Text(
-                    'Seats: ${preview['seats_remaining'] ?? '?'}/${preview['heads_required'] ?? '?'}',
+                    _l10n.rjSeats(
+                      preview['heads_required'] ?? '?',
+                      preview['seats_remaining'] ?? '?',
+                    ),
                     style: theme.bodyMedium,
                   ),
                   Text(
@@ -151,7 +155,7 @@ class _RoomJoinWidgetState extends State<RoomJoinWidget> {
                   const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton(
+                    child: AppButton(
                       onPressed: !canJoin || _model.isJoining
                           ? null
                           : () async {
@@ -162,29 +166,21 @@ class _RoomJoinWidgetState extends State<RoomJoinWidget> {
                                 } else {
                                   ScaffoldMessenger.of(context)
                                       .showSnackBar(
-                                    const SnackBar(
+                                    SnackBar(
                                         content:
-                                            Text('Failed to join room')),
+                                            Text(_l10n.rjFailedJoin)),
                                   );
                                 }
                               }
                             },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            canJoin ? theme.primary : theme.textTertiary,
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: _model.isJoining
-                          ? SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: theme.onPrimary),
-                            )
-                          : Text(canJoin
-                              ? 'Join Room'
-                              : 'Cannot Join'),
+                      backgroundColor:
+                          canJoin ? theme.primary : theme.textTertiary,
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 14),
+                      loading: _model.isJoining,
+                      child: Text(canJoin
+                          ? _l10n.rjJoinRoom
+                          : _l10n.rjCannotJoin),
                     ),
                   ),
                 ],

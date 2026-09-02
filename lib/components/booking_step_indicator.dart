@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 
 /// One step of the booking progress timeline.
@@ -20,8 +21,8 @@ class BookingStep {
 
 /// Vertical timeline stepper for booking progress.
 ///
-/// Completed steps render a glowing teal checkmark with their timestamp,
-/// the current step is highlighted in teal, and pending steps show muted
+/// Completed steps render a glowing violet checkmark with their timestamp,
+/// the current step is highlighted in violet, and pending steps show muted
 /// gray dots.
 class BookingStepIndicator extends StatelessWidget {
   const BookingStepIndicator({
@@ -78,7 +79,7 @@ class _Connector extends StatelessWidget {
         width: 2,
         height: 26,
         decoration: BoxDecoration(
-          color: done ? AppThemeData.successTeal : theme.border,
+          color: done ? AppThemeData.successBrand : theme.border,
           borderRadius: BorderRadius.circular(2),
         ),
       ),
@@ -112,7 +113,7 @@ class _StepRow extends StatelessWidget {
             height: 44,
             decoration: BoxDecoration(
               color: done || isCurrent
-                  ? AppThemeData.successTeal
+                  ? AppThemeData.successBrand
                   : theme.surfaceAlt,
               shape: BoxShape.circle,
               boxShadow: done
@@ -120,7 +121,7 @@ class _StepRow extends StatelessWidget {
                       BoxShadow(
                         // Glow ring for completed checkmarks.
                         color:
-                            AppThemeData.successTeal.withValues(alpha: 0.35),
+                            AppThemeData.successBrand.withValues(alpha: 0.35),
                         blurRadius: 12,
                         spreadRadius: 2,
                       ),
@@ -128,7 +129,7 @@ class _StepRow extends StatelessWidget {
                   : isCurrent
                       ? [
                           BoxShadow(
-                            color: AppThemeData.successTeal
+                            color: AppThemeData.successBrand
                                 .withValues(alpha: 0.16),
                             blurRadius: 8,
                           ),
@@ -182,16 +183,16 @@ class _StepRow extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: AppThemeData.successTeal.withValues(alpha: 0.12),
+                color: AppThemeData.successBrand.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(AppThemeData.radiusPill),
               ),
               child: Text(
-                'In progress',
+                AppLocalizations.of(context)!.ccInProgress,
                 style: theme.labelSmall.override(
                   font: GoogleFonts.plusJakartaSans(
                     fontWeight: FontWeight.w700,
                   ),
-                  color: AppThemeData.successTeal,
+                  color: AppThemeData.successBrand,
                 ),
               ),
             ),

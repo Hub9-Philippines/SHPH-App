@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '/components/cupertino_ui/app_button.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 
 enum CallType { audio, video }
@@ -44,6 +46,8 @@ class _CallAcceptPermissionSheetState extends State<CallAcceptPermissionSheet> {
   bool _granted = false;
   bool _denied = false;
 
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
@@ -75,14 +79,14 @@ class _CallAcceptPermissionSheetState extends State<CallAcceptPermissionSheet> {
           ),
           const SizedBox(height: 20),
           Text(
-            isVideo ? 'Camera & Microphone Access' : 'Microphone Access',
+            isVideo ? _l10n.ccCamMicAccess : _l10n.ccMicAccess,
             style: theme.titleLarge,
           ),
           const SizedBox(height: 8),
           Text(
             isVideo
-              ? 'Allow camera and microphone to join the video call.'
-              : 'Allow microphone access to join the audio call.',
+              ? _l10n.ccCamMicDesc
+              : _l10n.ccMicDesc,
             textAlign: TextAlign.center,
             style: TextStyle(color: theme.secondaryText, fontSize: 14),
           ),
@@ -100,7 +104,7 @@ class _CallAcceptPermissionSheetState extends State<CallAcceptPermissionSheet> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Permission denied. Please enable it in your device settings.',
+                      _l10n.ccPermDenied,
                       style: TextStyle(color: theme.error, fontSize: 13),
                     ),
                   ),
@@ -119,7 +123,7 @@ class _CallAcceptPermissionSheetState extends State<CallAcceptPermissionSheet> {
                   Icon(Icons.check_circle_rounded, color: theme.success, size: 20),
                   const SizedBox(width: 8),
                   Text(
-                    'Access granted!',
+                    _l10n.ccAccessGranted,
                     style: TextStyle(color: theme.success, fontWeight: FontWeight.w600),
                   ),
                 ],
@@ -128,7 +132,7 @@ class _CallAcceptPermissionSheetState extends State<CallAcceptPermissionSheet> {
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton(
+            child: AppButton(
               onPressed: () {
                 setState(() {
                   _granted = true;
@@ -136,27 +140,27 @@ class _CallAcceptPermissionSheetState extends State<CallAcceptPermissionSheet> {
                 });
                 widget.onPermissionGranted?.call();
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.primary,
-                foregroundColor: theme.onPrimary,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              ),
+              backgroundColor: theme.primary,
+              foregroundColor: theme.onPrimary,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              borderRadius: 14,
               child: Text(
-                isVideo ? 'Allow Camera & Microphone' : 'Allow Microphone',
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                isVideo ? _l10n.ccAllowCamMic : _l10n.ccAllowMic,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w600, fontSize: 16),
               ),
             ),
           ),
           const SizedBox(height: 8),
           SizedBox(
             width: double.infinity,
-            child: TextButton(
+            child: AppButton(
               onPressed: () {
                 widget.onDecline?.call();
                 Navigator.of(context).pop();
               },
-              child: const Text('Decline'),
+              variant: AppButtonVariant.text,
+              child: Text(_l10n.ccDecline),
             ),
           ),
         ],

@@ -21,13 +21,20 @@ class ShphUsersApi {
     return response.data ?? {};
   }
 
-  Future<Map<String, dynamic>> uploadPhoto(List<int> fileBytes, String fileName) async {
+  Future<Map<String, dynamic>> uploadPhoto(
+    List<int> fileBytes,
+    String fileName, {
+    void Function(int sent, int total)? onSendProgress,
+  }) async {
     final formData = FormData.fromMap({
       'photo': MultipartFile.fromBytes(fileBytes, filename: fileName),
     });
     final response = await _client.post<Map<String, dynamic>>(
       '/api/users/me/photo/',
       data: formData,
+      onSendProgress: onSendProgress == null
+          ? null
+          : (sent, total) => onSendProgress(sent, total),
     );
     return response.data ?? {};
   }

@@ -8,6 +8,7 @@ import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
+import '/l10n/app_localizations.dart';
 import '/services/favorites_service.dart';
 import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
@@ -62,6 +63,8 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
   List<ShphReview> _reviews = [];
   bool _isLoadingReviews = false;
 
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -114,7 +117,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            _isFavorite ? 'Added to favorites' : 'Removed from favorites',
+            _isFavorite ? _l10n.ppAddedToFavorites : _l10n.ppRemovedFromFavorites,
           ),
           duration: const Duration(seconds: 2),
         ),
@@ -158,20 +161,20 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
 
     if (difference.inDays == 0) {
       if (difference.inHours == 0) {
-        return '${difference.inMinutes} min ago';
+        return _l10n.ppMinAgo(difference.inMinutes);
       }
-      return '${difference.inHours} hours ago';
+      return _l10n.ppHoursAgo(difference.inHours);
     }
     if (difference.inDays == 1) {
-      return '1 day ago';
+      return _l10n.ppDayAgo;
     }
     if (difference.inDays < 7) {
-      return '${difference.inDays} days ago';
+      return _l10n.ppDaysAgo(difference.inDays);
     }
     if (difference.inDays < 30) {
-      return '${(difference.inDays / 7).floor()} weeks ago';
+      return _l10n.ppWeeksAgo((difference.inDays / 7).floor());
     }
-    return '${(difference.inDays / 30).floor()} months ago';
+    return _l10n.ppMonthsAgo((difference.inDays / 30).floor());
   }
 
   @override
@@ -296,12 +299,12 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                                   children: [
                                     _heroInfoChip(
                                       icon: Icons.star_rounded,
-                                      label:
-                                          '${widget.rating.toStringAsFixed(1)} rating',
+                                      label: _l10n.ppRating(
+                                          widget.rating.toStringAsFixed(1)),
                                     ),
                                     _heroInfoChip(
                                       icon: Icons.reviews_rounded,
-                                      label: '${widget.reviewCount} reviews',
+                                      label: _l10n.ppReviews(widget.reviewCount),
                                     ),
                                     _heroInfoChip(
                                       icon: Icons.payments_rounded,
@@ -329,9 +332,8 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                       _buildProviderCard(),
                       const SizedBox(height: 18),
                       _buildSectionCard(
-                        title: 'About this service',
-                        subtitle:
-                            'Everything the customer should understand before booking.',
+                        title: _l10n.ppAboutTitle,
+                        subtitle: _l10n.ppAboutSubtitle,
                         child: Text(
                           widget.description,
                           style: AppTheme.of(context)
@@ -476,7 +478,9 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '${widget.rating.toStringAsFixed(1)} • ${widget.reviewCount} reviews',
+                        _l10n.ppOverviewRating(
+                            widget.rating.toStringAsFixed(1),
+                            widget.reviewCount),
                         style: AppTheme.of(context).labelMedium.override(
                               font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,
@@ -496,11 +500,11 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
               children: [
                 _overviewPill(
                   icon: Icons.flash_on_rounded,
-                  label: 'Fast booking',
+                  label: _l10n.ppFastBooking,
                 ),
                 _overviewPill(
                   icon: Icons.shield_outlined,
-                  label: widget.isVerified ? 'Verified provider' : 'Open listing',
+                  label: widget.isVerified ? _l10n.ppVerifiedProvider : _l10n.ppOpenListing,
                 ),
                 _overviewPill(
                   icon: Icons.category_rounded,
@@ -617,7 +621,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                'Verified',
+                                _l10n.ppVerified,
                                 style: AppTheme.of(context).labelSmall.override(
                                       font: GoogleFonts.plusJakartaSans(
                                         fontWeight: FontWeight.w700,
@@ -645,7 +649,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                         child: OutlinedButton.icon(
                           onPressed: _openContactProvider,
                           icon: const Icon(Icons.chat_bubble_outline_rounded),
-                          label: const Text('Contact'),
+                          label: Text(_l10n.ppContact),
                           style: OutlinedButton.styleFrom(
                             minimumSize: const Size.fromHeight(46),
                             shape: RoundedRectangleBorder(
@@ -659,7 +663,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                         child: FilledButton.icon(
                           onPressed: _openBooking,
                           icon: const Icon(Icons.calendar_today_rounded),
-                          label: const Text('Book now'),
+                          label: Text(_l10n.ppBookNow),
                           style: FilledButton.styleFrom(
                             minimumSize: const Size.fromHeight(46),
                             shape: RoundedRectangleBorder(
@@ -721,28 +725,26 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
       );
 
   Widget _buildTrustCard() => _buildSectionCard(
-        title: 'Why customers book this',
-        subtitle: 'A quick snapshot before the booking flow starts.',
+        title: _l10n.ppWhyTitle,
+        subtitle: _l10n.ppWhySubtitle,
         child: Column(
           children: [
             _trustRow(
               icon: Icons.bolt_rounded,
-              title: 'Fast handoff',
-              description: 'Go from service details to booking in one step.',
+              title: _l10n.ppFastHandoff,
+              description: _l10n.ppFastHandoffDesc,
             ),
             const SizedBox(height: 14),
             _trustRow(
               icon: Icons.star_outline_rounded,
-              title: 'Social proof',
-              description:
-                  '${widget.reviewCount} review${widget.reviewCount == 1 ? '' : 's'} currently attached to this listing.',
+              title: _l10n.ppSocialProof,
+              description: _l10n.ppSocialProofDesc(widget.reviewCount),
             ),
             const SizedBox(height: 14),
             _trustRow(
               icon: Icons.support_agent_rounded,
-              title: 'Provider contact',
-              description:
-                  'Message the provider first if you want to clarify scope or timing.',
+              title: _l10n.ppProviderContact,
+              description: _l10n.ppProviderContactDesc,
             ),
           ],
         ),
@@ -815,7 +817,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Recent reviews',
+                        _l10n.ppRecentReviews,
                         style: AppTheme.of(context).titleMedium.override(
                               font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,
@@ -825,7 +827,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Recent customer feedback for this listing.',
+                        _l10n.ppRecentReviewsSub,
                         style: AppTheme.of(context).bodySmall.override(
                               font: GoogleFonts.plusJakartaSans(),
                               color: const Color(0xFF64748B),
@@ -837,7 +839,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                 if (widget.reviewCount > 0)
                   TextButton(
                     onPressed: widget.serviceId == null ? null : _openAllReviews,
-                    child: const Text('See all'),
+                    child: Text(_l10n.ppSeeAll),
                   ),
               ],
             ),
@@ -853,10 +855,10 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
               )
             else if (widget.reviewCount > 0)
               _buildReviewPlaceholder(
-                '${widget.reviewCount} review${widget.reviewCount == 1 ? '' : 's'} available',
+                _l10n.ppReviewsAvailable(widget.reviewCount),
               )
             else
-              _buildReviewPlaceholder('No reviews yet'),
+              _buildReviewPlaceholder(_l10n.ppNoReviews),
           ],
         ),
       );
@@ -899,7 +901,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                       Text(
                         review.reviewerName?.trim().isNotEmpty == true
                             ? review.reviewerName!.trim()
-                            : 'Customer',
+                            : _l10n.ppFallbackCustomer,
                         style: AppTheme.of(context).bodyMedium.override(
                               font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,
@@ -1002,7 +1004,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
               Expanded(
                 child: FFButtonWidget(
                   onPressed: _openContactProvider,
-                  text: 'Contact',
+                  text: _l10n.ppContact,
                   options: FFButtonOptions(
                     width: double.infinity,
                     height: 54,
@@ -1022,7 +1024,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                 flex: 2,
                 child: FFButtonWidget(
                   onPressed: _openBooking,
-                  text: 'Book Now',
+                  text: _l10n.ppBookNow,
                   icon: const Icon(Icons.calendar_today_rounded, size: 18),
                   options: FFButtonOptions(
                     width: double.infinity,

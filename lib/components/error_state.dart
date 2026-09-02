@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
 
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 
 class ErrorState extends StatelessWidget {
   const ErrorState({
     super.key,
-    this.title = 'Something went wrong',
+    this.title,
     this.message,
     this.onRetry,
   });
 
-  final String title;
+  final String? title;
   final String? message;
   final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final _l10n = AppLocalizations.of(context)!;
+    final effectiveTitle = title ?? _l10n.ccSomethingWrong;
 
     return Center(
       child: Padding(
@@ -36,7 +39,7 @@ class ErrorState extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              title,
+              effectiveTitle,
               textAlign: TextAlign.center,
               style: theme.titleMedium.override(
                 fontWeight: FontWeight.w600,
@@ -56,7 +59,7 @@ class ErrorState extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh_rounded, size: 18),
-                label: const Text('Try again'),
+                label: Text(_l10n.ccTryAgain),
               ),
             ],
           ],

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '/components/cupertino_ui/app_button.dart';
 import '/components/screen_header.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import '../booking_funnel/widgets/booking_flow_route.dart';
 import 'tm_controller.dart';
@@ -17,13 +19,15 @@ class TMInvoiceScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
     return Consumer<TMFlowController>(
-      builder: (context, controller, _) => Scaffold(
+      builder: (context, controller, _) {
+        final l10n = AppLocalizations.of(context)!;
+        return Scaffold(
         backgroundColor: theme.primaryBackground,
         body: SafeArea(
           top: false,
           child: Column(
             children: [
-              const ScreenHeader(title: 'Final Invoice'),
+              ScreenHeader(title: l10n.tmFinalInvoice),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
@@ -49,13 +53,13 @@ class TMInvoiceScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 18),
                       _InvoiceRow(
-                        label: 'Base labor fee',
+                        label: l10n.tmBaseLaborFee,
                         value: controller.baseLaborCost,
                       ),
                       if (controller.approvedHardwareCost > 0) ...[
                         const SizedBox(height: 12),
                         _InvoiceRow(
-                          label: 'Approved hardware',
+                          label: l10n.tmApprovedHardwareLabel,
                           value: controller.approvedHardwareCost,
                         ),
                       ],
@@ -64,7 +68,7 @@ class TMInvoiceScreen extends StatelessWidget {
                         child: Divider(height: 1),
                       ),
                       _InvoiceRow(
-                        label: 'Total due',
+                        label: l10n.tmTotalDue,
                         value: controller.totalInvoiceAmount,
                         emphasize: true,
                       ),
@@ -73,7 +77,7 @@ class TMInvoiceScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 18),
                 Text(
-                  'Your final amount reflects the labor fee plus any hardware you approved during the active job.',
+                  l10n.tmFinalAmountReflects,
                   style: theme.bodyMedium.override(
                     color: theme.secondaryText,
                   ),
@@ -82,7 +86,7 @@ class TMInvoiceScreen extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   height: 56,
-                  child: ElevatedButton(
+                  child: AppButton(
                     onPressed: () {
                       Navigator.of(context).push(
                         buildBookingFlowRoute(
@@ -93,17 +97,13 @@ class TMInvoiceScreen extends StatelessWidget {
                         ),
                       );
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.primary,
-                      foregroundColor: theme.onPrimary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                    ),
+                    backgroundColor: theme.primary,
+                    foregroundColor: theme.onPrimary,
+                    borderRadius: 18,
+                    width: double.infinity,
                     child: Text(
-                      'Pay Now',
+                      l10n.tmPayNow,
                       style: theme.titleMedium.override(
-                        color: theme.onPrimary,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -116,7 +116,8 @@ class TMInvoiceScreen extends StatelessWidget {
         ],
       ),
     ),
-  ),
+  );
+  },
 );
   }
 }

@@ -5,8 +5,11 @@ import 'package:google_fonts/google_fonts.dart';
 import '/auth/base_auth_user_provider.dart';
 import '/backend/supabase/database/tables/payment_methods.dart';
 import '/components/back_button/back_button_widget.dart';
+import '/components/cupertino_ui/app_text_field.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'add_card_payment_model.dart';
 
@@ -32,6 +35,8 @@ class _AddCardPaymentWidgetState extends State<AddCardPaymentWidget> {
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final _formKey = GlobalKey<FormState>();
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -64,7 +69,7 @@ class _AddCardPaymentWidgetState extends State<AddCardPaymentWidget> {
     final userId = currentUser?.uid;
     if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User not authenticated')),
+        SnackBar(content: Text(_l10n.pmNotAuthenticated)),
       );
       return;
     }
@@ -116,14 +121,14 @@ class _AddCardPaymentWidgetState extends State<AddCardPaymentWidget> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text(widget.paymentMethod != null
-                  ? 'Card updated successfully'
-                  : 'Card added successfully')),
+                  ? _l10n.pcaUpdated
+                  : _l10n.pcaAdded)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving card: $e')),
+          SnackBar(content: Text(_l10n.pcaSaveError(e))),
         );
       }
     }
@@ -138,25 +143,22 @@ class _AddCardPaymentWidgetState extends State<AddCardPaymentWidget> {
         child: Scaffold(
           key: scaffoldKey,
           backgroundColor: AppTheme.of(context).primaryBackground,
-          appBar: AppBar(
-            backgroundColor: AppTheme.of(context).primaryBackground,
-            automaticallyImplyLeading: false,
-            leading: wrapWithModel(
-              model: _model.backButtonModel,
-              updateCallback: () => safeSetState(() {}),
-              child: const BackButtonWidget(),
-            ),
-            title: Text(
-              'Add Card',
-              style: AppTheme.of(context).titleLarge.override(
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(56),
+            child: CupertinoPageHeader(
+              title: _l10n.pcaTitle,
+              backgroundColor: AppTheme.of(context).primaryBackground,
+              leading: wrapWithModel(
+                model: _model.backButtonModel,
+                updateCallback: () => safeSetState(() {}),
+                child: const BackButtonWidget(),
+              ),
+              titleStyle: AppTheme.of(context).titleLarge.override(
                     font: GoogleFonts.plusJakartaSans(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
             ),
-            actions: const [],
-            centerTitle: true,
-            elevation: 0,
           ),
           body: SafeArea(
             top: true,
@@ -169,7 +171,7 @@ class _AddCardPaymentWidgetState extends State<AddCardPaymentWidget> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Card Information',
+                        _l10n.pcaInfoHeader,
                         style: AppTheme.of(context).titleMedium.override(
                               font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.bold,
@@ -186,7 +188,7 @@ class _AddCardPaymentWidgetState extends State<AddCardPaymentWidget> {
                         ],
                         maxLength: 19,
                         decoration: InputDecoration(
-                          labelText: 'Card Number',
+                          labelText: _l10n.pcaCardNumber,
                           hintText: '1234 5678 9012 3456',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -194,11 +196,11 @@ class _AddCardPaymentWidgetState extends State<AddCardPaymentWidget> {
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter card number';
+                            return _l10n.pcaEnterCardNumber;
                           }
                           final digits = value.replaceAll(' ', '');
                           if (digits.length < 13 || digits.length > 19) {
-                            return 'Please enter a valid card number';
+                            return _l10n.pcaValidCardNumber;
                           }
                           return null;
                         },
@@ -207,7 +209,7 @@ class _AddCardPaymentWidgetState extends State<AddCardPaymentWidget> {
                       DropdownButtonFormField<String>(
                         initialValue: _model.selectedProvider,
                         decoration: InputDecoration(
-                          labelText: 'Card Type',
+                          labelText: _l10n.pcaCardType,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -226,7 +228,7 @@ class _AddCardPaymentWidgetState extends State<AddCardPaymentWidget> {
                         },
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please select card type';
+                            return _l10n.pcaSelectCardType;
                           }
                           return null;
                         },
@@ -252,11 +254,11 @@ class _AddCardPaymentWidgetState extends State<AddCardPaymentWidget> {
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Required';
+                                  return _l10n.pcaRequired;
                                 }
                                 final month = int.tryParse(value);
                                 if (month == null || month < 1 || month > 12) {
-                                  return 'Invalid month';
+                                  return _l10n.pcaInvalidMonth;
                                 }
                                 return null;
                               },
@@ -281,12 +283,12 @@ class _AddCardPaymentWidgetState extends State<AddCardPaymentWidget> {
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Required';
+                                  return _l10n.pcaRequired;
                                 }
                                 final year = int.tryParse(value);
                                 if (year == null ||
                                     year < DateTime.now().year) {
-                                  return 'Invalid year';
+                                  return _l10n.pcaInvalidYear;
                                 }
                                 return null;
                               },
@@ -295,19 +297,15 @@ class _AddCardPaymentWidgetState extends State<AddCardPaymentWidget> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      TextFormField(
+                      AppTextField(
                         controller: _model.cardHolderController,
                         textCapitalization: TextCapitalization.words,
-                        decoration: InputDecoration(
-                          labelText: 'Cardholder Name',
-                          hintText: 'John Doe',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
+                        label: _l10n.pcaCardholderName,
+                        placeholder: 'John Doe',
+                        radius: 12,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter cardholder name';
+                            return _l10n.pcaEnterCardholderName;
                           }
                           return null;
                         },
@@ -320,13 +318,13 @@ class _AddCardPaymentWidgetState extends State<AddCardPaymentWidget> {
                             _model.isDefault = value ?? false;
                           });
                         },
-                        title: const Text('Set as default payment method'),
+                        title: Text(_l10n.pmSetDefaultFull),
                         controlAffinity: ListTileControlAffinity.leading,
                       ),
                       const SizedBox(height: 24),
                       FFButtonWidget(
                         onPressed: _saveCard,
-                        text: 'Add Card',
+                        text: _l10n.pcaTitle,
                         options: FFButtonOptions(
                           width: double.infinity,
                           color: AppTheme.of(context).primary,

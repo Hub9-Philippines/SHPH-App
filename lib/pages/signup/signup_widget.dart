@@ -6,9 +6,12 @@ import 'package:provider/provider.dart';
 
 import '/auth/auth_util.dart';
 import '/components/back_button/back_button_widget.dart';
+import '/components/cupertino_ui/app_text_field.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
+import '/l10n/app_localizations.dart';
 import '/services/error_handler.dart';
 import '/theme/app_theme.dart';
 import '../../auth/shph_auth/shph_auth_manager.dart';
@@ -30,6 +33,8 @@ class _SignupWidgetState extends State<SignupWidget> {
   late SignupModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -79,15 +84,17 @@ class _SignupWidgetState extends State<SignupWidget> {
         child: Scaffold(
           key: scaffoldKey,
           backgroundColor: theme.primaryBackground,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            automaticallyImplyLeading: false,
-            leading: wrapWithModel(
-              model: _model.backButtonModel,
-              updateCallback: () => safeSetState(() {}),
-              child: const BackButtonWidget(),
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(56),
+            child: CupertinoPageHeader(
+              title: '',
+              backgroundColor: Colors.transparent,
+              leading: wrapWithModel(
+                model: _model.backButtonModel,
+                updateCallback: () => safeSetState(() {}),
+                child: const BackButtonWidget(),
+              ),
             ),
-            elevation: 0,
           ),
           body: SafeArea(
             top: true,
@@ -125,12 +132,12 @@ class _SignupWidgetState extends State<SignupWidget> {
         ),
         const SizedBox(height: 20),
         Text(
-          'Create Account',
+          _l10n.suTitle,
           style: theme.headlineLarge.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         Text(
-          'Join SerbisyoHub PH and access home services at your fingertips.',
+          _l10n.suSubtitle,
           style: theme.bodyMedium.copyWith(
             color: AppTheme.of(context).secondaryText,
             fontSize: 15,
@@ -144,48 +151,48 @@ class _SignupWidgetState extends State<SignupWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _fieldLabel(theme, 'First Name'),
+        _fieldLabel(theme, _l10n.suFirstName),
         const SizedBox(height: 8),
         _inputField(
           theme,
           controller: _model.firstNameTextController!,
           focusNode: _model.firstNameFocusNode,
-          hint: 'Juan',
+          hint: _l10n.suFirstNameHint,
           textInputAction: TextInputAction.next,
         ),
         const SizedBox(height: 16),
-        _fieldLabel(theme, 'Middle Name (optional)'),
+        _fieldLabel(theme, _l10n.suMiddleName),
         const SizedBox(height: 8),
         _inputField(
           theme,
           controller: _model.middleNameTextController!,
           focusNode: _model.middleNameFocusNode,
-          hint: 'Santos',
+          hint: _l10n.suMiddleNameHint,
           textInputAction: TextInputAction.next,
         ),
         const SizedBox(height: 16),
-        _fieldLabel(theme, 'Last Name'),
+        _fieldLabel(theme, _l10n.suLastName),
         const SizedBox(height: 8),
         _inputField(
           theme,
           controller: _model.lastNameTextController!,
           focusNode: _model.lastNameFocusNode,
-          hint: 'Dela Cruz',
+          hint: _l10n.suLastNameHint,
           textInputAction: TextInputAction.next,
         ),
         const SizedBox(height: 16),
-        _fieldLabel(theme, 'Email'),
+        _fieldLabel(theme, _l10n.suEmail),
         const SizedBox(height: 8),
         _inputField(
           theme,
           controller: _model.emailTextController!,
           focusNode: _model.emailFocusNode,
-          hint: 'you@example.com',
+          hint: _l10n.suEmailHint,
           textInputAction: TextInputAction.next,
           keyboardType: TextInputType.emailAddress,
         ),
         const SizedBox(height: 16),
-        _fieldLabel(theme, 'Mobile number'),
+        _fieldLabel(theme, _l10n.suMobileNumber),
         const SizedBox(height: 8),
         TextFormField(
           controller: _model.phoneFieldTextController,
@@ -203,9 +210,9 @@ class _SignupWidgetState extends State<SignupWidget> {
           textInputAction: TextInputAction.next,
           obscureText: false,
           decoration: InputDecoration(
-            labelText: '+63',
+            labelText: _l10n.suPhonePrefix,
             labelStyle: theme.labelMedium.copyWith(fontSize: 16),
-            hintText: '9123456789',
+            hintText: _l10n.suPhoneHint,
             hintStyle: theme.labelMedium.copyWith(
               fontSize: 16,
               color: theme.secondaryText,
@@ -254,24 +261,24 @@ class _SignupWidgetState extends State<SignupWidget> {
           inputFormatters: [_model.phoneFieldMask],
         ),
         const SizedBox(height: 16),
-        _fieldLabel(theme, 'Password'),
+        _fieldLabel(theme, _l10n.suPassword),
         const SizedBox(height: 8),
         _inputField(
           theme,
           controller: _model.passwordTextController!,
           focusNode: _model.passwordFocusNode,
-          hint: 'At least 8 characters',
+          hint: _l10n.suPasswordHint,
           textInputAction: TextInputAction.next,
           obscure: true,
         ),
         const SizedBox(height: 16),
-        _fieldLabel(theme, 'Confirm Password'),
+        _fieldLabel(theme, _l10n.suConfirmPassword),
         const SizedBox(height: 8),
         _inputField(
           theme,
           controller: _model.confirmPasswordTextController!,
           focusNode: _model.confirmPasswordFocusNode,
-          hint: 'Repeat your password',
+          hint: _l10n.suConfirmPasswordHint,
           textInputAction: TextInputAction.done,
           obscure: true,
         ),
@@ -297,15 +304,14 @@ class _SignupWidgetState extends State<SignupWidget> {
                   if (phoneNumberVal.isEmpty ||
                       !phoneNumberVal.startsWith('+')) {
                     _model.isLoading = false;
-                    _model.errorMessage =
-                        'Phone Number is required and has to start with +.';
+                    _model.errorMessage = _l10n.suPhoneRequired;
                     safeSetState(() {});
                     return;
                   }
                   if (_model.passwordTextController.text !=
                       _model.confirmPasswordTextController.text) {
                     _model.isLoading = false;
-                    _model.errorMessage = 'Passwords do not match.';
+                    _model.errorMessage = _l10n.passwordsDoNotMatch;
                     safeSetState(() {});
                     return;
                   }
@@ -331,7 +337,7 @@ class _SignupWidgetState extends State<SignupWidget> {
                     );
                   } catch (e) {
                     _model.isLoading = false;
-                    final message = ErrorHandler.describeError(e);
+                    final message = ErrorHandler.describeError(e, _l10n);
                     _model.errorMessage = message;
                     safeSetState(() {});
                     if (!context.mounted) return;
@@ -339,7 +345,7 @@ class _SignupWidgetState extends State<SignupWidget> {
                   }
                   safeSetState(() {});
                 },
-          text: _model.isLoading ? 'Signing Up...' : 'Sign Up',
+          text: _model.isLoading ? _l10n.suSigningUp : _l10n.siSignUp,
           options: FFButtonOptions(
             width: double.infinity,
             height: 52,
@@ -358,13 +364,13 @@ class _SignupWidgetState extends State<SignupWidget> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'Already have an account? ',
+              _l10n.suAlreadyHaveAccount,
               style: theme.bodyMedium.copyWith(color: theme.secondaryText),
             ),
             GestureDetector(
               onTap: () => context.pushNamed(SigninWidget.routeName),
               child: Text(
-                'Sign In',
+                _l10n.siSignIn,
                 style: theme.bodyMedium.copyWith(
                   fontWeight: FontWeight.w600,
                   color: theme.primary,
@@ -396,37 +402,18 @@ class _SignupWidgetState extends State<SignupWidget> {
     TextInputType? keyboardType,
     bool obscure = false,
   }) {
-    return TextFormField(
+    return AppTextField(
       controller: controller,
       focusNode: focusNode,
-      autofocus: false,
       textInputAction: textInputAction,
       obscureText: obscure,
       keyboardType: keyboardType,
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: theme.labelMedium.copyWith(color: theme.secondaryText),
-        enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: theme.alternate, width: 1),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: theme.alternate, width: 1.5),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: theme.error, width: 1),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: theme.error, width: 1.5),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        filled: true,
-        fillColor: theme.secondaryBackground,
-      ),
+      placeholder: hint,
+      placeholderStyle:
+          theme.labelMedium.copyWith(color: theme.secondaryText),
+      fillColor: theme.secondaryBackground,
+      radius: 12,
       style: theme.bodyMedium.copyWith(fontSize: 16),
-      cursorColor: theme.primaryText,
     );
   }
 }

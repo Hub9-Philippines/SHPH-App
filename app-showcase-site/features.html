@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Features - Serbisyo</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { primary: '#10B981', dark: '#0a0a0a', light: '#f4f4f5' },
+                    fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;500;800&display=swap" rel="stylesheet">
+    
+    <!-- GSAP, Lenis, & Swup -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.27/bundled/lenis.min.js"></script>
+    <script src="https://unpkg.com/swup@4"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body { margin: 0; background-color: #0a0a0a; color: #f4f4f5; cursor: none; overflow-x: hidden; }
+        ::-webkit-scrollbar { display: none; }
+        
+        /* Swup Page Transition Classes */
+        .transition-fade {
+            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            opacity: 1;
+            transform: translateY(0);
+        }
+        html.is-animating .transition-fade {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        /* Custom Cursor */
+        .cursor-dot, .cursor-outline {
+            position: fixed; top: 0; left: 0; transform: translate(-50%, -50%);
+            border-radius: 50%; z-index: 9999; pointer-events: none;
+        }
+        .cursor-dot { width: 8px; height: 8px; background-color: #10B981; }
+        .cursor-outline { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.5); transition: width 0.2s, height 0.2s, background-color 0.2s; }
+        .cursor-hover .cursor-outline { width: 80px; height: 80px; background-color: rgba(16, 185, 129, 0.1); border-color: #10B981; backdrop-filter: blur(2px); }
+    </style>
+</head>
+<body>
+
+    <!-- Custom Cursor -->
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+    <!-- Navigation (Persists via Swup) -->
+    <nav class="fixed top-0 w-full p-6 flex justify-between items-center z-50 mix-blend-difference hoverable">
+        <a href="home.html" class="text-2xl font-extrabold tracking-tighter cursor-none text-white">serbisyo.</a>
+        <div class="flex gap-8 text-sm font-medium tracking-widest uppercase text-white">
+            <a href="about.html" class="cursor-none hover:text-primary transition-colors">About</a>
+            <a href="features.html" class="cursor-none text-primary transition-colors">Features</a>
+            <a href="contact.html" class="cursor-none hover:text-primary transition-colors">Contact</a>
+        </div>
+    </nav>
+
+    <!-- SWUP MAIN CONTAINER -->
+    <main id="swup" class="transition-fade">
+
+        <!-- FEATURES HERO -->
+        <section class="min-h-screen w-full flex flex-col justify-center items-center relative overflow-hidden px-6 pt-32 pb-20">
+            <div class="max-w-5xl w-full space-y-8 z-10">
+                <p class="text-primary font-mono text-sm tracking-widest uppercase">01 // Capabilities</p>
+                <h1 class="text-5xl md:text-8xl font-black tracking-tight leading-none" id="features-title">
+                    Engineered for <span class="text-primary">speed & reliability.</span>
+                </h1>
+                <p class="text-xl text-zinc-400 font-light leading-relaxed max-w-2xl">
+                    Discover how Serbisyo redefines local home services through modern engineering, real-time tracking, and verified safety protocols.
+                </p>
+            </div>
+            <div class="absolute top-1/2 left-10 -translate-y-1/2 w-[30vw] h-[30vw] bg-primary/10 rounded-full blur-[120px] -z-10"></div>
+        </section>
+
+        <!-- GRID FEATURES SECTION -->
+        <section class="py-32 px-6 bg-zinc-900 w-full flex justify-center">
+            <div class="max-w-6xl w-full grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                
+                <div class="bg-black/40 p-8 rounded-3xl border border-zinc-800 space-y-4 hoverable">
+                    <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center text-2xl">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold">Sub-30m Dispatch</h3>
+                    <p class="text-zinc-400 font-light text-sm leading-relaxed">
+                        Urgent plumbing or electrical failures are routed automatically to the closest verified professional on duty.
+                    </p>
+                </div>
+
+                <div class="bg-black/40 p-8 rounded-3xl border border-zinc-800 space-y-4 hoverable">
+                    <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center text-2xl">
+                        <i class="fas fa-shield-halved"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold">Secure Vetting</h3>
+                    <p class="text-zinc-400 font-light text-sm leading-relaxed">
+                        Every provider goes through strict background cross-checks, NBI clearance validations, and continuous ratings reviews.
+                    </p>
+                </div>
+
+                <div class="bg-black/40 p-8 rounded-3xl border border-zinc-800 space-y-4 hoverable">
+                    <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center text-2xl">
+                        <i class="fas fa-map-location-dot"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold">Live Tracking</h3>
+                    <p class="text-zinc-400 font-light text-sm leading-relaxed">
+                        Watch your expert navigate to your location in real-time with precise ETA updates and integrated calling.
+                    </p>
+                </div>
+
+                <div class="bg-black/40 p-8 rounded-3xl border border-zinc-800 space-y-4 hoverable">
+                    <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center text-2xl">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold">Cashless Escrow</h3>
+                    <p class="text-zinc-400 font-light text-sm leading-relaxed">
+                        Payments are held securely in escrow and only released to the provider once the task is completed to your satisfaction.
+                    </p>
+                </div>
+
+                <div class="bg-black/40 p-8 rounded-3xl border border-zinc-800 space-y-4 hoverable">
+                    <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center text-2xl">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold">Meritocracy System</h3>
+                    <p class="text-zinc-400 font-light text-sm leading-relaxed">
+                        Top-performing workers earn priority booking and bonuses, guaranteeing consistently elite customer experiences.
+                    </p>
+                </div>
+
+                <div class="bg-black/40 p-8 rounded-3xl border border-zinc-800 space-y-4 hoverable">
+                    <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center text-2xl">
+                        <i class="fas fa-headset"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold">24/7 Support</h3>
+                    <p class="text-zinc-400 font-light text-sm leading-relaxed">
+                        Our dedicated dispute resolution and support team are on standby around the clock to assist you.
+                    </p>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="w-full bg-primary text-black relative flex flex-col pt-32 pb-12 px-6">
+            <div class="text-center z-10 space-y-8 flex-1 flex flex-col justify-center items-center">
+                <h2 class="text-6xl md:text-[10vw] font-black tracking-tighter hoverable leading-none">GET<br>SERBISYO</h2>
+                <a href="contact.html" class="px-10 py-5 bg-black text-white rounded-full font-bold uppercase tracking-widest text-sm hoverable transition-transform hover:scale-105 inline-block">
+                    Contact Us
+                </a>
+            </div>
+            
+            <div class="mt-32 w-full max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-end border-t border-black/20 pt-8 z-10">
+                <div class="text-sm font-bold uppercase tracking-widest">
+                    &copy; 2026 Serbisyo Inc.
+                </div>
+                <div class="flex gap-8 text-xs font-bold uppercase tracking-widest mt-6 md:mt-0">
+                    <a href="#" class="hover:opacity-50 cursor-none transition-opacity">Privacy</a>
+                    <a href="#" class="hover:opacity-50 cursor-none transition-opacity">Terms</a>
+                    <a href="about.html" class="hover:opacity-50 cursor-none transition-opacity">About</a>
+                </div>
+            </div>
+        </footer>
+
+    </main>
+
+    <!-- SCRIPTS -->
+    <script>
+        // Detect if running locally (file://) or on a server
+        const isLocal = window.location.protocol === 'file:';
+
+        // 1. Initialize Lenis Smooth Scroll
+        const lenis = new Lenis({ duration: 1.2, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), orientation: 'vertical', gestureOrientation: 'vertical', smoothWheel: true });
+        function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+        requestAnimationFrame(raf);
+
+        gsap.registerPlugin(ScrollTrigger);
+        lenis.on('scroll', ScrollTrigger.update);
+        gsap.ticker.add((time) => { lenis.raf(time * 1000) });
+        gsap.ticker.lagSmoothing(0);
+
+        // 2. Global Custom Cursor
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorOutline = document.querySelector('.cursor-outline');
+        window.addEventListener('mousemove', (e) => {
+            gsap.to(cursorDot, { x: e.clientX, y: e.clientY, duration: 0.1 });
+            gsap.to(cursorOutline, { x: e.clientX, y: e.clientY, duration: 0.5, ease: "power2.out" });
+        });
+
+        // 3. Animations Initialization
+        function initAnimations() {
+            document.querySelectorAll('.hoverable, a, button').forEach(el => {
+                el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+                el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+            });
+
+            if (document.querySelector('#features-title')) {
+                gsap.from('#features-title', { opacity: 0, y: 50, duration: 1.2, ease: "power4.out", delay: 0.2 });
+            }
+
+            ScrollTrigger.refresh();
+        }
+
+        initAnimations();
+
+        // 4. Swup Initialization — only on a real server, skip on file://
+        if (!isLocal && typeof Swup !== 'undefined') {
+            const swup = new Swup();
+
+            swup.hooks.on('content:replace', () => {
+                ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+            });
+
+            swup.hooks.on('page:view', () => {
+                initAnimations();
+                lenis.scrollTo(0, { immediate: true });
+            });
+        }
+    </script>
+</body>
+</html>

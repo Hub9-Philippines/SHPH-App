@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 
 class InvoiceLineItem {
@@ -21,11 +22,12 @@ class InvoiceLineItems extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final _l10n = AppLocalizations.of(context)!;
     final effectiveTotal = total ?? items.fold<double>(0, (sum, i) => sum + i.amount);
     final hasExplicitTotal = items.any((i) => i.label.toLowerCase() == 'total');
     final displayItems = hasExplicitTotal ? items : [
       ...items,
-      InvoiceLineItem(label: 'Total due', amount: effectiveTotal),
+      InvoiceLineItem(label: _l10n.ccTotalDue, amount: effectiveTotal),
     ];
 
     return Column(

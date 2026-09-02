@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 
 class WaitingForClientModal extends StatelessWidget {
@@ -37,6 +38,7 @@ class WaitingForClientModal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final _l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
       child: Column(
@@ -58,7 +60,7 @@ class WaitingForClientModal extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          Text('Waiting for selection\u2026', style: theme.titleMedium),
+          Text(_l10n.ccWaitingSelection, style: theme.titleMedium),
           const SizedBox(height: 8),
           if (clientName != null || distanceKm != null)
             Row(
@@ -79,7 +81,7 @@ class WaitingForClientModal extends StatelessWidget {
             )
           else
             Text(
-              'The client is reviewing available providers.',
+              _l10n.ccClientReviewing,
               textAlign: TextAlign.center,
               style: TextStyle(color: theme.secondaryText, fontSize: 14),
             ),
@@ -95,7 +97,7 @@ class WaitingForClientModal extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
-              child: const Text('Dismiss', style: TextStyle(fontWeight: FontWeight.w600)),
+              child: Text(_l10n.ccDismiss, style: TextStyle(fontWeight: FontWeight.w600)),
             ),
           ),
         ],

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/components/cupertino_ui/app_button.dart';
 import '/components/screen_header.dart';
 import '/components/soft_card.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 
 class OnDemandBookingWidget extends StatefulWidget {
@@ -18,6 +20,8 @@ class OnDemandBookingWidget extends StatefulWidget {
 class _OnDemandBookingWidgetState extends State<OnDemandBookingWidget> {
   int _urgencyDays = 0;
   String? _selectedTimeSlot;
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   final timeSlots = [
     '8:00 AM - 10:00 AM',
@@ -36,7 +40,8 @@ class _OnDemandBookingWidgetState extends State<OnDemandBookingWidget> {
       body: SafeArea(
         child: Column(
           children: [
-            const ScreenHeader(title: 'On-Demand Booking', subtitle: 'Get help when you need it'),
+            ScreenHeader(
+                title: _l10n.obTitle, subtitle: _l10n.obSubtitle),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -59,13 +64,18 @@ class _OnDemandBookingWidgetState extends State<OnDemandBookingWidget> {
 
   Widget _buildUrgencySelector(BuildContext context) {
     final theme = AppTheme.of(context);
-    final options = ['Now', 'Today', 'Tomorrow', 'This Week'];
+    final options = [
+      _l10n.obOptionNow,
+      _l10n.obOptionToday,
+      _l10n.obOptionTomorrow,
+      _l10n.obOptionThisWeek,
+    ];
 
     return SoftCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('When do you need service?',
+          Text(_l10n.obWhenNeed,
               style: theme.titleSmall.override(
                 fontWeight: FontWeight.w600,
                 color: theme.primaryText,
@@ -113,7 +123,7 @@ class _OnDemandBookingWidgetState extends State<OnDemandBookingWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Preferred Time',
+          Text(_l10n.obPreferredTime,
               style: theme.titleSmall.override(
                 fontWeight: FontWeight.w600,
                 color: theme.primaryText,
@@ -171,17 +181,17 @@ class _OnDemandBookingWidgetState extends State<OnDemandBookingWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Booking Summary',
+          Text(_l10n.obBookingSummary,
               style: theme.titleSmall.override(
                 fontWeight: FontWeight.w600,
                 color: theme.primaryText,
               )),
           const SizedBox(height: 12),
-          _infoRow(theme, 'Service Fee', '₱150.00'),
-          _infoRow(theme, 'Urgency Fee', _urgencyDays == 0 ? '₱50.00' : '₱0.00'),
-          _infoRow(theme, 'Service Charge', '₱20.00'),
+          _infoRow(theme, _l10n.obFeeService, '₱150.00'),
+          _infoRow(theme, _l10n.obFeeUrgency, _urgencyDays == 0 ? '₱50.00' : '₱0.00'),
+          _infoRow(theme, _l10n.obFeeServiceCharge, '₱20.00'),
           const Divider(height: 24),
-          _infoRow(theme, 'Total', '₱${_urgencyDays == 0 ? '220.00' : '170.00'}',
+          _infoRow(theme, _l10n.obTotal, '₱${_urgencyDays == 0 ? '220.00' : '170.00'}',
               bold: true, color: theme.primary),
         ],
       ),
@@ -217,17 +227,14 @@ class _OnDemandBookingWidgetState extends State<OnDemandBookingWidget> {
     return SizedBox(
       width: double.infinity,
       height: 52,
-      child: FilledButton(
+      child: AppButton(
         onPressed: _selectedTimeSlot == null ? null : () {},
-        style: FilledButton.styleFrom(
-          backgroundColor: theme.primary,
-          foregroundColor: theme.onPrimary,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppThemeData.radiusMd),
-          ),
-        ),
+        backgroundColor: theme.primary,
+        foregroundColor: theme.onPrimary,
+        borderRadius: AppThemeData.radiusMd,
+        width: double.infinity,
         child: Text(
-          'Confirm Booking',
+          _l10n.obConfirmBooking,
           style: GoogleFonts.plusJakartaSans(
             fontWeight: FontWeight.w600,
             fontSize: 15,

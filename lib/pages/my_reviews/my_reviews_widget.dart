@@ -7,6 +7,7 @@ import '/backend/supabase/database/tables/reviews.dart';
 import '/backend/supabase/database/tables/service_listings.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/app_localizations.dart';
 import '/services/logging_service.dart';
 import '/services/reviews_service.dart';
 import '/services/service_listing_service.dart';
@@ -30,6 +31,8 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
   late Future<List<_UserReviewItem>> _reviewsFuture;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -144,7 +147,7 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'My Reviews',
+                              _l10n.mrTitle,
                               style: AppTheme.of(context).titleLarge.override(
                                     font: GoogleFonts.plusJakartaSans(
                                       fontWeight: FontWeight.w700,
@@ -153,7 +156,7 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
                                   ),
                             ),
                             Text(
-                              'Track every service you rated and revisit your feedback.',
+                              _l10n.mrSubtitle,
                               style: AppTheme.of(context).bodySmall.override(
                                     font: GoogleFonts.plusJakartaSans(),
                                     color: AppTheme.of(context).secondaryText,
@@ -254,7 +257,7 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Your feedback footprint',
+                        _l10n.mrFootprint,
                         style: AppTheme.of(context).titleMedium.override(
                               font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w700,
@@ -264,7 +267,7 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Useful for tracking what services delivered the best experience.',
+                        _l10n.mrFootprintSub,
                         style: AppTheme.of(context).bodySmall.override(
                               font: GoogleFonts.plusJakartaSans(),
                               color: Colors.white.withValues(alpha: 0.82),
@@ -280,21 +283,21 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
               children: [
                 Expanded(
                   child: _buildHeroMetric(
-                    label: 'Reviews',
+                    label: _l10n.mrReviews,
                     value: '${stats.count}',
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: _buildHeroMetric(
-                    label: 'Average',
+                    label: _l10n.mrAverage,
                     value: stats.average.toStringAsFixed(1),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: _buildHeroMetric(
-                    label: '5 stars',
+                    label: _l10n.mr5Stars,
                     value: '${stats.fiveStarCount}',
                   ),
                 ),
@@ -365,7 +368,7 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
                 ),
                 const SizedBox(height: 18),
                 Text(
-                  'No reviews yet',
+                  _l10n.mrNoReviews,
                   textAlign: TextAlign.center,
                   style: AppTheme.of(context).titleMedium.override(
                         font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
@@ -374,7 +377,7 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Once you rate completed services, they will appear here with the service details and your score.',
+                  _l10n.mrEmptyBody,
                   textAlign: TextAlign.center,
                   style: AppTheme.of(context).bodyMedium.override(
                         font: GoogleFonts.plusJakartaSans(),
@@ -400,14 +403,14 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Could not load your reviews',
+                _l10n.mrError,
                 style: AppTheme.of(context).titleMedium.override(
                       font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                     ),
               ),
               const SizedBox(height: 8),
               Text(
-                'Pull to refresh or try again now.',
+                _l10n.mrErrorSub,
                 style: AppTheme.of(context).bodyMedium.override(
                       font: GoogleFonts.plusJakartaSans(),
                        color: AppTheme.of(context).secondaryText,
@@ -419,7 +422,7 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
                   _loadReviews();
                   safeSetState(() {});
                 },
-                child: const Text('Retry'),
+                child: Text(_l10n.mrRetry),
               ),
             ],
           ),
@@ -429,9 +432,9 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
   Widget _buildReviewCard(_UserReviewItem item) {
     final service = item.service;
     final review = item.review;
-    final serviceTitle = service?.title ?? 'Service #${review.serviceListingId}';
-    final category = service?.categoryName ?? 'Service';
-    final providerName = service?.providerName ?? 'Service Provider';
+    final serviceTitle = service?.title ?? _l10n.mrServiceFallback(review.serviceListingId);
+    final category = service?.categoryName ?? _l10n.mrService;
+    final providerName = service?.providerName ?? _l10n.mrProvider;
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -558,16 +561,16 @@ class _MyReviewsWidgetState extends State<MyReviewsWidget> {
     final difference = now.difference(dateTime);
 
     if (difference.inMinutes < 1) {
-      return 'Just now';
+      return _l10n.mrJustNow;
     }
     if (difference.inHours < 1) {
-      return '${difference.inMinutes}m ago';
+      return _l10n.mrMinAgo(difference.inMinutes);
     }
     if (difference.inDays < 1) {
-      return '${difference.inHours}h ago';
+      return _l10n.mrHoursAgo(difference.inHours);
     }
     if (difference.inDays < 7) {
-      return '${difference.inDays}d ago';
+      return _l10n.mrDaysAgo(difference.inDays);
     }
     return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
   }
