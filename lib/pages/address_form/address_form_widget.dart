@@ -5,13 +5,16 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/components/back_button/back_button_widget.dart';
+import '/components/cupertino_ui/app_text_field.dart';
+import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
-import '/services/addresses_service.dart';
-import '/theme/app_theme.dart';
+import '/l10n/app_localizations.dart';
 import '/pages/geographic_selection/geographic_selection_widget.dart';
+import '/services/addresses_service.dart';
 import '/services/psgc_service.dart';
+import '/theme/app_theme.dart';
 import 'address_form_model.dart';
 
 export 'address_form_model.dart';
@@ -38,6 +41,8 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
   bool _hasLoadedRegions = false;
   bool _hasLoadedAddressData = false;
   bool _isRestoringGeography = false;
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -91,7 +96,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
           setState(() {
             _model.latitude = loc.latitude;
             _model.longitude = loc.longitude;
-            _model.selectedAddress = 'Current device location';
+            _model.selectedAddress = _l10n.hmCurrentDeviceLocation;
           });
         }
       });
@@ -141,7 +146,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
           _model.selectedBarangayCode = null;
         });
         _hasLoadedAddressData = true;
-        await _restoreGeographicSelectionFromCodes();
+        await _restoreGeographicSelectionFromNames();
 
         if (_model.latitude == null || _model.longitude == null) {
           final loc = await getCurrentUserLocation(
@@ -152,7 +157,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
               if (_model.latitude == null) {
                 _model.latitude = loc.latitude;
                 _model.longitude = loc.longitude;
-                _model.selectedAddress = 'Current device location';
+                _model.selectedAddress = _l10n.hmCurrentDeviceLocation;
               }
             });
           }
@@ -161,7 +166,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading address: $e')),
+          SnackBar(content: Text(_l10n.afErrorLoadingAddress(e))),
         );
       }
     }
@@ -237,6 +242,104 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
     }
   }
 
+  /// Restore geographic dropdown selections by matching the stored text
+  /// names (province, city, barangay) against PSGC data.  The address
+  /// model only stores plain-text names, not PSGC codes, so we must do
+  /// a name-based lookup: find the region that contains a matching
+  /// province, then drill down to city and barangay.
+  Future<void> _restoreGeographicSelectionFromNames() async {
+    if (!_hasLoadedRegions || !_hasLoadedAddressData || _isRestoringGeography) {
+      return;
+    }
+
+    final provinceName = _model.provinceTextFieldTextController?.text.trim();
+    final cityName = _model.cityTextFieldTextController?.text.trim();
+    final barangayName = _model.barangayTextFieldTextController?.text.trim();
+
+    if (provinceName == null || provinceName.isEmpty) {
+      return;
+    }
+
+    _isRestoringGeography = true;
+    try {
+      // 1. Find the region whose provinces list contains a province
+      //    whose name matches (case-insensitive, ignoring 'City' suffix).
+      Region? matchedRegion;
+      Province? matchedProvince;
+
+      for (final region in _model.regions) {
+        final provinces = await PSGCService.getProvincesByRegion(region.code);
+        final found = provinces.firstWhereOrNull(
+          (p) => _namesMatch(p.name, provinceName),
+        );
+        if (found != null) {
+          matchedRegion = region;
+          matchedProvince = found;
+          break;
+        }
+      }
+
+      if (matchedRegion == null || matchedProvince == null) {
+        return;
+      }
+
+      // 2. Select region + load its provinces & cities.
+      _model.selectedRegion = matchedRegion;
+      _model.selectedRegionCode = matchedRegion.code;
+      _model.regionTextFieldTextController?.text = matchedRegion.regionName;
+
+      await _model.loadProvinces(matchedRegion.code);
+      _model.selectedProvince = matchedProvince;
+      _model.selectedProvinceCode = matchedProvince.code;
+      _model.provinceTextFieldTextController?.text = matchedProvince.name;
+
+      await _model.loadCitiesMunicipalitiesByProvince(matchedProvince.code);
+
+      // 3. Find the city/municipality.
+      if (cityName != null && cityName.isNotEmpty) {
+        final matchedCity = _model.citiesMunicipalities.firstWhereOrNull(
+          (c) => _namesMatch(c.name, cityName),
+        );
+        if (matchedCity != null) {
+          _model.selectedCityMunicipality = matchedCity;
+          _model.selectedCityMunicipalityCode = matchedCity.code;
+          _model.cityTextFieldTextController?.text = matchedCity.name;
+
+          await _model.loadBarangays(matchedCity.code);
+
+          // 4. Find the barangay.
+          if (barangayName != null && barangayName.isNotEmpty) {
+            final matchedBrgy = _model.barangays.firstWhereOrNull(
+              (b) => _namesMatch(b.name, barangayName),
+            );
+            if (matchedBrgy != null) {
+              _model.selectedBarangay = matchedBrgy;
+              _model.selectedBarangayCode = matchedBrgy.code;
+              _model.barangayTextFieldTextController?.text = matchedBrgy.name;
+            }
+          }
+        }
+      }
+
+      if (mounted) {
+        safeSetState(() {});
+      }
+    } finally {
+      _isRestoringGeography = false;
+    }
+  }
+
+  /// Loose name comparison: lowercase, strip trailing 'city' / 'city municipality',
+  /// collapse whitespace.
+  bool _namesMatch(String a, String b) {
+    String normalize(String s) => s
+        .toLowerCase()
+        .replaceAll(RegExp(r'\bcity\b|\bmunicipality\b'), '')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    return normalize(a) == normalize(b);
+  }
+
   @override
   void dispose() {
     _model.dispose();
@@ -278,7 +381,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
       if (savedAddress == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Error saving address')),
+            SnackBar(content: Text(_l10n.afErrorSavingAddress)),
           );
         }
         return;
@@ -303,8 +406,8 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
           SnackBar(
             content: Text(
               editingId != null
-                  ? 'Address updated successfully'
-                  : 'Address added successfully',
+                  ? _l10n.afAddressUpdated
+                  : _l10n.afAddressAdded,
             ),
           ),
         );
@@ -313,7 +416,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving address: $e')),
+          SnackBar(content: Text(_l10n.afErrorSavingAddressDetail(e))),
         );
       }
     }
@@ -328,31 +431,31 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
         child: Scaffold(
           key: scaffoldKey,
           backgroundColor: AppTheme.of(context).primaryBackground,
-          appBar: AppBar(
-            backgroundColor: AppTheme.of(context).primaryBackground,
-            automaticallyImplyLeading: false,
-            leading: wrapWithModel(
-              model: _model.backButtonModel,
-              updateCallback: () => safeSetState(() {}),
-              child: const BackButtonWidget(),
-            ),
-            title: Text(
-              _model.editingAddressId != null ? 'Edit address' : 'New address',
-              style: AppTheme.of(context).titleLarge.override(
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(56),
+            child: CupertinoPageHeader(
+              backgroundColor: AppTheme.of(context).primaryBackground,
+              leading: wrapWithModel(
+                model: _model.backButtonModel,
+                updateCallback: () => safeSetState(() {}),
+                child: const BackButtonWidget(),
+              ),
+              title: _model.editingAddressId != null
+                  ? _l10n.afEditAddress
+                  : _l10n.afNewAddress,
+              titleStyle: AppTheme.of(context).titleLarge.override(
                     font: GoogleFonts.plusJakartaSans(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
+              actions: [
+                if (_model.editingAddressId != null)
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline),
+                    onPressed: _showDeleteConfirmation,
+                  ),
+              ],
             ),
-            actions: [
-              if (_model.editingAddressId != null)
-                IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: _showDeleteConfirmation,
-                ),
-            ],
-            centerTitle: true,
-            elevation: 0,
           ),
           body: SafeArea(
             top: true,
@@ -366,15 +469,15 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                     mainAxisSize: MainAxisSize.max,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildSectionTitle('Contact Information'),
+                      _buildSectionTitle(_l10n.afContactInformation),
                       _buildTextField(
                         controller: _model.fullNameTextFieldTextController,
                         focusNode: _model.fullNameTextFieldFocusNode,
-                        label: 'Full name',
-                        hint: 'Enter your full name',
+                        label: _l10n.afFullName,
+                        hint: _l10n.afEnterFullName,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your full name';
+                            return _l10n.afErrorFullName;
                           }
                           return null;
                         },
@@ -382,33 +485,33 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                       _buildTextField(
                         controller: _model.mobileNumberTextFieldTextController,
                         focusNode: _model.mobileNumberTextFieldFocusNode,
-                        label: 'Mobile number',
+                        label: _l10n.afMobileNumber,
                         hint: '09XX XXX XXXX',
                         keyboardType: TextInputType.phone,
                         maxLength: 11,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your mobile number';
+                            return _l10n.afErrorMobileNumber;
                           }
                           if (!RegExp(r'^09\d{9}$').hasMatch(value)) {
-                            return 'Please enter a valid mobile number';
+                            return _l10n.afErrorValidMobile;
                           }
                           return null;
                         },
                       ),
                       const SizedBox(height: 20),
-                      _buildSectionTitle('Address Details'),
+                      _buildSectionTitle(_l10n.afAddressDetails),
                       _buildLabelSelector(),
                       // Location picker - moved to first position under Address Details
                       _buildLocationPicker(),
                       _buildTextField(
                         controller: _model.streetAddressTextFieldTextController,
                         focusNode: _model.streetAddressTextFieldFocusNode,
-                        label: 'Street address',
-                        hint: 'House/Unit number, Street name',
+                        label: _l10n.afStreetAddress,
+                        hint: _l10n.afHouseUnitStreet,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your street address';
+                            return _l10n.afErrorStreetAddress;
                           }
                           return null;
                         },
@@ -420,8 +523,8 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                       _buildTextField(
                         controller: _model.postalCodeTextFieldTextController,
                         focusNode: _model.postalCodeTextFieldFocusNode,
-                        label: 'Postal code',
-                        hint: 'Enter postal code',
+                        label: _l10n.afPostalCode,
+                        hint: _l10n.afEnterPostalCode,
                         keyboardType: TextInputType.number,
                         maxLength: 4,
                       ),
@@ -439,7 +542,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Set as default address',
+                            _l10n.afSetAsDefault,
                             style: AppTheme.of(context).bodyMedium,
                           ),
                         ],
@@ -448,8 +551,8 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                       FFButtonWidget(
                         onPressed: _saveAddress,
                         text: _model.editingAddressId != null
-                            ? 'Update address'
-                            : 'Save address',
+                            ? _l10n.afUpdateAddress
+                            : _l10n.afSaveAddress,
                         options: FFButtonOptions(
                           width: double.infinity,
                           height: 56,
@@ -584,7 +687,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Label',
+              _l10n.afLabel,
               style: AppTheme.of(context).bodyMedium.override(
                     color: AppTheme.of(context).secondaryText,
                   ),
@@ -654,7 +757,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Region',
+              _l10n.afRegion,
               style: AppTheme.of(context).bodyMedium.override(
                     color: AppTheme.of(context).secondaryText,
                   ),
@@ -696,7 +799,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                   children: [
                     Expanded(
                       child: Text(
-                        _model.selectedRegion?.regionName ?? 'Select region',
+                        _model.selectedRegion?.regionName ?? _l10n.afSelectRegion,
                         style: AppTheme.of(context).bodyMedium.override(
                               color: _model.selectedRegion != null
                                   ? AppTheme.of(context).primaryText
@@ -722,7 +825,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Province',
+              _l10n.afProvince,
               style: AppTheme.of(context).bodyMedium.override(
                     color: AppTheme.of(context).secondaryText,
                   ),
@@ -768,7 +871,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                   children: [
                     Expanded(
                       child: Text(
-                        _model.selectedProvince?.name ?? 'Select province',
+                        _model.selectedProvince?.name ?? _l10n.afSelectProvince,
                         style: AppTheme.of(context).bodyMedium.override(
                               color: _model.selectedProvince != null
                                   ? AppTheme.of(context).primaryText
@@ -796,7 +899,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'City/Municipality',
+              _l10n.afCityMunicipality,
               style: AppTheme.of(context).bodyMedium.override(
                     color: AppTheme.of(context).secondaryText,
                   ),
@@ -852,7 +955,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                     Expanded(
                       child: Text(
                         _model.selectedCityMunicipality?.name ??
-                            'Select city/municipality',
+                            _l10n.afSelectCity,
                         style: AppTheme.of(context).bodyMedium.override(
                               color: _model.selectedCityMunicipality != null
                                   ? AppTheme.of(context).primaryText
@@ -878,8 +981,8 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
   void _showBarangayBottomSheet() {
     if (_model.barangays.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No barangays available for this city/municipality'),
+        SnackBar(
+          content: Text(_l10n.afNoBarangays),
         ),
       );
       return;
@@ -922,7 +1025,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Select Barangay',
+                        _l10n.afSelectBarangayTitle,
                         style: AppTheme.of(context).titleLarge.override(
                               font: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w600,
@@ -939,7 +1042,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                             color: AppTheme.of(context).alternate,
                           ),
                         ),
-                        child: TextField(
+                        child: AppTextField(
                           controller: searchController,
                           focusNode: searchFocus,
                           onChanged: (value) {
@@ -951,18 +1054,8 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                                   .toList();
                             });
                           },
-                          decoration: InputDecoration(
-                            hintText: 'Search barangay...',
-                            prefixIcon: Icon(
-                              Icons.search,
-                              color: AppTheme.of(context).secondaryText,
-                            ),
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                          ),
+                          placeholder: _l10n.afSearchBarangay,
+                          prefixIcon: Icons.search,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -971,7 +1064,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                         child: filteredBarangays.isEmpty
                             ? Center(
                                 child: Text(
-                                  'No barangays found',
+                                  _l10n.afNoBarangaysFound,
                                   style: AppTheme.of(context).bodyMedium,
                                 ),
                               )
@@ -1047,7 +1140,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Barangay',
+              _l10n.afBarangay,
               style: AppTheme.of(context).bodyMedium.override(
                     color: AppTheme.of(context).secondaryText,
                   ),
@@ -1075,7 +1168,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                   children: [
                     Expanded(
                       child: Text(
-                        _model.selectedBarangay?.name ?? 'Select barangay',
+                        _model.selectedBarangay?.name ?? _l10n.afSelectBarangay,
                         style: AppTheme.of(context).bodyMedium.override(
                               color: _model.selectedBarangay != null
                                   ? AppTheme.of(context).primaryText
@@ -1123,7 +1216,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
             (result['address'] as String).isNotEmpty) {
           _model.selectedAddress = result['address'] as String?;
         } else {
-          _model.selectedAddress ??= 'Pinned location';
+          _model.selectedAddress ??= _l10n.bfPinnedLocation;
         }
       });
     }
@@ -1137,7 +1230,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Pin Location',
+              _l10n.afPinLocation,
               style: AppTheme.of(context).bodyMedium.override(
                     color: AppTheme.of(context).secondaryText,
                   ),
@@ -1177,7 +1270,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Pin location on map (optional)',
+              _l10n.afPinLocationOnMap,
               style: AppTheme.of(context).bodyMedium.override(
                     color: AppTheme.of(context).secondaryText,
                   ),
@@ -1213,7 +1306,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  _model.selectedAddress ?? 'Pinned location',
+                  _model.selectedAddress ?? _l10n.bfPinnedLocation,
                   style: AppTheme.of(context).bodyMedium.override(
                         fontWeight: FontWeight.w600,
                         color: AppTheme.of(context).primaryText,
@@ -1233,7 +1326,7 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
           ),
           const SizedBox(width: 8),
           Text(
-            'Change',
+            _l10n.afChange,
             style: AppTheme.of(context).bodySmall.override(
                   color: AppTheme.of(context).primary,
                   fontWeight: FontWeight.w600,
@@ -1251,12 +1344,12 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete address'),
-        content: const Text('Are you sure you want to delete this address?'),
+        title: Text(_l10n.afDeleteAddress),
+        content: Text(_l10n.afDeleteConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(_l10n.afCancel),
           ),
           TextButton(
             onPressed: () async {
@@ -1289,18 +1382,18 @@ class _AddressFormWidgetState extends State<AddressFormWidget> {
                 Navigator.pop(context);
                 context.pop();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Address deleted successfully')),
+                  SnackBar(content: Text(_l10n.afAddressDeleted)),
                 );
               } catch (e) {
                 if (!context.mounted) return;
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error deleting address: $e')),
+                  SnackBar(content: Text(_l10n.afErrorDeletingAddress(e))),
                 );
               }
             },
-            child: Text('Delete', style: TextStyle(color: AppTheme.of(context).error)),
+            child: Text(_l10n.afDelete,
+                style: TextStyle(color: AppTheme.of(context).error)),
           ),
         ],
       ),

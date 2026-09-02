@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/components/cupertino_ui/app_text_field.dart';
 import '/components/screen_header.dart';
+import '/components/segmented_control.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
-import '/custom_code/widgets/index.dart' as custom_widgets;
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart' show CallHistoryDetailsPageWidget, ChatPageWidget;
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'messages_model.dart';
 
@@ -25,6 +27,8 @@ class _MessagesWidgetState extends State<MessagesWidget> {
   late MessagesModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _searchController = TextEditingController();
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -91,97 +95,71 @@ class _MessagesWidgetState extends State<MessagesWidget> {
           backgroundColor: AppTheme.of(context).secondaryBackground,
           body: SafeArea(
             top: true,
-            child: RefreshIndicator(
-              color: AppTheme.of(context).primary,
-              onRefresh: _model.reload,
-              child: CustomScrollView(
-                physics: const BouncingScrollPhysics(
-                  parent: AlwaysScrollableScrollPhysics(),
+            child: Column(
+              children: [
+                ScreenHeader(
+                  title: _l10n.msTitle,
+                  subtitle: _l10n.msSubtitle,
+                  action: Icon(
+                    Icons.tune_rounded,
+                    color: AppTheme.of(context).primary,
+                  ),
                 ),
-                slivers: [
-                  SliverToBoxAdapter(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        ScreenHeader(
-                          title: 'Messages',
-                          subtitle: 'Stay close to providers, updates, and support.',
-                          action: Icon(
-                            Icons.tune_rounded,
-                            color: AppTheme.of(context).primary,
-                          ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  child: _buildSearchField(),
+                ),
+                const SizedBox(height: AppThemeData.spaceLg),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: SegmentedControl<int>(
+                    height: 52,
+                    value: _model.selectedTabIndex,
+                    onChanged: (index) async {
+                      _model.selectedTabIndex = index;
+                      safeSetState(() {});
+                    },
+                    segments: [
+                      SegmentedOption(
+                        value: 0,
+                        label: _l10n.msChats,
+                        icon: Icons.chat_bubble_outline_rounded,
+                      ),
+                      SegmentedOption(
+                        value: 1,
+                        label: _l10n.msCallsHistory,
+                        icon: Icons.call_outlined,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _buildSectionLabel(),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: RefreshIndicator(
+                    color: const Color(0xFF14B8A6),
+                    backgroundColor: AppTheme.of(context).primaryBackground,
+                    onRefresh: _model.reload,
+                    child: CustomScrollView(
+                      physics: const BouncingScrollPhysics(
+                        parent: AlwaysScrollableScrollPhysics(),
+                      ),
+                      slivers: [
+                        SliverPadding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                          sliver: _model.selectedTabIndex == 0
+                              ? _buildChatTabSliver()
+                              : _buildCallTabSliver(),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                          child: _buildSearchField(),
-                        ),
-                        const SizedBox(height: AppThemeData.spaceLg),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Container(
-                            width: double.infinity,
-                            height: 68,
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: AppTheme.of(context).primaryBackground,
-                              borderRadius:
-                                  BorderRadius.circular(AppThemeData.radiusLg),
-                              boxShadow: AppThemeData.shadowCard,
-                            ),
-                            child:
-                                custom_widgets.CupertinoSlidingWidgetMessages(
-                              width: double.infinity,
-                              height: double.infinity,
-                              initialIndex: _model.selectedTabIndex,
-                              onChanged: (index) async {
-                                _model.selectedTabIndex = index;
-                                safeSetState(() {});
-                                await _model.pageViewController?.animateToPage(
-                                  index,
-                                  duration: const Duration(milliseconds: 350),
-                                  curve: Curves.easeOutCubic,
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: _buildSectionLabel(),
-                        ),
-                        const SizedBox(height: 12),
                       ],
                     ),
                   ),
-                  SliverFillRemaining(
-                    hasScrollBody: true,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                      child: PageView(
-                        controller: _model.pageViewController ??=
-                            PageController(
-                          initialPage: max(
-                            0,
-                            min(
-                              valueOrDefault<int>(_model.selectedTabIndex, 0),
-                              1,
-                            ),
-                          ),
-                        ),
-                        onPageChanged: (_) async {
-                          _model.selectedTabIndex = _model.pageViewCurrentIndex;
-                          safeSetState(() {});
-                        },
-                        children: [
-                          _buildChatTab(),
-                          _buildCallTab(),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -195,43 +173,23 @@ class _MessagesWidgetState extends State<MessagesWidget> {
           borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
           boxShadow: AppThemeData.shadowSoft,
         ),
-        child: TextFormField(
+        child: AppTextField(
           controller: _searchController,
-          decoration: InputDecoration(
-            hintText: 'Search conversations or calls',
-            hintStyle: theme.bodyMedium.override(
-                  font: GoogleFonts.plusJakartaSans(),
-                  color: theme.textTertiary,
-                ),
-            prefixIcon: const Icon(Icons.search_rounded),
-            suffixIcon: _searchController.text.isEmpty
-                ? null
-                : IconButton(
-                    onPressed: _searchController.clear,
-                    icon: const Icon(Icons.close_rounded),
-                  ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
-              borderSide: BorderSide(
-                color: theme.primary.withValues(alpha: 0.22),
-                width: 1.4,
+          placeholder: _l10n.msSearchPlaceholder,
+          placeholderStyle: theme.bodyMedium.override(
+                font: GoogleFonts.plusJakartaSans(),
+                color: theme.textTertiary,
               ),
-            ),
-            filled: true,
-            fillColor: theme.primaryBackground,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 18,
-              vertical: 16,
-            ),
-          ),
+          prefixIcon: Icons.search_rounded,
+          suffix: _searchController.text.isEmpty
+              ? null
+              : IconButton(
+                  onPressed: _searchController.clear,
+                  icon: const Icon(Icons.close_rounded),
+                ),
+          radius: AppThemeData.radiusLg,
+          fillColor: theme.primaryBackground,
+          padding: const EdgeInsets.fromLTRB(22, 16, 18, 16),
         ),
       );
   }
@@ -242,7 +200,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
         ? _filteredChatRooms.length
         : _filteredCallHistory.length;
     final title =
-        _model.selectedTabIndex == 0 ? 'Recent conversations' : 'Recent calls';
+        _model.selectedTabIndex == 0 ? _l10n.msRecentConversations : _l10n.msRecentCalls;
 
     return Row(
       children: [
@@ -258,14 +216,14 @@ class _MessagesWidgetState extends State<MessagesWidget> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
-            color: theme.primaryLight,
+            color: theme.primary.withValues(alpha: 0.10),
             borderRadius: BorderRadius.circular(999),
           ),
           child: Text(
-            '$itemCount items',
+            _l10n.msItems(itemCount),
             style: theme.labelSmall.override(
                   font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
-                  color: theme.primaryBrandText,
+                  color: theme.primary,
                 ),
           ),
         ),
@@ -273,11 +231,9 @@ class _MessagesWidgetState extends State<MessagesWidget> {
     );
   }
 
-  Widget _buildChatTab() {
+  Widget _buildChatTabSliver() {
     if (_model.isLoading) {
-      return ListView.separated(
-        physics: const NeverScrollableScrollPhysics(),
-        padding: EdgeInsets.zero,
+      return SliverList.separated(
         itemCount: 4,
         separatorBuilder: (_, __) => const SizedBox(height: 12),
         itemBuilder: (_, __) => const MessageCardSkeleton(),
@@ -285,19 +241,20 @@ class _MessagesWidgetState extends State<MessagesWidget> {
     }
 
     if (_filteredChatRooms.isEmpty) {
-      return _buildEmptyState(
-        icon: Icons.mark_chat_unread_rounded,
-        title: _searchController.text.isEmpty
-            ? 'No conversations yet'
-            : 'No conversations matched',
-        description: _searchController.text.isEmpty
-            ? 'Messages from your providers will show up here once a booking starts.'
-            : 'Try another provider name or keyword.',
+      return SliverToBoxAdapter(
+        child: _buildEmptyState(
+          icon: Icons.mark_chat_unread_rounded,
+          title: _searchController.text.isEmpty
+              ? _l10n.msNoConversations
+              : _l10n.msNoConversationsMatch,
+          description: _searchController.text.isEmpty
+              ? _l10n.msEmptyChatsBody
+              : _l10n.msTryAnotherProvider,
+        ),
       );
     }
 
-    return ListView.separated(
-      padding: EdgeInsets.zero,
+    return SliverList.separated(
       itemCount: _filteredChatRooms.length,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) =>
@@ -305,11 +262,9 @@ class _MessagesWidgetState extends State<MessagesWidget> {
     );
   }
 
-  Widget _buildCallTab() {
+  Widget _buildCallTabSliver() {
     if (_model.isLoading) {
-      return ListView.separated(
-        physics: const NeverScrollableScrollPhysics(),
-        padding: EdgeInsets.zero,
+      return SliverList.separated(
         itemCount: 4,
         separatorBuilder: (_, __) => const SizedBox(height: 12),
         itemBuilder: (_, __) => const MessageCardSkeleton(),
@@ -317,19 +272,20 @@ class _MessagesWidgetState extends State<MessagesWidget> {
     }
 
     if (_filteredCallHistory.isEmpty) {
-      return _buildEmptyState(
-        icon: Icons.call_end_rounded,
-        title: _searchController.text.isEmpty
-            ? 'No call activity yet'
-            : 'No calls matched',
-        description: _searchController.text.isEmpty
-            ? 'Your completed and missed calls will appear here when that history is available.'
-            : 'Try a different search term.',
+      return SliverToBoxAdapter(
+        child: _buildEmptyState(
+          icon: Icons.call_end_rounded,
+          title: _searchController.text.isEmpty
+              ? _l10n.msNoCalls
+              : _l10n.msNoCallsMatch,
+          description: _searchController.text.isEmpty
+              ? _l10n.msEmptyCallsBody
+              : _l10n.msTryOtherSearch,
+        ),
       );
     }
 
-    return ListView.separated(
-      padding: EdgeInsets.zero,
+    return SliverList.separated(
       itemCount: _filteredCallHistory.length,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) =>
@@ -361,14 +317,13 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                   width: 68,
                   height: 68,
                   decoration: BoxDecoration(
-                    color:
-                        AppThemeData.successTeal.withValues(alpha: 0.12),
+                    color: theme.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(22),
                   ),
                   child: Icon(
                     icon,
                     size: 32,
-                    color: AppThemeData.successTeal,
+                    color: theme.primary,
                   ),
                 ),
                 const SizedBox(height: AppThemeData.spaceLg),
@@ -450,7 +405,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      chatRoom.lastMessage ?? 'No messages yet',
+                      chatRoom.lastMessage ?? _l10n.msNoMessages,
                       style: theme.bodyMedium.override(
                             font: GoogleFonts.plusJakartaSans(),
                             color: theme.secondaryText,
@@ -471,7 +426,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
-                            'Conversation',
+                            _l10n.msConversation,
                             style: theme.labelSmall.override(
                                   font: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.w700,
@@ -492,7 +447,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Text(
-                              '${chatRoom.unreadCount} unread',
+                              _l10n.msUnreadCount(chatRoom.unreadCount),
                               style: theme.labelSmall.override(
                                     font: GoogleFonts.plusJakartaSans(
                                       fontWeight: FontWeight.w700,
@@ -650,16 +605,16 @@ class _MessagesWidgetState extends State<MessagesWidget> {
     final difference = now.difference(dateTime);
 
     if (difference.inMinutes < 1) {
-      return 'Just now';
+      return _l10n.msJustNow;
     }
     if (difference.inHours < 1) {
-      return '${difference.inMinutes}m ago';
+      return _l10n.msMinutesAgo(difference.inMinutes);
     }
     if (difference.inDays < 1) {
-      return '${difference.inHours}h ago';
+      return _l10n.msHoursAgo(difference.inHours);
     }
     if (difference.inDays < 7) {
-      return '${difference.inDays}d ago';
+      return _l10n.msDaysAgo(difference.inDays);
     }
     return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
   }

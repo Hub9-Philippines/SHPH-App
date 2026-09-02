@@ -5,6 +5,7 @@ import '/components/back_button/back_button_widget.dart';
 import '/components/quick_book_bar.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart' show ServicesScreen;
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import '../../components/categories_widget/categories_widget.dart';
 import 'categories_model.dart';
@@ -24,6 +25,8 @@ class CategoriesWidget extends StatefulWidget {
 class _CategoriesWidgetState extends State<CategoriesWidget> {
   late CategoriesModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -79,7 +82,7 @@ class _CategoriesWidgetState extends State<CategoriesWidget> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'All Categories',
+                              _l10n.catgTitle,
                               style: AppTheme.of(context).titleLarge.override(
                                     font: GoogleFonts.plusJakartaSans(
                                       fontWeight: FontWeight.w700,
@@ -88,7 +91,7 @@ class _CategoriesWidgetState extends State<CategoriesWidget> {
                                   ),
                             ),
                             Text(
-                              'Browse every service category in one place.',
+                              _l10n.catgSubtitle,
                               style: AppTheme.of(context).bodySmall.override(
                                     font: GoogleFonts.plusJakartaSans(),
                                     color: const Color(0xFF64748B),
@@ -103,27 +106,10 @@ class _CategoriesWidgetState extends State<CategoriesWidget> {
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
-                    child: Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(28),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x12000000),
-                            blurRadius: 18,
-                            offset: Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(28),
-                        child: wrapWithModel(
-                          model: _model.categoriesWidgetModel,
-                          updateCallback: () => safeSetState(() {}),
-                          child: const CategoriesWidgetWidget(),
-                        ),
-                      ),
+                    child: wrapWithModel(
+                      model: _model.categoriesWidgetModel,
+                      updateCallback: () => safeSetState(() {}),
+                      child: const CategoriesWidgetWidget(),
                     ),
                   ),
                 ),

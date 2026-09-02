@@ -1,5 +1,8 @@
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
+import '/theme/app_theme.dart';
 
 class FFButtonOptions {
   const FFButtonOptions({
@@ -94,6 +97,7 @@ class _FFButtonWidgetState extends State<FFButtonWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final data = AppTheme.of(context);
     final textWidget = loading
         ? SizedBox(
             width: widget.options.width == null
@@ -101,9 +105,10 @@ class _FFButtonWidgetState extends State<FFButtonWidget> {
                 : null,
             child: Center(
               child: SizedBox(
-                width: 23,
-                height: 23,
+                width: 22,
+                height: 22,
                 child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
                   valueColor: AlwaysStoppedAnimation<Color>(
                     widget.options.textStyle?.color ?? Colors.white,
                   ),
@@ -135,134 +140,97 @@ class _FFButtonWidgetState extends State<FFButtonWidget> {
                   }
                 }
               }
-            : () => widget.onPressed!())
+            : widget.onPressed)
         : null;
 
-    final style = ButtonStyle(
-      shape: WidgetStateProperty.resolveWith<OutlinedBorder>((states) {
-        if (states.contains(WidgetState.hovered) &&
-            widget.options.hoverBorderSide != null) {
-          return RoundedRectangleBorder(
-            borderRadius:
-                widget.options.borderRadius ?? BorderRadius.circular(8),
-            side: widget.options.hoverBorderSide!,
-          );
-        }
-        return RoundedRectangleBorder(
-          borderRadius: widget.options.borderRadius ?? BorderRadius.circular(8),
-          side: widget.options.borderSide ?? BorderSide.none,
-        );
-      }),
-      foregroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
-        if (states.contains(WidgetState.disabled) &&
-            widget.options.disabledTextColor != null) {
-          return widget.options.disabledTextColor;
-        }
-        if (states.contains(WidgetState.hovered) &&
-            widget.options.hoverTextColor != null) {
-          return widget.options.hoverTextColor;
-        }
-        return widget.options.textStyle?.color ?? Colors.white;
-      }),
-      backgroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
-        if (states.contains(WidgetState.disabled) &&
-            widget.options.disabledColor != null) {
-          return widget.options.disabledColor;
-        }
-        if (states.contains(WidgetState.hovered) &&
-            widget.options.hoverColor != null) {
-          return widget.options.hoverColor;
-        }
-        return widget.options.color;
-      }),
-      overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
-        if (states.contains(WidgetState.pressed)) {
-          return widget.options.splashColor;
-        }
-        return widget.options.hoverColor == null ? null : Colors.transparent;
-      }),
-      padding: WidgetStateProperty.all(
-        widget.options.padding ??
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      ),
-      elevation: WidgetStateProperty.resolveWith<double?>((states) {
-        if (states.contains(WidgetState.hovered) &&
-            widget.options.hoverElevation != null) {
-          return widget.options.hoverElevation!;
-        }
-        return widget.options.elevation ?? 2.0;
-      }),
-      iconColor: WidgetStateProperty.resolveWith<Color?>((states) {
-        if (states.contains(WidgetState.disabled) &&
-            widget.options.disabledTextColor != null) {
-          return widget.options.disabledTextColor;
-        }
-        if (states.contains(WidgetState.hovered) &&
-            widget.options.hoverTextColor != null) {
-          return widget.options.hoverTextColor;
-        }
-        return widget.options.iconColor;
-      }),
-    );
+    final bg = widget.options.color ?? data.primary;
+    final fg = widget.options.textStyle?.color ??
+        (widget.options.color != null ? Colors.white : data.onPrimary);
+    final radius = widget.options.borderRadius ?? BorderRadius.circular(12);
+    final iconFill = widget.options.iconColor ??
+        widget.options.textStyle?.color ??
+        fg;
+    final hasIcon =
+        !loading && (widget.icon != null || widget.iconData != null);
+    final isIconOnly = hasIcon && text == null;
 
-    if ((widget.icon != null || widget.iconData != null) && !loading) {
+    Widget content;
+    if (isIconOnly) {
       final icon = widget.icon ??
           Icon(
             widget.iconData!,
             size: widget.options.iconSize,
-            color: widget.options.iconColor,
+            color: iconFill,
           );
-
-      if (text == null) {
-        return Container(
-          height: widget.options.height,
-          width: widget.options.width,
-          decoration: BoxDecoration(
-            border: Border.fromBorderSide(
-              widget.options.borderSide ?? BorderSide.none,
-            ),
-            borderRadius:
-                widget.options.borderRadius ?? BorderRadius.circular(8),
-          ),
-          child: IconButton(
-            splashRadius: 1,
-            icon: Padding(
-              padding: widget.options.iconPadding ?? EdgeInsets.zero,
-              child: icon,
-            ),
-            onPressed: onPressed,
-            style: style,
-            focusNode: _focusNode,
-          ),
-        );
-      }
-      return SizedBox(
-        height: widget.options.height,
-        width: widget.options.width,
-        child: ElevatedButton.icon(
-          icon: Padding(
-            padding: widget.options.iconPadding ?? EdgeInsets.zero,
-            child: icon,
-          ),
-          label: textWidget,
-          onPressed: onPressed,
-          style: style,
-          iconAlignment: widget.options.iconAlignment ?? IconAlignment.start,
-          focusNode: _focusNode,
-        ),
+      content = Padding(
+        padding: widget.options.iconPadding ?? EdgeInsets.zero,
+        child: icon,
       );
+    } else if (hasIcon) {
+      final icon = widget.icon ??
+          Icon(
+            widget.iconData!,
+            size: widget.options.iconSize,
+            color: iconFill,
+          );
+      content = Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: widget.options.iconAlignment == IconAlignment.end
+            ? [
+                Flexible(child: textWidget),
+                const SizedBox(width: 8),
+                icon,
+              ]
+            : [
+                icon,
+                const SizedBox(width: 8),
+                Flexible(child: textWidget),
+              ],
+      );
+    } else {
+      content = textWidget;
     }
 
-    return SizedBox(
-      height: widget.options.height,
-      width: widget.options.width,
-      child: ElevatedButton(
+    final disabled = onPressed == null;
+    final disabledBg =
+        widget.options.disabledColor ?? bg.withValues(alpha: 0.4);
+    final baseFg = widget.options.textStyle?.color ?? fg;
+    final disabledFg =
+        widget.options.disabledTextColor ?? baseFg.withValues(alpha: 0.45);
+
+    Widget button = Container(
+      decoration: BoxDecoration(
+        color: disabled ? disabledBg : bg,
+        borderRadius: radius,
+        border: widget.options.borderSide == null
+            ? null
+            : Border.fromBorderSide(widget.options.borderSide!),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: CupertinoButton(
         onPressed: onPressed,
-        style: style,
-        focusNode: _focusNode,
-        child: textWidget,
+        padding: widget.options.padding ??
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+        disabledColor: disabledBg,
+        child: DefaultTextStyle(
+          style: TextStyle(
+            color: disabled ? disabledFg : fg,
+            fontSize: widget.options.textStyle?.fontSize,
+          ),
+          child: content,
+        ),
       ),
     );
+
+    if (widget.options.width != null || widget.options.height != null) {
+      button = SizedBox(
+        width: widget.options.width,
+        height: widget.options.height,
+        child: button,
+      );
+    }
+    return button;
   }
 }
 

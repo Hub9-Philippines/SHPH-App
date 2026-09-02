@@ -68,7 +68,7 @@ dependencies:
   dio: ^5.9.0
   http: ^1.6.0
   image_picker: ^1.2.1
-  intl: 0.20.2
+  intl: 0.20.3
   json_path: ^0.9.0
   lottie: ^3.3.2
   mask_text_input_formatter: 2.9.0
@@ -93,6 +93,7 @@ dependencies:
   url_launcher: ^6.3.2
   video_player: ^2.11.0
   flutter_stripe: ^13.0.0
+  flutter_svg: ^2.0.10
   webview_flutter: ^4.13.1
   smart_liveliness_detection: ^0.3.9
   firebase_messaging: ^16.4.3
@@ -127,7 +128,7 @@ flutter_launcher_icons:
   android: 'launcher_icon'
   ios: true
   image_path: 'assets/images/app_launcher_icon.png'
-  adaptive_icon_background: '#0d6d78'
+  adaptive_icon_background: '#4338CA'
   adaptive_icon_foreground: 'assets/images/AppIcons/android/adaptive-foreground.png'
   min_sdk_android: 21
   remove_alpha_ios: true

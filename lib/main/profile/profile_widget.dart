@@ -11,10 +11,16 @@ import '/auth/post_auth_navigation_flow.dart'
     show kProviderAppStoreUrl;
 import '/backend/supabase/supabase.dart';
 import '/components/content_container.dart';
+import '/components/refreshable_page.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/components/tinted_menu_tile.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
+import '/l10n/app_localizations.dart';
+import '/services/auth_service.dart';
+import '/services/client_kyc_service.dart';
+import '/api/models/address.dart';
+import '/services/addresses_service.dart';
 import '/services/profiles_service.dart';
 import '/theme/app_theme.dart';
 import 'profile_model.dart';
@@ -31,12 +37,17 @@ class ProfileWidget extends StatefulWidget {
   State<ProfileWidget> createState() => _ProfileWidgetState();
 }
 
-class _ProfileWidgetState extends State<ProfileWidget> {
+class _ProfileWidgetState extends State<ProfileWidget>
+    with RefreshablePage<ProfileWidget> {
   late ProfileModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
   bool _providerSwitch = false;
   bool _isUploading = false;
+
+  late Future<ProfilesRow?> _profileFuture;
+  late Future<({String status, bool skipped})> _kycStatusFuture;
+  late Future<List<ShphAddress>> _addressesFuture;
 
   // Royal-blue hero gradient — merges the previous card look with the
   // current brand primary.
@@ -46,16 +57,36 @@ class _ProfileWidgetState extends State<ProfileWidget> {
     Color(0xFF3B62D9),
   ];
 
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
     _model = createModel(context, ProfileModel.new);
+    _profileFuture = ProfilesService.instance.getProfile();
+    _kycStatusFuture = ClientKycService().status();
+    _addressesFuture = AddressesService.instance.getAddresses();
   }
 
   @override
   void dispose() {
     _model.dispose();
     super.dispose();
+  }
+
+  @override
+  Future<void> onRefresh() async {
+    _reloadData();
+  }
+
+  /// Re-fetch profile + KYC status after returning from a pushed workflow
+  /// (e.g. Edit Profile, KYC) so the hero and readiness section stay fresh.
+  void _reloadData() {
+    safeSetState(() {
+      _profileFuture = ProfilesService.instance.getProfile();
+      _kycStatusFuture = ClientKycService().status();
+      _addressesFuture = AddressesService.instance.getAddresses();
+    });
   }
 
   @override
@@ -66,7 +97,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
     return Theme(
       data: AppTheme.lightTheme(),
       child: FutureBuilder<ProfilesRow?>(
-        future: ProfilesService.instance.getProfile(),
+        future: _profileFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Scaffold(
@@ -93,8 +124,8 @@ class _ProfileWidgetState extends State<ProfileWidget> {
             return Scaffold(
               key: scaffoldKey,
               backgroundColor: Colors.white,
-              body: const SafeArea(
-                child: Center(child: Text('Profile not found')),
+              body: SafeArea(
+                child: Center(child: Text(_l10n.pfNotFound)),
               ),
             );
           }
@@ -108,15 +139,9 @@ class _ProfileWidgetState extends State<ProfileWidget> {
               key: scaffoldKey,
               backgroundColor: Colors.white,
               body: SafeArea(
-                child: RefreshIndicator(
-                  color: AppTheme.of(context).primary,
-                  onRefresh: () async => safeSetState(() {}),
-                  child: CustomScrollView(
-                    physics: const BouncingScrollPhysics(
-                      parent: AlwaysScrollableScrollPhysics(),
-                    ),
-                    slivers: [
-                      SliverToBoxAdapter(
+                child: wrapWithRefresh(
+                  slivers: [
+                    SliverToBoxAdapter(
                         child: ContentContainer(
                           variant: ContentVariant.wide,
                           padded: true,
@@ -127,15 +152,17 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                               const SizedBox(height: AppThemeData.spaceLg),
                               _buildHeroCard(profile),
                               const SizedBox(height: 24),
+                              _buildVerificationSection(profile),
+                              const SizedBox(height: 24),
                               _buildGroup(
-                                label: 'ACCOUNT',
+                                label: _l10n.pfAccountGroup,
                                 tiles: [
                                   _tile(
                                     context,
                                     icon: Icons.calendar_month_rounded,
                                     tint: AppThemeData.accentNavy,
-                                    title: 'My Bookings',
-                                    subtitle: 'View past and upcoming jobs',
+                                    title: _l10n.pfMyBookings,
+                                    subtitle: _l10n.pfMyBookingsSub,
                                     onTap: () => context
                                         .pushNamed(BookingsWidget.routeName),
                                   ),
@@ -143,9 +170,8 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                     context,
                                     icon: Icons.receipt_long_rounded,
                                     tint: AppThemeData.accentSky,
-                                    title: 'Payment & Invoices',
-                                    subtitle:
-                                        'View history and download invoices',
+                                    title: _l10n.pfPaymentInvoices,
+                                    subtitle: _l10n.pfPaymentInvoicesSub,
                                     onTap: () => context.pushNamed(
                                         PaymentMethodsWidget.routeName),
                                   ),
@@ -153,8 +179,8 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                     context,
                                     icon: Icons.translate_rounded,
                                     tint: AppThemeData.accentPurple,
-                                    title: 'Language Preference',
-                                    subtitle: 'English, Hindi, Marathi, etc.',
+                                    title: _l10n.pfLanguage,
+                                    subtitle: 'English, Filipino',
                                     onTap: () => context.pushNamed(
                                         LanguageSettingsWidget.routeName),
                                   ),
@@ -162,15 +188,14 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                               ),
                               const SizedBox(height: 20),
                               _buildGroup(
-                                label: 'PREFERENCES & UTILITIES',
+                                label: _l10n.pfPrefsGroup,
                                 tiles: [
                                   _tile(
                                     context,
                                     icon: Icons.favorite_rounded,
                                     tint: AppThemeData.accentPink,
-                                    title: 'Favorites',
-                                    subtitle:
-                                        'Jump back into the services you saved',
+                                    title: _l10n.pfFavorites,
+                                    subtitle: _l10n.pfFavoritesSub,
                                     onTap: () => context
                                         .pushNamed(FavoritesWidget.routeName),
                                   ),
@@ -178,25 +203,25 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                     context,
                                     icon: Icons.star_rounded,
                                     tint: AppThemeData.accentOrange,
-                                    title: 'My Reviews',
-                                    subtitle: 'See the feedback you have left',
+                                    title: _l10n.pfMyReviews,
+                                    subtitle: _l10n.pfMyReviewsSub,
                                     onTap: () => context
                                         .pushNamed(MyReviewsWidget.routeName),
                                   ),
                                   _tile(
                                     context,
                                     icon: Icons.card_giftcard_rounded,
-                                    tint: AppThemeData.accentTeal,
-                                    title: 'Referral Program',
-                                    subtitle: 'Share and earn rewards',
+                                    tint: AppThemeData.accentIndigo,
+                                    title: _l10n.pfReferral,
+                                    subtitle: _l10n.pfReferralSub,
                                     onTap: _showReferralSheet,
                                   ),
                                   _tile(
                                     context,
                                     icon: Icons.notifications_active_rounded,
                                     tint: AppThemeData.accentYellow,
-                                    title: 'Notification Settings',
-                                    subtitle: 'Control alerts and reminders',
+                                    title: _l10n.pfNotificationSettings,
+                                    subtitle: _l10n.pfNotificationSettingsSub,
                                     onTap: () => context.pushNamed(
                                         MyNotificationsWidget.routeName),
                                   ),
@@ -204,9 +229,8 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                     context,
                                     icon: Icons.help_outline_rounded,
                                     tint: AppThemeData.accentBlue,
-                                    title: 'Help Center',
-                                    subtitle:
-                                        'FAQs and chat with our support team',
+                                    title: _l10n.pfHelpCenter,
+                                    subtitle: _l10n.pfHelpCenterSub,
                                     onTap: () =>
                                         context.pushNamed(HelpPage.routeName),
                                   ),
@@ -214,15 +238,14 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                               ),
                               const SizedBox(height: 20),
                               _buildGroup(
-                                label: 'SYSTEM ACCESS',
+                                label: _l10n.pfSystemAccessGroup,
                                 tiles: [
                                   _tile(
                                     context,
                                     icon: Icons.shield_rounded,
                                     tint: AppThemeData.accentNavy,
-                                    title: 'Security',
-                                    subtitle:
-                                        'Password, login protection, and app security',
+                                    title: _l10n.seSecurity,
+                                    subtitle: _l10n.pfSecuritySub,
                                     onTap: () => context.pushNamed(
                                         SecuritySettingsWidget.routeName),
                                   ),
@@ -231,9 +254,8 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                     context,
                                     icon: Icons.logout_rounded,
                                     tint: AppThemeData.destructiveCrimson,
-                                    title: 'Log out',
-                                    subtitle:
-                                        'Sign out of your account on this device',
+                                    title: _l10n.logOut,
+                                    subtitle: _l10n.pfLogOutSub,
                                     titleColor:
                                         AppThemeData.destructiveCrimson,
                                     onTap: _handleLogout,
@@ -247,7 +269,6 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                       ),
                     ],
                   ),
-                ),
               ),
             ),
           );
@@ -259,9 +280,31 @@ class _ProfileWidgetState extends State<ProfileWidget> {
   // -------------------------------------------------------------------
   // Hero card — previous design language on the royal-blue brand gradient
   // -------------------------------------------------------------------
+  Widget _buildAvatarPlaceholder() {
+    return Container(
+      color: Colors.white.withValues(alpha: 0.18),
+      alignment: Alignment.center,
+      child: const Icon(
+        Icons.person_rounded,
+        size: 40,
+        color: Colors.white,
+      ),
+    );
+  }
+
   Widget _buildHeroCard(ProfilesRow profile) {
     final displayName =
         valueOrDefault<String>(profile.displayName, 'Rims Client');
+    final hasFullName = (profile.firstName ?? '').trim().isNotEmpty &&
+        (profile.lastName ?? '').trim().isNotEmpty;
+    final hasDisplayName = (profile.displayName ?? '').trim().isNotEmpty &&
+        profile.displayName != 'Rims Client' &&
+        profile.displayName != 'Serbisyo User';
+    final isComplete = profile.isProfileComplete == true ||
+        hasFullName ||
+        hasDisplayName ||
+        AuthService.instance.isProfileComplete;
+    final needsCompletion = !isComplete;
     final email = valueOrDefault<String>(profile.email, currentUserEmail);
     final phone = valueOrDefault<String>(
       profile.phoneNumber,
@@ -296,6 +339,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
             children: [
               // Crisp circular photo with a subtle ring + camera affordance.
               Stack(
+                clipBehavior: Clip.none,
                 children: [
                   Container(
                     width: 76,
@@ -318,15 +362,10 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                               placeholder: (_, __) => Container(
                                 color: Colors.white.withValues(alpha: 0.15),
                               ),
-                              errorWidget: (_, __, ___) => Image.asset(
-                                'assets/images/error_image.png',
-                                fit: BoxFit.cover,
-                              ),
+                              errorWidget: (_, __, ___) =>
+                                  _buildAvatarPlaceholder(),
                             )
-                          : Image.asset(
-                              'assets/images/error_image.png',
-                              fit: BoxFit.cover,
-                            ),
+                          : _buildAvatarPlaceholder(),
                     ),
                   ),
                   // Add / edit photo affordance.
@@ -425,10 +464,27 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                       ),
                     ],
                     const SizedBox(height: 12),
-                    // Previous-design outlined pill button.
-                    _EditPill(
-                      onTap: () =>
-                          context.pushNamed(EditProfileWidget.routeName),
+                    // Two-state action pills: incomplete → complete CTA.
+                    // Verification lives in its own account-readiness
+                    // section below; Edit Profile stays reachable always.
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        if (needsCompletion)
+                          _CompleteProfilePill(
+                            onTap: () => context.pushNamed(
+                                CreateProfileWidget.routeName),
+                          ),
+                        _EditPill(
+                          onTap: () async {
+                            await context.pushNamed(
+                                EditProfileWidget.routeName);
+                            if (mounted) _reloadData();
+                          },
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -436,46 +492,286 @@ class _ProfileWidgetState extends State<ProfileWidget> {
             ],
           ),
           const SizedBox(height: 18),
-          // Metric footer strip from the previous hero.
-          Container(
-            width: double.infinity,
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.14),
-              ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _HeroMetric(
-                    icon: Icons.verified_user_outlined,
-                    label: 'Account Status',
-                    value: 'Active',
+          // Saved places — tappable rectangle that opens the addresses page.
+          FutureBuilder<List<ShphAddress>>(
+            future: _addressesFuture,
+            builder: (context, addressSnapshot) {
+              final addresses = addressSnapshot.data ?? [];
+              final defaultAddress = addresses.where((a) => a.isDefault).isNotEmpty
+                  ? addresses.firstWhere((a) => a.isDefault)
+                  : null;
+              final hasDefaultAddress = defaultAddress != null;
+              final defaultName = defaultAddress?.label?.isNotEmpty == true
+                  ? defaultAddress!.label
+                  : defaultAddress?.street ?? '';
+
+              return Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
+                  onTap: () => context.pushNamed(AddressesWidget.routeName),
+                  child: Container(
+                    width: double.infinity,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.14),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.pin_drop_outlined,
+                          color: Colors.white.withValues(alpha: 0.92),
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _l10n.pfSavedPlaces,
+                                style: AppTheme.of(context).bodyMedium.override(
+                                      font: GoogleFonts.plusJakartaSans(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                      color: Colors.white,
+                                    ),
+                              ),
+                              if (hasDefaultAddress && defaultName != null && defaultName!.isNotEmpty) ...[
+                                const SizedBox(height: 2),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.check_circle,
+                                      size: 12,
+                                      color: Colors.white.withValues(alpha: 0.9),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        defaultName!,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: AppTheme.of(context).bodySmall.override(
+                                              font: GoogleFonts.plusJakartaSans(),
+                                              color: Colors.white.withValues(alpha: 0.8),
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        if (!hasDefaultAddress) ...[
+                          Text(
+                            _l10n.pfAdd,
+                            style: AppTheme.of(context).bodySmall.override(
+                                  font: GoogleFonts.plusJakartaSans(),
+                                  color: Colors.white.withValues(alpha: 0.85),
+                                ),
+                          ),
+                          const SizedBox(width: 4),
+                        ],
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: Colors.white.withValues(alpha: 0.92),
+                          size: 20,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                Container(
-                  width: 1,
-                  height: 40,
-                  color: Colors.white.withValues(alpha: 0.16),
-                ),
-                Expanded(
-                  child: _HeroMetric(
-                    icon: Icons.pin_drop_outlined,
-                    label: 'Saved Places',
-                    value: FFAppState().hasSelectedLocation ? 'Set' : 'Add',
-                  ),
-                ),
-              ],
-            ),
+              );
+            },
           ),
           ],
         ),
       ],
       ),
+    );
+  }
+
+  // -------------------------------------------------------------------
+  // Account readiness — KYC verification tile (web ProfilePage parity:
+  // hidden once verified, "Not started" / "In progress" / "Action required"
+  // otherwise, with a Verify CTA for actionable states).
+  // -------------------------------------------------------------------
+  Widget _buildVerificationSection(ProfilesRow profile) {
+    final theme = AppTheme.of(context);
+    final rowVerified = profile.isVerified == true ||
+        (profile.verificationStatus ?? '').toLowerCase() == 'verified';
+
+    return FutureBuilder<({String status, bool skipped})>(
+      future: _kycStatusFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const SizedBox.shrink();
+        }
+        final status = snapshot.data?.status ?? 'not_submitted';
+        final approved = rowVerified || status == 'approved';
+        if (approved) {
+          return const SizedBox.shrink();
+        }
+
+        final l10n = AppLocalizations.of(context)!;
+        final String label;
+        final Color badgeText;
+        final Color badgeBg;
+        final IconData icon;
+        final bool showCta;
+        switch (status) {
+          case 'rejected':
+            label = l10n.verificationActionRequired;
+            badgeText = AppThemeData.destructiveCrimson;
+            badgeBg = AppThemeData.statusCancelledBg;
+            icon = Icons.gpp_bad_rounded;
+            showCta = true;
+          case 'pending':
+            label = l10n.verificationInProgress;
+            badgeText = AppThemeData.statusPending;
+            badgeBg = AppThemeData.statusPendingBg;
+            icon = Icons.hourglass_top_rounded;
+            showCta = false;
+          default:
+            label = l10n.verificationNotStarted;
+            badgeText = theme.primary;
+            badgeBg = theme.primary.withValues(alpha: 0.10);
+            icon = Icons.gpp_maybe_rounded;
+            showCta = true;
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 16, bottom: 8),
+              child: Text(
+                _l10n.pfVerificationGroup,
+                style: theme.labelMedium.override(
+                  font:
+                      GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+                  letterSpacing: 0.6,
+                  color: theme.secondaryText,
+                ),
+              ),
+            ),
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: theme.primaryBackground,
+                borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
+                border: Border.all(color: theme.border),
+                boxShadow: AppThemeData.shadowSoft,
+              ),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 46,
+                          height: 46,
+                          decoration: BoxDecoration(
+                            color: badgeText.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(icon, size: 22, color: badgeText),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.kycVerification,
+                                style: theme.titleSmall.override(
+                                  font: GoogleFonts.plusJakartaSans(
+                                      fontWeight: FontWeight.w700),
+                                  color: theme.primaryText,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                label,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.bodySmall.override(
+                                  font: GoogleFonts.plusJakartaSans(),
+                                  color: theme.secondaryText,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: badgeBg,
+                            borderRadius:
+                                BorderRadius.circular(AppThemeData.radiusPill),
+                          ),
+                          child: Text(
+                            label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.labelSmall.override(
+                              font: GoogleFonts.plusJakartaSans(
+                                  fontWeight: FontWeight.w700),
+                              color: badgeText,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (showCta) ...[
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                      child: InkWell(
+                        onTap: () async {
+                          await context
+                              .pushNamed(KycOnboardingWidget.routeName);
+                          if (mounted) _reloadData();
+                        },
+                        borderRadius:
+                            BorderRadius.circular(AppThemeData.radiusLg),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: theme.primary,
+                            borderRadius: BorderRadius.circular(
+                                AppThemeData.radiusLg),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            l10n.verifyNow,
+                            style: theme.labelMedium.override(
+                              font: GoogleFonts.plusJakartaSans(
+                                  fontWeight: FontWeight.w700),
+                              color: theme.onPrimary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -552,7 +848,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Are you a service provider?',
+                  _l10n.pfAreYouProvider,
                   style: theme.titleSmall.override(
                     font:
                         GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
@@ -561,7 +857,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  'Switch to Provider Account',
+                  _l10n.pfSwitchToProvider,
                   style: theme.bodySmall.override(
                     font: GoogleFonts.plusJakartaSans(),
                     color: theme.secondaryText,
@@ -601,7 +897,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                     size: 22, color: AppTheme.of(sheetContext).primary),
                 const SizedBox(width: 10),
                 Text(
-                  'Provider account detected',
+                  _l10n.pfProviderDetected,
                   style: AppTheme.of(sheetContext).titleMedium.override(
                         fontWeight: FontWeight.w700,
                       ),
@@ -610,9 +906,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Service providers use the dedicated SerbisyoHub PH Provider '
-              'app. Open the store to install it, then sign in with the same '
-              'account.',
+              _l10n.pfProviderAppBody,
               style: AppTheme.of(sheetContext).bodyMedium.override(
                     color: AppTheme.of(sheetContext).secondaryText,
                   ),
@@ -630,7 +924,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                   );
                 },
                 icon: const Icon(Icons.download_rounded, size: 18),
-                label: const Text('Open Provider App Store'),
+                label: Text(_l10n.pfOpenProviderAppStore),
               ),
             ),
           ],
@@ -645,8 +939,8 @@ class _ProfileWidgetState extends State<ProfileWidget> {
     const inviteUrl = 'https://serbisyohubph.com/invite';
     Clipboard.setData(const ClipboardData(text: inviteUrl));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Invite link copied — share it to earn rewards!'),
+      SnackBar(
+        content: Text(_l10n.pfInviteCopied),
         duration: Duration(seconds: 2),
       ),
     );
@@ -660,7 +954,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
     showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const Center(
+      builder: (_) => Center(
         child: Card(
           child: Padding(
             padding: EdgeInsets.all(20),
@@ -669,7 +963,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
               children: [
                 CircularProgressIndicator(),
                 SizedBox(height: 14),
-                Text('Uploading photo…'),
+                Text(_l10n.pfUploadingPhoto),
               ],
             ),
           ),
@@ -692,8 +986,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
 
       if (url == null || url.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Could not upload photo. Please try again.')),
+          SnackBar(content: Text(_l10n.pfUploadFailed)),
         );
         return;
       }
@@ -704,14 +997,14 @@ class _ProfileWidgetState extends State<ProfileWidget> {
       if (mounted) {
         safeSetState(() {});
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile photo updated!')),
+          SnackBar(content: Text(_l10n.pfPhotoUpdated)),
         );
       }
     } catch (e) {
       if (!mounted) return;
       Navigator.of(context, rootNavigator: true).pop(); // close dialog
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Upload failed: $e')),
+        SnackBar(content: Text(_l10n.pfUploadError(e))),
       );
     } finally {
       if (mounted) safeSetState(() => _isUploading = false);
@@ -731,7 +1024,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
           children: [
             ListTile(
               leading: const Icon(Icons.photo_library_rounded),
-              title: const Text('Choose from gallery'),
+              title: Text(_l10n.pfChooseGallery),
               onTap: () async {
                 Navigator.pop(sheetContext);
                 final file = await picker.pickImage(
@@ -745,7 +1038,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
             ),
             ListTile(
               leading: const Icon(Icons.photo_camera_rounded),
-              title: const Text('Take a photo'),
+              title: Text(_l10n.pfTakePhoto),
               onTap: () async {
                 Navigator.pop(sheetContext);
                 final file = await picker.pickImage(
@@ -767,18 +1060,18 @@ class _ProfileWidgetState extends State<ProfileWidget> {
     final confirm = await showDialog<bool>(
           context: context,
           builder: (alertDialogContext) => AlertDialog(
-            title: const Text('Logout confirmation'),
-            content: const Text(
-              'Are you sure you want to log out of your account?',
+            title: Text(_l10n.logOutTitle),
+            content: Text(
+              _l10n.logOutConfirm,
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(alertDialogContext, false),
-                child: const Text('Cancel'),
+                child: Text(_l10n.cancel),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(alertDialogContext, true),
-                child: const Text('Logout'),
+                child: Text(_l10n.logOutAction),
               ),
             ],
           ),
@@ -795,6 +1088,54 @@ class _ProfileWidgetState extends State<ProfileWidget> {
   }
 }
 
+class _CompleteProfilePill extends StatelessWidget {
+  const _CompleteProfilePill({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppThemeData.radiusPill),
+      child: Container(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppThemeData.radiusPill),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x33000000),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.person_add_alt_1_rounded,
+              size: 14,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(width: 5),
+            Text(
+              AppLocalizations.of(context)!.completeYourProfile,
+              style: theme.textTheme.labelSmall?.override(
+                font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+                color: theme.colorScheme.primary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _EditPill extends StatelessWidget {
   const _EditPill({required this.onTap});
 
@@ -802,6 +1143,7 @@ class _EditPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final _l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     return InkWell(
       onTap: onTap,
@@ -824,7 +1166,7 @@ class _EditPill extends StatelessWidget {
                 size: 13, color: Colors.white),
             const SizedBox(width: 5),
             Text(
-              'Edit Profile',
+              _l10n.seEditProfile,
               style: theme.textTheme.labelSmall?.override(
                 font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                 color: Colors.white,
@@ -837,44 +1179,6 @@ class _EditPill extends StatelessWidget {
   }
 }
 
-class _HeroMetric extends StatelessWidget {
-  const _HeroMetric({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) => Column(
-        children: [
-          Icon(icon, color: Colors.white.withValues(alpha: 0.92), size: 18),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.labelLarge?.override(
-                  font: GoogleFonts.plusJakartaSans(
-                    fontWeight: FontWeight.w700,
-                  ),
-                  color: Colors.white,
-                ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.labelSmall?.override(
-                  font: GoogleFonts.plusJakartaSans(),
-                  color: Colors.white.withValues(alpha: 0.8),
-                ),
-          ),
-        ],
-      );
-}
 class _VerificationBadge extends StatelessWidget {
   const _VerificationBadge({required this.isVerified});
 

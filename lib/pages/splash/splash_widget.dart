@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
+import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import 'splash_model.dart';
 
@@ -24,6 +26,8 @@ class _SplashWidgetState extends State<SplashWidget> {
   late SplashModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -95,16 +99,15 @@ class _SplashWidgetState extends State<SplashWidget> {
               mainAxisSize: MainAxisSize.max,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Lottie.network(
-                  'https://lottie.host/602e7112-9c2a-44bc-b6c5-4701c93ed1ca/QNoV3E7bwP.json',
+                SvgPicture.asset(
+                  'assets/images/shph-logo-svg.svg',
                   width: 200,
                   height: 200,
                   fit: BoxFit.contain,
-                  animate: true,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'SerbisyoHub PH',
+                  'Serbisyo',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.getFont(
                     'Plus Jakarta Sans',
@@ -115,7 +118,7 @@ class _SplashWidgetState extends State<SplashWidget> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Connecting Local Needs with Trusted Providers',
+                  _l10n.splTagline,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.getFont(
                     'Plus Jakarta Sans',
