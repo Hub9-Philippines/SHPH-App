@@ -3956,6 +3956,26 @@ class AppLocalizationsEs extends AppLocalizations {
   String get ccUrgentAssistance => 'Urgent Assistance';
 
   @override
+  String get emGetHelp => 'Obtener ayuda ahora';
+
+  @override
+  String get emChoosePriority => '¿Qué tan urgente necesitas un profesional?';
+
+  @override
+  String get emEmergency => 'Emergencia';
+
+  @override
+  String get emEmergencyDesc =>
+      'Envío inmediato: se envía un profesional verificado de inmediato.';
+
+  @override
+  String get emUrgent => 'Urgente';
+
+  @override
+  String get emUrgentDesc =>
+      'Servicio rápido: un profesional llega en 15–30 minutos.';
+
+  @override
   String get ccTypeMessage => 'Type a message...';
 
   @override

@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math' as math;
 
 import '/api/resources/ondemand_jobs_api.dart';
 import '/api/resources/providers_api.dart';
@@ -43,7 +42,6 @@ class DispatchTMRepository implements TMRepository {
   final Duration matchTimeout;
   final double? _clientLatitude;
   final double? _clientLongitude;
-  final _random = math.Random();
   bool _dispatchJobAvailable = true;
 
   static const _terminalStages = {
@@ -601,8 +599,8 @@ class DispatchTMRepository implements TMRepository {
             .toString(),
         specialty:
             (profile['skill_profession'] ?? 'Service Provider').toString(),
-        rating: profile['is_verified'] == true ? 4.9 : 4.7,
-        completedJobs: 120 + _random.nextInt(120),
+        rating: 0,
+        completedJobs: 0,
         etaMinutes: GeoUtils.calculateETA(distanceKm),
         vehicleLabel: distanceKm <= 4
             ? 'Nearby service unit'

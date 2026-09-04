@@ -995,7 +995,9 @@ class _ProfileWidgetState extends State<ProfileWidget>
         'face_scan_url': url,
       });
       if (mounted) {
-        safeSetState(() {});
+        // Re-fetch the profile so the new photo URL is picked up and the
+        // hero avatar (CachedNetworkImage) reloads immediately.
+        _reloadData();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(_l10n.pfPhotoUpdated)),
         );

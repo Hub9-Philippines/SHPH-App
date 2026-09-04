@@ -9,11 +9,16 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
+import '/api/models/service_listing.dart';
+import '/api/resources/bookings_api.dart';
+import '/api/resources/ondemand_jobs_api.dart';
+import '/api/resources/services_api.dart';
+import '/app_state.dart';
 import '/components/cupertino_ui/app_button.dart';
 import '/components/cupertino_ui/app_feedback.dart';
 import '/l10n/app_localizations.dart';
 import '/main.dart';
-import '/services/nearby_pro_mock_data.dart';
+import '/utils/geo_utils.dart';
 import '/theme/app_theme.dart';
 import '../status_page.dart';
 import '../../../api/app_config.dart';
@@ -23,6 +28,10 @@ import '../booking_models.dart';
 // ────────────────────────────────────────────────────────────────────────
 // Screen
 // ────────────────────────────────────────────────────────────────────────
+
+/// The on-demand search runs for 180s with a 4→24 km radius ladder widened
+/// one rung every 30s (parity with shph-web/src/utils/onDemandRadius.ts).
+const _searchWindowSeconds = 180;
 
 class LiveMatchingScreen extends StatefulWidget {
   const LiveMatchingScreen({
@@ -50,19 +59,20 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
   GoogleMapController? _mapController;
 
   // ── Timer / stage ──────────────────────────────────────────────────
-  Timer? _timer;
-  Timer? _matchTimer;
-  Timer? _mockStatusTimer;
-  int _secondsRemaining = 30;
+  Timer? _pollTimer;
+  int _secondsRemaining = 180;
   bool _timedOut = false;
+  bool _isRealJob = false;
+  String? _liveJobId;
+  double _currentRadiusKm = 4;
+  DateTime? _lastExpandAt;
+  static const _expandRungInterval = Duration(seconds: 30);
 
-  // ── Mock provider matching ─────────────────────────────────────────
+  // ── Provider matching ──────────────────────────────────────────────
   Map<String, dynamic>? _matchedPro;
   List<Map<String, dynamic>> _nearbyPros = [];
   LatLng? _providerLatLng;
   String bookingStatus = 'confirmation pending';
-  late final List<_MockBooking> _mockBookings;
-  late _MockBooking _activeMockBooking;
 
   // ── Zoom targets per stage ─────────────────────────────────────────
   static const _zoomNearby = 16.0;
@@ -74,9 +84,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
   @override
   void initState() {
     super.initState();
-    _mockBookings = _buildMockBookings();
-    _activeMockBooking = _mockBookings.first;
-    bookingStatus = _activeMockBooking.initialStatus;
+    bookingStatus = 'confirmation pending';
     _radarController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 4800),
@@ -87,144 +95,319 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
       duration: const Duration(milliseconds: 1100),
     );
 
+    // Real on-demand job id (when the broadcast succeeded). When present the
+    // screen polls the server for the real matching status; otherwise it runs
+    // an honest countdown that never fabricates a match.
+    _liveJobId = context.read<BookingFlowController?>()?.liveJobId;
+    _isRealJob = (_liveJobId ?? '').isNotEmpty;
+
     // Generate nearby pros immediately — context is valid in initState
     // because the widget is already in the tree when pushed via Navigator.
     _generateNearbyPros();
 
-    // Schedule the mock match at 5 seconds.
-    _matchTimer = Timer(const Duration(seconds: 5), _onMatchFound);
-
-    _timer = Timer.periodic(const Duration(seconds: 1), _onTick);
-    _startMockStatusSimulation();
+    _pollTimer = Timer.periodic(const Duration(seconds: 3), (_) => _pollTick());
   }
 
-  List<_MockBooking> _buildMockBookings() {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    return [
-      _MockBooking(
-        id: 'mock-success-today',
-        providerName: 'Ramon Dela Cruz',
-        initialStatus: 'confirmation pending',
-        bookingDate: today,
-      ),
-      _MockBooking(
-        id: 'mock-cancelled-today',
-        providerName: 'Ramon Dela Cruz',
-        initialStatus: 'booking cancelled',
-        bookingDate: today,
-      ),
-      _MockBooking(
-        id: 'mock-cancelled-future',
-        providerName: 'Ramon Dela Cruz',
-        initialStatus: 'booking cancelled',
-        bookingDate: today.add(const Duration(days: 3)),
-      ),
-    ];
-  }
+  Future<void> _generateNearbyPros() async {
+    final appState = FFAppState();
+    final useLocation = GeoUtils.hasValidLocation(
+      appState.selectedLatitude,
+      appState.selectedLongitude,
+    );
 
-  void _startMockStatusSimulation() {
-    _mockStatusTimer?.cancel();
-    if (_activeMockBooking.initialStatus != 'confirmation pending') {
-      return;
+    List<ShphServiceListing> listings = const [];
+    try {
+      final page = await ShphServicesApi.instance.listListings(
+        ordering: '-rating',
+        pageSize: 20,
+        latitude: useLocation ? appState.selectedLatitude : null,
+        longitude: useLocation ? appState.selectedLongitude : null,
+      );
+      listings = page.results
+          .where((s) => s.latitude != null && s.longitude != null)
+          .toList();
+    } catch (_) {
+      listings = const [];
     }
-    _mockStatusTimer = Timer(const Duration(seconds: 5), () {
-      if (!mounted || bookingStatus != 'confirmation pending') {
-        return;
-      }
-      setState(() {
-        bookingStatus = 'booking confirmed';
-      });
+
+    if (!mounted) return;
+    setState(() {
+      _nearbyPros = listings.map(_listingToPro).toList();
     });
   }
 
-  void _generateNearbyPros() {
-    final booking = context.read<BookingFlowController?>();
-    final draft = booking?.draft;
-    _nearbyPros = NearbyProMockData.instance.generateNearbyPros(
-      serviceId: draft?.serviceListingId ?? 0,
-      category: draft?.serviceCategoryName ?? 'Cleaning',
-      count: 3,
-    );
+  static Map<String, dynamic> _listingToPro(ShphServiceListing s) {
+    final distanceKm = s.distanceKm;
+    return {
+      'providerId': s.provider?.toString() ?? '${s.id}',
+      'providerName': s.providerName ?? 'Professional',
+      'providerPhoto': s.providerPhoto ?? '',
+      'providerLatitude': s.latitude,
+      'providerLongitude': s.longitude,
+      'distanceKm': distanceKm ?? 99.0,
+      'distanceText': distanceKm != null
+          ? (distanceKm < 1.0
+              ? '${(distanceKm * 1000).round()} m away'
+              : '${distanceKm.toStringAsFixed(1)} km away')
+          : 'nearby',
+      'rating': double.tryParse(s.rating ?? '0') ?? 0.0,
+      'completedJobs': 0,
+      'etaMinutes': distanceKm != null ? GeoUtils.calculateETA(distanceKm) : 15,
+    };
   }
 
-  void _onMatchFound() {
+  // ── Real status polling ────────────────────────────────────────────
+  void _pollTick() {
     if (!mounted || _timedOut || _matchedPro != null) {
       return;
     }
-    if (_nearbyPros.isEmpty) {
+    if (_isRealJob) {
+      _pollJobStatus();
+    } else {
+      _decrementCountdown();
+    }
+  }
+
+  Future<void> _pollJobStatus() async {
+    final jobId = _liveJobId;
+    if (jobId == null || jobId.isEmpty) {
+      _decrementCountdown();
       return;
     }
+    try {
+      final response = await ShphOnDemandJobsApi.instance.getJobStatus(jobId);
+      if (!mounted) return;
+      if (_timedOut || _matchedPro != null) return;
 
-    // Pick the closest pro.
-    _nearbyPros.sort((a, b) =>
-        (a['distanceKm'] as double).compareTo(b['distanceKm'] as double));
-    final pro = _nearbyPros.first;
+      final status = (response['status'] as String?)?.toLowerCase() ?? '';
+      final radiusRaw = response['radius_km'];
+      if (radiusRaw is num && radiusRaw > 0) {
+        _currentRadiusKm = radiusRaw.toDouble();
+      }
+      _syncCountdownFromExpiry(response['expires_at'] as String?);
+      if (!mounted || _timedOut) return;
 
+      switch (status) {
+        case 'accepted':
+          await _onJobAccepted(response);
+        case 'expired':
+        case 'cancelled':
+          _finishTimedOut();
+        default:
+          _maybeExpandRadius();
+      }
+    } catch (_) {
+      // Transient network/parse error — keep the honest countdown moving.
+      _decrementCountdown();
+    }
+  }
+
+  void _syncCountdownFromExpiry(String? expiresAt) {
+    final parsed = expiresAt == null ? null : DateTime.tryParse(expiresAt);
+    if (parsed != null) {
+      final seconds = parsed.difference(DateTime.now()).inSeconds;
+      if (seconds <= 0) {
+        _finishTimedOut();
+        return;
+      }
+      _secondsRemaining = seconds.clamp(0, _searchWindowSeconds);
+    } else {
+      _decrementCountdown();
+    }
+    if (_secondsRemaining <= 0) {
+      _finishTimedOut();
+    }
+  }
+
+  void _decrementCountdown() {
+    if (_secondsRemaining <= 0) {
+      _finishTimedOut();
+      return;
+    }
+    setState(() {
+      _secondsRemaining--;
+      if (_secondsRemaining % 30 == 0 && _secondsRemaining < _searchWindowSeconds) {
+        _gradientController.forward(from: 0.0);
+        _animateMapZoom();
+      }
+      if (_secondsRemaining <= 0) {
+        _timedOut = true;
+        _radarController.stop();
+        _gradientController.stop();
+        _pollTimer?.cancel();
+      }
+    });
+  }
+
+  void _finishTimedOut() {
+    if (!mounted) return;
+    setState(() {
+      if (!_timedOut) {
+        _timedOut = true;
+        _secondsRemaining = 0;
+      }
+      _radarController.stop();
+      _gradientController.stop();
+    });
+    _pollTimer?.cancel();
+  }
+
+  // Walks the 4→8→12→16→20→24 km radius ladder while the job is still
+  // searching. Mirrors the backend/web cadence: one rung every 30s over the
+  // 180s search window, snapping to the next multiple of 4 km (parity with
+  // shph-web/src/utils/onDemandRadius.ts computeExpandTarget).
+  void _maybeExpandRadius() {
+    final jobId = _liveJobId;
+    if (jobId == null || jobId.isEmpty) return;
+    final now = DateTime.now();
+    if (_lastExpandAt != null &&
+        now.difference(_lastExpandAt!) < _expandRungInterval) {
+      return;
+    }
+    final nextRadius = _computeExpandTarget(_currentRadiusKm);
+    if (nextRadius <= _currentRadiusKm) return;
+    _currentRadiusKm = nextRadius.toDouble();
+    _lastExpandAt = now;
+    unawaited(_expandRadiusQuietly(jobId, nextRadius));
+  }
+
+  // Next rung above [currentRadiusKm], snapped to a multiple of 4 km, capped
+  // at 24 km. Never narrows. Mirrors the web's computeExpandTarget.
+  static int _computeExpandTarget(double currentKm) {
+    const step = 4.0;
+    const maxKm = 24.0;
+    final rung = (currentKm / step).floorToDouble() * step + step;
+    final target = rung.clamp(currentKm, maxKm);
+    return target.round();
+  }
+
+  Future<void> _expandRadiusQuietly(String jobId, int radiusKm) async {
+    try {
+      await ShphOnDemandJobsApi.instance.expandRadius(jobId, radiusKm);
+    } catch (_) {
+      // Radius expansion is best-effort; ignore transient failures.
+    }
+  }
+
+  Future<void> _onJobAccepted(Map<String, dynamic> response) async {
+    bookingStatus = 'booking confirmed';
+    final bookingId = (response['booking_id'] ??
+            (response['booking'] is Map
+                ? (response['booking'] as Map)['id']
+                : null))
+        ?.toString();
+
+    if (bookingId != null && bookingId.isNotEmpty) {
+      await _resolveAcceptedProvider(bookingId);
+    }
+    if (!mounted) return;
+
+    if (_matchedPro == null) {
+      _useNearestRealPro();
+    }
+    if (!mounted) return;
+
+    if (_matchedPro != null) {
+      setState(() {
+        _pollTimer?.cancel();
+        _radarController.stop();
+        _gradientController.stop();
+      });
+    } else {
+      // Accepted but could not resolve a real provider — honest fallback to
+      // the timeout sheet rather than fabricating one.
+      _finishTimedOut();
+    }
+  }
+
+  Future<void> _resolveAcceptedProvider(String bookingId) async {
+    try {
+      final booking = await ShphBookingsApi.instance.getBooking(bookingId);
+      final listing = _matchingListingFor(booking.providerId);
+
+      if (listing != null) {
+        _adoptMatchedPro(
+          pro: {
+            ...listing,
+            if ((booking.providerName ?? '').isNotEmpty)
+              'providerName': booking.providerName,
+            if ((booking.providerPhoto ?? '').isNotEmpty)
+              'providerPhoto': booking.providerPhoto,
+          },
+        );
+        return;
+      }
+
+      // No matching listing with real coords — nothing to route to.
+      _matchedPro = null;
+    } catch (_) {
+      _matchedPro = null;
+    }
+  }
+
+  Map<String, dynamic>? _matchingListingFor(int? providerId) {
+    if (providerId != null) {
+      for (final pro in _nearbyPros) {
+        if (pro['providerId'] == providerId.toString()) {
+          return pro;
+        }
+      }
+    }
+    return _closestNearbyPro();
+  }
+
+  Map<String, dynamic>? _closestNearbyPro() {
+    if (_nearbyPros.isEmpty) return null;
+    final sorted = [..._nearbyPros]
+      ..sort((a, b) =>
+          (a['distanceKm'] as double).compareTo(b['distanceKm'] as double));
+    return sorted.first;
+  }
+
+  void _useNearestRealPro() {
+    final pro = _closestNearbyPro();
+    if (pro == null) return;
+    _adoptMatchedPro(pro: pro);
+  }
+
+  void _adoptMatchedPro({required Map<String, dynamic> pro}) {
+    final lat = pro['providerLatitude'] as double?;
+    final lng = pro['providerLongitude'] as double?;
+    if (lat == null || lng == null) {
+      return;
+    }
     setState(() {
       _matchedPro = pro;
-      _providerLatLng = LatLng(
-        pro['providerLatitude'] as double,
-        pro['providerLongitude'] as double,
-      );
-      _timer?.cancel();
-      _matchTimer?.cancel();
+      _providerLatLng = LatLng(lat, lng);
+      _pollTimer?.cancel();
       _radarController.stop();
       _gradientController.stop();
     });
   }
 
   void _retryProviderSearch() {
-    _timer?.cancel();
-    _matchTimer?.cancel();
-    _mockStatusTimer?.cancel();
+    _pollTimer?.cancel();
     _generateNearbyPros();
     setState(() {
       _matchedPro = null;
       _providerLatLng = null;
       _timedOut = false;
-      _secondsRemaining = 30;
+      _secondsRemaining = _searchWindowSeconds;
+      _currentRadiusKm = 4;
+      _lastExpandAt = null;
       bookingStatus = 'confirmation pending';
     });
-    _activeMockBooking = _mockBookings.first;
     _radarController.repeat();
     _gradientController.reset();
-    _matchTimer = Timer(const Duration(seconds: 5), _onMatchFound);
-    _timer = Timer.periodic(const Duration(seconds: 1), _onTick);
-    _startMockStatusSimulation();
+    _pollTimer = Timer.periodic(const Duration(seconds: 3), (_) => _pollTick());
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
-    _matchTimer?.cancel();
-    _mockStatusTimer?.cancel();
+    _pollTimer?.cancel();
     _radarController.dispose();
     _gradientController.dispose();
     super.dispose();
-  }
-
-  // ── Tick ───────────────────────────────────────────────────────────
-  void _onTick(Timer timer) {
-    if (!mounted) {
-      return;
-    }
-    if (_matchedPro != null) {
-      _timer?.cancel();
-      return;
-    }
-    setState(() {
-      _secondsRemaining--;
-      if (_secondsRemaining <= 0) {
-        _timedOut = true;
-        _timer?.cancel();
-        _radarController.stop();
-        _gradientController.stop();
-      } else if (_secondsRemaining == 20 || _secondsRemaining == 10) {
-        _gradientController.forward(from: 0.0);
-        _animateMapZoom();
-      }
-    });
   }
 
   // ── Map zoom animation ────────────────────────────────────────────
@@ -240,10 +423,10 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     if (_timedOut) {
       return _zoomNearby;
     }
-    if (_secondsRemaining > 20) {
+    if (_secondsRemaining > 120) {
       return _zoomNearby;
     }
-    if (_secondsRemaining > 10) {
+    if (_secondsRemaining > 60) {
       return _zoomChecking;
     }
     return _zoomSweep;
@@ -256,10 +439,10 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     if (_timedOut || _secondsRemaining <= 0) {
       return 3;
     }
-    if (_secondsRemaining > 20) {
+    if (_secondsRemaining > 120) {
       return 1;
     }
-    if (_secondsRemaining > 10) {
+    if (_secondsRemaining > 60) {
       return 2;
     }
     return 3;
@@ -274,13 +457,13 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
         subtitle: l10n.bfNameOnWay(name),
       );
     }
-    if (seconds > 20) {
+    if (seconds > 120) {
       return _MatchingStage(
         label: l10n.bfBroadcastingRequest,
         subtitle: l10n.bfAlertingNearbyProviders,
       );
     }
-    if (seconds > 10) {
+    if (seconds > 60) {
       return _MatchingStage(
         label: l10n.bfCheckingAvailability,
         subtitle: l10n.bfComparingWhoReaches,
@@ -596,7 +779,11 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
                               draft?.address.label ?? l10n.bfPinnedLocation,
                           addressLine:
                               '${draft?.address.line1 ?? l10n.bfLocationLoading}${(draft?.address.city ?? '').isNotEmpty ? ', ${draft!.address.city}' : ''}',
-                          referenceId: booking?.activeReferenceId,
+                          referenceId:
+                              booking?.liveJobId ?? booking?.activeReferenceId,
+                          providerCount: booking?.liveProviderCount,
+                          feeMin: booking?.liveEstFeeMin,
+                          feeMax: booking?.liveEstFeeMax,
                           secondsRemaining: _secondsRemaining,
                           gradientValue: _gradientController,
                           stageIndex: _currentStage(),
@@ -613,20 +800,6 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
 // ────────────────────────────────────────────────────────────────────────
 // Matching stage model
 // ────────────────────────────────────────────────────────────────────────
-
-class _MockBooking {
-  const _MockBooking({
-    required this.id,
-    required this.providerName,
-    required this.initialStatus,
-    required this.bookingDate,
-  });
-
-  final String id;
-  final String providerName;
-  final String initialStatus;
-  final DateTime bookingDate;
-}
 
 class _AssignedProviderRouteMap extends StatefulWidget {
   const _AssignedProviderRouteMap({
@@ -1806,7 +1979,7 @@ class _StatusBadge extends StatelessWidget {
                 _GradientBar(
                   gradientValue: gradientValue,
                   stageIndex: stageIndex,
-                  progress: secondsRemaining / 30,
+                  progress: secondsRemaining / _searchWindowSeconds,
                   theme: theme,
                 ),
               ],
@@ -1914,6 +2087,9 @@ class _SearchingSheet extends StatelessWidget {
     required this.gradientValue,
     required this.stageIndex,
     this.referenceId,
+    this.providerCount,
+    this.feeMin,
+    this.feeMax,
   });
 
   final ScrollController scrollController;
@@ -1924,9 +2100,19 @@ class _SearchingSheet extends StatelessWidget {
   final String addressLine;
   final VoidCallback onCancel;
   final String? referenceId;
+  final int? providerCount;
+  final double? feeMin;
+  final double? feeMax;
   final int secondsRemaining;
   final Animation<double> gradientValue;
   final int stageIndex;
+
+  static String _roundFee(double value) {
+    if (!value.isFinite) {
+      return '0';
+    }
+    return value.toStringAsFixed(0);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1983,7 +2169,7 @@ class _SearchingSheet extends StatelessWidget {
           _GradientBar(
             gradientValue: gradientValue,
             stageIndex: stageIndex,
-            progress: secondsRemaining / 30,
+            progress: (secondsRemaining / _searchWindowSeconds).clamp(0.0, 1.0),
             theme: theme,
           ),
           const SizedBox(height: 8),
@@ -2033,6 +2219,27 @@ class _SearchingSheet extends StatelessWidget {
               icon: Icons.tag_rounded,
               title: l10n.bfSearchReference,
               subtitle: referenceId!,
+            ),
+          ],
+          if (providerCount != null && providerCount! > 0) ...[
+            const SizedBox(height: 12),
+            _MetaRow(
+              theme: theme,
+              icon: Icons.people_alt_outlined,
+              title: 'Providers notified',
+              subtitle: providerCount! == 1
+                  ? '1 provider'
+                  : '${providerCount!} providers',
+            ),
+          ],
+          if (feeMin != null && feeMax != null) ...[
+            const SizedBox(height: 12),
+            _MetaRow(
+              theme: theme,
+              icon: Icons.request_quote_outlined,
+              title: 'Estimated fee',
+              subtitle:
+                  '₱${_roundFee(feeMin!)} – ₱${_roundFee(feeMax!)}',
             ),
           ],
           const SizedBox(height: 20),

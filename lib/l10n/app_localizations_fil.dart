@@ -3981,6 +3981,27 @@ class AppLocalizationsFil extends AppLocalizations {
   String get ccUrgentAssistance => 'Urgent Assistance';
 
   @override
+  String get emGetHelp => 'Kumuha ng tulong ngayon';
+
+  @override
+  String get emChoosePriority =>
+      'Gaano ka-urgent ang kailangan mo ng propesyonal?';
+
+  @override
+  String get emEmergency => 'Emergency';
+
+  @override
+  String get emEmergencyDesc =>
+      'Agad na pagpapadala — may na-verify na pro na ipapadala agad sa iyo.';
+
+  @override
+  String get emUrgent => 'Urgent';
+
+  @override
+  String get emUrgentDesc =>
+      'Mabilis na serbisyo — darating ang pro sa loob ng 15–30 minuto.';
+
+  @override
   String get ccTypeMessage => 'Mag-type ng message...';
 
   @override

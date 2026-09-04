@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' as gmaps;
 import 'package:provider/provider.dart';
 
+import '/api/resources/ondemand_jobs_api.dart';
 import '/app_state.dart';
 import '/l10n/app_localizations.dart';
 import '/models/service_listing.dart';
@@ -88,6 +89,7 @@ class ExpressCheckoutScreen extends StatelessWidget {
     if (scheduledDateTime != null) {
       final diffMinutes = scheduledDateTime.difference(now).inMinutes;
       if (diffMinutes < 120) {
+        await _refreshNearestProviderDistance(controller, service);
         final appState = FFAppState();
         if (appState.nearestProviderDistance > 4.0) {
           if (!context.mounted) return;
@@ -157,6 +159,32 @@ class ExpressCheckoutScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _refreshNearestProviderDistance(
+    BookingFlowController controller,
+    ServiceListing service,
+  ) async {
+    final categoryId = service.category;
+    final draft = controller.draft;
+    if (categoryId == null) {
+      return;
+    }
+    try {
+      final estimate = await ShphOnDemandJobsApi.instance.estimate(
+        categoryId: categoryId,
+        latitude: draft.latitude,
+        longitude: draft.longitude,
+        radiusKm: 4,
+      );
+      final nearestKm =
+          (estimate['nearest_provider_km'] as num?)?.toDouble();
+      if (nearestKm != null && nearestKm.isFinite && nearestKm >= 0) {
+        FFAppState().nearestProviderDistance = nearestKm;
+      }
+    } catch (_) {
+      // Keep the current value (conservative fallback) on failure.
+    }
   }
 
   DateTime? _scheduledDateTime(BookingDraft draft) {

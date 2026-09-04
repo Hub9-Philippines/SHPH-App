@@ -105,5 +105,11 @@
   "timeMaterial": "TIEMPO-MATERIAL",
   "scheduled": "PROGRAMADO",
   "controlYourExperience": "Controle su experiencia en la app",
-  "controlYourExperienceSubtitle": "Apariencia, seguridad, notificaciones y soporte, todo en un solo lugar."
+  "controlYourExperienceSubtitle": "Apariencia, seguridad, notificaciones y soporte, todo en un solo lugar.",
+  "emGetHelp": "Obtener ayuda ahora",
+  "emChoosePriority": "¿Qué tan urgente necesitas un profesional?",
+  "emEmergency": "Emergencia",
+  "emEmergencyDesc": "Envío inmediato: se envía un profesional verificado de inmediato.",
+  "emUrgent": "Urgente",
+  "emUrgentDesc": "Servicio rápido: un profesional llega en 15–30 minutos."
 }

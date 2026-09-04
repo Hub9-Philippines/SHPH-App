@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '/api/resources/services_api.dart';
+import '/app_state.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/logging_service.dart';
-import '/services/nearby_pro_mock_data.dart';
 import '/utils/emergency_categories.dart';
+import '/utils/geo_utils.dart';
 import '/utils/tagalog_service_keywords.dart';
 import 'services_widget.dart' show ServicesScreen;
 
@@ -73,18 +74,22 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
 
   Future<void> _loadServicesFromDatabase() async {
     try {
-      final services = await ShphServicesApi.instance
-          .listListings(ordering: '-rating', pageSize: 100);
+      // Pass the user's pinned location so the backend computes the real
+      // distance_km for each listing; otherwise distances are null.
+      final appState = FFAppState();
+      final useLocation = GeoUtils.hasValidLocation(
+        appState.selectedLatitude,
+        appState.selectedLongitude,
+      );
+      final services = await ShphServicesApi.instance.listListings(
+        ordering: '-rating',
+        pageSize: 100,
+        latitude: useLocation ? appState.selectedLatitude : null,
+        longitude: useLocation ? appState.selectedLongitude : null,
+      );
       final listings = services.results;
 
       allServices = listings.map((service) {
-        final nearByPros = NearbyProMockData.instance.generateNearbyPros(
-          serviceId: service.id,
-          category: service.categoryName ?? 'Service',
-          count: 3,
-        );
-        final nearest = nearByPros.isNotEmpty ? nearByPros.first : null;
-
         return {
           'id': service.id,
           'serviceId': service.id,
@@ -97,18 +102,17 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
           'rating': double.tryParse(service.rating ?? '0') ?? 0.0,
           'reviewCount': service.reviewCount ?? 0,
           'imageUrl': service.thumbnail ?? '',
-          'providerId':
-              nearest?['providerId'] ?? service.provider?.toString() ?? '',
-          'providerName':
-              nearest?['providerName'] ?? service.providerName ?? 'Provider',
-          'providerPhoto':
-              nearest?['providerPhoto'] ?? service.providerPhoto ?? '',
+          'providerId': service.provider?.toString() ?? '',
+          'providerName': service.providerName ?? 'Provider',
+          'providerPhoto': service.providerPhoto ?? '',
           'isTimeMaterial': service.isTimeMaterial,
-          'distanceKm': nearest?['distanceKm'] ?? 99.0,
-          'distanceText': nearest?['distanceText'] ?? 'Unknown',
-          'providerLatitude': nearest?['providerLatitude'],
-          'providerLongitude': nearest?['providerLongitude'],
-          'nearbyPros': nearByPros,
+          'distanceKm': service.distanceKm ?? 99.0,
+          'distanceText': service.distanceKm != null
+              ? _formatDistance(service.distanceKm!)
+              : 'Unknown',
+          'providerLatitude': service.latitude,
+          'providerLongitude': service.longitude,
+          'nearbyPros': const <Map<String, dynamic>>[],
         };
       }).toList();
 
@@ -123,6 +127,13 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
       allServices = [];
       filteredServices = [];
     }
+  }
+
+  static String _formatDistance(double km) {
+    if (km < 1.0) {
+      return '${(km * 1000).round()} m away';
+    }
+    return '${km.toStringAsFixed(1)} km away';
   }
 
   void applyFilters() {

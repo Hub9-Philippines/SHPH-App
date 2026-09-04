@@ -56,12 +56,7 @@ class _CategoriesWidgetState extends State<CategoriesWidget> {
             ),
           ),
           body: SafeArea(
-            child: RefreshIndicator(
-              color: AppTheme.of(context).primary,
-              onRefresh: () async {
-                safeSetState(() {});
-              },
-              child: Column(
+            child: Column(
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -117,6 +112,5 @@ class _CategoriesWidgetState extends State<CategoriesWidget> {
             ),
           ),
         ),
-      ),
-    );
+      );
 }

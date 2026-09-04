@@ -12,7 +12,6 @@ import '/components/user_avatar.dart';
 import '/l10n/app_localizations.dart';
 import '/models/service_listing.dart';
 import '/theme/app_theme.dart';
-import '/utils/emergency_categories.dart';
 import '../booking_controller.dart';
 import '../booking_models.dart';
 
@@ -290,12 +289,9 @@ class _ServiceMatrix extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = AppTheme.of(context);
     final draft = controller.draft;
-    final urgent = draft.urgency == BookingUrgency.rightNow ||
-        isEmergencyCategory(draft.serviceCategoryName);
-    final deepDelta =
-        (draft.serviceBasePrice ?? 599.0) * 0.25;
-    final premiumDelta =
-        (draft.serviceBasePrice ?? 599.0) * 0.45;
+    final urgent = draft.urgency == BookingUrgency.rightNow;
+    final deepDelta = (draft.serviceBasePrice ?? 0.0) * 0.25;
+    final premiumDelta = (draft.serviceBasePrice ?? 0.0) * 0.45;
 
     Widget row({
       required bool checked,
@@ -387,8 +383,7 @@ class _ServiceMatrix extends StatelessWidget {
             (v ?? false) ? BookingUrgency.rightNow : BookingUrgency.scheduled,
           ),
           title: l10n.bfExpressArrival,
-          price:
-              '+PHP ${controller.quote.urgencyAdjustment.toStringAsFixed(0)}',
+          price: _formatUrgencyPrice(controller.quote.urgencyAdjustment),
           tag: 'FASTEST',
         ),
         row(
@@ -879,4 +874,15 @@ class _SectionTitle extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
       );
+}
+
+/// Formats the express-arrival price row. Positive adjustments are shown as
+/// a surcharge (e.g. "+PHP 108"), negative ones (scheduling ahead discount)
+/// as a savings value (e.g. "−PHP 48") instead of a confusing "+PHP -48".
+String _formatUrgencyPrice(double adjustment) {
+  final rounded = adjustment.round().abs();
+  if (adjustment >= 0) {
+    return '+PHP $rounded';
+  }
+  return '−PHP $rounded';
 }

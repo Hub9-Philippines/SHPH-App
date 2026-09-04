@@ -4,18 +4,27 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import '/api/models/booking.dart';
+import '/api/models/service_listing.dart';
+import '/api/resources/bookings_api.dart';
+import '/api/resources/recommendations_api.dart';
+import '/api/resources/services_api.dart';
 import '/auth/auth_util.dart';
 import '/app_state.dart';
 import '/components/cupertino_ui/app_feedback.dart';
+import '/components/emergency_modal.dart';
 import '/components/refreshable_page.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import '/pages/booking_funnel/booking_controller.dart';
 import '/pages/booking_funnel/booking_models.dart';
+import '/pages/booking_funnel/status_page.dart';
 import '/pages/booking_funnel/express_checkout_screen.dart';
 import '/pages/booking_funnel/widgets/booking_flow_route.dart';
 import '/pages/booking_funnel/widgets/service_selection_panel.dart';
 import '/models/service_listing.dart';
+import '/services/auth_service.dart';
+import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
 import '/utils/geo_utils.dart';
 
@@ -32,6 +41,11 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
   late final VoidCallback _scrollListener;
   bool _isHeaderCompact = false;
   bool _isAccountMenuOpen = false;
+
+  List<_HomeBookingData> _bookings = const [];
+  List<_HomeCategoryData> _categories = const [];
+  List<_TrendingProviderData> _providers = const [];
+  List<_TrendingProviderData> _recommendedProviders = const [];
 
   String get _displayName {
     final name = currentUserDisplayName.trim();
@@ -50,6 +64,7 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
     super.initState();
     _scrollListener = _handleScroll;
     _scrollController = ScrollController()..addListener(_scrollListener);
+    _loadHomeData();
   }
 
   @override
@@ -61,7 +76,15 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
 
   @override
   Future<void> onRefresh() async {
-    safeSetState(() {});
+    // Pull to refresh reloads the signed-in user's profile (so the greeting
+    // and avatar reflect fresh server data) and re-fetches the feed.
+    try {
+      await AuthService.instance.refreshCurrentUser();
+    } catch (_) {
+      // Non-fatal: fall through and still rebuild with current state.
+    }
+    await _loadHomeData();
+    if (mounted) safeSetState(() {});
   }
 
   void _handleScroll() {
@@ -112,7 +135,9 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
     );
   }
 
-  Future<void> _startBookingProcess() async {
+  Future<void> _startBookingProcess({
+    BookingUrgency urgency = BookingUrgency.rightNow,
+  }) async {
     final selectedService = await showModalBottomSheet<ServiceListing>(
       context: context,
       isScrollControlled: true,
@@ -148,7 +173,7 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
         ChangeNotifierProvider(
           create: (_) => BookingFlowController(
             initialDraft: BookingDraft(
-              urgency: BookingUrgency.rightNow,
+              urgency: urgency,
               rooms: 1,
               cleaningType: ServiceType.standard,
               paymentMethod: BookingPaymentMethod.gcash,
@@ -163,6 +188,21 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
     );
   }
 
+  /// Opens the dedicated emergency/urgent priority modal (instead of the
+  /// generic quick-book panel); the selected priority drives the booking's
+  /// urgency in the express checkout flow.
+  Future<void> _openEmergencyModal() async {
+    final priority = await EmergencyModal.show(context);
+    if (!mounted || priority == null) {
+      return;
+    }
+    final urgency = switch (priority) {
+      EmergencyPriority.emergency => BookingUrgency.rightNow,
+      EmergencyPriority.urgent => BookingUrgency.laterToday,
+    };
+    await _startBookingProcess(urgency: urgency);
+  }
+
   Future<bool> _confirmExit() async {
     return await AppFeedback.confirmDialog(
           context: context,
@@ -172,6 +212,24 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
           cancelText: 'Cancel',
         ) ??
         false;
+  }
+
+  void _openTrackingPage(_HomeBookingData booking) {
+    final bookingStatus = booking.statusLabel.toLowerCase();
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => StatusPage(
+          bookingStatus: bookingStatus,
+          bookingDate: DateTime.now(),
+          providerName: booking.providerName,
+          serviceTitle: booking.title,
+          bookingReference: booking.bookingId.isNotEmpty
+              ? booking.bookingId
+              : null,
+          shouldPopToHome: true,
+        ),
+      ),
+    );
   }
 
   void _openCategory(String categoryName) {
@@ -221,16 +279,12 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
     final theme = AppTheme.of(context);
     final appState = context.watch<FFAppState>();
     final hasUnreadNotifications = appState.notificationCount > 0;
-    final bookings = _prototypeBookings();
-    final categories = _prototypeCategories();
-    final providers = _prototypeProviders();
-    final recommendedProviders = _prototypeRecommendedProviders();
-    final accountName = currentUserDisplayName.trim().isNotEmpty
-        ? currentUserDisplayName.trim()
-        : 'Rina Santos';
-    final accountEmail = currentUserEmail.trim().isNotEmpty
-        ? currentUserEmail.trim()
-        : 'rina@email.com';
+    final bookings = _bookings;
+    final categories = _categories;
+    final providers = _providers;
+    final recommendedProviders = _recommendedProviders;
+    final accountName = currentUserDisplayName.trim();
+    final accountEmail = currentUserEmail.trim();
 
     return GestureDetector(
       onTap: () {
@@ -278,18 +332,13 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
                   child: wrapWithRefresh(
                     controller: _scrollController,
                     slivers: [
-                      SliverToBoxAdapter(
-                        child: PrototypeAppHeader(
-                          userName: _headerGreeting,
-                          avatarUrl: currentUserPhoto,
-                          hasUnreadNotifications: hasUnreadNotifications,
-                          isCompact: _isHeaderCompact,
-                          onNotificationTap: () => context.pushNamed(
-                            MyNotificationsWidget.routeName,
-                          ),
-                          onAvatarTap: _toggleAccountMenu,
-                          onSearchTap: _openSearchPage,
-                        ),
+                      // Top spacer that reserves room for the pinned header
+                      // while it is fully expanded (greeting view) at the top
+                      // of the list. Kept at/under the header's expanded height
+                      // so no gap shows; if the header grows slightly taller,
+                      // the (opaque) header simply overlaps it invisibly.
+                      const SliverToBoxAdapter(
+                        child: SizedBox(height: 150),
                       ),
                     SliverPadding(
                       padding: const EdgeInsets.fromLTRB(20, 5, 20, 28),
@@ -316,7 +365,8 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
                                       iconBgColor: booking.iconBgColor,
                                       iconColor: booking.iconColor,
                                       subtitleInfo: booking.subtitleInfo,
-                                      onTrackTap: _startBookingProcess,
+                                      onTrackTap: () =>
+                                          _openTrackingPage(booking),
                                       onMessageTap: () => context.pushNamed(
                                         MessagesWidget.routeName,
                                       ),
@@ -324,7 +374,7 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
                                   ),
                                 ),
                                 const SizedBox(height: 4),
-                                EmergencyHelpCard(onTap: _startBookingProcess),
+                                EmergencyHelpCard(onTap: _openEmergencyModal),
                                 const SizedBox(height: 16),
                                 _HomeSectionHeader(
                                   title: 'EXPLORE SERVICES',
@@ -425,9 +475,29 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
                         ],
                       ),
                     ),
+                    // Pinned header: stays frozen at the top of the screen and
+                    // collapses from the tall greeting view into a compact
+                    // bar (search bar + notification + profile) as the list
+                    // scrolls. See _handleScroll -> _isHeaderCompact.
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: PrototypeAppHeader(
+                        userName: _headerGreeting,
+                        avatarUrl: currentUserPhoto,
+                        hasUnreadNotifications: hasUnreadNotifications,
+                        isCompact: _isHeaderCompact,
+                        onNotificationTap: () => context.pushNamed(
+                          MyNotificationsWidget.routeName,
+                        ),
+                        onAvatarTap: _toggleAccountMenu,
+                        onSearchTap: _openSearchPage,
+                      ),
+                    ),
                     if (_isAccountMenuOpen)
                       Positioned.fill(
-                        top: _isHeaderCompact ? 92 : 170,
+                        top: _isHeaderCompact ? 108 : 154,
                         child: GestureDetector(
                           behavior: HitTestBehavior.translucent,
                           onTap: _closeAccountMenu,
@@ -436,7 +506,7 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
                       ),
                     if (_isAccountMenuOpen)
                       Positioned(
-                        top: _isHeaderCompact ? 72 : 80,
+                        top: _isHeaderCompact ? 110 : 156,
                         right: 20,
                         child: _AccountMenu(
                           name: accountName,
@@ -454,135 +524,255 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
         );
   }
 
-  List<_HomeBookingData> _prototypeBookings() {
-    final now = DateTime.now();
-    return [
-      const _HomeBookingData(
-        title: 'Lockout Assistance',
-        providerName: 'Mario Santos',
-        category: 'Locksmith',
-        statusLabel: 'On the way',
-        statusColor: Color(0xFF2563EB),
-        statusBgColor: Color(0xFFEFF6FF),
-        icon: Icons.key_rounded,
-        iconBgColor: Color(0xFFEFF6FF),
-        iconColor: Color(0xFF1E3A8A),
-        subtitleInfo: 'ETA 12 min - PHP 350',
-      ),
-      _HomeBookingData(
-        title: 'Deep Cleaning',
-        providerName: 'Ana Cruz',
-        category: 'Cleaning',
-        statusLabel: 'In progress',
-        statusColor: const Color(0xFFD97706),
-        statusBgColor: const Color(0xFFFFFBEB),
-        icon: Icons.cleaning_services_rounded,
-        iconBgColor: const Color(0xFFECFDF5),
-        iconColor: const Color(0xFF059669),
-        subtitleInfo: 'Started 9:05 AM - 2 of 3 rooms done',
-      ),
-    ];
+  Future<void> _loadHomeData() async {
+    final results = await Future.wait<Object?>([
+      _loadBookings(),
+      _loadCategories(),
+      _loadProviders(),
+      _loadNearbyRecommendations(),
+    ]);
+
+    if (!mounted) return;
+
+    setState(() {
+      _bookings = (results[0] as List<_HomeBookingData>?) ?? const [];
+      _categories = (results[1] as List<_HomeCategoryData>?) ?? const [];
+      _providers = (results[2] as List<_TrendingProviderData>?) ?? const [];
+      _recommendedProviders =
+          (results[3] as List<_TrendingProviderData>?) ?? const [];
+    });
   }
 
-  List<_HomeCategoryData> _prototypeCategories() {
-    return const [
-      _HomeCategoryData(
-        name: 'Cleaning',
-        priceSubtitle: 'From PHP 499',
-        icon: Icons.cleaning_services_rounded,
-        gradientColors: [Color(0xFF0EA5E9), Color(0xFF1D4ED8)],
-        badgeLabel: 'Popular',
+  Future<List<_HomeBookingData>> _loadBookings() async {
+    try {
+      final page = await ShphBookingsApi.instance.listUserBookings();
+      final active = page.results
+          .where((b) =>
+              b.status != 'cancelled' &&
+              b.status != 'completed' &&
+              b.status != 'cancelled')
+          .take(2)
+          .toList();
+
+      return active.map((b) {
+        final status = b.status;
+        final label = switch (status) {
+          'confirmed' => 'Confirmed',
+          'en_route' || 'assigned' => 'On the way',
+          'on_site' || 'arrived' => 'On site',
+          'in_progress' => 'In progress',
+          'pending' => 'Pending',
+          _ => status.isNotEmpty ? status : 'Pending',
+        };
+        return _HomeBookingData(
+          title: b.listingTitle ?? 'Service booking',
+          providerName: b.providerName ?? 'Waiting for a pro',
+          category: _bookingCategoryLabel(b.status),
+          statusLabel: label,
+          statusColor: AppThemeData.successBrand,
+          statusBgColor: AppThemeData.statusActiveBg,
+          icon: Icons.home_work_rounded,
+          iconBgColor: AppThemeData.statusActiveBg,
+          iconColor: AppThemeData.successBrand,
+          subtitleInfo: _bookingSubtitle(b),
+          bookingId: b.id,
+        );
+      }).toList();
+    } catch (e, s) {
+      LoggingService.error(
+        'Failed to load home bookings',
+        tag: 'HomeRedesign',
+        error: e,
+        stackTrace: s,
+      );
+      return const [];
+    }
+  }
+
+  Future<List<_HomeCategoryData>> _loadCategories() async {
+    try {
+      final page = await ShphServicesApi.instance.listCategories();
+      final themes = _categoryPalette(Theme.of(context).brightness);
+      return page.results.take(5).map((c) {
+        final name = c.name;
+        final palette = themes[c.name.toLowerCase()] ?? themes['default']!;
+        return _HomeCategoryData(
+          name: name,
+          priceSubtitle: '',
+          icon: palette.icon,
+          gradientColors: palette.colors,
+          badgeLabel: null,
+          isDarkText: palette.isDarkText,
+        );
+      }).toList();
+    } catch (e, s) {
+      LoggingService.error(
+        'Failed to load home categories',
+        tag: 'HomeRedesign',
+        error: e,
+        stackTrace: s,
+      );
+      return const [];
+    }
+  }
+
+  Future<List<_TrendingProviderData>> _loadProviders() async {
+    try {
+      final appState = FFAppState();
+      final useLocation = GeoUtils.hasValidLocation(
+        appState.selectedLatitude,
+        appState.selectedLongitude,
+      );
+      final page = await ShphServicesApi.instance.listListings(
+        ordering: '-rating',
+        pageSize: 20,
+        latitude: useLocation ? appState.selectedLatitude : null,
+        longitude: useLocation ? appState.selectedLongitude : null,
+      );
+
+      // Trending = listings sorted by rating/reviews server-side (-rating).
+      final byRating = [...page.results]
+        ..sort((a, b) {
+          final ra = double.tryParse(a.rating ?? '0') ?? 0;
+          final rb = double.tryParse(b.rating ?? '0') ?? 0;
+          if (ra != rb) return rb.compareTo(ra);
+          return (b.reviewCount ?? 0).compareTo(a.reviewCount ?? 0);
+        });
+
+      return byRating
+          .take(10)
+          .map(_fromListing)
+          .where((p) => p.name.isNotEmpty)
+          .toList();
+    } catch (e, s) {
+      LoggingService.error(
+        'Failed to load home providers',
+        tag: 'HomeRedesign',
+        error: e,
+        stackTrace: s,
+      );
+      return const [];
+    }
+  }
+
+  Future<List<_TrendingProviderData>> _loadNearbyRecommendations() async {
+    try {
+      final appState = FFAppState();
+      final useLocation = GeoUtils.hasValidLocation(
+        appState.selectedLatitude,
+        appState.selectedLongitude,
+      );
+      final nearby = await ShphRecommendationsApi.instance.nearby(
+        lat: useLocation ? appState.selectedLatitude : null,
+        lng: useLocation ? appState.selectedLongitude : null,
+        radius: 10,
+        limit: 10,
+      );
+
+      // Server-computed radius search — distance_km comes from the backend.
+      return nearby
+          .map((r) {
+            final listing = r.listing;
+            return _TrendingProviderData(
+              providerId: listing.provider?.toString() ?? '${listing.id}',
+              name: listing.providerName ?? '',
+              category: listing.categoryName ?? 'Service',
+              avatarUrl: listing.providerPhoto ?? '',
+              rating: double.tryParse(listing.rating ?? '0') ?? 0,
+              reviewCount: listing.reviewCount ?? 0,
+              distanceKm: r.distanceKm ?? listing.distanceKm ?? 0,
+              startingPrice: (listing.basePrice ?? 0).round(),
+            );
+          })
+          .where((p) => p.name.isNotEmpty)
+          .toList();
+    } catch (e, s) {
+      LoggingService.error(
+        'Failed to load home nearby recommendations',
+        tag: 'HomeRedesign',
+        error: e,
+        stackTrace: s,
+      );
+      return const [];
+    }
+  }
+
+  static _TrendingProviderData _fromListing(ShphServiceListing listing) {
+    final rating = double.tryParse(listing.rating ?? '0') ?? 0;
+    return _TrendingProviderData(
+      providerId: listing.provider?.toString() ?? '${listing.id}',
+      name: listing.providerName ?? '',
+      category: listing.categoryName ?? 'Service',
+      avatarUrl: listing.providerPhoto ?? '',
+      rating: rating,
+      reviewCount: listing.reviewCount ?? 0,
+      distanceKm: listing.distanceKm ?? 0,
+      startingPrice: (listing.basePrice ?? 0).round(),
+    );
+  }
+
+  static String _bookingCategoryLabel(String status) => switch (status) {
+        'in_progress' => 'In progress',
+        'en_route' || 'on_site' || 'arrived' || 'assigned' => 'On the way',
+        'confirmed' => 'Upcoming',
+        _ => 'Booking',
+      };
+
+  static String _bookingSubtitle(ShphBooking b) {
+    final status = b.status;
+    if (status == 'in_progress') {
+      return 'Service is now underway';
+    }
+    if (b.scheduledAt != null && b.scheduledAt!.isNotEmpty) {
+      return 'Scheduled at ${b.scheduledAt}';
+    }
+    return 'Booking #${b.id}';
+  }
+
+  static Map<String, _CategoryPalette> _categoryPalette(
+    Brightness brightness,
+  ) {
+    final isDark = brightness == Brightness.dark;
+    return {
+      'default': _CategoryPalette(
+        icon: Icons.build_rounded,
+        colors: [AppThemeData.accentBlue, AppThemeData.accentNavy],
+        isDarkText: false,
       ),
-      _HomeCategoryData(
-        name: 'Plumbing',
-        priceSubtitle: 'From PHP 599',
+      'cleaning': _CategoryPalette(
+        icon: Icons.cleaning_services_rounded,
+        colors: [AppThemeData.accentSky, AppThemeData.accentIndigo],
+        isDarkText: isDark,
+      ),
+      'plumbing': _CategoryPalette(
         icon: Icons.plumbing_rounded,
-        gradientColors: [Color(0xFF14B8A6), Color(0xFF0F766E)],
-        badgeLabel: 'Fast help',
+        colors: [AppThemeData.accentOrange, AppThemeData.accentIndigo],
+        isDarkText: isDark,
       ),
-      _HomeCategoryData(
-        name: 'Electrical',
-        priceSubtitle: 'From PHP 699',
+      'electrical': _CategoryPalette(
         icon: Icons.electrical_services_rounded,
-        gradientColors: [Color(0xFFF59E0B), Color(0xFFEA580C)],
-        badgeLabel: 'Trusted',
+        colors: [AppThemeData.accentYellow, AppThemeData.destructiveCrimson],
         isDarkText: true,
       ),
-      _HomeCategoryData(
-        name: 'Painting',
-        priceSubtitle: 'From PHP 799',
+      'painting': _CategoryPalette(
         icon: Icons.format_paint_rounded,
-        gradientColors: [Color(0xFF8B5CF6), Color(0xFF2563EB)],
+        colors: [AppThemeData.accentPurple, AppThemeData.accentIndigo],
+        isDarkText: isDark,
       ),
-      _HomeCategoryData(
-        name: 'More',
-        priceSubtitle: 'All services',
-        icon: Icons.grid_view_rounded,
-        gradientColors: [Color(0xFFE2E8F0), Color(0xFFF8FAFC)],
-        isDarkText: true,
-      ),
-    ];
+    };
   }
+}
 
-  List<_TrendingProviderData> _prototypeProviders() {
-    return const [
-      _TrendingProviderData(
-        providerId: '101',
-        name: 'Mila Reyes',
-        category: 'Deep cleaning',
-        avatarUrl: '',
-        rating: 4.9,
-        reviewCount: 128,
-        distanceKm: 1.4,
-        startingPrice: 549,
-      ),
-      _TrendingProviderData(
-        providerId: '102',
-        name: 'Arvin Santos',
-        category: 'Plumbing repair',
-        avatarUrl: '',
-        rating: 4.8,
-        reviewCount: 94,
-        distanceKm: 2.1,
-        startingPrice: 699,
-      ),
-      _TrendingProviderData(
-        providerId: '103',
-        name: 'Jessa Cruz',
-        category: 'Electrical work',
-        avatarUrl: '',
-        rating: 4.9,
-        reviewCount: 156,
-        distanceKm: 2.8,
-        startingPrice: 799,
-      ),
-    ];
-  }
+class _CategoryPalette {
+  const _CategoryPalette({
+    required this.icon,
+    required this.colors,
+    required this.isDarkText,
+  });
 
-  List<_TrendingProviderData> _prototypeRecommendedProviders() {
-    return const [
-      _TrendingProviderData(
-        providerId: '201',
-        name: 'Pedro Reyes',
-        category: 'Licensed Plumber',
-        avatarUrl: 'https://i.pravatar.cc/80?img=11',
-        rating: 4.9,
-        reviewCount: 124,
-        distanceKm: 1.2,
-        startingPrice: 350,
-      ),
-      _TrendingProviderData(
-        providerId: '202',
-        name: 'Juan Dela Cruz',
-        category: 'Electrical Expert',
-        avatarUrl: 'https://i.pravatar.cc/80?img=68',
-        rating: 4.8,
-        reviewCount: 89,
-        distanceKm: 2.4,
-        startingPrice: 420,
-      ),
-    ];
-  }
+  final IconData icon;
+  final List<Color> colors;
+  final bool isDarkText;
 }
 
 class _HomeSectionHeader extends StatelessWidget {
@@ -975,6 +1165,7 @@ class _HomeBookingData {
     required this.iconBgColor,
     required this.iconColor,
     required this.subtitleInfo,
+    this.bookingId = '',
   });
 
   final String title;
@@ -987,6 +1178,7 @@ class _HomeBookingData {
   final Color iconBgColor;
   final Color iconColor;
   final String subtitleInfo;
+  final String bookingId;
 }
 
 class _HomeCategoryData {

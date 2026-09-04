@@ -415,6 +415,15 @@ class AppThemeData {
   static const Color successBrand = Color(0xFF7C5CFC);
   static const Color destructiveSoft = Color(0xFFEF4444);
 
+  /// Returns a text color with sufficient contrast for the given [background]:
+  /// white text on dark backgrounds, dark text on light/white backgrounds.
+  /// Use for buttons/rows where the background color may be either light or
+  /// dark (e.g. outlined buttons whose fill follows the page surface).
+  static Color contrastOn(Color background) {
+    final luminance = background.computeLuminance();
+    return luminance > 0.4 ? const Color(0xFF0F172A) : Colors.white;
+  }
+
   // Brand gradients owned by the theme (white text sits on both, identical
   // across light/dark by design).
   static const List<Color> profileHeroGradient = [

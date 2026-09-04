@@ -37,6 +37,7 @@ class BookingDraft {
     this.serviceListingId,
     this.serviceTitle,
     this.serviceCategoryName,
+    this.serviceCategoryId,
     this.serviceDescription,
     this.serviceImageUrl,
     this.serviceBasePrice,
@@ -52,6 +53,7 @@ class BookingDraft {
   final int? serviceListingId;
   final String? serviceTitle;
   final String? serviceCategoryName;
+  final int? serviceCategoryId;
   final String? serviceDescription;
   final String? serviceImageUrl;
   final double? serviceBasePrice;
@@ -78,6 +80,7 @@ class BookingDraft {
     int? serviceListingId,
     String? serviceTitle,
     String? serviceCategoryName,
+    int? serviceCategoryId,
     String? serviceDescription,
     String? serviceImageUrl,
     double? serviceBasePrice,
@@ -100,6 +103,7 @@ class BookingDraft {
         serviceListingId: serviceListingId ?? this.serviceListingId,
         serviceTitle: serviceTitle ?? this.serviceTitle,
         serviceCategoryName: serviceCategoryName ?? this.serviceCategoryName,
+        serviceCategoryId: serviceCategoryId ?? this.serviceCategoryId,
         serviceDescription: serviceDescription ?? this.serviceDescription,
         serviceImageUrl: serviceImageUrl ?? this.serviceImageUrl,
         serviceBasePrice: serviceBasePrice ?? this.serviceBasePrice,

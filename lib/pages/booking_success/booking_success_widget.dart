@@ -177,14 +177,16 @@ class _BookingSuccessWidgetState extends State<BookingSuccessWidget>
                       },
                       variant: AppButtonVariant.outlined,
                       borderSide: BorderSide(
-                        color: AppTheme.of(context).primary.withValues(
-                              alpha: 0.18,
-                            ),
+                        color: AppThemeData.contrastOn(
+                          AppTheme.of(context).primaryBackground,
+                        ).withValues(alpha: 0.4),
                       ),
                       width: double.infinity,
                       height: 52,
                       borderRadius: 18,
-                      foregroundColor: AppTheme.of(context).primary,
+                      foregroundColor: AppThemeData.contrastOn(
+                        AppTheme.of(context).primaryBackground,
+                      ),
                       child: Text(
                         _l10n.bsBackHome,
                         style: AppTheme.of(context).bodyMedium.override(

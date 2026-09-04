@@ -164,16 +164,20 @@ class BookingConfirmationView extends StatelessWidget {
                 height: 52,
                 variant: AppButtonVariant.outlined,
                 backgroundColor: theme.primaryBackground,
-                foregroundColor: AppThemeData.actionPrimary,
-                borderSide: const BorderSide(
-                    color: AppThemeData.actionPrimary),
+                foregroundColor: AppThemeData.contrastOn(theme.primaryBackground),
+                borderSide: BorderSide(
+                    color: AppThemeData.contrastOn(theme.primaryBackground)
+                        .withValues(alpha: 0.4)),
                 borderRadius: AppThemeData.radiusMd,
                 onPressed: () => _addToCalendar(context),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.event_available_rounded,
-                        size: 19, color: AppThemeData.actionPrimary),
+                    Icon(
+                      Icons.event_available_rounded,
+                      size: 19,
+                      color: AppThemeData.contrastOn(theme.primaryBackground),
+                    ),
                     const SizedBox(width: 8),
                     Text(l10n.bfAddToCalendar),
                   ],

@@ -4,7 +4,6 @@ import '/app_state.dart';
 import '/l10n/app_localizations.dart';
 import '/models/service_listing.dart';
 import '/services/logging_service.dart';
-import '/services/nearby_pro_mock_data.dart';
 import '/utils/geo_utils.dart';
 import 'booking_models.dart';
 import 'booking_repository.dart';
@@ -49,6 +48,21 @@ class BookingFlowController extends ChangeNotifier {
   String? activeReferenceId;
   String? lastError;
 
+  /// Real on-demand job id from POST /api/services/on-demand/ (null when the
+  /// broadcast did not succeed / no category selected). Drives the live
+  /// matching UI's authoritative status instead of fabricated numbers.
+  String? get liveJobId =>
+      _shphRepo?.lastJobId;
+  int? get liveProviderCount => _shphRepo?.lastProviderCount;
+  double? get liveEstFeeMin => _shphRepo?.lastEstFeeMin;
+  double? get liveEstFeeMax => _shphRepo?.lastEstFeeMax;
+  bool get liveBroadcastSucceeded => _shphRepo?.lastBroadcastSucceeded ?? false;
+
+  ShphBookingRepository? get _shphRepo =>
+      repository is ShphBookingRepository
+          ? repository as ShphBookingRepository
+          : null;
+
   BookingDraft get draft => _draft;
 
   void setService(ServiceListing service) {
@@ -56,6 +70,7 @@ class BookingFlowController extends ChangeNotifier {
       serviceListingId: service.id,
       serviceTitle: service.title,
       serviceCategoryName: service.categoryName,
+      serviceCategoryId: service.category,
       serviceDescription: service.description,
       serviceImageUrl: service.thumbnail,
       serviceBasePrice: service.basePrice,
@@ -65,7 +80,11 @@ class BookingFlowController extends ChangeNotifier {
   }
 
   BookingQuote get quote {
-    final base = _draft.serviceBasePrice ?? 599.0;
+    // Anchor the estimate to the service's real base price. There is no
+    // server-side quote endpoint, so the room/type/urgency adjustments are
+    // client-side estimates; the authoritative total comes from the API after
+    // the booking is created. No fabricated flat price is used.
+    final base = _draft.serviceBasePrice ?? 0.0;
     final roomIncrement = (base * 0.18).clamp(90.0, 320.0);
     final roomSubtotal = (_draft.rooms - 1) * roomIncrement;
     final cleaningTypeAdjustment = switch (_draft.cleaningType) {
@@ -238,31 +257,9 @@ class BookingFlowController extends ChangeNotifier {
         longitude: originLng,
       );
 
-      // --- Proximity gate: ensure at least one provider exists within 10 km ---
-      const nearbyThresholdKm = 10.0;
-      final mockNearby = NearbyProMockData.instance.generateNearbyPros(
-        serviceId: _draft.serviceListingId ?? 0,
-        category: _draft.serviceCategoryName ?? l10n.bfService,
-        count: 3,
-      );
-      final hasProviderNearby = mockNearby.any((pro) {
-        final proLat = pro['providerLatitude'] as double?;
-        final proLng = pro['providerLongitude'] as double?;
-        if (proLat == null || proLng == null) return false;
-        final dist = GeoUtils.calculateDistance(
-          originLat, originLng, proLat, proLng,
-        );
-        return dist <= nearbyThresholdKm;
-      });
-
-      if (!hasProviderNearby) {
-        lastError = l10n.bfNoProvidersNearby;
-        isSubmitting = false;
-        notifyListeners();
-        return false;
-      }
-      // --- End proximity gate ---
-
+      // Proceed straight to the real booking/dispatch call. Backend provider
+      // availability and matching are handled server-side; if no provider can
+      // be matched the repository surfaces a clear error to the user.
       activeReferenceId = await repository.broadcastLiveSearch(_draft);
       _draft = _draft.copyWith(liveSearchToken: activeReferenceId);
       return true;

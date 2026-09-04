@@ -7390,6 +7390,42 @@ abstract class AppLocalizations {
   /// **'Urgent Assistance'**
   String get ccUrgentAssistance;
 
+  /// No description provided for @emGetHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Get help now'**
+  String get emGetHelp;
+
+  /// No description provided for @emChoosePriority.
+  ///
+  /// In en, this message translates to:
+  /// **'How urgently do you need a pro?'**
+  String get emChoosePriority;
+
+  /// No description provided for @emEmergency.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency'**
+  String get emEmergency;
+
+  /// No description provided for @emEmergencyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Immediate dispatch — a verified pro is sent to you right away.'**
+  String get emEmergencyDesc;
+
+  /// No description provided for @emUrgent.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgent'**
+  String get emUrgent;
+
+  /// No description provided for @emUrgentDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Expedited service — a pro arrives within 15–30 minutes.'**
+  String get emUrgentDesc;
+
   /// No description provided for @ccTypeMessage.
   ///
   /// In en, this message translates to:

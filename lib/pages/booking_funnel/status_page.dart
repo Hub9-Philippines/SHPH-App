@@ -5,12 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '/api/resources/bookings_api.dart';
 import '/flutter_flow/flutter_flow_util.dart' hide LatLng;
 import '/index.dart';
 import '/l10n/app_localizations.dart';
 import '/main.dart';
 import '/components/cupertino_ui/app_button.dart';
 import '/components/user_avatar.dart';
+import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
 
 class StatusPage extends StatefulWidget {
@@ -34,6 +36,9 @@ class StatusPage extends StatefulWidget {
   final LatLng? clientLocation;
   final LatLng? providerLocation;
   final String? providerPhoto;
+
+  /// Optional SHPH booking id. When present the screen polls the real booking
+  /// status from the API instead of advancing through a fabricated timeline.
   final String? bookingReference;
   final bool shouldPopToHome;
 
@@ -50,21 +55,12 @@ class _StatusPageState extends State<StatusPage>
   late final AnimationController _pulseController;
 
   GoogleMapController? _mapController;
-  Timer? _mockProgressTimer;
+  Timer? _statusPollTimer;
   bool _mapReady = false;
 
   LatLng _currentProviderLocation = const LatLng(14.5995, 120.9842);
   String _currentStatus = '';
   int _etaSeconds = 0;
-
-  static const _mockStatuses = [
-    'confirmed',
-    'en_route',
-    'on_site',
-    'in_progress',
-    'completed',
-  ];
-  int _mockStatusIndex = 0;
 
   final Set<Polyline> _polylines = {};
 
@@ -153,7 +149,6 @@ class _StatusPageState extends State<StatusPage>
     _currentProviderLocation =
         widget.providerLocation ?? const LatLng(14.5995, 120.9842);
     _currentStatus = widget.bookingStatus;
-    _etaSeconds = _etaForStatus(_currentStatus);
 
     _pulseController = AnimationController(
       vsync: this,
@@ -163,54 +158,58 @@ class _StatusPageState extends State<StatusPage>
       _pulseController.repeat(reverse: true);
     }
 
-    _startMockProgress();
+    _startStatusPolling();
   }
 
-  void _startMockProgress() {
-    if (_isTerminal) return;
-
-    _mockStatusIndex =
-        _mockStatuses.indexOf(_currentStatus.toLowerCase()).clamp(0, 0);
-
-    _mockProgressTimer = Timer.periodic(const Duration(milliseconds: 2500), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-
-      setState(() {
-        _mockStatusIndex++;
-        if (_mockStatusIndex >= _mockStatuses.length) {
-          _mockStatusIndex = _mockStatuses.length - 1;
-          timer.cancel();
-          _pulseController.stop();
-          _pulseController.value = 0;
-          return;
-        }
-
-        _currentStatus = _mockStatuses[_mockStatusIndex];
-
-        if (_currentStatus == 'on_site') {
-          _currentProviderLocation = _clientLocation;
-        } else if (_currentStatus == 'completed') {
-          _pulseController.stop();
-          _pulseController.value = 0;
-        }
-      });
-    });
-  }
-
-  int _etaForStatus(String status) {
-    switch (status.toLowerCase()) {
-      case 'en_route':
-        return 900; // 15 min
-      case 'on_site':
-        return 300; // 5 min
-      case 'in_progress':
-        return 1800; // 30 min
-      default:
-        return 0;
+  /// Polls the real booking record when a booking id is available. When none
+  /// is provided the screen reflects only the caller-supplied status — it no
+  /// longer advances through a fabricated timeline.
+  void _startStatusPolling() {
+    final bookingId = widget.bookingReference;
+    if (bookingId == null || bookingId.isEmpty) {
+      return;
     }
+
+    Future<void> poll() async {
+      if (!mounted) return;
+      try {
+        final booking = await ShphBookingsApi.instance.getBooking(bookingId);
+        if (!mounted) return;
+
+        final newStatus = booking.status;
+        if (newStatus.isNotEmpty && newStatus != _currentStatus) {
+          setState(() {
+            _currentStatus = newStatus;
+
+            if (newStatus == 'completed') {
+              _pulseController.stop();
+              _pulseController.value = 0;
+            }
+            // The booking's service location is the client location; when the
+            // provider is reported as on-site/arrived move it there.
+            if ((newStatus == 'on_site' ||
+                    newStatus == 'arrived' ||
+                    newStatus == 'in_progress') &&
+                booking.serviceLat != null &&
+                booking.serviceLng != null) {
+              _currentProviderLocation =
+                  LatLng(booking.serviceLat!, booking.serviceLng!);
+            }
+          });
+        }
+      } catch (e) {
+        LoggingService.debug(
+          'Status poll failed: $e',
+          tag: 'StatusPage',
+          error: e,
+        );
+      }
+    }
+
+    _statusPollTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      poll();
+    });
+    poll();
   }
 
   void _scheduleBoundsUpdate() {
@@ -245,7 +244,7 @@ class _StatusPageState extends State<StatusPage>
   @override
   void dispose() {
     _pulseController.dispose();
-    _mockProgressTimer?.cancel();
+    _statusPollTimer?.cancel();
     _mapController?.dispose();
     super.dispose();
   }
@@ -363,14 +362,25 @@ class _StatusPageState extends State<StatusPage>
             ),
           ),
 
-          // Floating back button — top-left over the map.
+          // Floating back + home buttons — top-left over the map.
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.only(left: 16, top: 16),
-              child: _FloatingCircleButton(
-                icon: Icons.chevron_left_rounded,
-                tooltip: l10n.bfBack,
-                onTap: _handleBack,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _FloatingCircleButton(
+                    icon: Icons.chevron_left_rounded,
+                    tooltip: l10n.bfBack,
+                    onTap: _handleBack,
+                  ),
+                  const SizedBox(width: 10),
+                  _FloatingCircleButton(
+                    icon: Icons.home_rounded,
+                    tooltip: l10n.bfHome,
+                    onTap: _goHome,
+                  ),
+                ],
               ),
             ),
           ),
@@ -380,7 +390,7 @@ class _StatusPageState extends State<StatusPage>
             child: Align(
               alignment: Alignment.topCenter,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(76, 16, 16, 0),
+                padding: const EdgeInsets.fromLTRB(116, 16, 16, 0),
                 child: _ProviderCard(
                   providerName: widget.providerName,
                   providerPhoto: widget.providerPhoto,
