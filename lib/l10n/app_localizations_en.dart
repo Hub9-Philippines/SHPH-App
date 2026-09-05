@@ -4809,4 +4809,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bkPmtCOD => 'COD';
+
+  @override
+  String get pfAddProfilePicture => 'Add profile picture';
+
+  @override
+  String get pfChangeProfilePicture => 'Change profile picture';
+
+  @override
+  String get pfRemoveProfilePicture => 'Remove profile picture';
+
+  @override
+  String get pfRemovePhotoTitle => 'Remove profile picture?';
+
+  @override
+  String get pfRemovePhotoMessage =>
+      'Your photo will be removed from your public profile.';
+
+  @override
+  String get pfPhotoRemoved => 'Profile picture removed.';
 }

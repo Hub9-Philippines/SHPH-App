@@ -144,6 +144,48 @@ class PrototypeAppHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasAvatar = avatarUrl.trim().isNotEmpty;
+    final actions = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _HeaderIconButton(
+          icon: Icons.notifications_none_rounded,
+          hasBadge: hasUnreadNotifications,
+          onTap: onNotificationTap,
+        ),
+        const SizedBox(width: 8),
+        GestureDetector(
+          onTap: onAvatarTap,
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppDesignTokens.radiusMd),
+              border: Border.all(color: Colors.white, width: 2),
+              boxShadow: const [
+                BoxShadow(
+                    color: Color(0x0D0F172A),
+                    blurRadius: 4,
+                    offset: Offset(0, 1))
+              ],
+              image: hasAvatar
+                  ? DecorationImage(
+                      image: NetworkImage(avatarUrl),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
+            ),
+            child: hasAvatar
+                ? null
+                : const Icon(
+                    Icons.person_rounded,
+                    color: AppDesignTokens.inkMuted,
+                    size: 20,
+                  ),
+          ),
+        ),
+      ],
+    );
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 240),
       curve: Curves.easeInOut,
@@ -158,86 +200,58 @@ class PrototypeAppHeader extends StatelessWidget {
                 colors: [Color(0xFFECFDF5), Color(0xFFF4FFFC), AppDesignTokens.canvas],
               ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
+      child: isCompact
+          ? Row(
+              children: [
+                Expanded(
+                  child: _SearchTriggerBar(
+                    onTap: onSearchTap,
+                    onMicTap: onMicTap,
+                    isCompact: true,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                actions,
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    if (!isCompact) ...[
-                      Text('YOUR HOME, MADE EASY', style: AppDesignTokens.eyebrow()),
-                      const SizedBox(height: 4),
-                    ],
-                    Text(
-                      isCompact ? 'Hi, $userName' : 'Good morning, $userName 👋',
-                      style: isCompact
-                          ? AppDesignTokens.cardTitle().copyWith(fontSize: 16)
-                          : AppDesignTokens.titleMedium(),
-                    ),
-                    if (!isCompact) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        "Tell us what needs fixing. We'll find the right pro.",
-                        style: AppDesignTokens.bodyMedium(),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('YOUR HOME, MADE EASY',
+                              style: AppDesignTokens.eyebrow()),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Good morning, $userName 👋',
+                            style: AppDesignTokens.titleMedium(),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "Tell us what needs fixing. We'll find the right pro.",
+                            style: AppDesignTokens.bodyMedium(),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
+                    const SizedBox(width: 12),
+                    actions,
                   ],
                 ),
-              ),
-              const SizedBox(width: 12),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _HeaderIconButton(
-                    icon: Icons.notifications_none_rounded,
-                    hasBadge: hasUnreadNotifications,
-                    onTap: onNotificationTap,
-                  ),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: onAvatarTap,
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(AppDesignTokens.radiusMd),
-                        border: Border.all(color: Colors.white, width: 2),
-                        boxShadow: const [
-                          BoxShadow(color: Color(0x0D0F172A), blurRadius: 4, offset: Offset(0, 1))
-                        ],
-                        image: hasAvatar
-                            ? DecorationImage(
-                                image: NetworkImage(avatarUrl),
-                                fit: BoxFit.cover,
-                              )
-                            : null,
-                      ),
-                      child: hasAvatar
-                          ? null
-                          : const Icon(
-                              Icons.person_rounded,
-                              color: AppDesignTokens.inkMuted,
-                              size: 20,
-                            ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          SizedBox(height: isCompact ? 8 : 16),
-          _SearchTriggerBar(
-            onTap: onSearchTap,
-            onMicTap: onMicTap,
-            isCompact: isCompact,
-          ),
-        ],
-      ),
+                const SizedBox(height: 16),
+                _SearchTriggerBar(
+                  onTap: onSearchTap,
+                  onMicTap: onMicTap,
+                  isCompact: false,
+                ),
+              ],
+            ),
     );
   }
 }

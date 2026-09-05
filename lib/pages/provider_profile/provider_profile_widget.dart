@@ -88,10 +88,10 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
     final name = p['display_name']?.toString() ??
         p['first_name']?.toString() ??
         _l10n.ppfProvider;
-    final photo = p['photo_url']?.toString() ?? p['photo']?.toString();
-    final bio = p['bio_details']?.toString() ?? p['bio']?.toString();
-    final rating = _avgRating();
-    final isKycVerified = p['verification_status']?.toString() == 'verified';
+    final photo = p['photo_url']?.toString();
+    final bio = p['bio']?.toString();
+    final rating = _avgRating(p);
+    final isKycVerified = p['kyc_verified'] == true;
 
     return SingleChildScrollView(
       child: Column(
@@ -390,7 +390,11 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
     );
   }
 
-  double _avgRating() {
+  double _avgRating(Map<String, dynamic> provider) {
+    final avg = (provider['avg_rating'] as num?)?.toDouble();
+    if (avg != null) {
+      return avg;
+    }
     if (_model.reviews.isEmpty) return 0.0;
     final sum =
         _model.reviews.fold<num>(0, (a, r) => a + (r['rating'] as num? ?? 0));

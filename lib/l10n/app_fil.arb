@@ -1586,5 +1586,11 @@
   "tmVehicleExpanded": "Malawak na unit",
   "tmProviderFallback": "Provider",
   "tmVehicleFallback": "Service unit",
-  "bkPmtCOD": "COD"
+  "bkPmtCOD": "COD",
+  "pfAddProfilePicture": "Magdagdag ng profile picture",
+  "pfChangeProfilePicture": "Palitan ang profile picture",
+  "pfRemoveProfilePicture": "Alisin ang profile picture",
+  "pfRemovePhotoTitle": "Alisin ang profile picture?",
+  "pfRemovePhotoMessage": "Aalisin ang iyong larawan sa iyong pampublikong profile.",
+  "pfPhotoRemoved": "Inalis ang profile picture."
 }

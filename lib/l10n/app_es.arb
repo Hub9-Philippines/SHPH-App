@@ -111,5 +111,11 @@
   "emEmergency": "Emergencia",
   "emEmergencyDesc": "Envío inmediato: se envía un profesional verificado de inmediato.",
   "emUrgent": "Urgente",
-  "emUrgentDesc": "Servicio rápido: un profesional llega en 15–30 minutos."
+  "emUrgentDesc": "Servicio rápido: un profesional llega en 15–30 minutos.",
+  "pfAddProfilePicture": "Añadir foto de perfil",
+  "pfChangeProfilePicture": "Cambiar foto de perfil",
+  "pfRemoveProfilePicture": "Eliminar foto de perfil",
+  "pfRemovePhotoTitle": "¿Eliminar foto de perfil?",
+  "pfRemovePhotoMessage": "Tu foto se eliminará de tu perfil público.",
+  "pfPhotoRemoved": "Foto de perfil eliminada."
 }

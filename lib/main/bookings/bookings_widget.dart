@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '/components/booking_action_row.dart';
 import '/components/refreshable_page.dart';
+import '/components/search_bar_field.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
@@ -126,54 +127,10 @@ class _BookingsWidgetState extends State<BookingsWidget>
       );
 
   Widget _buildSearchBar(BuildContext context) {
-    final theme = AppTheme.of(context);
-    return TextField(
+    return SearchBarField(
       controller: searchController,
-      textInputAction: TextInputAction.search,
+      hintText: _l10n.exSearchPlaceholder,
       onChanged: _model.setSearchQuery,
-      style: theme.bodyMedium.override(
-        font: GoogleFonts.plusJakartaSans(),
-        color: theme.primaryText,
-      ),
-      decoration: InputDecoration(
-        isDense: true,
-        hintText: _l10n.exSearchPlaceholder,
-        hintStyle: theme.bodyMedium.override(
-          font: GoogleFonts.plusJakartaSans(),
-          color: theme.textTertiary,
-        ),
-        prefixIcon: Icon(
-          Icons.search_rounded,
-          color: theme.secondaryText,
-          size: 22,
-        ),
-        suffixIcon: searchController.text.isEmpty
-            ? null
-            : IconButton(
-                icon: Icon(
-                  Icons.close_rounded,
-                  size: 18,
-                  color: theme.secondaryText,
-                ),
-                onPressed: () {
-                  searchController.clear();
-                  _model.setSearchQuery('');
-                  safeSetState(() {});
-                },
-              ),
-        filled: true,
-        fillColor: theme.primaryBackground,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
-          borderSide: BorderSide(color: theme.border),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
-          borderSide: const BorderSide(color: AppThemeData.actionPrimary),
-        ),
-      ),
     );
   }
 

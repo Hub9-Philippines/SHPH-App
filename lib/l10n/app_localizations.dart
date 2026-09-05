@@ -8979,6 +8979,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'COD'**
   String get bkPmtCOD;
+
+  /// No description provided for @pfAddProfilePicture.
+  ///
+  /// In en, this message translates to:
+  /// **'Add profile picture'**
+  String get pfAddProfilePicture;
+
+  /// No description provided for @pfChangeProfilePicture.
+  ///
+  /// In en, this message translates to:
+  /// **'Change profile picture'**
+  String get pfChangeProfilePicture;
+
+  /// No description provided for @pfRemoveProfilePicture.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove profile picture'**
+  String get pfRemoveProfilePicture;
+
+  /// No description provided for @pfRemovePhotoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove profile picture?'**
+  String get pfRemovePhotoTitle;
+
+  /// No description provided for @pfRemovePhotoMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your photo will be removed from your public profile.'**
+  String get pfRemovePhotoMessage;
+
+  /// No description provided for @pfPhotoRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile picture removed.'**
+  String get pfPhotoRemoved;
 }
 
 class _AppLocalizationsDelegate

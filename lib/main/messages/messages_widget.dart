@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '/components/cupertino_ui/app_text_field.dart';
 import '/components/screen_header.dart';
+import '/components/search_bar_field.dart';
 import '/components/segmented_control.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -166,32 +166,10 @@ class _MessagesWidgetState extends State<MessagesWidget> {
       );
 
   Widget _buildSearchField() {
-    final theme = AppTheme.of(context);
-    return Container(
-        decoration: BoxDecoration(
-          color: theme.primaryBackground,
-          borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
-          boxShadow: AppThemeData.shadowSoft,
-        ),
-        child: AppTextField(
-          controller: _searchController,
-          placeholder: _l10n.msSearchPlaceholder,
-          placeholderStyle: theme.bodyMedium.override(
-                font: GoogleFonts.plusJakartaSans(),
-                color: theme.textTertiary,
-              ),
-          prefixIcon: Icons.search_rounded,
-          suffix: _searchController.text.isEmpty
-              ? null
-              : IconButton(
-                  onPressed: _searchController.clear,
-                  icon: const Icon(Icons.close_rounded),
-                ),
-          radius: AppThemeData.radiusLg,
-          fillColor: theme.primaryBackground,
-          padding: const EdgeInsets.fromLTRB(22, 16, 18, 16),
-        ),
-      );
+    return SearchBarField(
+      controller: _searchController,
+      hintText: _l10n.msSearchPlaceholder,
+    );
   }
 
   Widget _buildSectionLabel() {

@@ -9,7 +9,7 @@ class ProviderProfileService {
 
   Future<Map<String, dynamic>?> getProvider(dynamic id) async {
     try {
-      return await _api.getProvider(id);
+      return await _api.getProviderProfile(id);
     } catch (e) {
       LoggingService.error('Error fetching provider: $e',
           tag: 'ProviderProfileService');

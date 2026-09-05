@@ -1587,5 +1587,11 @@
   "tmVehicleExpanded": "Expanded-area service unit",
   "tmProviderFallback": "Provider",
   "tmVehicleFallback": "Service unit",
-  "bkPmtCOD": "COD"
+  "bkPmtCOD": "COD",
+  "pfAddProfilePicture": "Add profile picture",
+  "pfChangeProfilePicture": "Change profile picture",
+  "pfRemoveProfilePicture": "Remove profile picture",
+  "pfRemovePhotoTitle": "Remove profile picture?",
+  "pfRemovePhotoMessage": "Your photo will be removed from your public profile.",
+  "pfPhotoRemoved": "Profile picture removed."
 }

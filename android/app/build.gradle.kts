@@ -16,19 +16,24 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.hub9.serbisyohubph"
-    compileSdk = flutter.compileSdkVersion
+    
+    // FIX: Hardcoded 37 with compileSdkMinor to resolve target hash string 'android-37' error
+    compileSdk = 37
+    compileSdkMinor = 0
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     defaultConfig {
         applicationId = "com.hub9.serbisyohubph"
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        
+        // FIX: Hardcoded 37 to ensure complete compatibility with permission_handler_android
+        targetSdk = 37 
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
@@ -72,12 +77,32 @@ kotlin {
     }
 }
 
-
 flutter {
     source = "../.."
 }
 
 dependencies {
-    // Corrected to the highest existing version for the 2.1.x line
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+}
+
+
+// FIX 2: Cascading override to force all third-party submodules to stick to the Java 17 toolchain
+subprojects {
+    plugins.withType<org.gradle.api.plugins.JavaPlugin> {
+        extensions.configure<org.gradle.api.plugins.JavaPluginExtension> {
+            toolchain {
+                languageVersion.set(JavaLanguageVersion.of(17))
+            }
+        }
+    }
+    afterEvaluate {
+        if (plugins.hasPlugin("com.android.application") || plugins.hasPlugin("com.android.library")) {
+            configure<com.android.build.gradle.BaseExtension> {
+                compileOptions {
+                    sourceCompatibility = JavaVersion.VERSION_17
+                    targetCompatibility = JavaVersion.VERSION_17
+                }
+            }
+        }
+    }
 }

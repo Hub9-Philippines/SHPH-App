@@ -46,6 +46,7 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
   List<_HomeCategoryData> _categories = const [];
   List<_TrendingProviderData> _providers = const [];
   List<_TrendingProviderData> _recommendedProviders = const [];
+  bool _hasBookingHistory = false;
 
   String get _displayName {
     final name = currentUserDisplayName.trim();
@@ -331,6 +332,7 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
                   ),
                   child: wrapWithRefresh(
                     controller: _scrollController,
+                    displacement: _isHeaderCompact ? 64 : 150,
                     slivers: [
                       // Top spacer that reserves room for the pinned header
                       // while it is fully expanded (greeting view) at the top
@@ -406,12 +408,9 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
                                   ),
                                 ),
                                 const SizedBox(height: 16),
-                                BayanihanPoolCard(
-                                  onTap: _startBookingProcess,
-                                ),
-                                const SizedBox(height: 16),
                                 SeasonalOfferCard(onTap: _startBookingProcess),
                                 const SizedBox(height: 18),
+                                if (_hasBookingHistory) ...[
                                 _HomeSectionHeader(
                                   title: 'Trending near you',
                                   subtitle:
@@ -462,6 +461,7 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
                                     ),
                                   ),
                                 ),
+                                ],
                                 const SizedBox(height: 6),
                                 ReferralBannerCard(
                                   promoCode: 'SHPH2026',
@@ -497,7 +497,7 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
                     ),
                     if (_isAccountMenuOpen)
                       Positioned.fill(
-                        top: _isHeaderCompact ? 108 : 154,
+                        top: _isHeaderCompact ? 44 : 126,
                         child: GestureDetector(
                           behavior: HitTestBehavior.translucent,
                           onTap: _closeAccountMenu,
@@ -506,7 +506,7 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
                       ),
                     if (_isAccountMenuOpen)
                       Positioned(
-                        top: _isHeaderCompact ? 110 : 156,
+                        top: _isHeaderCompact ? 48 : 130,
                         right: 20,
                         child: _AccountMenu(
                           name: accountName,
@@ -546,6 +546,7 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
   Future<List<_HomeBookingData>> _loadBookings() async {
     try {
       final page = await ShphBookingsApi.instance.listUserBookings();
+      _hasBookingHistory = page.results.isNotEmpty;
       final active = page.results
           .where((b) =>
               b.status != 'cancelled' &&
@@ -601,7 +602,7 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
           priceSubtitle: '',
           icon: palette.icon,
           gradientColors: palette.colors,
-          badgeLabel: null,
+          badgeLabel: palette.badgeLabel,
           isDarkText: palette.isDarkText,
         );
       }).toList();
@@ -737,27 +738,27 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
       'default': _CategoryPalette(
         icon: Icons.build_rounded,
         colors: [AppThemeData.accentBlue, AppThemeData.accentNavy],
-        isDarkText: false,
+        isDarkText: isDark,
       ),
       'cleaning': _CategoryPalette(
         icon: Icons.cleaning_services_rounded,
-        colors: [AppThemeData.accentSky, AppThemeData.accentIndigo],
-        isDarkText: isDark,
+        colors: const [Color(0xFF0EA5E9), Color(0xFF1D4ED8)],
+        badgeLabel: 'Popular',
       ),
       'plumbing': _CategoryPalette(
         icon: Icons.plumbing_rounded,
-        colors: [AppThemeData.accentOrange, AppThemeData.accentIndigo],
-        isDarkText: isDark,
+        colors: const [Color(0xFF14B8A6), Color(0xFF0F766E)],
+        badgeLabel: 'Fast help',
       ),
       'electrical': _CategoryPalette(
         icon: Icons.electrical_services_rounded,
-        colors: [AppThemeData.accentYellow, AppThemeData.destructiveCrimson],
+        colors: const [Color(0xFFF59E0B), Color(0xFFEA580C)],
+        badgeLabel: 'Trusted',
         isDarkText: true,
       ),
       'painting': _CategoryPalette(
         icon: Icons.format_paint_rounded,
-        colors: [AppThemeData.accentPurple, AppThemeData.accentIndigo],
-        isDarkText: isDark,
+        colors: const [Color(0xFF8B5CF6), Color(0xFF2563EB)],
       ),
     };
   }
@@ -767,11 +768,13 @@ class _CategoryPalette {
   const _CategoryPalette({
     required this.icon,
     required this.colors,
-    required this.isDarkText,
+    this.badgeLabel,
+    this.isDarkText = false,
   });
 
   final IconData icon;
   final List<Color> colors;
+  final String? badgeLabel;
   final bool isDarkText;
 }
 

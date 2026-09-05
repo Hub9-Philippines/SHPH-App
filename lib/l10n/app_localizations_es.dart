@@ -4811,4 +4811,23 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get bkPmtCOD => 'COD';
+
+  @override
+  String get pfAddProfilePicture => 'Añadir foto de perfil';
+
+  @override
+  String get pfChangeProfilePicture => 'Cambiar foto de perfil';
+
+  @override
+  String get pfRemoveProfilePicture => 'Eliminar foto de perfil';
+
+  @override
+  String get pfRemovePhotoTitle => '¿Eliminar foto de perfil?';
+
+  @override
+  String get pfRemovePhotoMessage =>
+      'Tu foto se eliminará de tu perfil público.';
+
+  @override
+  String get pfPhotoRemoved => 'Foto de perfil eliminada.';
 }

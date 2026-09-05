@@ -4841,4 +4841,23 @@ class AppLocalizationsFil extends AppLocalizations {
 
   @override
   String get bkPmtCOD => 'COD';
+
+  @override
+  String get pfAddProfilePicture => 'Magdagdag ng profile picture';
+
+  @override
+  String get pfChangeProfilePicture => 'Palitan ang profile picture';
+
+  @override
+  String get pfRemoveProfilePicture => 'Alisin ang profile picture';
+
+  @override
+  String get pfRemovePhotoTitle => 'Alisin ang profile picture?';
+
+  @override
+  String get pfRemovePhotoMessage =>
+      'Aalisin ang iyong larawan sa iyong pampublikong profile.';
+
+  @override
+  String get pfPhotoRemoved => 'Inalis ang profile picture.';
 }

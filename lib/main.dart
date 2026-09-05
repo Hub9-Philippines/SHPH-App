@@ -321,39 +321,55 @@ class _NavBarPageState extends State<NavBarPage> {
   Widget build(BuildContext context) {
     final tabs = _tabs;
 
-    return Scaffold(
-      resizeToAvoidBottomInset: !widget.disableResizeToAvoidBottomInset,
-      body: ListenableBuilder(
-        listenable: FFAppState(),
-        builder: (context, _) {
-          final currentTabs = _tabs;
-          return _currentPage ??
-              (currentTabs[_currentPageName] ?? currentTabs.values.first);
-        },
-      ),
-      bottomNavigationBar: ListenableBuilder(
-        listenable: FFAppState(),
-        builder: (context, _) {
-          final tabKeys = _tabs.keys.toList();
-          final rawIdx = tabKeys.indexOf(_currentPageName);
-          final safeIdx = rawIdx >= 0 ? rawIdx : 0;
-          final items = _buildNavItems(context);
-          return SafeArea(
-            top: false,
-            child: CupertinoTabBar(
-              currentIndex: safeIdx.clamp(0, items.length - 1),
-              onTap: (i) => safeSetState(() {
-                _currentPage = null;
-                _currentPageName = tabKeys[i.clamp(0, tabKeys.length - 1)];
-              }),
-              backgroundColor: AppTheme.of(context).primaryBackground,
-              activeColor: AppTheme.of(context).primary,
-              inactiveColor: AppTheme.of(context).secondaryText,
-              iconSize: 24,
-              items: items,
-            ),
-          );
-        },
+    // System back from any non-Home tab returns to Home instead of exiting
+    // the app. Home's own PopScope handles the exit confirmation.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) {
+          return;
+        }
+        if (_currentPageName != 'Home') {
+          safeSetState(() {
+            _currentPage = null;
+            _currentPageName = 'Home';
+          });
+        }
+      },
+      child: Scaffold(
+        resizeToAvoidBottomInset: !widget.disableResizeToAvoidBottomInset,
+        body: ListenableBuilder(
+          listenable: FFAppState(),
+          builder: (context, _) {
+            final currentTabs = _tabs;
+            return _currentPage ??
+                (currentTabs[_currentPageName] ?? currentTabs.values.first);
+          },
+        ),
+        bottomNavigationBar: ListenableBuilder(
+          listenable: FFAppState(),
+          builder: (context, _) {
+            final tabKeys = _tabs.keys.toList();
+            final rawIdx = tabKeys.indexOf(_currentPageName);
+            final safeIdx = rawIdx >= 0 ? rawIdx : 0;
+            final items = _buildNavItems(context);
+            return SafeArea(
+              top: false,
+              child: CupertinoTabBar(
+                currentIndex: safeIdx.clamp(0, items.length - 1),
+                onTap: (i) => safeSetState(() {
+                  _currentPage = null;
+                  _currentPageName = tabKeys[i.clamp(0, tabKeys.length - 1)];
+                }),
+                backgroundColor: AppTheme.of(context).primaryBackground,
+                activeColor: AppTheme.of(context).primary,
+                inactiveColor: AppTheme.of(context).secondaryText,
+                iconSize: 24,
+                items: items,
+              ),
+            );
+          },
+        ),
       ),
     );
   }

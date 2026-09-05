@@ -15,14 +15,22 @@ class ShphProvidersApi {
     return response.data ?? {};
   }
 
+  /// Public provider profile from the Providers API. Returns
+  /// `ProviderProfileResponse` fields: id, display_name, photo_url, bio,
+  /// kyc_verified, total_completed_bookings, avg_rating, member_since.
+  Future<Map<String, dynamic>> getProviderProfile(dynamic providerId) async {
+    final response = await _client
+        .get<Map<String, dynamic>>('/api/providers/$providerId/');
+    return response.data ?? {};
+  }
+
   Future<PaginatedResponse<ShphServiceListing>> listProviderListings(
     dynamic providerId, {
     int? page,
   }) async {
     final response = await _client.get<Map<String, dynamic>>(
-      '/api/services/listings/',
+      '/api/providers/$providerId/listings/',
       queryParameters: {
-        'provider': providerId.toString(),
         if (page != null) 'page': page,
       },
     );

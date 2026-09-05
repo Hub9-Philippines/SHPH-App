@@ -379,9 +379,7 @@ class _ProfileWidgetState extends State<ProfileWidget>
                       shadowColor: Colors.black26,
                       child: InkWell(
                         customBorder: const CircleBorder(),
-                        onTap: _isUploading
-                            ? null
-                            : _showAvatarSourceSheet,
+                        onTap: _isUploading ? null : () => _showAvatarSourceSheet(profile),
                         child: SizedBox(
                           width: 28,
                           height: 28,
@@ -1013,8 +1011,10 @@ class _ProfileWidgetState extends State<ProfileWidget>
     }
   }
 
-  void _showAvatarSourceSheet() {
+  void _showAvatarSourceSheet(ProfilesRow profile) {
+    final hasPhoto = (profile.faceScanUrl ?? '').trim().isNotEmpty;
     final picker = ImagePicker();
+    final danger = Theme.of(context).colorScheme.error;
     showModalBottomSheet<void>(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -1023,7 +1023,31 @@ class _ProfileWidgetState extends State<ProfileWidget>
       builder: (sheetContext) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 18, 16, 8),
+              child: Row(
+                children: [
+                  Icon(
+                    hasPhoto
+                        ? Icons.portrait_rounded
+                        : Icons.add_a_photo_outlined,
+                    size: 22,
+                    color: AppTheme.of(sheetContext).primary,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    hasPhoto
+                        ? _l10n.pfChangeProfilePicture
+                        : _l10n.pfAddProfilePicture,
+                    style: AppTheme.of(sheetContext).titleMedium.override(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                ],
+              ),
+            ),
             ListTile(
               leading: const Icon(Icons.photo_library_rounded),
               title: Text(_l10n.pfChooseGallery),
@@ -1052,10 +1076,64 @@ class _ProfileWidgetState extends State<ProfileWidget>
                 if (file != null) await _pickAndUploadPhoto(file);
               },
             ),
+            if (hasPhoto) ...[
+              const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+              ListTile(
+                leading: Icon(Icons.delete_outline_rounded, color: danger),
+                title: Text(
+                  _l10n.pfRemoveProfilePicture,
+                  style: Theme.of(sheetContext).textTheme.bodyLarge?.override(
+                        color: danger,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                onTap: () async {
+                  Navigator.pop(sheetContext);
+                  await _removeProfilePhoto(profile);
+                },
+              ),
+            ],
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _removeProfilePhoto(ProfilesRow profile) async {
+    final confirm = await showDialog<bool>(
+          context: context,
+          builder: (alertDialogContext) => AlertDialog(
+            title: Text(_l10n.pfRemovePhotoTitle),
+            content: Text(_l10n.pfRemovePhotoMessage),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(alertDialogContext, false),
+                child: Text(_l10n.cancel),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(alertDialogContext, true),
+                child: Text(_l10n.pfRemoveProfilePicture),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (!confirm || !mounted) return;
+
+    try {
+      await ProfilesService.instance.updateProfile({'face_scan_url': ''});
+      if (!mounted) return;
+      _reloadData();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_l10n.pfPhotoRemoved)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_l10n.pfUploadError(e))),
+      );
+    }
   }
 
   Future<void> _handleLogout() async {
