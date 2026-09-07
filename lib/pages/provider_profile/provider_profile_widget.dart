@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '/components/cupertino_ui/app_activity_indicator.dart';
 import '/components/cupertino_ui/cupertino_page_header.dart';
+import '/pages/provider_reviews/provider_reviews_widget.dart';
+import '/pages/product_page/product_page_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
@@ -69,8 +71,7 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.person_off_rounded,
-                size: 64, color: theme.textTertiary),
+            Icon(Icons.person_off_rounded, size: 64, color: theme.textTertiary),
             const SizedBox(height: 16),
             Text(_l10n.ppfNotFound,
                 style: GoogleFonts.plusJakartaSans(
@@ -94,215 +95,316 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
     final isKycVerified = p['kyc_verified'] == true;
 
     return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHero(context, theme, name, photo, bio, rating, isKycVerified),
+          _buildHero(context, theme, name, photo, bio, isKycVerified),
+          const SizedBox(height: 16),
           _buildStats(theme, rating),
-          if (isKycVerified) _buildVerifiedBadge(theme),
+          const SizedBox(height: 24),
           _buildSectionHeader(theme, _l10n.ppfServices),
+          const SizedBox(height: 12),
           if (_model.listings.isEmpty)
             _buildEmpty(theme, _l10n.ppfNoServices)
           else
             _buildServicesGrid(context, theme),
+          const SizedBox(height: 28),
           _buildSectionHeader(theme, _l10n.ppfReviews),
-          if (_model.reviews.isEmpty)
-            _buildEmpty(theme, _l10n.ppfNoReviews)
-          else
-            _buildReviewsList(theme),
+          const SizedBox(height: 12),
+          _buildSeeAllReviews(theme),
         ],
       ),
     );
   }
 
   Widget _buildHero(BuildContext context, AppThemeData theme, String name,
-      String? photo, String? bio, double rating, bool verified) {
+      String? photo, String? bio, bool verified) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 22),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [theme.primary, theme.primary.withValues(alpha: 0.8)],
+          colors: [theme.primary, theme.primaryDark],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(AppThemeData.radiusCard),
+        boxShadow: AppThemeData.shadowMd,
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 40,
-            backgroundColor: Colors.white.withValues(alpha: 0.18),
-            backgroundImage:
-                photo != null ? NetworkImage(photo) : null,
-            child: photo == null
-                ? Icon(
-                    Icons.person_rounded,
-                    size: 40,
-                    color: theme.onPrimary,
-                  )
-                : null,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildAvatar(theme, photo, radius: 38),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.headlineSmall.override(
+                        font: GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w800,
+                        ),
+                        color: theme.onPrimary,
+                      ),
+                    ),
+                    if (verified) ...[
+                      const SizedBox(height: 8),
+                      _buildVerifiedBadge(theme, compact: true),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-          Text(name,
-              style: GoogleFonts.plusJakartaSans(
-                  color: theme.onPrimary,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w600)),
           if (bio != null && bio.isNotEmpty) ...[
-            const SizedBox(height: 6),
+            const SizedBox(height: 18),
             Text(bio,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.plusJakartaSans(
-                    color: theme.onPrimary.withValues(alpha: 0.85),
-                    fontSize: 14)),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: theme.bodyMedium.override(
+                  font: GoogleFonts.plusJakartaSans(),
+                  color: theme.onPrimary.withValues(alpha: 0.82),
+                )),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildAvatar(AppThemeData theme, String? photo,
+      {required double radius}) {
+    final imageUrl = photo?.trim() ?? '';
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: theme.onPrimary.withValues(alpha: 0.25),
+        shape: BoxShape.circle,
+      ),
+      child: CircleAvatar(
+        radius: radius,
+        backgroundColor: theme.primaryLight,
+        backgroundImage: imageUrl.isNotEmpty ? NetworkImage(imageUrl) : null,
+        child: imageUrl.isEmpty
+            ? Icon(Icons.person_rounded, size: radius, color: theme.primary)
+            : null,
       ),
     );
   }
 
   Widget _buildStats(AppThemeData theme, double rating) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: theme.secondaryBackground,
+        borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
+        border: Border.all(color: theme.border),
+      ),
       child: Row(
         children: [
-          _statItem(theme, rating.toStringAsFixed(1), _l10n.ppfRating),
-          _statItem(theme, _model.reviews.length.toString(), _l10n.ppfReviews),
-          _statItem(theme, _model.listings.length.toString(), _l10n.ppfServices),
+          _statItem(theme, rating.toStringAsFixed(1), _l10n.ppfRating,
+              icon: Icons.star_rounded),
+          _statDivider(theme),
+          _statItem(theme, _model.provider!['total_completed_bookings']?.toString() ?? '0', _l10n.ppfCompletedBookings,
+              icon: Icons.check_circle_outline),
+          _statDivider(theme),
+          _statItem(theme, _model.listings.length.toString(), _l10n.ppfServices,
+              icon: Icons.home_repair_service_outlined),
         ],
       ),
     );
   }
 
-  Widget _statItem(AppThemeData theme, String value, String label) {
+  Widget _statDivider(AppThemeData theme) {
+    return Container(width: 1, height: 34, color: theme.border);
+  }
+
+  Widget _statItem(AppThemeData theme, String value, String label,
+      {required IconData icon}) {
     return Expanded(
       child: Column(
         children: [
+          Icon(icon, size: 16, color: theme.primaryBrandText),
+          const SizedBox(height: 4),
           Text(value,
-              style: GoogleFonts.plusJakartaSans(
-                  color: theme.primaryText,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700)),
+              style: theme.titleLarge.override(
+                font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
+                color: theme.primaryText,
+              )),
           const SizedBox(height: 2),
-          Text(label,
-              style: GoogleFonts.plusJakartaSans(
-                  color: theme.secondaryText, fontSize: 12)),
+          Text(label, style: theme.labelSmall),
         ],
       ),
     );
   }
 
-  Widget _buildVerifiedBadge(AppThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: theme.success.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.verified_rounded,
-                size: 16, color: theme.success),
-            const SizedBox(width: 6),
-            Text(_l10n.ppfKycVerified,
-                style: GoogleFonts.plusJakartaSans(
-                    color: theme.success,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600)),
-          ],
-        ),
+  Widget _buildVerifiedBadge(AppThemeData theme, {bool compact = false}) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 9 : 12,
+        vertical: compact ? 5 : 6,
+      ),
+      decoration: BoxDecoration(
+        color: theme.onPrimary.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(AppThemeData.radiusPill),
+        border: Border.all(color: theme.onPrimary.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.verified_rounded,
+              size: compact ? 14 : 16, color: theme.onPrimary),
+          const SizedBox(width: 6),
+          Text(_l10n.ppfKycVerified,
+              style: theme.labelSmall.override(
+                font: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.w700,
+                ),
+                color: theme.onPrimary,
+              )),
+        ],
       ),
     );
   }
 
   Widget _buildSectionHeader(AppThemeData theme, String title) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Text(title,
-            style: GoogleFonts.plusJakartaSans(
-                color: theme.primaryText,
-                fontSize: 16,
-                fontWeight: FontWeight.w600)),
-      ),
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 18,
+          decoration: BoxDecoration(
+            color: theme.primary,
+            borderRadius: BorderRadius.circular(AppThemeData.radiusPill),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(title,
+            style: theme.titleMedium.override(
+              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
+              color: theme.primaryText,
+            )),
+      ],
     );
   }
 
   Widget _buildEmpty(AppThemeData theme, String message) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Text(message,
-          style: GoogleFonts.plusJakartaSans(
-              color: theme.secondaryText, fontSize: 14)),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
+      decoration: BoxDecoration(
+        color: theme.secondaryBackground,
+        borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
+        border: Border.all(color: theme.border),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.forum_outlined, color: theme.textTertiary, size: 28),
+          const SizedBox(height: 8),
+          Text(message, style: theme.bodySmall),
+        ],
+      ),
     );
   }
 
   Widget _buildServicesGrid(BuildContext context, AppThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Wrap(
+    return LayoutBuilder(
+      builder: (context, constraints) => Wrap(
         spacing: 12,
         runSpacing: 12,
         children: _model.listings.map((l) {
-          final thumb = l['thumbnail'] as String?;
-          final price = l['basePrice'] as double?;
+          final thumb = l['thumbnail']?.toString() ?? '';
+          final price = (l['basePrice'] as num?)?.toDouble();
           final title = l['title'] as String? ?? '';
-          final rating = l['rating'] as String?;
+          final rating = l['rating']?.toString();
+          final category = l['categoryName']?.toString();
+          final id = l['id'] as int? ?? l['listing_id'] as int? ?? 0;
           return SizedBox(
-            width: (MediaQuery.of(context).size.width - 60) / 2,
+            width: (constraints.maxWidth - 12) / 2,
             child: GestureDetector(
-              onTap: () {},
+              onTap: id > 0
+                  ? () => context.pushNamed(
+                      ProductPageWidget.routeName,
+                      extra: <String, dynamic>{
+                        'serviceName': title,
+                        'category': category ?? '',
+                        'price': price != null ? '₱${price.toStringAsFixed(0)}' : '',
+                        'rating': rating != null ? double.tryParse(rating) ?? 0.0 : 0.0,
+                        'reviewCount': int.parse(l['reviewCount']?.toString() ?? '0'),
+                        'imageUrl': thumb,
+                        'serviceId': id,
+                        'providerId': widget.providerId,
+                        'providerName': _model.provider!['display_name']?.toString() ?? _l10n.ppfProvider,
+                        'providerPhoto': _model.provider!['photo_url']?.toString(),
+                        'providerCategory': category ?? '',
+                        'isVerified': _model.provider!['kyc_verified'] == true,
+                      },
+                    )
+                  : null,
               child: Container(
                 decoration: BoxDecoration(
-                  color: theme.secondaryBackground,
-                  borderRadius: BorderRadius.circular(12),
+                  color: theme.primaryBackground,
+                  borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
                   border: Border.all(color: theme.border),
+                  boxShadow: AppThemeData.shadowSoft,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     ClipRRect(
                       borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(12)),
-                      child: thumb != null
-                          ? Image.network(thumb,
-                              height: 100,
-                              width: double.infinity,
-                              fit: BoxFit.cover)
-                          : Container(
-                              height: 100,
-                              color: theme.primary.withValues(alpha: 0.1),
-                              child: Icon(Icons.image_rounded,
-                                  color: theme.primary)),
+                        top: Radius.circular(AppThemeData.radiusLg),
+                      ),
+                      child: AspectRatio(
+                        aspectRatio: 1.55,
+                        child: thumb.isNotEmpty
+                            ? Image.network(
+                                thumb,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) =>
+                                    _buildListingPlaceholder(theme),
+                              )
+                            : _buildListingPlaceholder(theme),
+                      ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.fromLTRB(12, 11, 12, 12),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(title,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.plusJakartaSans(
-                                  color: theme.primaryText,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500)),
-                          const SizedBox(height: 4),
+                              style: theme.bodySmall.override(
+                                font: GoogleFonts.plusJakartaSans(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                color: theme.primaryText,
+                              )),
+                          if (category != null && category.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(category,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.labelSmall),
+                          ],
+                          const SizedBox(height: 8),
                           Row(
                             children: [
                               if (rating != null)
                                 Row(
                                   children: [
                                     Icon(Icons.star_rounded,
-                                        size: 14, color: theme.warning),
+                                        size: 14, color: AppThemeData.star),
                                     const SizedBox(width: 2),
-                                    Text(rating,
-                                        style: GoogleFonts.plusJakartaSans(
-                                            color: theme.secondaryText,
-                                            fontSize: 11)),
+                                    Text(rating, style: theme.labelSmall),
                                     const SizedBox(width: 6),
                                   ],
                                 ),
@@ -310,10 +412,12 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
                                   price != null
                                       ? '₱${price.toStringAsFixed(0)}'
                                       : '',
-                                  style: GoogleFonts.plusJakartaSans(
-                                      color: theme.primary,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600)),
+                                  style: theme.labelMedium.override(
+                                    font: GoogleFonts.plusJakartaSans(
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                    color: theme.primary,
+                                  )),
                             ],
                           ),
                         ],
@@ -329,75 +433,76 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
     );
   }
 
-  Widget _buildReviewsList(AppThemeData theme) {
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-      itemCount: _model.reviews.length,
-      separatorBuilder: (_, __) => const Divider(height: 1),
-      itemBuilder: (context, index) {
-        final r = _model.reviews[index];
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundImage: r['reviewerPhoto'] != null
-                    ? NetworkImage(r['reviewerPhoto'] as String)
-                    : null,
-                child: r['reviewerPhoto'] == null
-                    ? Icon(Icons.person, color: theme.secondaryText)
-                    : null,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(r['reviewerName']?.toString() ?? _l10n.ppfAnonymous,
-                        style: GoogleFonts.plusJakartaSans(
-                            color: theme.primaryText,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500)),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Icon(Icons.star_rounded,
-                            size: 14, color: theme.warning),
-                        const SizedBox(width: 4),
-                        Text(
-                            (r['rating'] as num?)?.toStringAsFixed(1) ?? '',
-                            style: GoogleFonts.plusJakartaSans(
-                                color: theme.secondaryText, fontSize: 12)),
-                      ],
-                    ),
-                    if (r['comment'] != null) ...[
-                      const SizedBox(height: 4),
-                      Text(r['comment'] as String,
-                          style: GoogleFonts.plusJakartaSans(
-                              color: theme.primaryText, fontSize: 13)),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+  Widget _buildListingPlaceholder(AppThemeData theme) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [theme.primaryLight, theme.surfaceAlt],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.home_repair_service_outlined,
+          size: 30,
+          color: theme.primary,
+        ),
+      ),
     );
   }
 
+  Widget _buildSeeAllReviews(AppThemeData theme) {
+    return SizedBox(
+      width: double.infinity,
+      child: TextButton(
+        onPressed: () => context.pushNamed(
+          ProviderReviewsWidget.routeName,
+          pathParameters: <String, String>{'providerId': widget.providerId.toString()},
+        ),
+        style: TextButton.styleFrom(
+          backgroundColor: theme.primary,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(AppThemeData.radiusSm)),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              _l10n.ppfSeeAllReviews,
+              style: GoogleFonts.plusJakartaSans(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(width: 6),
+            const Icon(Icons.chevron_right, size: 18, color: Colors.white),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Fallback star rating for the hero stat pill when the provider response has no
+  /// `avg_rating`. Kept primarily so the stat pill keeps compiling; the profile now
+  /// surfaces reviews from the dedicated reviews page.
   double _avgRating(Map<String, dynamic> provider) {
-    final avg = (provider['avg_rating'] as num?)?.toDouble();
-    if (avg != null) {
+    final avg = _asDouble(provider['avg_rating']);
+    if (avg > 0) {
       return avg;
     }
-    if (_model.reviews.isEmpty) return 0.0;
-    final sum =
-        _model.reviews.fold<num>(0, (a, r) => a + (r['rating'] as num? ?? 0));
-    return sum / _model.reviews.length;
+    return 0.0;
+  }
+
+  double _asDouble(dynamic value) {
+    if (value is num) {
+      return value.toDouble();
+    }
+    return double.tryParse(value?.toString() ?? '') ?? 0.0;
   }
 }

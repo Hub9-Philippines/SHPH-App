@@ -3,38 +3,17 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '/api/resources/users_api.dart';
-import '/auth/base_auth_user_provider.dart';
 import '/backend/supabase/database/tables/payment_methods.dart';
 import '/flutter_flow/lat_lng.dart';
 import '/index.dart';
 import '/main.dart';
 import '/main/home/home_redesign_widget.dart';
 import '/models/service_listing.dart';
+import '/pages/provider_reviews/provider_reviews_widget.dart';
 import '/pages/booking_funnel/booking_models.dart';
 import '/pages/booking_funnel/booking_success_screen.dart';
 import '/pages/geographic_selection/geographic_selection_widget.dart';
 import '/services/client_kyc_service.dart';
-
-// Helper retained for potential future role checks; provider lifecycle removed.
-Future<Map<String, dynamic>?> _fetchUserProfile(String userId) async {
-  try {
-    final data = await ShphUsersApi.instance.getMe();
-    final profile = data['profile'] is Map<String, dynamic>
-        ? data['profile'] as Map<String, dynamic>
-        : data;
-    if (profile.isEmpty) return null;
-    return {
-      'role': profile['role'],
-      'is_provider': profile['is_provider'],
-      'is_client': profile['is_client'],
-      'email': profile['email'],
-      'display_name': profile['display_name'],
-    };
-  } catch (e) {
-    return null;
-  }
-}
 
 /// Client-only route gating. No provider routes exist in this app.
 class _RouteGates {
@@ -633,6 +612,13 @@ class AppRouter {
             ),
           ),
           GoRoute(
+            path: ProviderReviewsWidget.routePath,
+            name: ProviderReviewsWidget.routeName,
+            builder: (context, state) => ProviderReviewsWidget(
+              providerId: state.pathParameters['providerId']!,
+            ),
+          ),
+          GoRoute(
             path: CategoryDetailWidget.routePath,
             name: CategoryDetailWidget.routeName,
             builder: (context, state) {
@@ -744,7 +730,7 @@ class AppRouter {
               bookingId:
                   state.pathParameters['bookingId'] ?? '',
               serviceName: state.extra != null
-                  ? (state.extra as Map)['serviceName'] as String?
+                  ? (state.extra! as Map)['serviceName'] as String?
                   : state.uri.queryParameters['serviceName'],
             ),
           ),

@@ -43,25 +43,9 @@ class ProviderProfileService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getProviderReviews(
-    dynamic providerId,
-  ) async {
-    try {
-      final page = await _api.listProviderReviews(providerId);
-      return page.results
-          .map((r) => {
-                'id': r.id,
-                'rating': r.rating,
-                'comment': r.comment,
-                'reviewerName': r.reviewerName,
-                'reviewerPhoto': r.reviewerPhoto,
-                'createdAt': r.createdAt,
-              })
-          .toList();
-    } catch (e) {
-      LoggingService.error('Error fetching provider reviews: $e',
-          tag: 'ProviderProfileService');
-      return [];
-    }
-  }
+  /// Provider reviews are no longer served from a per-provider endpoint — the old
+  /// `/api/services/listings/provider/{id}/reviews/` route doesn't exist in the
+  /// deployed backend (it 404s). Reviews for a provider are now loaded on the
+  /// dedicated reviews page by merging per-listing public reviews from the
+  /// provider's top listings.
 }

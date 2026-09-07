@@ -13,6 +13,11 @@ class ProviderProfileModel extends FlutterFlowModel<ProviderProfileWidget> {
   @override
   void initState(BuildContext context) {}
 
+  /// Provider profile loads [provider] and [listings] in place; reviews are no
+  /// longer loaded on the profile screen. The broken provider-reviews endpoint
+  /// (`/api/services/listings/provider/{id}/reviews/`) doesn't exist in the
+  /// deployed backend (it 404s), so the profile now links out to the dedicated
+  /// reviews page instead.
   Future<void> loadProvider(dynamic providerId) async {
     isLoading = true;
     try {
@@ -20,8 +25,9 @@ class ProviderProfileModel extends FlutterFlowModel<ProviderProfileWidget> {
           await ProviderProfileService.instance.getProvider(providerId);
       listings =
           await ProviderProfileService.instance.getProviderListings(providerId);
-      reviews =
-          await ProviderProfileService.instance.getProviderReviews(providerId);
+      // Kept as empty so downstream consumers that still reference `_model.reviews`
+      // (stat pills, `_avgRating` fallback) keep compiling during the transition.
+      reviews = const [];
     } finally {
       isLoading = false;
     }

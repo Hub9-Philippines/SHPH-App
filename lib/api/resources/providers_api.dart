@@ -40,12 +40,15 @@ class ShphProvidersApi {
     );
   }
 
-  Future<PaginatedResponse<ShphReview>> listProviderReviews(
-    dynamic providerId, {
+  /// Public reviews for a single provider listing. This is the spec'd,
+  /// deployed endpoint (`/api/services/listings/{id}/reviews/`); it replaces the
+  /// now-removed per-provider reviews path.
+  Future<PaginatedResponse<ShphReview>> listProviderListingsReviews(
+    int listingId, {
     int? page,
   }) async {
     final response = await _client.get<Map<String, dynamic>>(
-      '/api/services/listings/provider/$providerId/reviews/',
+      '/api/services/listings/$listingId/reviews/',
       queryParameters: {if (page != null) 'page': page},
     );
     return PaginatedResponse.fromJson(
