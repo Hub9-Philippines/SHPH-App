@@ -188,6 +188,16 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
         ),
       );
 
+  String _userInitials(String userId) {
+    if (userId.isEmpty) {
+      return '??';
+    }
+    if (userId.length <= 2) {
+      return userId.toUpperCase();
+    }
+    return userId.substring(0, 2).toUpperCase();
+  }
+
   Widget _buildReviewCard(BuildContext context, ReviewsRow review) => Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -208,7 +218,7 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
                 ),
                 child: Center(
                   child: Text(
-                    review.userId.substring(0, 2).toUpperCase(),
+                    _userInitials(review.userId),
                     style: AppTheme.of(context)
                         .bodyMedium
                         .override(
