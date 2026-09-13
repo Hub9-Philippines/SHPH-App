@@ -3,9 +3,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '/theme/app_theme.dart';
 
-const double _kDefaultMapVisibleFraction = 0.42;
 const double _kDefaultSheetMaxFraction = 0.64;
-const double _kMinimumMapHeight = 220;
 
 class BookingStatusScaffold extends StatelessWidget {
   const BookingStatusScaffold({
@@ -17,7 +15,6 @@ class BookingStatusScaffold extends StatelessWidget {
     this.markerHue = BitmapDescriptor.hueRed,
     this.markers,
     this.isDraggable = false,
-    this.mapVisibleFraction = _kDefaultMapVisibleFraction,
     this.sheetMaxFraction = _kDefaultSheetMaxFraction,
     this.sheetInitialFraction = 0.35,
     this.sheetMinFraction = 0.12,
@@ -33,7 +30,6 @@ class BookingStatusScaffold extends StatelessWidget {
   final double markerHue;
   final Set<Marker>? markers;
   final bool isDraggable;
-  final double mapVisibleFraction;
   final double sheetMaxFraction;
   final double sheetInitialFraction;
   final double sheetMinFraction;
@@ -48,8 +44,6 @@ class BookingStatusScaffold extends StatelessWidget {
       backgroundColor: theme.primaryBackground,
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final mapHeight = (constraints.maxHeight * mapVisibleFraction)
-              .clamp(_kMinimumMapHeight, constraints.maxHeight);
           final sheetMaxHeight = constraints.maxHeight * sheetMaxFraction;
 
           return Stack(
@@ -68,14 +62,9 @@ class BookingStatusScaffold extends StatelessWidget {
                   ),
                 ),
               ),
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                height: mapHeight,
+              Positioned.fill(
                 child: showMap
-                    ? ClipRect(
-                        child: GoogleMap(
+                    ? GoogleMap(
                           initialCameraPosition: CameraPosition(
                             target: location,
                             zoom: 16,
@@ -100,8 +89,7 @@ class BookingStatusScaffold extends StatelessWidget {
                                 ),
                               ),
                             },
-                        ),
-                      )
+                        )
                     : const SizedBox.shrink(),
               ),
               if (center != null) Center(child: center!),

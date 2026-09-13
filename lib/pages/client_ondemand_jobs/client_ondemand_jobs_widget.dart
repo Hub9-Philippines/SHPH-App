@@ -145,7 +145,7 @@ class _ClientOnDemandJobsWidgetState
                                         const SizedBox(width: 4),
                                         Text(
                                           _statusLabel(status),
-                                          style: theme.bodySmall?.copyWith(
+                                          style: theme.bodySmall.copyWith(
                                             color: statusColor,
                                             fontWeight: FontWeight.w600,
                                           ),
@@ -157,7 +157,7 @@ class _ClientOnDemandJobsWidgetState
                                   if (bidCount > 0)
                                     Text(
                                       _l10n.cjBids(bidCount),
-                                      style: theme.bodySmall?.copyWith(
+                                      style: theme.bodySmall.copyWith(
                                           color: theme.secondaryText),
                                     ),
                                 ],
@@ -186,7 +186,7 @@ class _ClientOnDemandJobsWidgetState
                                   _l10n.cjFee(
                                     '${feeMin != null ? '\$${feeMin.toStringAsFixed(0)}' : ''}${feeMin != null && feeMax != null ? ' - ' : ''}${feeMax != null ? '\$${feeMax.toStringAsFixed(0)}' : ''}',
                                   ),
-                                  style: theme.bodyMedium?.copyWith(
+                                  style: theme.bodyMedium.copyWith(
                                       fontWeight: FontWeight.w600),
                                 ),
                               ],

@@ -59,11 +59,11 @@ class _NotFoundWidgetState extends State<NotFoundWidget> {
               const SizedBox(height: 24),
               Text(_l10n.nfTitle,
                   style: theme.titleLarge
-                      ?.copyWith(fontWeight: FontWeight.w600)),
+                      .copyWith(fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               Text(
                 _l10n.nfBody,
-                style: theme.bodyMedium?.copyWith(color: theme.secondaryText),
+                style: theme.bodyMedium.copyWith(color: theme.secondaryText),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),

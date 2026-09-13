@@ -185,7 +185,7 @@ class _SessionsWidgetState extends State<SessionsWidget> {
                                     children: [
                                       Text(device,
                                           style: theme.bodyMedium
-                                              ?.copyWith(
+                                              .copyWith(
                                                   fontWeight:
                                                       FontWeight.w600)),
                                       if (isCurrent) ...[
@@ -203,7 +203,7 @@ class _SessionsWidgetState extends State<SessionsWidget> {
                                           ),
                                           child: Text(_l10n.snCurrent,
                                               style: theme.bodySmall
-                                                  ?.copyWith(
+                                                  .copyWith(
                                                       color:
                                                           theme.success,
                                                       fontSize: 10)),
@@ -214,11 +214,11 @@ class _SessionsWidgetState extends State<SessionsWidget> {
                                   const SizedBox(height: 2),
                                   if (loginAt.isNotEmpty)
                                     Text(loginAt,
-                                        style: theme.bodySmall?.copyWith(
+                                        style: theme.bodySmall.copyWith(
                                             color: theme.secondaryText)),
                                   if (ip.isNotEmpty)
                                     Text(ip,
-                                        style: theme.bodySmall?.copyWith(
+                                        style: theme.bodySmall.copyWith(
                                             color: theme.secondaryText)),
                                 ],
                               ),

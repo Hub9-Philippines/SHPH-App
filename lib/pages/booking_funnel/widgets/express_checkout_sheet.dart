@@ -83,8 +83,8 @@ class ExpressCheckoutSheet extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.titleMedium.override(
-                      font:
-                          GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+                      font: GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w700),
                       color: theme.primaryText,
                     ),
                   ),
@@ -225,7 +225,8 @@ class _SpecialistSummary extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    Icon(Icons.verified_rounded, size: 15, color: theme.primary),
+                    Icon(Icons.verified_rounded,
+                        size: 15, color: theme.primary),
                   ],
                 ),
                 const SizedBox(height: 3),
@@ -250,12 +251,10 @@ class _SpecialistSummary extends StatelessWidget {
           ),
           if (service.distanceKm != null)
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: theme.surfaceAlt,
-                borderRadius:
-                    BorderRadius.circular(AppThemeData.radiusPill),
+                borderRadius: BorderRadius.circular(AppThemeData.radiusPill),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -289,9 +288,6 @@ class _ServiceMatrix extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = AppTheme.of(context);
     final draft = controller.draft;
-    final urgent = draft.urgency == BookingUrgency.rightNow;
-    final deepDelta = (draft.serviceBasePrice ?? 0.0) * 0.25;
-    final premiumDelta = (draft.serviceBasePrice ?? 0.0) * 0.45;
 
     Widget row({
       required bool checked,
@@ -304,12 +300,10 @@ class _ServiceMatrix extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(bottom: AppThemeData.spaceSm),
           child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: theme.secondaryBackground,
-              borderRadius:
-                  BorderRadius.circular(AppThemeData.radiusMd),
+              borderRadius: BorderRadius.circular(AppThemeData.radiusMd),
               border: Border.all(
                 color: checked
                     ? theme.primary.withValues(alpha: 0.5)
@@ -332,12 +326,12 @@ class _ServiceMatrix extends StatelessWidget {
                 if (tag != null)
                   Container(
                     margin: const EdgeInsets.only(right: 8),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       color: AppThemeData.accentYellow,
-                      borderRadius: BorderRadius.circular(
-                          AppThemeData.radiusPill),
+                      borderRadius:
+                          BorderRadius.circular(AppThemeData.radiusPill),
                     ),
                     child: Text(
                       tag,
@@ -374,34 +368,32 @@ class _ServiceMatrix extends StatelessWidget {
           onChanged: (_) {},
           locked: true,
           title: draft.serviceTitle ?? l10n.bfSelectedService,
-          price:
-              'PHP ${(controller.quote.basePrice).toStringAsFixed(0)}',
+          price: 'PHP ${(controller.quote.basePrice).toStringAsFixed(0)}',
         ),
-        row(
-          checked: urgent,
-          onChanged: (v) => controller.setUrgency(
-            (v ?? false) ? BookingUrgency.rightNow : BookingUrgency.scheduled,
+        if (controller.quote.timePremium != 0)
+          row(
+            checked: true,
+            onChanged: (_) {},
+            locked: true,
+            title: 'Time adjustment',
+            price: 'PHP ${controller.quote.timePremium.toStringAsFixed(0)}',
           ),
-          title: l10n.bfExpressArrival,
-          price: _formatUrgencyPrice(controller.quote.urgencyAdjustment),
-          tag: 'FASTEST',
-        ),
-        row(
-          checked: draft.cleaningType == ServiceType.deep,
-          onChanged: (v) => controller.setServiceType(
-            (v ?? false) ? ServiceType.deep : ServiceType.standard,
+        if (controller.quote.platformFee != 0)
+          row(
+            checked: true,
+            onChanged: (_) {},
+            locked: true,
+            title: 'Platform fee',
+            price: 'PHP ${controller.quote.platformFee.toStringAsFixed(0)}',
           ),
-          title: l10n.bfDeepCleanUpgrade,
-          price: '+PHP ${deepDelta.toStringAsFixed(0)}',
-        ),
-        row(
-          checked: draft.cleaningType == ServiceType.premium,
-          onChanged: (v) => controller.setServiceType(
-            (v ?? false) ? ServiceType.premium : ServiceType.standard,
+        if (controller.quote.vat != 0)
+          row(
+            checked: true,
+            onChanged: (_) {},
+            locked: true,
+            title: 'VAT',
+            price: 'PHP ${controller.quote.vat.toStringAsFixed(0)}',
           ),
-          title: l10n.bfPremiumMaterials,
-          price: '+PHP ${premiumDelta.toStringAsFixed(0)}',
-        ),
       ],
     );
   }
@@ -479,27 +471,56 @@ class _LocationContextCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: AppThemeData.spaceMd),
-              AppTextField(
-                controller: TextEditingController(
-                  text: controller.draft.landmarks,
-                ),
-                onChanged: controller.setLandmarks,
-                placeholder: l10n.bfLandmarksPlaceholder,
-                placeholderStyle: theme.bodySmall.override(
-                  font: GoogleFonts.plusJakartaSans(),
-                  color: theme.textTertiary,
-                ),
-                radius: AppThemeData.radiusMd,
-                fillColor: theme.primaryBackground,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
-                ),
-              ),
+              _LandmarkField(controller: controller),
             ],
           ),
         ),
       ],
+    );
+  }
+}
+
+class _LandmarkField extends StatefulWidget {
+  const _LandmarkField({required this.controller});
+
+  final BookingFlowController controller;
+
+  @override
+  State<_LandmarkField> createState() => _LandmarkFieldState();
+}
+
+class _LandmarkFieldState extends State<_LandmarkField> {
+  late final TextEditingController _textController;
+
+  @override
+  void initState() {
+    super.initState();
+    _textController = TextEditingController(
+      text: widget.controller.draft.landmarks,
+    );
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    return AppTextField(
+      controller: _textController,
+      onChanged: widget.controller.setLandmarks,
+      placeholder: l10n.bfLandmarksPlaceholder,
+      placeholderStyle: theme.bodySmall.override(
+        font: GoogleFonts.plusJakartaSans(),
+        color: theme.textTertiary,
+      ),
+      radius: AppThemeData.radiusMd,
+      fillColor: theme.primaryBackground,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     );
   }
 }
@@ -617,10 +638,8 @@ class _PaymentMatrix extends StatelessWidget {
               height: 52,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color:
-                    selected ? theme.primary : theme.primaryBackground,
-                borderRadius:
-                    BorderRadius.circular(AppThemeData.radiusLg),
+                color: selected ? theme.primary : theme.primaryBackground,
+                borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
                 border: Border.all(
                   color: selected ? theme.primary : theme.border,
                   width: selected ? 1.6 : 1,
@@ -649,15 +668,16 @@ class _PaymentMatrix extends StatelessWidget {
             tier(
               label: l10n.bfCash,
               selected: draft.paymentMethod == BookingPaymentMethod.cod,
-              onTap: () => controller
-                  .setPaymentMethod(BookingPaymentMethod.cod),
+              onTap: () =>
+                  controller.setPaymentMethod(BookingPaymentMethod.cod),
             ),
             const SizedBox(width: AppThemeData.spaceSm),
             tier(
               label: l10n.bfDigital,
-              selected: isDigital && draft.paymentMethod != BookingPaymentMethod.cod,
-              onTap: () => controller
-                  .setPaymentMethod(BookingPaymentMethod.gcash),
+              selected:
+                  isDigital && draft.paymentMethod != BookingPaymentMethod.cod,
+              onTap: () =>
+                  controller.setPaymentMethod(BookingPaymentMethod.gcash),
             ),
           ],
         ),
@@ -682,9 +702,7 @@ class _PaymentMatrix extends StatelessWidget {
                       borderRadius:
                           BorderRadius.circular(AppThemeData.radiusLg),
                       border: Border.all(
-                        color: active
-                            ? theme.primary
-                            : theme.border,
+                        color: active ? theme.primary : theme.border,
                         width: active ? 1.8 : 1,
                       ),
                     ),
@@ -695,9 +713,7 @@ class _PaymentMatrix extends StatelessWidget {
                         Icon(
                           glyph,
                           size: 26,
-                          color: active
-                              ? theme.primary
-                              : theme.secondaryText,
+                          color: active ? theme.primary : theme.secondaryText,
                         ),
                         const SizedBox(height: 6),
                         Text(
@@ -743,8 +759,7 @@ class _CheckoutFooter extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final categoryLabel =
-        (controller.draft.serviceCategoryName ?? '').trim();
+    final categoryLabel = (controller.draft.serviceCategoryName ?? '').trim();
     final ctaLabel = categoryLabel.isEmpty
         ? l10n.bfBookNow
         : l10n.bfBookCategoryNow(categoryLabel);
@@ -756,7 +771,11 @@ class _CheckoutFooter extends StatelessWidget {
         Row(
           children: [
             Text(
-              l10n.bfTotalPriceDue,
+              controller.isLoadingQuote
+                  ? 'Loading estimate...'
+                  : controller.quoteError != null
+                      ? 'Estimate unavailable'
+                      : l10n.bfTotalPriceDue,
               style: theme.bodyLarge.override(
                 fontWeight: FontWeight.w600,
                 color: theme.secondaryText,
@@ -764,7 +783,11 @@ class _CheckoutFooter extends StatelessWidget {
             ),
             const Spacer(),
             Text(
-              'PHP ${quote.total.toStringAsFixed(0)}',
+              controller.isLoadingQuote
+                  ? '...'
+                  : controller.serverQuote == null
+                      ? '—'
+                      : 'PHP ${quote.total.toStringAsFixed(0)}',
               style: theme.titleLarge.override(
                 font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
                 color: theme.primary,
@@ -773,13 +796,25 @@ class _CheckoutFooter extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppThemeData.spaceMd),
+        if (controller.quoteError != null)
+          TextButton.icon(
+            onPressed:
+                controller.isLoadingQuote ? null : controller.refreshQuote,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Retry estimate'),
+          ),
         AppButton(
           width: double.infinity,
           height: 56,
           backgroundColor: AppThemeData.actionPrimary,
           foregroundColor: Colors.white,
           borderRadius: AppThemeData.radiusLg,
-          onPressed: controller.isSubmitting ? null : onNextOrConfirm,
+          onPressed: controller.isSubmitting ||
+                  controller.isLoadingQuote ||
+                  controller.quoteError != null ||
+                  controller.serverQuote == null
+              ? null
+              : onNextOrConfirm,
           child: controller.checkoutStep <
                   BookingFlowController.checkoutStepCount - 1
               ? Text(
@@ -787,22 +822,22 @@ class _CheckoutFooter extends StatelessWidget {
                   style: theme.titleMedium.override(
                     font: GoogleFonts.plusJakartaSans(
                         fontWeight: FontWeight.w800),
+                    color: theme.onPrimary,
                   ),
                 )
               : Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.bolt_rounded, size: 19,
-                        color: Colors.white),
+                    const Icon(Icons.bolt_rounded,
+                        size: 19, color: Colors.white),
                     const SizedBox(width: 8),
                     Flexible(
                       child: Text(
-                        isScheduled
-                            ? l10n.bfConfirmReserveSlot
-                            : ctaLabel,
+                        isScheduled ? l10n.bfConfirmReserveSlot : ctaLabel,
                         style: theme.titleMedium.override(
                           font: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w800),
+                          color: theme.onPrimary,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -862,6 +897,7 @@ class _CheckoutSheets {
     }
   }
 }
+
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle({required this.title});
 
@@ -874,15 +910,4 @@ class _SectionTitle extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
       );
-}
-
-/// Formats the express-arrival price row. Positive adjustments are shown as
-/// a surcharge (e.g. "+PHP 108"), negative ones (scheduling ahead discount)
-/// as a savings value (e.g. "−PHP 48") instead of a confusing "+PHP -48".
-String _formatUrgencyPrice(double adjustment) {
-  final rounded = adjustment.round().abs();
-  if (adjustment >= 0) {
-    return '+PHP $rounded';
-  }
-  return '−PHP $rounded';
 }

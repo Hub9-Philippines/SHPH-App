@@ -113,7 +113,7 @@ class _RoomJoinWidgetState extends State<RoomJoinWidget> {
                   const SizedBox(height: 8),
                   Text(_model.errorMsg!,
                       style: theme.bodySmall
-                          ?.copyWith(color: theme.error)),
+                          .copyWith(color: theme.error)),
                 ],
               ],
             ),
@@ -135,7 +135,7 @@ class _RoomJoinWidgetState extends State<RoomJoinWidget> {
                   const SizedBox(height: 4),
                   Text(preview['category_name']?.toString() ?? '',
                       style: theme.bodySmall
-                          ?.copyWith(color: theme.secondaryText)),
+                          .copyWith(color: theme.secondaryText)),
                   const SizedBox(height: 8),
                   Text(
                     _l10n.rjSeats(
@@ -147,7 +147,7 @@ class _RoomJoinWidgetState extends State<RoomJoinWidget> {
                   Text(
                     '${preview['event_date'] ?? ''} ${preview['event_time'] ?? ''}',
                     style: theme.bodySmall
-                        ?.copyWith(color: theme.secondaryText),
+                        .copyWith(color: theme.secondaryText),
                   ),
                   if (preview['price_per_head'] != null)
                     Text('\$${preview['price_per_head']}/head',

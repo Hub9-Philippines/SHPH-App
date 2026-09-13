@@ -107,8 +107,7 @@ abstract class AppDesignTokens {
         color: color,
       );
 
-  static TextStyle badge({Color color = brand}) =>
-      GoogleFonts.plusJakartaSans(
+  static TextStyle badge({Color color = brand}) => GoogleFonts.plusJakartaSans(
         fontSize: 8,
         fontWeight: FontWeight.w800,
         color: color,
@@ -189,7 +188,8 @@ class PrototypeAppHeader extends StatelessWidget {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 240),
       curve: Curves.easeInOut,
-      padding: EdgeInsets.fromLTRB(20, isCompact ? 8 : 12, 20, isCompact ? 8 : 16),
+      padding:
+          EdgeInsets.fromLTRB(20, isCompact ? 8 : 12, 20, isCompact ? 8 : 16),
       decoration: BoxDecoration(
         color: isCompact ? AppDesignTokens.surface : null,
         gradient: isCompact
@@ -197,7 +197,11 @@ class PrototypeAppHeader extends StatelessWidget {
             : const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFFECFDF5), Color(0xFFF4FFFC), AppDesignTokens.canvas],
+                colors: [
+                  Color(0xFFECFDF5),
+                  Color(0xFFF4FFFC),
+                  AppDesignTokens.canvas
+                ],
               ),
       ),
       child: isCompact
@@ -278,7 +282,8 @@ class _HeaderIconButton extends StatelessWidget {
           color: AppDesignTokens.surface,
           borderRadius: BorderRadius.circular(AppDesignTokens.radiusMd),
           boxShadow: const [
-            BoxShadow(color: Color(0x0D0F172A), blurRadius: 4, offset: Offset(0, 1))
+            BoxShadow(
+                color: Color(0x0D0F172A), blurRadius: 4, offset: Offset(0, 1))
           ],
         ),
         child: Stack(
@@ -328,12 +333,14 @@ class _SearchTriggerBar extends StatelessWidget {
           color: AppDesignTokens.surface,
           borderRadius: BorderRadius.circular(AppDesignTokens.radiusMd),
           boxShadow: const [
-            BoxShadow(color: Color(0x0D0F172A), blurRadius: 4, offset: Offset(0, 1))
+            BoxShadow(
+                color: Color(0x0D0F172A), blurRadius: 4, offset: Offset(0, 1))
           ],
         ),
         child: Row(
           children: [
-            const Icon(Icons.search_rounded, size: 20, color: AppDesignTokens.inkMuted),
+            const Icon(Icons.search_rounded,
+                size: 20, color: AppDesignTokens.inkMuted),
             SizedBox(width: isCompact ? 10 : 12),
             Expanded(
               child: Text(
@@ -411,7 +418,8 @@ class ActiveBookingCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppDesignTokens.radiusLg),
         border: Border.all(color: AppDesignTokens.borderSubtle),
         boxShadow: const [
-          BoxShadow(color: Color(0x050F172A), blurRadius: 4, offset: Offset(0, 1))
+          BoxShadow(
+              color: Color(0x050F172A), blurRadius: 4, offset: Offset(0, 1))
         ],
       ),
       child: Column(
@@ -425,7 +433,8 @@ class ActiveBookingCard extends StatelessWidget {
                     height: 52,
                     decoration: BoxDecoration(
                       color: iconBgColor,
-                      borderRadius: BorderRadius.circular(AppDesignTokens.radiusMd),
+                      borderRadius:
+                          BorderRadius.circular(AppDesignTokens.radiusMd),
                     ),
                     child: Icon(icon, color: iconColor, size: 24),
                   ),
@@ -460,10 +469,12 @@ class ActiveBookingCard extends StatelessWidget {
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
                             color: statusBgColor,
-                            borderRadius: BorderRadius.circular(AppDesignTokens.radiusPill),
+                            borderRadius: BorderRadius.circular(
+                                AppDesignTokens.radiusPill),
                           ),
                           child: Text(
                             statusLabel,
@@ -483,7 +494,8 @@ class ActiveBookingCard extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       subtitleInfo,
-                      style: AppDesignTokens.caption(color: AppDesignTokens.success),
+                      style: AppDesignTokens.caption(
+                          color: AppDesignTokens.success),
                     ),
                   ],
                 ),
@@ -501,11 +513,13 @@ class ActiveBookingCard extends StatelessWidget {
                       backgroundColor: AppDesignTokens.brand,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppDesignTokens.radiusSm),
+                        borderRadius:
+                            BorderRadius.circular(AppDesignTokens.radiusSm),
                       ),
                     ),
                     onPressed: onTrackTap,
-                    icon: const Icon(Icons.location_searching_rounded, size: 14, color: Colors.white),
+                    icon: const Icon(Icons.location_searching_rounded,
+                        size: 14, color: Colors.white),
                     label: Text(
                       'Track Service',
                       style: GoogleFonts.plusJakartaSans(
@@ -525,9 +539,11 @@ class ActiveBookingCard extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: iconBgColor,
-                    borderRadius: BorderRadius.circular(AppDesignTokens.radiusSm),
+                    borderRadius:
+                        BorderRadius.circular(AppDesignTokens.radiusSm),
                   ),
-                  child: Icon(Icons.chat_bubble_outline_rounded, size: 18, color: iconColor),
+                  child: Icon(Icons.chat_bubble_outline_rounded,
+                      size: 18, color: iconColor),
                 ),
               ),
             ],
@@ -553,7 +569,8 @@ class EmergencyHelpCard extends StatelessWidget {
           colors: [Color(0xFFEF4444), Color(0xFFF43F5E)],
         ),
         boxShadow: const [
-          BoxShadow(color: Color(0x33EF4444), blurRadius: 16, offset: Offset(0, 6))
+          BoxShadow(
+              color: Color(0x33EF4444), blurRadius: 16, offset: Offset(0, 6))
         ],
       ),
       child: Row(
@@ -565,7 +582,8 @@ class EmergencyHelpCard extends StatelessWidget {
               color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(AppDesignTokens.radiusSm),
             ),
-            child: const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 22),
+            child: const Icon(Icons.warning_amber_rounded,
+                color: Colors.white, size: 22),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -759,7 +777,8 @@ class BayanihanPoolCard extends StatelessWidget {
           colors: [Color(0xFF14B8A6), Color(0xFF059669)],
         ),
         boxShadow: const [
-          BoxShadow(color: Color(0x2614B8A6), blurRadius: 12, offset: Offset(0, 4))
+          BoxShadow(
+              color: Color(0x2614B8A6), blurRadius: 12, offset: Offset(0, 4))
         ],
       ),
       child: Row(
@@ -771,7 +790,8 @@ class BayanihanPoolCard extends StatelessWidget {
               color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(AppDesignTokens.radiusSm),
             ),
-            child: const Icon(Icons.people_outline_rounded, color: Colors.white, size: 22),
+            child: const Icon(Icons.people_outline_rounded,
+                color: Colors.white, size: 22),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -842,7 +862,8 @@ class SeasonalOfferCard extends StatelessWidget {
           colors: [Color(0xFF1D4ED8), Color(0xFF1E3A8A), Color(0xFF0F172A)],
         ),
         boxShadow: const [
-          BoxShadow(color: Color(0x382563EB), blurRadius: 24, offset: Offset(0, 10))
+          BoxShadow(
+              color: Color(0x382563EB), blurRadius: 24, offset: Offset(0, 10))
         ],
       ),
       child: Stack(
@@ -894,9 +915,11 @@ class SeasonalOfferCard extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppDesignTokens.radiusSm),
+                    borderRadius:
+                        BorderRadius.circular(AppDesignTokens.radiusSm),
                   ),
                 ),
                 onPressed: onTap,
@@ -981,12 +1004,18 @@ class TrendingProviderCard extends StatelessWidget {
                           : null,
                     ),
                     child: hasAvatar
-                        ? null
-                        : const Icon(
-                            Icons.person_rounded,
-                            color: AppDesignTokens.inkMuted,
-                            size: 18,
-                          ),
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(
+                              AppDesignTokens.radiusSm,
+                            ),
+                            child: Image.network(
+                              avatarUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) =>
+                                  _providerAvatarFallback(),
+                            ),
+                          )
+                        : _providerAvatarFallback(),
                   ),
                   Positioned(
                     bottom: 0,
@@ -1127,6 +1156,16 @@ class TrendingProviderCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _providerAvatarFallback() {
+    return const Center(
+      child: Icon(
+        Icons.person_rounded,
+        color: AppDesignTokens.inkMuted,
+        size: 18,
       ),
     );
   }
@@ -1387,7 +1426,8 @@ class BookingItemCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppDesignTokens.radiusLg),
         border: Border.all(color: AppDesignTokens.borderSubtle),
         boxShadow: const [
-          BoxShadow(color: Color(0x050F172A), blurRadius: 4, offset: Offset(0, 1))
+          BoxShadow(
+              color: Color(0x050F172A), blurRadius: 4, offset: Offset(0, 1))
         ],
       ),
       child: Column(
@@ -1402,7 +1442,8 @@ class BookingItemCard extends StatelessWidget {
                   color: AppDesignTokens.surfaceMuted,
                   borderRadius: BorderRadius.circular(AppDesignTokens.radiusMd),
                 ),
-                child: Icon(icon, color: AppDesignTokens.inkSecondary, size: 24),
+                child:
+                    Icon(icon, color: AppDesignTokens.inkSecondary, size: 24),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1432,10 +1473,12 @@ class BookingItemCard extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              const Icon(Icons.calendar_today_outlined, size: 14, color: AppDesignTokens.inkMuted),
+              const Icon(Icons.calendar_today_outlined,
+                  size: 14, color: AppDesignTokens.inkMuted),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(dateTimeFormatted, style: AppDesignTokens.caption()),
+                child:
+                    Text(dateTimeFormatted, style: AppDesignTokens.caption()),
               ),
               Text(
                 priceFormatted,
@@ -1461,7 +1504,8 @@ class BookingItemCard extends StatelessWidget {
                             : AppDesignTokens.brand,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppDesignTokens.radiusSm),
+                          borderRadius:
+                              BorderRadius.circular(AppDesignTokens.radiusSm),
                         ),
                       ),
                       onPressed: onPrimaryAction,
@@ -1473,7 +1517,9 @@ class BookingItemCard extends StatelessWidget {
                         color: Colors.white,
                       ),
                       label: Text(
-                        status == BookingStatus.completed ? 'Write Review' : 'Track Service',
+                        status == BookingStatus.completed
+                            ? 'Write Review'
+                            : 'Track Service',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
@@ -1495,7 +1541,8 @@ class BookingItemCard extends StatelessWidget {
                               : AppDesignTokens.brand,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppDesignTokens.radiusSm),
+                          borderRadius:
+                              BorderRadius.circular(AppDesignTokens.radiusSm),
                         ),
                       ),
                       onPressed: onSecondaryAction,
@@ -1509,7 +1556,9 @@ class BookingItemCard extends StatelessWidget {
                             : AppDesignTokens.brand,
                       ),
                       label: Text(
-                        status == BookingStatus.completed ? 'Book Again' : 'Reschedule',
+                        status == BookingStatus.completed
+                            ? 'Book Again'
+                            : 'Reschedule',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
@@ -1529,9 +1578,12 @@ class BookingItemCard extends StatelessWidget {
               onTap: onPrimaryAction,
               child: Row(
                 children: [
-                  const Icon(Icons.visibility_outlined, size: 14, color: AppDesignTokens.inkMuted),
+                  const Icon(Icons.visibility_outlined,
+                      size: 14, color: AppDesignTokens.inkMuted),
                   const SizedBox(width: 6),
-                  Text('View Details', style: AppDesignTokens.caption(color: AppDesignTokens.inkMuted)),
+                  Text('View Details',
+                      style: AppDesignTokens.caption(
+                          color: AppDesignTokens.inkMuted)),
                 ],
               ),
             ),
@@ -1610,7 +1662,8 @@ class ConversationChatCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppDesignTokens.radiusLg),
           border: Border.all(color: AppDesignTokens.borderSubtle),
           boxShadow: const [
-            BoxShadow(color: Color(0x050F172A), blurRadius: 4, offset: Offset(0, 1))
+            BoxShadow(
+                color: Color(0x050F172A), blurRadius: 4, offset: Offset(0, 1))
           ],
         ),
         child: Row(
@@ -1629,7 +1682,9 @@ class ConversationChatCard extends StatelessWidget {
                     width: 12,
                     height: 12,
                     decoration: BoxDecoration(
-                      color: isCompleted ? AppDesignTokens.inkMuted : AppDesignTokens.success,
+                      color: isCompleted
+                          ? AppDesignTokens.inkMuted
+                          : AppDesignTokens.success,
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 2),
                     ),
@@ -1645,14 +1700,18 @@ class ConversationChatCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(name, style: AppDesignTokens.cardTitle().copyWith(fontSize: 12)),
+                      Text(name,
+                          style: AppDesignTokens.cardTitle()
+                              .copyWith(fontSize: 12)),
                       Text(timeAgo, style: AppDesignTokens.caption()),
                     ],
                   ),
                   const SizedBox(height: 6),
                   Text(
                     messageSnippet,
-                    style: AppDesignTokens.caption(color: AppDesignTokens.inkSecondary).copyWith(height: 1.4),
+                    style: AppDesignTokens.caption(
+                            color: AppDesignTokens.inkSecondary)
+                        .copyWith(height: 1.4),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1661,24 +1720,32 @@ class ConversationChatCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: isCompleted ? AppDesignTokens.brandLight : AppDesignTokens.successLight,
-                          borderRadius: BorderRadius.circular(AppDesignTokens.radiusPill),
+                          color: isCompleted
+                              ? AppDesignTokens.brandLight
+                              : AppDesignTokens.successLight,
+                          borderRadius:
+                              BorderRadius.circular(AppDesignTokens.radiusPill),
                         ),
                         child: Text(
                           isCompleted ? 'Completed' : 'Conversation',
                           style: AppDesignTokens.badge(
-                            color: isCompleted ? AppDesignTokens.brand : AppDesignTokens.success,
+                            color: isCompleted
+                                ? AppDesignTokens.brand
+                                : AppDesignTokens.success,
                           ),
                         ),
                       ),
                       if (unreadCount > 0)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
                             color: AppDesignTokens.brand,
-                            borderRadius: BorderRadius.circular(AppDesignTokens.radiusPill),
+                            borderRadius: BorderRadius.circular(
+                                AppDesignTokens.radiusPill),
                           ),
                           child: Text(
                             '$unreadCount unread',
@@ -1731,7 +1798,8 @@ class ProfileHeroCard extends StatelessWidget {
           colors: [Color(0xFF1E3A8A), Color(0xFF274FB5), Color(0xFF3B62D9)],
         ),
         boxShadow: const [
-          BoxShadow(color: Color(0x331E3A8A), blurRadius: 20, offset: Offset(0, 8))
+          BoxShadow(
+              color: Color(0x331E3A8A), blurRadius: 20, offset: Offset(0, 8))
         ],
       ),
       child: Row(
@@ -1743,7 +1811,8 @@ class ProfileHeroCard extends StatelessWidget {
                 height: 76,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white.withOpacity(0.85), width: 2),
+                  border: Border.all(
+                      color: Colors.white.withOpacity(0.85), width: 2),
                   image: DecorationImage(
                     image: NetworkImage(avatarUrl),
                     fit: BoxFit.cover,
@@ -1762,10 +1831,14 @@ class ProfileHeroCard extends StatelessWidget {
                       color: Colors.white,
                       shape: BoxShape.circle,
                       boxShadow: [
-                        BoxShadow(color: Color(0x26000000), blurRadius: 4, offset: Offset(0, 1))
+                        BoxShadow(
+                            color: Color(0x26000000),
+                            blurRadius: 4,
+                            offset: Offset(0, 1))
                       ],
                     ),
-                    child: const Icon(Icons.camera_alt_rounded, size: 14, color: AppDesignTokens.brand),
+                    child: const Icon(Icons.camera_alt_rounded,
+                        size: 14, color: AppDesignTokens.brand),
                   ),
                 ),
               ),
@@ -1791,7 +1864,8 @@ class ProfileHeroCard extends StatelessWidget {
                     ),
                     if (isVerified) ...[
                       const SizedBox(width: 6),
-                      const Icon(Icons.verified_rounded, color: Color(0xFF67E8F9), size: 16),
+                      const Icon(Icons.verified_rounded,
+                          color: Color(0xFF67E8F9), size: 16),
                     ],
                   ],
                 ),
@@ -1847,7 +1921,8 @@ class ProfileMenuGroup extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppDesignTokens.radiusLg),
             border: Border.all(color: AppDesignTokens.borderSubtle),
             boxShadow: const [
-              BoxShadow(color: Color(0x050F172A), blurRadius: 4, offset: Offset(0, 1))
+              BoxShadow(
+                  color: Color(0x050F172A), blurRadius: 4, offset: Offset(0, 1))
             ],
           ),
           child: Column(
@@ -1855,7 +1930,12 @@ class ProfileMenuGroup extends StatelessWidget {
               for (int i = 0; i < items.length; i++) ...[
                 items[i],
                 if (i < items.length - 1)
-                  const Divider(height: 1, thickness: 1, indent: 16, endIndent: 16, color: AppDesignTokens.borderSubtle),
+                  const Divider(
+                      height: 1,
+                      thickness: 1,
+                      indent: 16,
+                      endIndent: 16,
+                      color: AppDesignTokens.borderSubtle),
               ],
             ],
           ),
@@ -1908,13 +1988,17 @@ class ProfileMenuItem extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: AppDesignTokens.cardTitle().copyWith(fontSize: 12)),
+                  Text(title,
+                      style:
+                          AppDesignTokens.cardTitle().copyWith(fontSize: 12)),
                   const SizedBox(height: 2),
                   Text(subtitle, style: AppDesignTokens.caption()),
                 ],
               ),
             ),
-            trailing ?? const Icon(Icons.chevron_right_rounded, color: AppDesignTokens.inkMuted, size: 18),
+            trailing ??
+                const Icon(Icons.chevron_right_rounded,
+                    color: AppDesignTokens.inkMuted, size: 18),
           ],
         ),
       ),

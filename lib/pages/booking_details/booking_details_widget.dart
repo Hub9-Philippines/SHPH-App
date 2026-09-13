@@ -72,12 +72,10 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
 
       if (booking != null) {
         Map<String, dynamic>? service;
-        final parsedId =
-            int.tryParse(booking.serviceListingId.toString());
+        final parsedId = int.tryParse(booking.serviceListingId.toString());
         if (parsedId != null) {
           try {
-            final listing =
-                await ShphServicesApi.instance.getListing(parsedId);
+            final listing = await ShphServicesApi.instance.getListing(parsedId);
             service = {
               'id': listing.id,
               'title': listing.title,
@@ -208,7 +206,8 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
   }
 
   String get _providerName =>
-      _model.serviceListing?['provider_name'] as String? ?? _l10n.bdAssignedProvider;
+      _model.serviceListing?['provider_name'] as String? ??
+      _l10n.bdAssignedProvider;
 
   @override
   Widget build(BuildContext context) => GestureDetector(
@@ -275,8 +274,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                                       style: AppTheme.of(context)
                                           .bodyMedium
                                           .override(
-                                            font:
-                                                GoogleFonts.plusJakartaSans(),
+                                            font: GoogleFonts.plusJakartaSans(),
                                             color: AppTheme.of(context)
                                                 .secondaryText,
                                           ),
@@ -294,8 +292,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
   /// circular actions.
   Widget _buildProviderSummaryCard(BuildContext context) {
     final theme = AppTheme.of(context);
-    final rating =
-        (_model.serviceListing?['rating'] as num?)?.toDouble() ?? 0.0;
+    final rating = _asDouble(_model.serviceListing?['rating']);
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -325,8 +322,8 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.titleSmall.override(
-                        font:
-                            GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+                        font: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.w700),
                         color: theme.primaryText,
                       ),
                     ),
@@ -384,6 +381,13 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
         ),
       ],
     );
+  }
+
+  double _asDouble(dynamic value) {
+    if (value is num) {
+      return value.toDouble();
+    }
+    return double.tryParse(value?.toString() ?? '') ?? 0.0;
   }
 
   /// Zone 2 — vertical progress timeline derived from server status and
@@ -526,7 +530,8 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
             _l10n.bdPaymentStatus,
             booking.paymentStatus ?? _l10n.bdPending,
           ),
-          _buildInfoRow(context, _l10n.bdServiceLocation, _serviceLocationLine()),
+          _buildInfoRow(
+              context, _l10n.bdServiceLocation, _serviceLocationLine()),
         ],
       ),
     );
@@ -607,15 +612,14 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
               width: double.infinity,
               height: 52,
               child: FilledButton.icon(
-                onPressed: (_isTrackable && _model.booking != null)
-                    ? _openMap
-                    : null,
+                onPressed:
+                    (_isTrackable && _model.booking != null) ? _openMap : null,
                 icon: const Icon(Icons.map_rounded, size: 20),
                 label: Text(
                   _l10n.bdTrackOnMap,
                   style: theme.titleSmall.override(
-                    font:
-                        GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+                    font: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w700),
                     color: Colors.white,
                   ),
                 ),
@@ -636,8 +640,8 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                 label: Text(
                   _l10n.bdCancelBooking,
                   style: theme.labelLarge.override(
-                    font:
-                        GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+                    font: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w700),
                     color: AppThemeData.destructiveSoft,
                   ),
                 ),

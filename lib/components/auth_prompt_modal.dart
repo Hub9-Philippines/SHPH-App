@@ -47,7 +47,7 @@ class AuthPromptModal extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             _l10n.ccSignInSubtitle,
-            style: theme.bodySmall?.copyWith(color: theme.secondaryText),
+            style: theme.bodySmall.copyWith(color: theme.secondaryText),
             textAlign: TextAlign.center,
           ),
         ],

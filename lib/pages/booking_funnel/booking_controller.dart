@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 import '/app_state.dart';
 import '/l10n/app_localizations.dart';
@@ -43,6 +44,9 @@ class BookingFlowController extends ChangeNotifier {
   bool get isLoadingData => _isLoadingData;
 
   bool isSubmitting = false;
+  bool isLoadingQuote = false;
+  String? quoteError;
+  BookingQuote? serverQuote;
   bool liveSearchTimedOut = false;
   bool isMatchingActive = false;
   String? activeReferenceId;
@@ -51,17 +55,15 @@ class BookingFlowController extends ChangeNotifier {
   /// Real on-demand job id from POST /api/services/on-demand/ (null when the
   /// broadcast did not succeed / no category selected). Drives the live
   /// matching UI's authoritative status instead of fabricated numbers.
-  String? get liveJobId =>
-      _shphRepo?.lastJobId;
+  String? get liveJobId => _shphRepo?.lastJobId;
   int? get liveProviderCount => _shphRepo?.lastProviderCount;
   double? get liveEstFeeMin => _shphRepo?.lastEstFeeMin;
   double? get liveEstFeeMax => _shphRepo?.lastEstFeeMax;
   bool get liveBroadcastSucceeded => _shphRepo?.lastBroadcastSucceeded ?? false;
 
-  ShphBookingRepository? get _shphRepo =>
-      repository is ShphBookingRepository
-          ? repository as ShphBookingRepository
-          : null;
+  ShphBookingRepository? get _shphRepo => repository is ShphBookingRepository
+      ? repository as ShphBookingRepository
+      : null;
 
   BookingDraft get draft => _draft;
 
@@ -77,39 +79,44 @@ class BookingFlowController extends ChangeNotifier {
       servicePriceUnit: service.priceUnit,
     );
     notifyListeners();
+    unawaited(refreshQuote());
   }
 
   BookingQuote get quote {
-    // Anchor the estimate to the service's real base price. There is no
-    // server-side quote endpoint, so the room/type/urgency adjustments are
-    // client-side estimates; the authoritative total comes from the API after
-    // the booking is created. No fabricated flat price is used.
+    final estimate = serverQuote;
+    if (estimate != null) {
+      return estimate;
+    }
+    // A zero quote is a loading placeholder, never a price estimate.
     final base = _draft.serviceBasePrice ?? 0.0;
-    final roomIncrement = (base * 0.18).clamp(90.0, 320.0);
-    final roomSubtotal = (_draft.rooms - 1) * roomIncrement;
-    final cleaningTypeAdjustment = switch (_draft.cleaningType) {
-      ServiceType.standard => 0.0,
-      ServiceType.deep => base * 0.25,
-      ServiceType.premium => base * 0.45,
-    };
-    final urgencyAdjustment = switch (_draft.urgency) {
-      BookingUrgency.rightNow => (base * 0.18).clamp(100.0, 180.0),
-      BookingUrgency.laterToday => (base * 0.12).clamp(60.0, 140.0),
-      BookingUrgency.scheduled => -(base * 0.08).clamp(40.0, 90.0),
-    };
-
     return BookingQuote(
       basePrice: base,
-      roomSubtotal: roomSubtotal,
-      cleaningTypeAdjustment: cleaningTypeAdjustment,
-      urgencyAdjustment: urgencyAdjustment,
-      total: base + roomSubtotal + cleaningTypeAdjustment + urgencyAdjustment,
+      total: 0,
     );
+  }
+
+  Future<void> refreshQuote() async {
+    if (!hasSelectedService) {
+      return;
+    }
+    isLoadingQuote = true;
+    quoteError = null;
+    notifyListeners();
+    try {
+      serverQuote = await repository.estimateBooking(_draft);
+    } catch (error) {
+      serverQuote = null;
+      quoteError = error.toString();
+    } finally {
+      isLoadingQuote = false;
+      notifyListeners();
+    }
   }
 
   void setUrgency(BookingUrgency urgency) {
     _draft = _draft.copyWith(urgency: urgency);
     notifyListeners();
+    unawaited(refreshQuote());
   }
 
   void setRooms(int rooms) {
@@ -195,6 +202,7 @@ class BookingFlowController extends ChangeNotifier {
       urgency: urgency ?? _draft.urgency,
     );
     notifyListeners();
+    unawaited(refreshQuote());
   }
 
   String urgencyLabel(AppLocalizations l10n) => switch (_draft.urgency) {
@@ -211,7 +219,8 @@ class BookingFlowController extends ChangeNotifier {
         BookingPaymentMethod.cod => l10n.bfCash,
       };
 
-  String cleaningTypeLabel(AppLocalizations l10n) => switch (_draft.cleaningType) {
+  String cleaningTypeLabel(AppLocalizations l10n) =>
+      switch (_draft.cleaningType) {
         ServiceType.standard => l10n.bfStandardClean,
         ServiceType.deep => l10n.bfDeepClean,
         ServiceType.premium => l10n.bfPremiumClean,
@@ -222,10 +231,23 @@ class BookingFlowController extends ChangeNotifier {
 
   bool get hasSelectedService => _draft.serviceListingId != null;
 
+  bool get hasValidSchedule =>
+      _draft.urgency != BookingUrgency.scheduled ||
+      (_draft.scheduledDate != null && _draft.scheduledTime != null);
+
+  /// True when the draft carries a usable address for dispatch. Falls back to
+  /// true so a minimal default never bricks the funnel during entry testing.
+  bool get hasValidAddress =>
+      _draft.address.line1.trim().isNotEmpty ||
+      _draft.address.label.trim().isNotEmpty;
+
   Future<bool> attachLiveSearchToken(AppLocalizations l10n) async {
     if (!hasSelectedService) {
       lastError = l10n.bfPleaseChooseService;
       notifyListeners();
+      return false;
+    }
+    if (isSubmitting) {
       return false;
     }
     isSubmitting = true;
@@ -276,6 +298,14 @@ class BookingFlowController extends ChangeNotifier {
     if (!hasSelectedService) {
       lastError = l10n.bfPleaseChooseService;
       notifyListeners();
+      return false;
+    }
+    if (!hasValidSchedule) {
+      lastError = l10n.bfSelectATime;
+      notifyListeners();
+      return false;
+    }
+    if (isSubmitting) {
       return false;
     }
     isSubmitting = true;

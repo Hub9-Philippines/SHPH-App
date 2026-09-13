@@ -6,10 +6,13 @@ import 'package:provider/provider.dart';
 import '/components/cupertino_ui/app_button.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/components/instant_dispatch_section.dart';
+import '/components/search_bar_field.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/pages/geographic_selection/geographic_selection_widget.dart';
 import '/models/service_listing.dart';
+import '/utils/category_icons.dart';
 import '/utils/emergency_categories.dart';
+import '/services/auth_service.dart';
 import '/services/logging_service.dart';
 import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
@@ -50,13 +53,6 @@ class _ServicesScreenState extends State<ServicesScreen> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   AppLocalizations get _l10n => AppLocalizations.of(context)!;
-
-  Map<String, String> get _filterLabels => {
-        'recommended': _l10n.svFilterRecommended,
-        'topRated': _l10n.svFilterTopRated,
-        'lowestPrice': _l10n.svFilterLowestPrice,
-        'nearest': _l10n.svFilterNearest,
-      };
 
   @override
   void initState() {
@@ -171,8 +167,6 @@ class _ServicesScreenState extends State<ServicesScreen> {
                                         ],
                                       ),
                                       const SizedBox(height: 16),
-                                      _buildHeroSummary(context),
-                                      const SizedBox(height: 18),
                                       _buildCategoryRail(context),
                                       if (_isEmergencySelection) ...[
                                         InstantDispatchSection(
@@ -254,6 +248,52 @@ class _ServicesScreenState extends State<ServicesScreen> {
       _model.selectedCategory != null &&
       isEmergencyCategory(_model.selectedCategory);
 
+  /// Toggles a service favorite: requires sign-in, syncs to the favorites
+  /// API via the model (optimistic UI), and surfaces failures. The heart
+  /// state itself lives in [_model.favorites], reloaded from the server on
+  /// every page entry so it survives navigation.
+  Future<void> _toggleFavorite(
+    BuildContext context, {
+    required int serviceId,
+  }) async {
+    if (!AuthService.instance.isAuthenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_l10n.ccSignInTitle),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    final nowFavorite = await _model.toggleFavorite(serviceId);
+    if (!mounted) {
+      return;
+    }
+    setState(() {});
+
+    if (nowFavorite == null) {
+      // API call failed and the heart was reverted.
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_l10n.ccSomethingWrong),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          nowFavorite
+              ? _l10n.ppAddedToFavorites
+              : _l10n.ppRemovedFromFavorites,
+        ),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
   /// Launches express checkout for the top emergency result in the selected
   /// category with right-now urgency (the Instant Dispatch guarantee).
   void _launchInstantDispatch(BuildContext context) {
@@ -285,7 +325,12 @@ class _ServicesScreenState extends State<ServicesScreen> {
       borderRadius: BorderRadius.circular(AppThemeData.radiusPill),
       child: InkWell(
         onTap: () => context
-            .pushNamed(GeographicSelectionWidget.routeName),
+            .pushNamed(
+          GeographicSelectionWidget.routeName,
+          extra: {
+            'selectionType': GeographicSelectionType.region,
+          },
+        ),
         borderRadius: BorderRadius.circular(AppThemeData.radiusPill),
         child: Padding(
           padding:
@@ -319,178 +364,25 @@ class _ServicesScreenState extends State<ServicesScreen> {
     );
   }
 
-  Widget _buildSearchBar(BuildContext context) => Container(        height: 58,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(22),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x12000000),
-              blurRadius: 20,
-              offset: Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            const Icon(
-              Icons.search_rounded,
-              color: Color(0xFF5F6B76),
-              size: 24,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: TextField(
-                controller: _model.searchController,
-                focusNode: _model.searchFocusNode,
-                onChanged: (value) {
-                  EasyDebounce.debounce(
-                    'services_screen_search',
-                    const Duration(milliseconds: 250),
-                    () {
-                      if (!mounted) {
-                        return;
-                      }
-                      setState(() {
-                        _model.searchQuery = value;
-                        _model.applyFilters();
-                      });
-                    },
-                  );
-                },
-                decoration: InputDecoration(
-                  hintText: _l10n.svSearchPlaceholder,
-                  hintStyle: AppTheme.of(context).bodySmall.override(
-                        font: GoogleFonts.plusJakartaSans(),
-                        color: const Color(0xFF93A0AC),
-                      ),
-                  border: InputBorder.none,
-                ),
-              ),
-            ),
-            if (_model.searchController.text.isNotEmpty)
-              InkWell(
-                onTap: () {
-                  setState(() {
-                    _model.searchController.clear();
-                    _model.searchQuery = '';
-                    _model.applyFilters();
-                  });
-                },
-                borderRadius: BorderRadius.circular(999),
-                child: const Padding(
-                  padding: EdgeInsets.all(4),
-                  child: Icon(
-                    Icons.close_rounded,
-                    color: Color(0xFF7F8B97),
-                    size: 20,
-                  ),
-                ),
-              ),
-          ],
-        ),
-      );
-
-  Widget _buildHeroSummary(BuildContext context) {
-    final selectedCategory = _model.selectedCategory;
-    final selectedFilter = _model.selectedFilter;
-    final count = _model.filteredServices.length;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1A7F64),
-            Color(0xFF0FA57A),
-            Color(0xFF68D2AA),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x220FA57A),
-            blurRadius: 22,
-            offset: Offset(0, 14),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            selectedCategory != null && selectedCategory != 'All'
-                ? selectedCategory
-                : _l10n.svExploreEveryService,
-            style: AppTheme.of(context).headlineSmall.override(
-                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
-                  color: Colors.white,
-                ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            selectedFilter != null
-                ? _l10n.svCountSorted(
-                    count, _filterLabels[selectedFilter] ?? selectedFilter)
-                : _l10n.svCountReady(count),
-            style: AppTheme.of(context).bodyMedium.override(
-                  font: GoogleFonts.plusJakartaSans(),
-                  color: Colors.white.withValues(alpha: 0.86),
-                ),
-          ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _summaryPill(
-                context,
-                icon: Icons.tune_rounded,
-                label: selectedFilter == null
-                    ? _l10n.svSmartRanking
-                    : _filterLabels[selectedFilter] ?? selectedFilter,
-              ),
-              _summaryPill(
-                context,
-                icon: Icons.category_rounded,
-                label: selectedCategory ?? _l10n.svAllCategories,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _summaryPill(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-  }) =>
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.16),
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 16, color: Colors.white),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: AppTheme.of(context).labelMedium.override(
-                    font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
-                    color: Colors.white,
-                  ),
-            ),
-          ],
-        ),
+  Widget _buildSearchBar(BuildContext context) => SearchBarField(
+        controller: _model.searchController,
+        focusNode: _model.searchFocusNode,
+        hintText: _l10n.svSearchPlaceholder,
+        onChanged: (value) {
+          EasyDebounce.debounce(
+            'services_screen_search',
+            const Duration(milliseconds: 250),
+            () {
+              if (!mounted) {
+                return;
+              }
+              setState(() {
+                _model.searchQuery = value;
+                _model.applyFilters();
+              });
+            },
+          );
+        },
       );
 
   Widget _buildCategoryRail(BuildContext context) => SizedBox(
@@ -814,6 +706,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                               BorderRadius.circular(AppThemeData.radiusSm),
                           child: _ServiceCardImage(
                             imageUrl: service['imageUrl'] as String?,
+                            category: service['category'] as String?,
                           ),
                         ),
                         Positioned(
@@ -824,16 +717,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                             borderRadius:
                                 BorderRadius.circular(AppThemeData.radiusPill),
                             child: InkWell(
-                              onTap: () {
-                                final serviceId = service['id'] as int;
-                                setState(() {
-                                  if (_model.favorites.contains(serviceId)) {
-                                    _model.favorites.remove(serviceId);
-                                  } else {
-                                    _model.favorites.add(serviceId);
-                                  }
-                                });
-                              },
+                              onTap: () => _toggleFavorite(context, serviceId: service['id'] as int),
                               borderRadius:
                                   BorderRadius.circular(AppThemeData.radiusPill),
                               child: Padding(
@@ -1005,6 +889,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                                 fontWeight: FontWeight.w700,
                                 fontSize: 11.5,
                               ),
+                              color: theme.onPrimary,
                             ),
                           ),
                           const SizedBox(width: 4),
@@ -1028,18 +913,22 @@ class _ServicesScreenState extends State<ServicesScreen> {
 }
 
 class _ServiceCardImage extends StatelessWidget {
-  const _ServiceCardImage({required this.imageUrl});
+  const _ServiceCardImage({
+    required this.imageUrl,
+    this.category,
+  });
 
   static const double size = 84;
 
   final String? imageUrl;
+  final String? category;
 
   @override
   Widget build(BuildContext context) {
     final cacheSize = (size * MediaQuery.devicePixelRatioOf(context)).round();
 
     if (imageUrl == null || imageUrl!.isEmpty) {
-      return const _ServiceCardImageFallback();
+      return _ServiceCardImageFallback(category: category);
     }
 
     return Image.network(
@@ -1050,22 +939,28 @@ class _ServiceCardImage extends StatelessWidget {
       cacheWidth: cacheSize,
       cacheHeight: cacheSize,
       errorBuilder: (context, error, stackTrace) =>
-          const _ServiceCardImageFallback(),
+          _ServiceCardImageFallback(category: category),
     );
   }
 }
 
 class _ServiceCardImageFallback extends StatelessWidget {
-  const _ServiceCardImageFallback();
+  const _ServiceCardImageFallback({this.category});
+
+  final String? category;
 
   @override
-  Widget build(BuildContext context) => Container(
-        width: _ServiceCardImage.size,
-        height: _ServiceCardImage.size,
-        color: const Color(0xFFE8EDF2),
-        child: Icon(
-          Icons.image_not_supported_outlined,
-          color: AppTheme.of(context).secondaryText,
-        ),
-      );
+  Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+    return Container(
+      width: _ServiceCardImage.size,
+      height: _ServiceCardImage.size,
+      color: theme.primary.withValues(alpha: 0.08),
+      child: Icon(
+        CategoryIcons.byName(category ?? ''),
+        size: 32,
+        color: theme.primary,
+      ),
+    );
+  }
 }

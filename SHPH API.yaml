@@ -13841,7 +13841,7 @@ paths:
     post:
       operationId: services_on_demand_expand_radius_create_by_id
       description: |-
-        Client expands the search radius of a searching job. The apps walk a fixed 4 km ladder — 4 → 8 → 12 → 16 → 20 → 24 km, one rung every 30s of an 180s search (see shph-app/src/utils/onDemandRadius.ts); 8 km is only the fallback when radius_km is omitted. This endpoint accepts 4–100 and never narrows an active search. Newly included providers receive a broadcast notification and an updated fee estimate is returned.
+        Client expands the search radius of a searching job. The apps walk a per-tier ladder — urgent: 4 → 6 → 8 km, explore: 8 → 12 → 16 km, one rung every 60s of an 180s search (see shph-app/src/utils/onDemandRadius.ts); 8 km is only the fallback when radius_km is omitted. This endpoint accepts 4–100 and never narrows an active search. Newly included providers receive a broadcast notification and an updated fee estimate is returned.
 
         **Frontend:** OnDemandBookingPage.vue, useTMFlow.ts
       summary: Expand on-demand job search radius
@@ -17133,6 +17133,10 @@ components:
         listing_title:
           type: string
           readOnly: true
+        category_name:
+          type: string
+          readOnly: true
+          default: ''
         provider_name:
           type: string
           readOnly: true
@@ -17266,6 +17270,23 @@ components:
           type: number
           format: float
           readOnly: true
+        provider_eta_minutes:
+          type: integer
+          description: |-
+            Straight-line distance / 2, floored at 5 — the SAME estimate the
+            on-demand accept paths already quote (services/views.py's auto-assign
+            and bid creation both use `max(5, round(distance_km * 2))`). Answering
+            with a different number here would put two ETAs on one job.
+
+            EN_ROUTE only. provider_lat/lng are written solely while EN_ROUTE or
+            ARRIVED — BookingLocationView 409s outside that pair and
+            LocationConsumer.handle_location_update is parity — so every earlier
+            status has no fix to work from, and ARRIVED means the provider is at
+            the door and an ETA is noise. Do not re-add an ARRIVED arm.
+
+            Costs no extra query: provider_lat/lng are columns on this row and
+            `on_demand_job` is in the view's prefetch_related.
+          readOnly: true
         client_address:
           type: string
           description: |-
@@ -17306,6 +17327,7 @@ components:
       required:
       - agreed_price
       - arrived_at
+      - category_name
       - client
       - client_address
       - client_confirmed_arrival
@@ -17322,6 +17344,7 @@ components:
       - listing_title
       - on_demand_job_id
       - payment_confirmed
+      - provider_eta_minutes
       - provider_id
       - provider_name
       - provider_photo
@@ -22057,6 +22080,14 @@ components:
           type: integer
         provider_is_online:
           type: boolean
+        provider_name:
+          type: string
+        provider_photo:
+          type: string
+        provider_kyc_verified:
+          type: boolean
+        review_count:
+          type: integer
         category_id:
           type: integer
           nullable: true
@@ -22080,7 +22111,11 @@ components:
       - price_unit
       - provider_id
       - provider_is_online
+      - provider_kyc_verified
+      - provider_name
+      - provider_photo
       - province
+      - review_count
       - status
       - thumbnail
       - title
@@ -22484,9 +22519,6 @@ components:
           exclusiveMinimum: true
         fee_breakdown:
           readOnly: true
-        join_token:
-          type: string
-          readOnly: true
         status:
           allOf:
           - $ref: '#/components/schemas/RoomStatusEnum'
@@ -22534,7 +22566,6 @@ components:
       - heads_required
       - id
       - is_full
-      - join_token
       - locked_at
       - organizer
       - organizer_name
@@ -24401,8 +24432,13 @@ components:
           additionalProperties: {}
           nullable: true
           readOnly: true
+        booking_id:
+          type: string
+          nullable: true
+          readOnly: true
       required:
       - bid_count
+      - booking_id
       - category
       - category_name
       - client_lat

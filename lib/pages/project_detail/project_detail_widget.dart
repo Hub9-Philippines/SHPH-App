@@ -116,7 +116,7 @@ class _ProjectDetailWidgetState extends State<ProjectDetailWidget> {
                                 ),
                                 child: Text(
                                   _statusLabel(status),
-                                  style: theme.bodySmall?.copyWith(
+                                  style: theme.bodySmall.copyWith(
                                     color: _statusColor(status, theme),
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -128,7 +128,7 @@ class _ProjectDetailWidgetState extends State<ProjectDetailWidget> {
                           Text(
                             project['category_name']?.toString() ??
                                 '',
-                            style: theme.bodySmall?.copyWith(
+                            style: theme.bodySmall.copyWith(
                                 color: theme.secondaryText),
                           ),
                           const SizedBox(height: 8),
@@ -186,7 +186,7 @@ class _ProjectDetailWidgetState extends State<ProjectDetailWidget> {
                             title: Text(
                               rl['role_label']?.toString() ?? '',
                               style: theme.bodyMedium
-                                  ?.copyWith(
+                                  .copyWith(
                                       fontWeight:
                                           FontWeight.w600),
                             ),
@@ -202,14 +202,13 @@ class _ProjectDetailWidgetState extends State<ProjectDetailWidget> {
                                       child: Text(
                                         _l10n.pdNoProspects,
                                         style: theme.bodySmall
-                                            ?.copyWith(
+                                            .copyWith(
                                                 color: theme
                                                     .secondaryText),
                                       ),
                                     ),
                                   ]
-                                : prospects.map<Widget>((p) {
-                                    return ListTile(
+                                : prospects.map<Widget>((p) => ListTile(
                                       key: ValueKey(
                                           p['provider_id']?.toString()),
                                       leading: CircleAvatar(
@@ -250,7 +249,7 @@ class _ProjectDetailWidgetState extends State<ProjectDetailWidget> {
                                               '',
                                           style: theme
                                               .bodySmall
-                                              ?.copyWith(
+                                              .copyWith(
                                             color: _prospectColor(
                                                 p['status']
                                                     ?.toString(),
@@ -261,8 +260,7 @@ class _ProjectDetailWidgetState extends State<ProjectDetailWidget> {
                                           ),
                                         ),
                                       ),
-                                    );
-                                  }).toList(),
+                                    )).toList(),
                           ),
                         );
                       }),
@@ -290,9 +288,9 @@ class _ProjectDetailWidgetState extends State<ProjectDetailWidget> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.description,
+                              const Icon(Icons.description,
                                   size: 18, color: Colors.white),
-                              SizedBox(width: 8),
+                              const SizedBox(width: 8),
                               Text(_l10n.pdGenerateQuote),
                             ],
                           ),
@@ -342,8 +340,7 @@ class _ProjectDetailWidgetState extends State<ProjectDetailWidget> {
         _ => theme.secondaryText,
       };
 
-  Widget _infoRow(AppThemeData theme, IconData icon, String text) {
-    return Padding(
+  Widget _infoRow(AppThemeData theme, IconData icon, String text) => Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
@@ -355,5 +352,4 @@ class _ProjectDetailWidgetState extends State<ProjectDetailWidget> {
         ],
       ),
     );
-  }
 }

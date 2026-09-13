@@ -1,4 +1,4 @@
-import 'dart:typed_data';
+import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +14,6 @@ import '/services/client_kyc_service.dart';
 import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
 import 'kyc_document_model.dart';
-import 'kyc_face_liveness_widget.dart';
 
 export 'kyc_document_model.dart';
 
@@ -49,14 +48,18 @@ class _KycDocumentWidgetState extends State<KycDocumentWidget> {
     void Function(ClientKycFile file) assign,
   ) async {
     final source = await _pickSource();
-    if (source == null || !mounted) return;
+    if (source == null || !mounted) {
+      return;
+    }
     try {
       final file = await ImagePicker().pickImage(
         source: source,
         maxWidth: 2048,
         imageQuality: 85,
       );
-      if (file == null || !mounted) return;
+      if (file == null || !mounted) {
+        return;
+      }
       final bytes = await file.readAsBytes();
       assign(ClientKycFile(bytes, file.name));
       safeSetState(() {});
@@ -95,22 +98,28 @@ class _KycDocumentWidgetState extends State<KycDocumentWidget> {
   }
 
   Future<void> _continue() async {
-    if (!_model.complete || _model.isSkipping) return;
-    context.pushNamed(
+    if (!_model.complete || _model.isSkipping) {
+      return;
+    }
+    unawaited(context.pushNamed(
       KycFaceLivenessWidget.routeName,
       extra: {
         'idFront': _model.idFront,
         'idBack': _model.idBack,
       },
-    );
+    ));
   }
 
   Future<void> _skip() async {
-    if (_model.isSkipping) return;
+    if (_model.isSkipping) {
+      return;
+    }
     _model.isSkipping = true;
     safeSetState(() {});
     final ok = await ClientKycService().skip();
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     if (ok) {
       LoggingService.info('Client skipped KYC documents', tag: 'KycDocuments');
       context.goNamedAuth(HomeWidget.routeName, context.mounted);
@@ -249,7 +258,7 @@ class _KycDocumentWidgetState extends State<KycDocumentWidget> {
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(10),
                     child: Image.memory(
-                      Uint8List.fromList(file!.bytes),
+                      Uint8List.fromList(file.bytes),
                       height: 120,
                       width: 120,
                       fit: BoxFit.cover,

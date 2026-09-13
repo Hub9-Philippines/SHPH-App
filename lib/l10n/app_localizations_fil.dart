@@ -610,6 +610,13 @@ class AppLocalizationsFil extends AppLocalizations {
   String get bfMatchingFlow => 'Matching flow';
 
   @override
+  String get bfBroadcastFailedTitle => 'Hindi available ang live matching';
+
+  @override
+  String get bfBroadcastFailedBody =>
+      'Hindi naabot ang dispatch service, kaya preview lang ito. Naka-save ang booking mo — subukang muli sa bookings o makipag-ugnayan sa support.';
+
+  @override
   String get bfNearestAvailableProvider =>
       'Pinakamalapit na available na provider';
 
@@ -917,6 +924,43 @@ class AppLocalizationsFil extends AppLocalizations {
       'Manatili sa screen na ito habang hinahanap namin ang pinakamalapit na available na pro.';
 
   @override
+  String get bfSearching => 'Naghahanap';
+
+  @override
+  String bfSecondsRemaining(Object seconds) {
+    return '${seconds}s';
+  }
+
+  @override
+  String get bfProvidersNotified => 'Na-notify na mga provider';
+
+  @override
+  String get bfProviderCountOne => '1 provider';
+
+  @override
+  String bfProviderCountMany(Object count) {
+    return '$count na provider';
+  }
+
+  @override
+  String get bfEstimatedFee => 'Tinantyang bayad';
+
+  @override
+  String bfFeeRange(Object min, Object max) {
+    return 'PHP $min - $max';
+  }
+
+  @override
+  String bfJobsCount(Object count) {
+    return '$count na trabaho';
+  }
+
+  @override
+  String bfMinutesShort(Object minutes) {
+    return '$minutes min';
+  }
+
+  @override
   String get bfProAssigned => 'May na-assign nang pro sa request mo.';
 
   @override
@@ -953,6 +997,24 @@ class AppLocalizationsFil extends AppLocalizations {
   String bfStepOf(Object currentStep) {
     return 'Step $currentStep ng 3';
   }
+
+  @override
+  String bfStepOfCount(Object currentStep, Object totalSteps) {
+    return 'Hakbang $currentStep ng $totalSteps';
+  }
+
+  @override
+  String get bfDetails => 'Detalye';
+
+  @override
+  String get bfReview => 'Pagsusuri';
+
+  @override
+  String get bfRetry => 'Subukan Muli';
+
+  @override
+  String get bfEstimateUnavailable =>
+      'Hindi ma-load ang price estimate. Naka-save ang iyong draft - subukan muli o bumalik.';
 
   @override
   String get bfServices => 'Mga Service';
@@ -992,6 +1054,9 @@ class AppLocalizationsFil extends AppLocalizations {
 
   @override
   String get bfChange => 'PALITAN';
+
+  @override
+  String get bfLandmarks => 'Mga Landmark';
 
   @override
   String get bfLandmarksPlaceholder =>
@@ -1133,6 +1198,11 @@ class AppLocalizationsFil extends AppLocalizations {
   @override
   String bfTodayAtTime(Object time) {
     return 'Ngayong $time';
+  }
+
+  @override
+  String bfOnDateAtTime(Object month, Object day, Object time) {
+    return '$month/$day nang $time';
   }
 
   @override
@@ -1924,6 +1994,14 @@ class AppLocalizationsFil extends AppLocalizations {
 
   @override
   String get spSearchPlaceholder => 'Maghanap ng services...';
+
+  @override
+  String get spVoiceSearchNoResult =>
+      'Hindi namin narinig. Subukan ulit o i-type ang hinahanap.';
+
+  @override
+  String get spVoiceSearchUnavailable =>
+      'Hindi available ang voice search sa device na ito. I-type na lang ang hinahanap.';
 
   @override
   String get spEmptyTitle => 'Maghanap ng services';
@@ -3667,6 +3745,21 @@ class AppLocalizationsFil extends AppLocalizations {
   String get ppfAnonymous => 'Anonymous';
 
   @override
+  String get ppfCompletedBookings => 'Natapos';
+
+  @override
+  String get ppfCompletedBookingsSub => 'na natapos na serbisyo';
+
+  @override
+  String get ppfSeeAllReviews => 'Tingnan ang lahat ng reviews';
+
+  @override
+  String get ppfLoadMoreReviews => 'Kunin pa ang ibang reviews';
+
+  @override
+  String get ppfReviewsTitle => 'Mga Review ng Provider';
+
+  @override
   String get favTitle => 'Favorites';
 
   @override
@@ -3981,27 +4074,6 @@ class AppLocalizationsFil extends AppLocalizations {
   String get ccUrgentAssistance => 'Urgent Assistance';
 
   @override
-  String get emGetHelp => 'Kumuha ng tulong ngayon';
-
-  @override
-  String get emChoosePriority =>
-      'Gaano ka-urgent ang kailangan mo ng propesyonal?';
-
-  @override
-  String get emEmergency => 'Emergency';
-
-  @override
-  String get emEmergencyDesc =>
-      'Agad na pagpapadala — may na-verify na pro na ipapadala agad sa iyo.';
-
-  @override
-  String get emUrgent => 'Urgent';
-
-  @override
-  String get emUrgentDesc =>
-      'Mabilis na serbisyo — darating ang pro sa loob ng 15–30 minuto.';
-
-  @override
   String get ccTypeMessage => 'Mag-type ng message...';
 
   @override
@@ -4043,25 +4115,6 @@ class AppLocalizationsFil extends AppLocalizations {
 
   @override
   String get svSearchPlaceholder => 'Maghanap ng services o categories...';
-
-  @override
-  String get svExploreEveryService => 'I-explore ang lahat ng services';
-
-  @override
-  String svCountReady(Object count) {
-    return '$count na services ang ready i-book';
-  }
-
-  @override
-  String svCountSorted(Object count, Object filter) {
-    return '$count na services na ni-sort ayon sa $filter';
-  }
-
-  @override
-  String get svSmartRanking => 'Smart na ranking';
-
-  @override
-  String get svAllCategories => 'Lahat ng categories';
 
   @override
   String get svNoServicesAvailable => 'Walang available na services';

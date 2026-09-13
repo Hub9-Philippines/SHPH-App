@@ -118,7 +118,7 @@ class _RoomDetailWidgetState extends State<RoomDetailWidget> {
                                 child: Text(
                                   _statusLabel(
                                       room['status']?.toString() ?? ''),
-                                  style: theme.bodySmall?.copyWith(
+                                  style: theme.bodySmall.copyWith(
                                     color: _statusColor(
                                         room['status']?.toString() ?? '',
                                         theme),
@@ -131,7 +131,7 @@ class _RoomDetailWidgetState extends State<RoomDetailWidget> {
                           const SizedBox(height: 8),
                           Text(
                             room['category_name']?.toString() ?? '',
-                            style: theme.bodySmall?.copyWith(
+                            style: theme.bodySmall.copyWith(
                                 color: theme.secondaryText),
                           ),
                           if (room['description']?.toString().isNotEmpty ==

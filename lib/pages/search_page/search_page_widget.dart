@@ -7,9 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '/backend/supabase/database/tables/bookings.dart';
 import '/backend/supabase/database/tables/service_listings.dart';
 import '/components/back_button/back_button_widget.dart';
-import '/components/category_pill.dart';
 import '/components/cupertino_ui/app_button.dart';
-import '/components/content_container.dart';
+import '/components/search_bar_field.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
@@ -18,7 +17,9 @@ import '/models/service_listing.dart';
 import '/services/bookings_service.dart';
 import '/services/logging_service.dart';
 import '/services/service_listing_service.dart';
+import '/services/voice_search_service.dart';
 import '/theme/app_theme.dart';
+import '/utils/category_icons.dart';
 import '/utils/geo_utils.dart';
 import '/utils/tagalog_service_keywords.dart';
 import '../booking_funnel/booking_controller.dart';
@@ -47,6 +48,8 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
+  final VoiceSearchService _voiceSearch = VoiceSearchService();
+  bool _isListening = false;
 
   AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
@@ -141,11 +144,15 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
 
     try {
       // Tagalog queries won't match English titles server-side. Fetch a broad
-      // listing set and let the client-side Tagalog keyword expansion do the
+      // listing set (backend caps a page at 20 by default — too small for
+      // client-side matching) and let the Tagalog keyword expansion do the
       // matching.
       final isTagalog = isTagalogQuery(normalizedQuery);
       final apiServices = await ServiceListingService.instance
-          .fetchServiceListings(search: isTagalog ? null : normalizedQuery);
+          .fetchServiceListings(
+        search: isTagalog ? null : normalizedQuery,
+        pageSize: isTagalog ? 100 : null,
+      );
       final services = apiServices
           .map(
             (listing) => ServiceListingsRow({
@@ -185,7 +192,10 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
         final provider = (service.providerName ?? '').toLowerCase();
         final categoryLower = category.toLowerCase();
         final matchesQuery = terms.any(
-              (term) => title.contains(term) || categoryLower.contains(term),
+              (term) =>
+                  title.contains(term) ||
+                  categoryLower.contains(term) ||
+                  desc.contains(term),
             ) ||
             desc.contains(normalizedQuery.toLowerCase()) ||
             provider.contains(normalizedQuery.toLowerCase()) ||
@@ -243,6 +253,53 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
     );
   }
 
+  /// Runs a one-shot voice session, fills the field with the final transcript
+  /// and searches immediately. Falls back to a snackbar when the device can't
+  /// recognize speech or the user was inaudible.
+  Future<void> _startVoiceSearch() async {
+    if (_isListening) {
+      await _voiceSearch.stop();
+      return;
+    }
+    safeSetState(() => _isListening = true);
+    FocusManager.instance.primaryFocus?.unfocus();
+
+    final result = await _voiceSearch.listen(
+      appLocale: Locale(_l10n.localeName),
+      onPartial: (partial) {
+        if (mounted) {
+          _searchController
+            ..text = partial
+            ..selection = TextSelection.collapsed(offset: partial.length);
+        }
+      },
+    );
+
+    if (!mounted) {
+      return;
+    }
+    safeSetState(() => _isListening = false);
+
+    final query = result.transcript.trim();
+    if (query.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            result.failure == VoiceSearchFailure.unavailable
+                ? _l10n.spVoiceSearchUnavailable
+                : _l10n.spVoiceSearchNoResult,
+            ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+    _searchController
+      ..text = query
+      ..selection = TextSelection.collapsed(offset: query.length);
+    await _performSearch(query);
+  }
+
   bool _matchesCategory(String selected, String actual) {
     final selectedNormalized = _normalizeCategory(selected);
     final actualNormalized = _normalizeCategory(actual);
@@ -287,6 +344,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
     _model.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
+    _voiceSearch.dispose();
     super.dispose();
   }
 
@@ -427,60 +485,15 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
         ),
       );
 
-  Widget _buildSearchBar() {
-    final theme = AppTheme.of(context);
-    return Container(
-        height: 58,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: BoxDecoration(
-          color: theme.primaryBackground,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: theme.border),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.search_rounded,
-              color: AppTheme.of(context).secondaryText,
-              size: 24,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: TextField(
-                controller: _searchController,
-                focusNode: _searchFocusNode,
-                autofocus: true,
-                onChanged: _scheduleSearch,
-                decoration: InputDecoration(
-                  hintText: _l10n.spSearchPlaceholder,
-                  hintStyle: AppTheme.of(context).bodyMedium.override(
-                        font: GoogleFonts.plusJakartaSans(),
-                        color: AppTheme.of(context).textTertiary,
-                      ),
-                  border: InputBorder.none,
-                ),
-              ),
-            ),
-            if (_searchController.text.isNotEmpty)
-              InkWell(
-                onTap: () {
-                  _searchController.clear();
-                  _performSearch('');
-                },
-                borderRadius: BorderRadius.circular(999),
-                child: Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Icon(
-                    Icons.close_rounded,
-                    color: AppTheme.of(context).textTertiary,
-                    size: 20,
-                  ),
-                ),
-              ),
-          ],
-        ),
+  Widget _buildSearchBar() => SearchBarField(
+        controller: _searchController,
+        focusNode: _searchFocusNode,
+        autofocus: true,
+        hintText: _l10n.spSearchPlaceholder,
+        onChanged: _scheduleSearch,
+        onMicTap: _startVoiceSearch,
+        micActive: _isListening,
       );
-  }
 
   Widget _buildQuickCategoryRail() => SizedBox(
         height: 40,
@@ -987,7 +1000,10 @@ class _SearchServiceCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _SearchServiceThumbnail(imageUrl: service.thumbnail),
+                _SearchServiceThumbnail(
+                  imageUrl: service.thumbnail,
+                  category: service.categoryName,
+                ),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
@@ -1066,11 +1082,15 @@ class _SearchServiceCard extends StatelessWidget {
 }
 
 class _SearchServiceThumbnail extends StatelessWidget {
-  const _SearchServiceThumbnail({required this.imageUrl});
+  const _SearchServiceThumbnail({
+    required this.imageUrl,
+    this.category,
+  });
 
   static const double size = 92;
 
   final String? imageUrl;
+  final String? category;
 
   @override
   Widget build(BuildContext context) {
@@ -1088,24 +1108,30 @@ class _SearchServiceThumbnail extends StatelessWidget {
               cacheWidth: cacheSize,
               cacheHeight: cacheSize,
               errorBuilder: (context, error, stackTrace) =>
-                  const _SearchServiceThumbnailFallback(),
+                  _SearchServiceThumbnailFallback(category: category),
             )
-          : const _SearchServiceThumbnailFallback(),
+          : _SearchServiceThumbnailFallback(category: category),
     );
   }
 }
 
 class _SearchServiceThumbnailFallback extends StatelessWidget {
-  const _SearchServiceThumbnailFallback();
+  const _SearchServiceThumbnailFallback({this.category});
+
+  final String? category;
 
   @override
-  Widget build(BuildContext context) => Container(
-        width: _SearchServiceThumbnail.size,
-        height: _SearchServiceThumbnail.size,
-        color: AppTheme.of(context).border,
-        child: Icon(
-          Icons.image_not_supported_outlined,
-          color: AppTheme.of(context).secondaryText,
-        ),
-      );
+  Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+    return Container(
+      width: _SearchServiceThumbnail.size,
+      height: _SearchServiceThumbnail.size,
+      color: theme.primary.withValues(alpha: 0.08),
+      child: Icon(
+        CategoryIcons.byName(category ?? ''),
+        size: 36,
+        color: theme.primary,
+      ),
+    );
+  }
 }

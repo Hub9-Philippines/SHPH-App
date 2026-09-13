@@ -6,12 +6,18 @@ import 'package:serbisyohubph/pages/booking_funnel/booking_models.dart';
 import 'package:serbisyohubph/pages/booking_funnel/booking_repository.dart';
 import 'package:serbisyohubph/pages/booking_funnel/checkout/checkout_screen.dart';
 import 'package:serbisyohubph/pages/booking_funnel/live_matching/live_matching_screen.dart';
+import 'package:serbisyohubph/l10n/app_localizations.dart';
 
 class _FakeBookingRepository implements BookingRepository {
   _FakeBookingRepository();
 
   int liveSearchCalls = 0;
   int reservationCalls = 0;
+
+  @override
+  Future<BookingQuote> estimateBooking(BookingDraft draft) async {
+    return const BookingQuote(basePrice: 500, total: 500);
+  }
 
   @override
   Future<String> broadcastLiveSearch(BookingDraft draft) async {
@@ -31,6 +37,8 @@ Widget _buildApp({
   required Widget child,
 }) =>
     MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: ChangeNotifierProvider.value(
         value: controller,
         child: child,
@@ -135,10 +143,12 @@ void main() {
     expect(repository.reservationCalls, 1);
   });
 
-  testWidgets('Live matching screen times out after 30 seconds',
+  testWidgets('Live matching screen times out after the search window',
       (tester) async {
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: LiveMatchingScreen(
           bookingDate: DateTime(2026, 7, 5),
           showMap: false,
@@ -148,9 +158,9 @@ void main() {
 
     expect(find.text('Finding the nearest provider'), findsOneWidget);
 
-    await tester.pump(const Duration(seconds: 31));
+    await tester.pump(const Duration(seconds: 541));
 
     expect(find.text('Providers are busy, try again'), findsOneWidget);
-    expect(find.text('Search timed out'), findsOneWidget);
+    expect(find.text('Adjust booking'), findsOneWidget);
   });
 }

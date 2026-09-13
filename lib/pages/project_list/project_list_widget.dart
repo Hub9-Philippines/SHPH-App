@@ -141,7 +141,7 @@ class _ProjectListWidgetState extends State<ProjectListWidget> {
                                         project['category_name']
                                                 ?.toString() ??
                                             '',
-                                        style: theme.bodySmall?.copyWith(
+                                        style: theme.bodySmall.copyWith(
                                             color:
                                                 theme.secondaryText),
                                       ),
@@ -160,7 +160,7 @@ class _ProjectListWidgetState extends State<ProjectListWidget> {
                                   ),
                                   child: Text(
                                     _statusLabel(status),
-                                    style: theme.bodySmall?.copyWith(
+                                    style: theme.bodySmall.copyWith(
                                       color:
                                           _statusColor(status, theme),
                                       fontWeight: FontWeight.w600,

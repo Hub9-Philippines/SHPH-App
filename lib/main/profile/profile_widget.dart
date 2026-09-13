@@ -1,11 +1,14 @@
+import 'dart:async';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '/api/models/address.dart';
 import '/auth/auth_util.dart';
 import '/auth/post_auth_navigation_flow.dart'
     show kProviderAppStoreUrl;
@@ -17,10 +20,9 @@ import '/components/tinted_menu_tile.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import '/l10n/app_localizations.dart';
+import '/services/addresses_service.dart';
 import '/services/auth_service.dart';
 import '/services/client_kyc_service.dart';
-import '/api/models/address.dart';
-import '/services/addresses_service.dart';
 import '/services/profiles_service.dart';
 import '/theme/app_theme.dart';
 import 'profile_model.dart';
@@ -100,12 +102,12 @@ class _ProfileWidgetState extends State<ProfileWidget>
         future: _profileFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Scaffold(
+            return const Scaffold(
               backgroundColor: Colors.white,
               body: SafeArea(
                 child: SingleChildScrollView(
                   child: Column(
-                    children: const [
+                    children: [
                       ProfileHeaderSkeleton(),
                       ProfileMenuItemSkeleton(),
                       ProfileMenuItemSkeleton(),
@@ -280,8 +282,7 @@ class _ProfileWidgetState extends State<ProfileWidget>
   // -------------------------------------------------------------------
   // Hero card — previous design language on the royal-blue brand gradient
   // -------------------------------------------------------------------
-  Widget _buildAvatarPlaceholder() {
-    return Container(
+  Widget _buildAvatarPlaceholder() => Container(
       color: Colors.white.withValues(alpha: 0.18),
       alignment: Alignment.center,
       child: const Icon(
@@ -290,7 +291,6 @@ class _ProfileWidgetState extends State<ProfileWidget>
         color: Colors.white,
       ),
     );
-  }
 
   Widget _buildHeroCard(ProfilesRow profile) {
     final displayName =
@@ -479,7 +479,9 @@ class _ProfileWidgetState extends State<ProfileWidget>
                           onTap: () async {
                             await context.pushNamed(
                                 EditProfileWidget.routeName);
-                            if (mounted) _reloadData();
+                            if (mounted) {
+                              _reloadData();
+                            }
                           },
                         ),
                       ],
@@ -540,7 +542,7 @@ class _ProfileWidgetState extends State<ProfileWidget>
                                       color: Colors.white,
                                     ),
                               ),
-                              if (hasDefaultAddress && defaultName != null && defaultName!.isNotEmpty) ...[
+                              if (hasDefaultAddress && defaultName != null && defaultName.isNotEmpty) ...[
                                 const SizedBox(height: 2),
                                 Row(
                                   children: [
@@ -552,7 +554,7 @@ class _ProfileWidgetState extends State<ProfileWidget>
                                     const SizedBox(width: 4),
                                     Expanded(
                                       child: Text(
-                                        defaultName!,
+                                        defaultName,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: AppTheme.of(context).bodySmall.override(
@@ -739,7 +741,9 @@ class _ProfileWidgetState extends State<ProfileWidget>
                         onTap: () async {
                           await context
                               .pushNamed(KycOnboardingWidget.routeName);
-                          if (mounted) _reloadData();
+                          if (mounted) {
+                            _reloadData();
+                          }
                         },
                         borderRadius:
                             BorderRadius.circular(AppThemeData.radiusLg),
@@ -866,7 +870,7 @@ class _ProfileWidgetState extends State<ProfileWidget>
           ),
           Switch.adaptive(
             value: _providerSwitch,
-            onChanged: (value) => _handleProviderSwitch(value),
+            onChanged: _handleProviderSwitch,
           ),
         ],
       ),
@@ -929,7 +933,9 @@ class _ProfileWidgetState extends State<ProfileWidget>
         ),
       ),
     ).whenComplete(() {
-      if (mounted) safeSetState(() => _providerSwitch = false);
+      if (mounted) {
+        safeSetState(() => _providerSwitch = false);
+      }
     });
   }
 
@@ -939,35 +945,37 @@ class _ProfileWidgetState extends State<ProfileWidget>
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(_l10n.pfInviteCopied),
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
 
   Future<void> _pickAndUploadPhoto(XFile file) async {
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     safeSetState(() => _isUploading = true);
 
     // Blocking progress dialog so the user can't double-tap.
-    showDialog<void>(
+    unawaited(showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (_) => Center(
         child: Card(
           child: Padding(
-            padding: EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 14),
+                const CircularProgressIndicator(),
+                const SizedBox(height: 14),
                 Text(_l10n.pfUploadingPhoto),
               ],
             ),
           ),
         ),
       ),
-    );
+    ));
 
     try {
       final bytes = await file.readAsBytes();
@@ -979,7 +987,9 @@ class _ProfileWidgetState extends State<ProfileWidget>
 
       final url = await ProfilesService.instance
           .uploadProfilePhoto(bytes, name);
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       Navigator.of(context, rootNavigator: true).pop(); // close dialog
 
       if (url == null || url.isEmpty) {
@@ -1001,13 +1011,17 @@ class _ProfileWidgetState extends State<ProfileWidget>
         );
       }
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       Navigator.of(context, rootNavigator: true).pop(); // close dialog
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(_l10n.pfUploadError(e))),
       );
     } finally {
-      if (mounted) safeSetState(() => _isUploading = false);
+      if (mounted) {
+        safeSetState(() => _isUploading = false);
+      }
     }
   }
 
@@ -1059,7 +1073,9 @@ class _ProfileWidgetState extends State<ProfileWidget>
                   maxHeight: 1024,
                   imageQuality: 85,
                 );
-                if (file != null) await _pickAndUploadPhoto(file);
+                if (file != null) {
+                  await _pickAndUploadPhoto(file);
+                }
               },
             ),
             ListTile(
@@ -1073,7 +1089,9 @@ class _ProfileWidgetState extends State<ProfileWidget>
                   maxHeight: 1024,
                   imageQuality: 85,
                 );
-                if (file != null) await _pickAndUploadPhoto(file);
+                if (file != null) {
+                  await _pickAndUploadPhoto(file);
+                }
               },
             ),
             if (hasPhoto) ...[
@@ -1119,17 +1137,23 @@ class _ProfileWidgetState extends State<ProfileWidget>
         ) ??
         false;
 
-    if (!confirm || !mounted) return;
+    if (!confirm || !mounted) {
+      return;
+    }
 
     try {
       await ProfilesService.instance.updateProfile({'face_scan_url': ''});
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       _reloadData();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(_l10n.pfPhotoRemoved)),
       );
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(_l10n.pfUploadError(e))),
       );
@@ -1158,11 +1182,15 @@ class _ProfileWidgetState extends State<ProfileWidget>
         ) ??
         false;
 
-    if (!confirm || !mounted) return;
+    if (!confirm || !mounted) {
+      return;
+    }
 
     GoRouter.of(context).prepareAuthEvent();
     await authManager.signOut();
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     GoRouter.of(context).clearRedirectLocation();
     context.goNamedAuth(SplashWidget.routeName, context.mounted);
   }

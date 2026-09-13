@@ -4,6 +4,10 @@ import '/api/models/service_listing.dart';
 import '/api/shph_api_client.dart';
 
 /// Favorites endpoints from SHPH API.yaml (`/api/favorites/*`).
+///
+/// The backend wraps each favorited listing in a `Favorite` object:
+/// `{id, listing, listing_detail, created_at}` where `listing_detail` is the
+/// full `ServiceListing` payload.
 class ShphFavoritesApi {
   ShphFavoritesApi._();
 
@@ -13,7 +17,8 @@ class ShphFavoritesApi {
   Future<void> addFavorite(int listingId) async {
     await _client.post(
       '/api/favorites/',
-      data: {'listing_id': listingId},
+      // Spec field is `listing` (FavoriteCreateRequestRequest), not listing_id.
+      data: {'listing': listingId},
     );
   }
 
@@ -27,6 +32,9 @@ class ShphFavoritesApi {
     );
     final data = response.data ?? [];
     return data
+        .whereType<Map<String, dynamic>>()
+        // Unwrap the Favorite envelope; the listing lives in `listing_detail`.
+        .map((favorite) => favorite['listing_detail'])
         .whereType<Map<String, dynamic>>()
         .map(ShphServiceListing.fromJson)
         .toList();

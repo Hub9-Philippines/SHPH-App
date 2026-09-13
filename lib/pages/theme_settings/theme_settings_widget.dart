@@ -82,24 +82,31 @@ class _ThemeSettingsWidgetState extends State<ThemeSettingsWidget> {
                     ThemeMode.system =>
                       _l10n.thSystemSubtitle,
                   };
-                  return RadioListTile<ThemeMode>(
-                    value: mode,
+                  return RadioGroup<ThemeMode>(
                     groupValue: _model.current,
                     onChanged: (v) {
                       if (v != null) {
                         setState(() => _model.setTheme(v, context));
                       }
                     },
-                    activeColor: theme.primary,
-                    secondary: Icon(icon,
-                        color: selected
-                            ? theme.primary
-                            : theme.secondaryText),
-                    title:
-                        Text(title, style: theme.bodyMedium),
-                    subtitle: Text(subtitle,
-                        style: theme.bodySmall?.copyWith(
-                            color: theme.secondaryText)),
+                    child: RadioListTile<ThemeMode>.adaptive(
+                      value: mode,
+                      activeColor: theme.primary,
+                      secondary: Icon(
+                        icon,
+                        color: selected ? theme.primary : theme.secondaryText,
+                      ),
+                      title: Text(
+                        title, 
+                        style: theme.bodyMedium,
+                      ),
+                      subtitle: Text(
+                        subtitle,
+                        style: theme.bodySmall.copyWith(
+                          color: theme.secondaryText,
+                        ),
+                      ),
+                    ),
                   );
                 }),
               ],

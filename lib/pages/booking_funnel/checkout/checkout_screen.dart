@@ -17,6 +17,7 @@ import '../booking_success_screen.dart';
 import '../live_matching/live_matching_screen.dart';
 import '../widgets/booking_flow_route.dart';
 import '../widgets/booking_status_scaffold.dart';
+import '../widgets/booking_step_spine.dart';
 
 class CheckoutScreen extends StatelessWidget {
   const CheckoutScreen({
@@ -38,7 +39,9 @@ class CheckoutScreen extends StatelessWidget {
 
           final showWaiting = controller.isMatchingActive;
 
-          return BookingStatusScaffold(
+          return PopScope(
+            canPop: !controller.isSubmitting,
+            child: BookingStatusScaffold(
             showMap: showLiveMap,
             location: location,
             markerHue: gmaps.BitmapDescriptor.hueRose,
@@ -105,9 +108,10 @@ class CheckoutScreen extends StatelessWidget {
                           _serviceLevelLabel(draft.serviceCategoryName, l10n),
                     ),
             ),
-          );
-        },
-      );
+          ),
+        );
+      },
+    );
 
   Future<void> _submit(
     BuildContext context,
@@ -268,7 +272,11 @@ class CheckoutScreen extends StatelessWidget {
     if (draft.urgency == BookingUrgency.scheduled &&
         draft.scheduledDate != null &&
         draft.scheduledTime != null) {
-      return '${draft.scheduledDate!.month}/${draft.scheduledDate!.day} at ${formatTimeOfDay(draft.scheduledTime!)}';
+      return l10n.bfOnDateAtTime(
+        draft.scheduledDate!.month,
+        draft.scheduledDate!.day,
+        formatTimeOfDay(draft.scheduledTime!),
+      );
     }
     return l10n.bfSelectATime;
   }
@@ -377,6 +385,19 @@ class _CheckoutSheet extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 14),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 2),
+          child: BookingStepSpine(
+            steps: [
+              l10n.bfLocation,
+              l10n.bfTime,
+              l10n.bfDetails,
+              l10n.bfReview,
+            ],
+            currentStep: 3,
+          ),
+        ),
+        const SizedBox(height: 14),
         Flexible(
           child: SingleChildScrollView(
             child: Column(
@@ -462,6 +483,13 @@ class _CheckoutSheet extends StatelessWidget {
                   ),
                 ],
                 const SizedBox(height: 14),
+                if (controller.quoteError != null) ...[
+                  _EstimateRetryBanner(
+                    onRetry: controller.refreshQuote,
+                    onBack: onBack,
+                  ),
+                  const SizedBox(height: 14),
+                ],
                 _TotalCard(total: quote.total),
               ],
             ),
@@ -981,6 +1009,92 @@ class _TotalCard extends StatelessWidget {
               fontWeight: FontWeight.w700,
               color: theme.primary,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EstimateRetryBanner extends StatelessWidget {
+  const _EstimateRetryBanner({
+    required this.onRetry,
+    required this.onBack,
+  });
+
+  final Future<void> Function() onRetry;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = AppTheme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.warning.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: theme.warning.withValues(alpha: 0.30),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.error_outline_rounded,
+                size: 20,
+                color: theme.warning,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  l10n.bfEstimateUnavailable,
+                  style: theme.bodySmall.override(
+                    color: theme.secondaryText,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 44,
+                  child: AppButton(
+                    onPressed: () async {
+                      await onRetry();
+                    },
+                    variant: AppButtonVariant.outlined,
+                    borderSide: BorderSide(color: theme.alternate),
+                    foregroundColor: theme.primary,
+                    borderRadius: 14,
+                    child: Text(
+                      l10n.bfRetry,
+                      style: theme.bodyMedium.override(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              TextButton(
+                onPressed: onBack,
+                child: Text(
+                  l10n.bfBack,
+                  style: theme.bodyMedium.override(
+                    color: theme.secondaryText,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

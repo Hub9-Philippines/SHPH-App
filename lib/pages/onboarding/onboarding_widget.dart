@@ -11,7 +11,6 @@ import '/index.dart';
 import '/l10n/app_localizations.dart';
 import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
-import '/l10n/app_localizations.dart';
 import 'onboarding_model.dart';
 
 export 'onboarding_model.dart';

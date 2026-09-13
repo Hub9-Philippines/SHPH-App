@@ -77,7 +77,6 @@ class _FFButtonWidgetState extends State<FFButtonWidget> {
   bool loading = false;
   late FocusNode _internalFocusNode;
 
-  FocusNode get _focusNode => widget.focusNode ?? _internalFocusNode;
 
   int get maxLines => widget.options.maxLines ?? 1;
   String? get text =>

@@ -77,6 +77,13 @@ class ExpressCheckoutScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final urgency = controller.draft.urgency;
 
+    if (!controller.hasValidSchedule) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.bfSelectATime)),
+      );
+      return;
+    }
+
     // ASAP: bypass buffer, go straight to LiveMatchingScreen
     if (urgency == BookingUrgency.rightNow) {
       await _startLiveSearch(context, controller);
@@ -177,8 +184,7 @@ class ExpressCheckoutScreen extends StatelessWidget {
         longitude: draft.longitude,
         radiusKm: 4,
       );
-      final nearestKm =
-          (estimate['nearest_provider_km'] as num?)?.toDouble();
+      final nearestKm = (estimate['nearest_provider_km'] as num?)?.toDouble();
       if (nearestKm != null && nearestKm.isFinite && nearestKm >= 0) {
         FFAppState().nearestProviderDistance = nearestKm;
       }
@@ -203,4 +209,3 @@ class ExpressCheckoutScreen extends StatelessWidget {
   DateTime _liveMatchingDate(BookingDraft draft) =>
       _scheduledDateTime(draft) ?? draft.scheduledDate ?? DateTime.now();
 }
-

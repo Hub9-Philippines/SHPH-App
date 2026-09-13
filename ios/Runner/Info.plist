@@ -46,7 +46,7 @@
 		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true/>
 		<key>UIStatusBarHidden</key>
-		<false/>
+		<true/>
 		<!-- Mandatory Apple UIScene Lifecycle Support -->
 		<key>UIApplicationSceneManifest</key>
 		<dict>
@@ -62,10 +62,17 @@
 		<string>This app needs photo library access to select your ID document for provider verification.</string>
 		<key>NSPhotoLibraryAddUsageDescription</key>
 		<string>This app needs permission to save photos to your library.</string>
+		<!-- Microphone + speech recognition for the voice search on the Search page -->
+		<key>NSMicrophoneUsageDescription</key>
+		<string>This app needs microphone access to search services with your voice.</string>
+		<key>NSSpeechRecognitionUsageDescription</key>
+		<string>This app uses speech recognition to turn your spoken words into a search query.</string>
 		<!-- Location permissions for geolocation services -->
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>This app needs location access to find nearby service providers and show them on the map.</string>
 		<key>NSLocationAlwaysUsageDescription</key>
 		<string>This app requires access to your location.</string>
+		<key>UIViewControllerBasedStatusBarAppearance</key>
+		<false/>
 	</dict>
 </plist>

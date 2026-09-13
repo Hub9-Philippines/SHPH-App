@@ -171,6 +171,7 @@ class TimeSelectionPanel extends StatelessWidget {
                 l10n.bfContinueToSetup,
                 style: theme.titleMedium.override(
                   fontWeight: FontWeight.w700,
+                  color: theme.onPrimary,
                 ),
               ),
             ),
@@ -190,7 +191,11 @@ class TimeSelectionPanel extends StatelessWidget {
     if (urgency == BookingUrgency.scheduled &&
         scheduledDate != null &&
         scheduledTime != null) {
-      return '${scheduledDate!.month}/${scheduledDate!.day} at ${formatTimeOfDay(scheduledTime!)}';
+      return l10n.bfOnDateAtTime(
+        scheduledDate!.month,
+        scheduledDate!.day,
+        formatTimeOfDay(scheduledTime!),
+      );
     }
     return null;
   }

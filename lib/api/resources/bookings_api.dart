@@ -54,6 +54,20 @@ class ShphBookingsApi {
     return ShphBooking.fromJson(response.data ?? {});
   }
 
+  Future<Map<String, dynamic>> estimateBooking({
+    required int listingId,
+    required DateTime scheduledAt,
+  }) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/api/services/bookings/estimate/',
+      data: {
+        'listing_id': listingId,
+        'scheduled_at': scheduledAt.toUtc().toIso8601String(),
+      },
+    );
+    return response.data ?? {};
+  }
+
   Future<ShphBooking> getBooking(String id) async {
     final response = await _client.get<Map<String, dynamic>>(
       '/api/services/bookings/$id/',

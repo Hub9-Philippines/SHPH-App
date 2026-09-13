@@ -588,6 +588,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
                   gradientValue: _gradientController,
                   stageIndex: _currentStage(),
                   matchedPro: _matchedPro,
+                  broadcastFailed: !_isRealJob,
                 ),
               ),
 
@@ -1475,7 +1476,7 @@ class _AssignedRouteBottomSheet extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    '$completedJobs jobs',
+                                    l10n.bfJobsCount(completedJobs),
                                     style: theme.bodySmall.override(
                                       color: theme.secondaryText,
                                     ),
@@ -1495,7 +1496,7 @@ class _AssignedRouteBottomSheet extends StatelessWidget {
                             theme: theme,
                             icon: Icons.access_time_rounded,
                             label: l10n.bfEta,
-                            value: '$etaMinutes min',
+                            value: l10n.bfMinutesShort(etaMinutes),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -1855,6 +1856,7 @@ class _StatusBadge extends StatelessWidget {
     required this.gradientValue,
     required this.stageIndex,
     this.matchedPro,
+    this.broadcastFailed = false,
   });
 
   final String serviceTitle;
@@ -1864,6 +1866,11 @@ class _StatusBadge extends StatelessWidget {
   final Animation<double> gradientValue;
   final int stageIndex;
   final Map<String, dynamic>? matchedPro;
+
+  /// True when the on-demand broadcast failed so no live job exists; the
+  /// screen is then running an honest preview countdown instead of polling
+  /// the server, and the user must be told.
+  final bool broadcastFailed;
 
   @override
   Widget build(BuildContext context) {
@@ -1939,6 +1946,52 @@ class _StatusBadge extends StatelessWidget {
                   color: theme.secondaryText,
                 ),
               ),
+              if (broadcastFailed && !isMatched) ...[
+                const SizedBox(height: 10),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: theme.warning.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppThemeData.radiusMd),
+                    border: Border.all(
+                      color: theme.warning.withValues(alpha: 0.45),
+                    ),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        size: 18,
+                        color: theme.warning,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.bfBroadcastFailedTitle,
+                              style: theme.labelSmall.override(
+                                fontWeight: FontWeight.w800,
+                                color: theme.primaryText,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              l10n.bfBroadcastFailedBody,
+                              style: theme.labelSmall.override(
+                                color: theme.secondaryText,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 10),
               // Stage badge + countdown row
               Row(
@@ -1964,13 +2017,13 @@ class _StatusBadge extends StatelessWidget {
                   ),
                   if (!isMatched) ...[
                     const Spacer(),
-                    Text(
-                      '$secondsRemaining s',
-                      style: theme.labelLarge.override(
-                        color: theme.secondaryText,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+              Text(
+                l10n.bfSecondsRemaining(secondsRemaining),
+                style: theme.labelLarge.override(
+                  color: theme.secondaryText,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
                   ],
                 ],
               ),
@@ -2178,11 +2231,11 @@ class _SearchingSheet extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Text(
-                'Searching ',
+                l10n.bfSearching,
                 style: theme.bodySmall.override(color: theme.secondaryText),
               ),
               Text(
-                '$secondsRemaining s',
+                l10n.bfSecondsRemaining(secondsRemaining),
                 style: theme.labelLarge.override(
                   color: theme.primary,
                   fontWeight: FontWeight.w700,
@@ -2223,24 +2276,24 @@ class _SearchingSheet extends StatelessWidget {
           ],
           if (providerCount != null && providerCount! > 0) ...[
             const SizedBox(height: 12),
-            _MetaRow(
-              theme: theme,
-              icon: Icons.people_alt_outlined,
-              title: 'Providers notified',
-              subtitle: providerCount! == 1
-                  ? '1 provider'
-                  : '${providerCount!} providers',
-            ),
+              _MetaRow(
+                theme: theme,
+                icon: Icons.people_alt_outlined,
+                title: l10n.bfProvidersNotified,
+                subtitle: providerCount! == 1
+                    ? l10n.bfProviderCountOne
+                    : l10n.bfProviderCountMany(providerCount!),
+              ),
           ],
           if (feeMin != null && feeMax != null) ...[
             const SizedBox(height: 12),
-            _MetaRow(
-              theme: theme,
-              icon: Icons.request_quote_outlined,
-              title: 'Estimated fee',
-              subtitle:
-                  '₱${_roundFee(feeMin!)} – ₱${_roundFee(feeMax!)}',
-            ),
+              _MetaRow(
+                theme: theme,
+                icon: Icons.request_quote_outlined,
+                title: l10n.bfEstimatedFee,
+                subtitle:
+                    l10n.bfFeeRange(_roundFee(feeMin!), _roundFee(feeMax!)),
+              ),
           ],
           const SizedBox(height: 20),
           SizedBox(

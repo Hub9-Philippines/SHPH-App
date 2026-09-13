@@ -40,7 +40,6 @@ class ExploreMapView extends StatefulWidget {
 }
 
 class _ExploreMapViewState extends State<ExploreMapView> {
-  GoogleMapController? _controller;
   Set<Marker> _markers = {};
   Set<Circle> _circles = {};
 
@@ -55,12 +54,13 @@ class _ExploreMapViewState extends State<ExploreMapView> {
   @override
   void didUpdateWidget(ExploreMapView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.markers != widget.markers) _updateMarkers();
+    if (oldWidget.markers != widget.markers) {
+      _updateMarkers();
+    }
   }
 
   void _updateMarkers() {
-    _markers = widget.markers.map((m) {
-      return Marker(
+    _markers = widget.markers.map((m) => Marker(
         markerId: MarkerId(m.id),
         position: m.latLng,
         infoWindow: InfoWindow(
@@ -68,8 +68,7 @@ class _ExploreMapViewState extends State<ExploreMapView> {
           snippet: m.snippet ?? '',
         ),
         onTap: () => widget.onMarkerTap?.call(m.id),
-      );
-    }).toSet();
+      )).toSet();
 
     if (widget.radiusMeters != null && widget.initialLocation != null) {
       _circles = {
@@ -86,8 +85,7 @@ class _ExploreMapViewState extends State<ExploreMapView> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return GoogleMap(
+  Widget build(BuildContext context) => GoogleMap(
       initialCameraPosition: CameraPosition(
         target: widget.initialLocation ?? _defaultLocation,
         zoom: 14,
@@ -97,8 +95,6 @@ class _ExploreMapViewState extends State<ExploreMapView> {
       myLocationEnabled: widget.showUserLocation,
       myLocationButtonEnabled: false,
       zoomControlsEnabled: false,
-      onMapCreated: (ctrl) => _controller = ctrl,
       onTap: (latLng) => widget.onMapTap?.call(latLng),
     );
-  }
 }

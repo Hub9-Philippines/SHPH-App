@@ -150,7 +150,7 @@ class _DisputesWidgetState extends State<DisputesWidget> {
                                         const SizedBox(width: 4),
                                         Text(
                                           _statusLabel(status),
-                                          style: theme.bodySmall?.copyWith(
+                                          style: theme.bodySmall.copyWith(
                                             color: statusColor,
                                             fontWeight: FontWeight.w600,
                                           ),

@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '/backend/supabase/database/tables/payment_methods.dart';
 import '/components/cupertino_ui/app_button.dart';
-import '/components/screen_header.dart';
 import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';

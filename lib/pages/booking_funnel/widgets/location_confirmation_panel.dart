@@ -11,12 +11,16 @@ class LocationConfirmationPanel extends StatelessWidget {
     required this.address,
     required this.onEdit,
     required this.onConfirm,
+    this.serviceTitle,
+    this.serviceCategoryName,
     super.key,
   });
 
   final BookingAddress address;
   final VoidCallback onEdit;
   final VoidCallback onConfirm;
+  final String? serviceTitle;
+  final String? serviceCategoryName;
 
   @override
   Widget build(BuildContext context) {
@@ -84,6 +88,58 @@ class LocationConfirmationPanel extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
+          if (serviceTitle != null) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: theme.primaryBackground,
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: theme.alternate),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: theme.primary.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.home_repair_service_rounded,
+                      color: theme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          serviceTitle!,
+                          style: theme.bodyLarge.override(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        if (serviceCategoryName != null) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            serviceCategoryName!,
+                            style: theme.bodySmall.override(
+                              color: theme.secondaryText,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -164,6 +220,7 @@ class LocationConfirmationPanel extends StatelessWidget {
                     l10n.bfContinue,
                     style: theme.titleSmall.override(
                       fontWeight: FontWeight.w700,
+                      color: theme.onPrimary,
                     ),
                   ),
                 ),

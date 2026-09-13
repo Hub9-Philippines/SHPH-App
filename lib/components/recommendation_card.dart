@@ -61,19 +61,19 @@ class RecommendationCard extends StatelessWidget {
                   children: [
                     if (category != null)
                       Text(category!,
-                          style: theme.bodySmall?.copyWith(
+                          style: theme.bodySmall.copyWith(
                               color: theme.primary,
                               fontWeight: FontWeight.w600)),
                     const SizedBox(height: 2),
                     Text(serviceName,
                         style: theme.titleSmall
-                            ?.copyWith(fontWeight: FontWeight.w600),
+                            .copyWith(fontWeight: FontWeight.w600),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 2),
                     Text(providerName,
                         style: theme.bodySmall
-                            ?.copyWith(color: theme.secondaryText)),
+                            .copyWith(color: theme.secondaryText)),
                     if (rating != null) ...[
                       const SizedBox(height: 4),
                       StarRating(
@@ -99,7 +99,7 @@ class RecommendationCard extends StatelessWidget {
               Column(
                 children: [
                   Text(price,
-                      style: theme.titleMedium?.copyWith(
+                      style: theme.titleMedium.copyWith(
                         fontWeight: FontWeight.w700,
                         color: theme.primary,
                       )),

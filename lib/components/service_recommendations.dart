@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '/components/recommendation_card.dart';
-import '/theme/app_theme.dart';
 
 class ServiceRecommendations extends StatelessWidget {
   const ServiceRecommendations({

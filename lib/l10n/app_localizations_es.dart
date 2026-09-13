@@ -603,6 +603,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get bfMatchingFlow => 'Matching flow';
 
   @override
+  String get bfBroadcastFailedTitle => 'Live matching unavailable';
+
+  @override
+  String get bfBroadcastFailedBody =>
+      'We couldn\'t reach the dispatch service, so this is a preview. Your booking is saved — retry from your bookings or contact support.';
+
+  @override
   String get bfNearestAvailableProvider => 'Nearest available provider';
 
   @override
@@ -907,6 +914,43 @@ class AppLocalizationsEs extends AppLocalizations {
       'Stay on this screen while we look for the closest available professional.';
 
   @override
+  String get bfSearching => 'Searching';
+
+  @override
+  String bfSecondsRemaining(Object seconds) {
+    return '${seconds}s';
+  }
+
+  @override
+  String get bfProvidersNotified => 'Providers notified';
+
+  @override
+  String get bfProviderCountOne => '1 provider';
+
+  @override
+  String bfProviderCountMany(Object count) {
+    return '$count providers';
+  }
+
+  @override
+  String get bfEstimatedFee => 'Estimated fee';
+
+  @override
+  String bfFeeRange(Object min, Object max) {
+    return 'PHP $min - $max';
+  }
+
+  @override
+  String bfJobsCount(Object count) {
+    return '$count jobs';
+  }
+
+  @override
+  String bfMinutesShort(Object minutes) {
+    return '$minutes min';
+  }
+
+  @override
   String get bfProAssigned =>
       'A professional has been assigned to your request.';
 
@@ -942,6 +986,24 @@ class AppLocalizationsEs extends AppLocalizations {
   String bfStepOf(Object currentStep) {
     return 'Step $currentStep of 3';
   }
+
+  @override
+  String bfStepOfCount(Object currentStep, Object totalSteps) {
+    return 'Step $currentStep of $totalSteps';
+  }
+
+  @override
+  String get bfDetails => 'Details';
+
+  @override
+  String get bfReview => 'Review';
+
+  @override
+  String get bfRetry => 'Retry';
+
+  @override
+  String get bfEstimateUnavailable =>
+      'Couldn\'t load the price estimate. Your draft is saved - retry or go back.';
 
   @override
   String get bfServices => 'Services';
@@ -981,6 +1043,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get bfChange => 'CHANGE';
+
+  @override
+  String get bfLandmarks => 'Landmarks';
 
   @override
   String get bfLandmarksPlaceholder =>
@@ -1121,6 +1186,11 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String bfTodayAtTime(Object time) {
     return 'Today at $time';
+  }
+
+  @override
+  String bfOnDateAtTime(Object month, Object day, Object time) {
+    return '$month/$day at $time';
   }
 
   @override
@@ -1908,6 +1978,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get spSearchPlaceholder => 'Search for services...';
+
+  @override
+  String get spVoiceSearchNoResult =>
+      'Didn\'t catch that. Try again or type your search.';
+
+  @override
+  String get spVoiceSearchUnavailable =>
+      'Voice search isn\'t available on this device. Please type your search instead.';
 
   @override
   String get spEmptyTitle => 'Search for services';
@@ -3644,6 +3722,21 @@ class AppLocalizationsEs extends AppLocalizations {
   String get ppfAnonymous => 'Anonymous';
 
   @override
+  String get ppfCompletedBookings => 'Completed';
+
+  @override
+  String get ppfCompletedBookingsSub => 'completed services';
+
+  @override
+  String get ppfSeeAllReviews => 'See all reviews';
+
+  @override
+  String get ppfLoadMoreReviews => 'Load more reviews';
+
+  @override
+  String get ppfReviewsTitle => 'Provider Reviews';
+
+  @override
   String get favTitle => 'Favorites';
 
   @override
@@ -3956,26 +4049,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get ccUrgentAssistance => 'Urgent Assistance';
 
   @override
-  String get emGetHelp => 'Obtener ayuda ahora';
-
-  @override
-  String get emChoosePriority => '¿Qué tan urgente necesitas un profesional?';
-
-  @override
-  String get emEmergency => 'Emergencia';
-
-  @override
-  String get emEmergencyDesc =>
-      'Envío inmediato: se envía un profesional verificado de inmediato.';
-
-  @override
-  String get emUrgent => 'Urgente';
-
-  @override
-  String get emUrgentDesc =>
-      'Servicio rápido: un profesional llega en 15–30 minutos.';
-
-  @override
   String get ccTypeMessage => 'Type a message...';
 
   @override
@@ -4017,25 +4090,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get svSearchPlaceholder => 'Search services or categories...';
-
-  @override
-  String get svExploreEveryService => 'Explore every service';
-
-  @override
-  String svCountReady(Object count) {
-    return '$count services ready to book';
-  }
-
-  @override
-  String svCountSorted(Object count, Object filter) {
-    return '$count services sorted by $filter';
-  }
-
-  @override
-  String get svSmartRanking => 'Smart ranking';
-
-  @override
-  String get svAllCategories => 'All categories';
 
   @override
   String get svNoServicesAvailable => 'No services available';

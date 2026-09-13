@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '/components/cupertino_ui/app_button.dart';
 import '/components/cupertino_ui/app_text_field.dart';
 import '/components/cupertino_ui/cupertino_page_header.dart';
-import '/components/star_rating.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
@@ -13,8 +12,7 @@ export 'write_review_model.dart';
 
 class WriteReviewWidget extends StatefulWidget {
   const WriteReviewWidget({
-    super.key,
-    required this.bookingId,
+    required this.bookingId, super.key,
     this.serviceName,
   });
 
@@ -114,8 +112,8 @@ class _WriteReviewWidgetState extends State<WriteReviewWidget> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.star, size: 18, color: Colors.white),
-                  SizedBox(width: 8),
+                  const Icon(Icons.star, size: 18, color: Colors.white),
+                  const SizedBox(width: 8),
                   Text(_l10n.wrSubmit),
                 ],
               ),
@@ -129,10 +127,7 @@ class _WriteReviewWidgetState extends State<WriteReviewWidget> {
 
 class StarRatingInput extends StatelessWidget {
   const StarRatingInput({
-    super.key,
-    required this.rating,
-    required this.size,
-    required this.onChanged,
+    required this.rating, required this.size, required this.onChanged, super.key,
   });
 
   final int rating;

@@ -12,8 +12,8 @@ import '/api/resources/services_api.dart';
 import '/auth/auth_util.dart';
 import '/app_state.dart';
 import '/components/cupertino_ui/app_feedback.dart';
-import '/components/emergency_modal.dart';
 import '/components/refreshable_page.dart';
+import '/components/skeleton_loading/skeleton_loading_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import '/pages/booking_funnel/booking_controller.dart';
@@ -40,13 +40,13 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
   late final ScrollController _scrollController;
   late final VoidCallback _scrollListener;
   bool _isHeaderCompact = false;
-  bool _isAccountMenuOpen = false;
 
   List<_HomeBookingData> _bookings = const [];
   List<_HomeCategoryData> _categories = const [];
   List<_TrendingProviderData> _providers = const [];
   List<_TrendingProviderData> _recommendedProviders = const [];
   bool _hasBookingHistory = false;
+  bool _isHomeLoading = true;
 
   String get _displayName {
     final name = currentUserDisplayName.trim();
@@ -56,7 +56,7 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
     return name.split(' ').first;
   }
 
-  String get _headerGreeting => _displayName == 'there'
+    String get _headerGreeting => _displayName == 'there'
       ? 'there'
       : _displayName;
 
@@ -95,27 +95,22 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
         _isHeaderCompact = compact;
       });
     }
-
-    if (_isAccountMenuOpen && _scrollController.offset > 0) {
-      setState(() {
-        _isAccountMenuOpen = false;
-      });
-    }
   }
 
-  void _toggleAccountMenu() {
-    setState(() {
-      _isAccountMenuOpen = !_isAccountMenuOpen;
-    });
-  }
-
-  void _closeAccountMenu() {
-    if (!_isAccountMenuOpen) {
-      return;
-    }
-    setState(() {
-      _isAccountMenuOpen = false;
-    });
+  Future<void> _openProfileActions() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      useSafeArea: true,
+      builder: (_) => _AccountMenu(
+        name: currentUserDisplayName.trim(),
+        email: currentUserEmail.trim(),
+        onManageAddresses: _openManageAddresses,
+        onHelpSupport: _openHelpSupport,
+        onSignOut: _signOut,
+      ),
+    );
   }
 
   Future<void> _openSearchPage() async {
@@ -189,19 +184,11 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
     );
   }
 
-  /// Opens the dedicated emergency/urgent priority modal (instead of the
-  /// generic quick-book panel); the selected priority drives the booking's
-  /// urgency in the express checkout flow.
-  Future<void> _openEmergencyModal() async {
-    final priority = await EmergencyModal.show(context);
-    if (!mounted || priority == null) {
-      return;
-    }
-    final urgency = switch (priority) {
-      EmergencyPriority.emergency => BookingUrgency.rightNow,
-      EmergencyPriority.urgent => BookingUrgency.laterToday,
-    };
-    await _startBookingProcess(urgency: urgency);
+  /// Launches the emergency/urgent flow directly: immediate on-demand
+  /// dispatch (rightNow urgency) through the express checkout and live
+  /// matching, same as the categories "Urgent Assistance" entry.
+  Future<void> _openEmergencyBooking() async {
+    await _startBookingProcess(urgency: BookingUrgency.rightNow);
   }
 
   Future<bool> _confirmExit() async {
@@ -224,7 +211,7 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
           bookingDate: DateTime.now(),
           providerName: booking.providerName,
           serviceTitle: booking.title,
-          bookingReference: booking.bookingId.isNotEmpty
+            bookingReference: booking.bookingId.isNotEmpty
               ? booking.bookingId
               : null,
           shouldPopToHome: true,
@@ -255,17 +242,17 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
   }
 
   Future<void> _openManageAddresses() async {
-    _closeAccountMenu();
+    Navigator.of(context).pop();
     await context.pushNamed(AddressesWidget.routeName);
   }
 
   Future<void> _openHelpSupport() async {
-    _closeAccountMenu();
+    Navigator.of(context).pop();
     await context.pushNamed(HelpPage.routeName);
   }
 
   Future<void> _signOut() async {
-    _closeAccountMenu();
+    Navigator.of(context).pop();
     GoRouter.of(context).prepareAuthEvent();
     await authManager.signOut();
     if (!mounted) {
@@ -284,12 +271,9 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
     final categories = _categories;
     final providers = _providers;
     final recommendedProviders = _recommendedProviders;
-    final accountName = currentUserDisplayName.trim();
-    final accountEmail = currentUserEmail.trim();
 
     return GestureDetector(
       onTap: () {
-        _closeAccountMenu();
         FocusScope.of(context).unfocus();
         FocusManager.instance.primaryFocus?.unfocus();
       },
@@ -342,186 +326,176 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
                       const SliverToBoxAdapter(
                         child: SizedBox(height: 150),
                       ),
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(20, 5, 20, 28),
-                      sliver: SliverList(
-                        delegate: SliverChildListDelegate([
-                                _HomeSectionHeader(
-                                  title: 'YOUR BOOKINGS',
-                                  actionLabel: 'See more',
-                                  onActionTap: () =>
-                                      context.pushNamed(BookingsWidget.routeName),
-                                ),
-                                const SizedBox(height: 12),
-                                ...bookings.map(
-                                  (booking) => Padding(
-                                    padding: const EdgeInsets.only(bottom: 12),
-                                    child: ActiveBookingCard(
-                                      title: booking.title,
-                                      providerName: booking.providerName,
-                                      category: booking.category,
-                                      statusLabel: booking.statusLabel,
-                                      statusColor: booking.statusColor,
-                                      statusBgColor: booking.statusBgColor,
-                                      icon: booking.icon,
-                                      iconBgColor: booking.iconBgColor,
-                                      iconColor: booking.iconColor,
-                                      subtitleInfo: booking.subtitleInfo,
-                                      onTrackTap: () =>
-                                          _openTrackingPage(booking),
-                                      onMessageTap: () => context.pushNamed(
-                                        MessagesWidget.routeName,
-                                      ),
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(20, 5, 20, 28),
+                        sliver: SliverList(
+                          delegate: SliverChildListDelegate([
+                            if (bookings.isNotEmpty) ...[
+                              _HomeSectionHeader(
+                                title: 'YOUR BOOKINGS',
+                                actionLabel: 'See more',
+                                onActionTap: () =>
+                                    context.pushNamed(BookingsWidget.routeName),
+                              ),
+                              const SizedBox(height: 12),
+                              ...bookings.map(
+                                (booking) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: ActiveBookingCard(
+                                    title: booking.title,
+                                    providerName: booking.providerName,
+                                    category: booking.category,
+                                    statusLabel: booking.statusLabel,
+                                    statusColor: booking.statusColor,
+                                    statusBgColor: booking.statusBgColor,
+                                    icon: booking.icon,
+                                    iconBgColor: booking.iconBgColor,
+                                    iconColor: booking.iconColor,
+                                    subtitleInfo: booking.subtitleInfo,
+                                    onTrackTap: () =>
+                                        _openTrackingPage(booking),
+                                    onMessageTap: () => context.pushNamed(
+                                      MessagesWidget.routeName,
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 4),
-                                EmergencyHelpCard(onTap: _openEmergencyModal),
-                                const SizedBox(height: 16),
-                                _HomeSectionHeader(
-                                  title: 'EXPLORE SERVICES',
-                                  subtitle: 'Popular local services, all in one place.',
-                                  actionLabel: 'Browse all',
-                                  onActionTap: () =>
-                                      context.pushNamed(CategoriesWidget.routeName),
-                                ),
-                                const SizedBox(height: 12),
-                                SizedBox(
-                                  height: 104,
-                                  child: ListView.separated(
-                                    scrollDirection: Axis.horizontal,
-                                    clipBehavior: Clip.none,
-                                    itemCount: categories.length,
-                                    separatorBuilder: (_, __) => const SizedBox(width: 10),
-                                    itemBuilder: (context, index) {
-                                      final category = categories[index];
-                                      return CategoryTileItem(
-                                        name: category.name,
-                                        priceSubtitle: category.priceSubtitle,
-                                        icon: category.icon,
-                                        gradientColors: category.gradientColors,
-                                        badgeLabel: category.badgeLabel,
-                                        isDarkText: category.isDarkText,
-                                        onTap: () => _openCategory(category.name),
-                                      );
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                SeasonalOfferCard(onTap: _startBookingProcess),
-                                const SizedBox(height: 18),
-                                if (_hasBookingHistory) ...[
-                                _HomeSectionHeader(
-                                  title: 'Trending near you',
-                                  subtitle:
-                                      'Verified pros with the strongest reviews nearby.',
-                                  actionLabel: 'See all',
-                                  onActionTap: () =>
-                                      context.pushNamed(CategoriesWidget.routeName),
-                                ),
-                                const SizedBox(height: 14),
-                                SizedBox(
-                                  height: 154,
-                                  child: ListView.separated(
-                                    scrollDirection: Axis.horizontal,
-                                    clipBehavior: Clip.none,
-                                    itemCount: providers.length,
-                                    separatorBuilder: (_, __) =>
-                                        const SizedBox(width: 12),
-                                    itemBuilder: (context, index) {
-                                      final provider = providers[index];
-                                      return TrendingProviderCard(
-                                        name: provider.name,
-                                        category: provider.category,
-                                        avatarUrl: provider.avatarUrl,
-                                        rating: provider.rating,
-                                        reviewCount: provider.reviewCount,
-                                        distanceKm: provider.distanceKm,
-                                        startingPrice: provider.startingPrice,
-                                        onTap: () => _openProvider(provider.providerId),
-                                      );
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(height: 18),
-                                _HomeSectionHeader(
-                                  title: 'Recommended for you',
-                                  subtitle:
-                                      'Based on what homeowners nearby are booking.',
-                                ),
-                                const SizedBox(height: 12),
-                                ...recommendedProviders.map(
-                                  (provider) => Padding(
-                                    padding: const EdgeInsets.only(bottom: 10),
-                                    child: _RecommendedProviderCard(
-                                      provider: provider,
-                                      onTap: () => _openProvider(
-                                        provider.providerId,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                ],
-                                const SizedBox(height: 6),
-                                ReferralBannerCard(
-                                  promoCode: 'SHPH2026',
-                                  onTap: () => context.pushNamed(
-                                    ProfileWidget.routeName,
-                                  ),
-                                ),
-                              ]),
+                              ),
+                              const SizedBox(height: 4),
+                            ],
+                            _HomeSectionHeader(
+                              title: 'Trending near you',
+                              subtitle:
+                                  'Verified pros with the strongest reviews nearby.',
+                              actionLabel: 'See all',
+                              onActionTap: () =>
+                                  context.pushNamed(CategoriesWidget.routeName),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Pinned header: stays frozen at the top of the screen and
-                    // collapses from the tall greeting view into a compact
-                    // bar (search bar + notification + profile) as the list
-                    // scrolls. See _handleScroll -> _isHeaderCompact.
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      child: PrototypeAppHeader(
-                        userName: _headerGreeting,
-                        avatarUrl: currentUserPhoto,
-                        hasUnreadNotifications: hasUnreadNotifications,
-                        isCompact: _isHeaderCompact,
-                        onNotificationTap: () => context.pushNamed(
-                          MyNotificationsWidget.routeName,
+                            const SizedBox(height: 14),
+                            SizedBox(
+                              height: 154,
+                              child: ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                clipBehavior: Clip.none,
+                                itemCount: _isHomeLoading ? 3 : providers.length,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(width: 12),
+                                itemBuilder: (context, index) {
+                                  if (_isHomeLoading) {
+                                    return const TrendingProviderCardSkeleton();
+                                  }
+                                  final provider = providers[index];
+                                  return TrendingProviderCard(
+                                    name: provider.name,
+                                    category: provider.category,
+                                    avatarUrl: provider.avatarUrl,
+                                    rating: provider.rating,
+                                    reviewCount: provider.reviewCount,
+                                    distanceKm: provider.distanceKm,
+                                    startingPrice: provider.startingPrice,
+                                    onTap: () =>
+                                        _openProvider(provider.providerId),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 18),
+                            EmergencyHelpCard(onTap: _openEmergencyBooking),
+                            const SizedBox(height: 16),
+                            _HomeSectionHeader(
+                              title: 'EXPLORE SERVICES',
+                              subtitle:
+                                  'Popular local services, all in one place.',
+                              actionLabel: 'Browse all',
+                              onActionTap: () =>
+                                  context.pushNamed(CategoriesWidget.routeName),
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              height: 104,
+                              child: ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                clipBehavior: Clip.none,
+                                itemCount: _isHomeLoading ? 4 : categories.length,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(width: 10),
+                                itemBuilder: (context, index) {
+                                  if (_isHomeLoading) {
+                                    return const HomeCategoryTileSkeleton();
+                                  }
+                                  final category = categories[index];
+                                  return CategoryTileItem(
+                                    name: category.name,
+                                    priceSubtitle: category.priceSubtitle,
+                                    icon: category.icon,
+                                    gradientColors: category.gradientColors,
+                                    badgeLabel: category.badgeLabel,
+                                    isDarkText: category.isDarkText,
+                                    onTap: () => _openCategory(category.name),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            SeasonalOfferCard(onTap: _startBookingProcess),
+                            const SizedBox(height: 18),
+                            if (_hasBookingHistory) ...[
+                              _HomeSectionHeader(
+                                title: 'Recommended for you',
+                                subtitle:
+                                    'Based on what homeowners nearby are booking.',
+                              ),
+                              const SizedBox(height: 12),
+                              ...recommendedProviders.map(
+                                (provider) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 10),
+                                  child: _RecommendedProviderCard(
+                                    provider: provider,
+                                    onTap: () => _openProvider(
+                                      provider.providerId,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 6),
+                            ReferralBannerCard(
+                              promoCode: 'SHPH2026',
+                              onTap: () => context.pushNamed(
+                                ProfileWidget.routeName,
+                              ),
+                            ),
+                          ]),
                         ),
-                        onAvatarTap: _toggleAccountMenu,
-                        onSearchTap: _openSearchPage,
                       ),
-                    ),
-                    if (_isAccountMenuOpen)
-                      Positioned.fill(
-                        top: _isHeaderCompact ? 44 : 126,
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.translucent,
-                          onTap: _closeAccountMenu,
-                          child: const SizedBox.expand(),
-                        ),
-                      ),
-                    if (_isAccountMenuOpen)
-                      Positioned(
-                        top: _isHeaderCompact ? 48 : 130,
-                        right: 20,
-                        child: _AccountMenu(
-                          name: accountName,
-                          email: accountEmail,
-                          onManageAddresses: _openManageAddresses,
-                          onHelpSupport: _openHelpSupport,
-                          onSignOut: _signOut,
-                        ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+                // Pinned header: stays frozen at the top of the screen and
+                // collapses from the tall greeting view into a compact
+                // bar (search bar + notification + profile) as the list
+                // scrolls. See _handleScroll -> _isHeaderCompact.
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: PrototypeAppHeader(
+                    userName: _headerGreeting,
+                    avatarUrl: currentUserPhoto,
+                    hasUnreadNotifications: hasUnreadNotifications,
+                    isCompact: _isHeaderCompact,
+                    onNotificationTap: () => context.pushNamed(
+                      MyNotificationsWidget.routeName,
+                    ),
+                    onAvatarTap: _openProfileActions,
+                    onSearchTap: _openSearchPage,
+                  ),
+                ),
+              ],
             ),
           ),
-        );
+        ),
+      ),
+    );
   }
 
   Future<void> _loadHomeData() async {
@@ -535,6 +509,7 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
     if (!mounted) return;
 
     setState(() {
+      _isHomeLoading = false;
       _bookings = (results[0] as List<_HomeBookingData>?) ?? const [];
       _categories = (results[1] as List<_HomeCategoryData>?) ?? const [];
       _providers = (results[2] as List<_TrendingProviderData>?) ?? const [];
@@ -632,8 +607,7 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
       );
 
       // Trending = listings sorted by rating/reviews server-side (-rating).
-      final byRating = [...page.results]
-        ..sort((a, b) {
+      final byRating = [...page.results]..sort((a, b) {
           final ra = double.tryParse(a.rating ?? '0') ?? 0;
           final rb = double.tryParse(b.rating ?? '0') ?? 0;
           if (ra != rb) return rb.compareTo(ra);
@@ -1049,10 +1023,10 @@ class _AccountMenu extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: Container(
-        width: 208,
+        width: double.infinity,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: const [
             BoxShadow(
               color: Color(0x220F172A),
@@ -1068,7 +1042,8 @@ class _AccountMenu extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1124,7 +1099,8 @@ class _AccountMenuItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isDanger ? AppDesignTokens.danger : AppDesignTokens.inkSecondary;
+    final color =
+        isDanger ? AppDesignTokens.danger : AppDesignTokens.inkSecondary;
     return Material(
       color: Colors.transparent,
       child: InkWell(

@@ -6,6 +6,13 @@ enum ServiceType { standard, deep, premium }
 
 enum BookingPaymentMethod { gcash, maya, card, qrPh, cod }
 
+double? bookingNumber(Object? value) {
+  if (value is num) {
+    return value.toDouble();
+  }
+  return double.tryParse(value?.toString() ?? '');
+}
+
 /// Checkout step labels for the confirm-booking progress spine.
 const List<String> kCheckoutSteps = ['Services', 'Location', 'Payment'];
 
@@ -128,9 +135,14 @@ class BookingDraft {
 class BookingQuote {
   const BookingQuote({
     required this.basePrice,
-    required this.roomSubtotal,
-    required this.cleaningTypeAdjustment,
-    required this.urgencyAdjustment,
+    this.roomSubtotal = 0,
+    this.cleaningTypeAdjustment = 0,
+    this.urgencyAdjustment = 0,
+    this.timePremium = 0,
+    this.platformFee = 0,
+    this.vat = 0,
+    this.platformFeePercent,
+    this.vatPercent,
     required this.total,
   });
 
@@ -138,7 +150,29 @@ class BookingQuote {
   final double roomSubtotal;
   final double cleaningTypeAdjustment;
   final double urgencyAdjustment;
+  final double timePremium;
+  final double platformFee;
+  final double vat;
+  final String? platformFeePercent;
+  final String? vatPercent;
   final double total;
+
+  factory BookingQuote.fromApi(Map<String, dynamic> json) {
+    final basePrice = bookingNumber(json['base_price']);
+    final total = bookingNumber(json['total']);
+    if (basePrice == null || total == null) {
+      throw const FormatException('Booking estimate is missing a price');
+    }
+    return BookingQuote(
+      basePrice: basePrice,
+      timePremium: bookingNumber(json['time_premium']) ?? 0,
+      platformFee: bookingNumber(json['platform_fee']) ?? 0,
+      vat: bookingNumber(json['vat']) ?? 0,
+      platformFeePercent: json['platform_fee_percent']?.toString(),
+      vatPercent: json['vat_percent']?.toString(),
+      total: total,
+    );
+  }
 }
 
 String serviceDisplayTitle(BookingDraft draft) =>

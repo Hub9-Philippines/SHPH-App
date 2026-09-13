@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 import '/l10n/app_localizations.dart';
 import '/services/logging_service.dart';
 import '/services/wallet_service.dart';

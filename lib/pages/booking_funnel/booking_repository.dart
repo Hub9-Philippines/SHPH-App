@@ -9,6 +9,10 @@ import 'booking_models.dart';
 abstract class BookingRepository {
   Future<String> broadcastLiveSearch(BookingDraft draft);
   Future<String> reserveScheduledSlot(BookingDraft draft);
+
+  Future<BookingQuote> estimateBooking(BookingDraft draft) async {
+    throw UnimplementedError('Booking estimate is not available');
+  }
 }
 
 class ShphBookingRepository implements BookingRepository {
@@ -31,6 +35,19 @@ class ShphBookingRepository implements BookingRepository {
   }
 
   @override
+  Future<BookingQuote> estimateBooking(BookingDraft draft) async {
+    final listingId = draft.serviceListingId;
+    if (listingId == null) {
+      throw StateError('No service selected for booking estimate');
+    }
+    final response = await ShphBookingsApi.instance.estimateBooking(
+      listingId: listingId,
+      scheduledAt: resolveScheduledDateTime(draft),
+    );
+    return BookingQuote.fromApi(response);
+  }
+
+  @override
   Future<String> broadcastLiveSearch(BookingDraft draft) async {
     _resetBroadcastResult();
     final booking = await _createBooking(
@@ -46,7 +63,8 @@ class ShphBookingRepository implements BookingRepository {
   /// Broadcasts a real on-demand job to nearby providers via the SHPH API.
   /// Populates the real [lastJobId] / [lastProviderCount] / fee estimate so the
   /// UI can show authoritative matching info instead of fabricated numbers.
-  Future<void> _broadcastOnDemandJob(BookingDraft draft, String bookingId) async {
+  Future<void> _broadcastOnDemandJob(
+      BookingDraft draft, String bookingId) async {
     final categoryId = draft.serviceCategoryId;
     if (categoryId == null) {
       LoggingService.warning(
@@ -82,9 +100,9 @@ class ShphBookingRepository implements BookingRepository {
         return;
       }
       lastJobId = jobId;
-      lastProviderCount = (response['provider_count'] as num?)?.toInt();
-      lastEstFeeMin = _toDouble(response['estimated_fee_min']);
-      lastEstFeeMax = _toDouble(response['estimated_fee_max']);
+      lastProviderCount = bookingNumber(response['provider_count'])?.toInt();
+      lastEstFeeMin = bookingNumber(response['estimated_fee_min']);
+      lastEstFeeMax = bookingNumber(response['estimated_fee_max']);
       lastBroadcastSucceeded = true;
       LoggingService.debug(
         'On-demand broadcast ok: job=$jobId providers=$lastProviderCount',
@@ -114,12 +132,6 @@ class ShphBookingRepository implements BookingRepository {
         '${now.minute.toString().padLeft(2, '0')}:00';
   }
 
-  static double? _toDouble(Object? value) {
-    if (value == null) return null;
-    if (value is num) return value.toDouble();
-    return double.tryParse(value.toString());
-  }
-
   @override
   Future<String> reserveScheduledSlot(BookingDraft draft) async {
     final booking = await _createBooking(
@@ -136,7 +148,7 @@ class ShphBookingRepository implements BookingRepository {
     required String bookingStatus,
   }) async {
     final listingId = await _resolveServiceListingId(draft);
-    final scheduledDateTime = _resolveScheduledDateTime(draft);
+    final scheduledDateTime = resolveScheduledDateTime(draft);
     final notes = [
       notesPrefix,
       'Mode: ${bookingStatus == 'pending' ? 'live search' : 'scheduled reserve'}',
@@ -182,7 +194,12 @@ class ShphBookingRepository implements BookingRepository {
         'No service selected for booking. Please choose a service first.');
   }
 
-  DateTime _resolveScheduledDateTime(BookingDraft draft) {
+  /// Resolves the API `scheduled_at` value from the draft's urgency and any
+  /// explicit slot. Immediate requests resolve to a short future window,
+  /// later-today uses today's chosen time, scheduled uses the picked
+  /// date+time, and anything incomplete falls back to a one-day-ahead slot.
+  @visibleForTesting
+  DateTime resolveScheduledDateTime(BookingDraft draft) {
     if (draft.scheduledDate != null && draft.scheduledTime != null) {
       return DateTime(
         draft.scheduledDate!.year,

@@ -547,3 +547,167 @@ class PaymentMethodCardSkeleton extends StatelessWidget {
       ),
     );
 }
+
+// Skeleton card for trending provider cards (home page "Trending near you"
+// rail). Mirrors TrendingProviderCard in lib/components/prototype_components.dart.
+class TrendingProviderCardSkeleton extends StatelessWidget {
+  const TrendingProviderCardSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) => Container(
+      width: 196,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.of(context).primaryBackground,
+        boxShadow: const [
+          BoxShadow(
+            blurRadius: 8,
+            color: Color(0x1A000000),
+            offset: Offset(0, 2),
+          )
+        ],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const SkeletonLoadingWidget(
+                width: 38,
+                height: 38,
+                borderRadius: BorderRadius.all(Radius.circular(8)),
+              ),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SkeletonLoadingWidget(
+                      width: double.infinity,
+                      height: 11,
+                      borderRadius: BorderRadius.all(Radius.circular(4)),
+                    ),
+                    SizedBox(height: 4),
+                    SkeletonLoadingWidget(
+                      width: 70,
+                      height: 9,
+                      borderRadius: BorderRadius.all(Radius.circular(4)),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 4),
+              const SkeletonLoadingWidget(
+                width: 44,
+                height: 14,
+                borderRadius: BorderRadius.all(Radius.circular(7)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              const SkeletonLoadingWidget(
+                width: 13,
+                height: 13,
+                borderRadius: BorderRadius.all(Radius.circular(4)),
+              ),
+              const SizedBox(width: 3),
+              const SkeletonLoadingWidget(
+                width: 18,
+                height: 10,
+                borderRadius: BorderRadius.all(Radius.circular(4)),
+              ),
+              const SizedBox(width: 2),
+              const SkeletonLoadingWidget(
+                width: 24,
+                height: 9,
+                borderRadius: BorderRadius.all(Radius.circular(4)),
+              ),
+              const Spacer(),
+              const SkeletonLoadingWidget(
+                width: 60,
+                height: 10,
+                borderRadius: BorderRadius.all(Radius.circular(4)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              const SkeletonLoadingWidget(
+                width: 12,
+                height: 12,
+                borderRadius: BorderRadius.all(Radius.circular(4)),
+              ),
+              const SizedBox(width: 3),
+              const SkeletonLoadingWidget(
+                width: 80,
+                height: 9,
+                borderRadius: BorderRadius.all(Radius.circular(4)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          const SkeletonLoadingWidget(
+            width: double.infinity,
+            height: 32,
+            borderRadius: BorderRadius.all(Radius.circular(8)),
+          ),
+        ],
+      ),
+    );
+}
+
+// Skeleton tile for home category tiles ("EXPLORE SERVICES" rail). Mirrors
+// CategoryTileItem in lib/components/prototype_components.dart.
+class HomeCategoryTileSkeleton extends StatelessWidget {
+  const HomeCategoryTileSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) => Container(
+      width: 132,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: AppTheme.of(context).primaryBackground,
+        boxShadow: const [
+          BoxShadow(
+            blurRadius: 6,
+            color: Color(0x1A000000),
+            offset: Offset(0, 2),
+          )
+        ],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const SkeletonLoadingWidget(
+            width: 32,
+            height: 32,
+            borderRadius: BorderRadius.all(Radius.circular(8)),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SkeletonLoadingWidget(
+                width: 90,
+                height: 12,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              const SizedBox(height: 2),
+              SkeletonLoadingWidget(
+                width: 56,
+                height: 9,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+}

@@ -3,12 +3,15 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '/components/cupertino_ui/app_button.dart';
+import '/components/cupertino_ui/app_switch.dart';
+import '/components/cupertino_ui/app_text_field.dart';
 import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import '../booking_controller.dart';
 import '../booking_models.dart';
 import '../checkout/checkout_screen.dart';
 import '../widgets/booking_flow_route.dart';
+import '../widgets/booking_step_spine.dart';
 
 class BookingSetupScreen extends StatelessWidget {
   const BookingSetupScreen({super.key});
@@ -33,7 +36,7 @@ class BookingSetupScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              l10n.bfStepOf(3),
+              l10n.bfStepOfCount(3, 4),
               style: theme.labelMedium.override(
                 color: theme.primary,
                 fontWeight: FontWeight.w700,
@@ -56,7 +59,18 @@ class BookingSetupScreen extends StatelessWidget {
             final quote = controller.quote;
             return Column(
               children: [
-                const _SetupProgress(),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: BookingStepSpine(
+                    steps: [
+                      l10n.bfLocation,
+                      l10n.bfTime,
+                      l10n.bfDetails,
+                      l10n.bfReview,
+                    ],
+                    currentStep: 2,
+                  ),
+                ),
                 Expanded(
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -108,10 +122,21 @@ class BookingSetupScreen extends StatelessWidget {
                         selected: controller.draft.cleaningType,
                         onChanged: controller.setServiceType,
                       ),
+                      const SizedBox(height: 16),
+                      _SectionLabel(title: l10n.bfLandmarks),
+                      const SizedBox(height: 10),
+                      _LandmarksField(controller: controller),
+                      const SizedBox(height: 16),
+                      _ArrivalCodeTile(controller: controller),
                       const SizedBox(height: 18),
                       _SectionLabel(title: l10n.bfLiveEstimate),
                       const SizedBox(height: 10),
-                      _PriceBreakdown(quote: quote),
+                      _EstimateSection(
+                        isLoading: controller.isLoadingQuote,
+                        error: controller.quoteError,
+                        quote: quote,
+                        onRetry: controller.refreshQuote,
+                      ),
                     ],
                   ),
                 ),
@@ -258,35 +283,106 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-class _SetupProgress extends StatelessWidget {
-  const _SetupProgress();
+class _LandmarksField extends StatefulWidget {
+  const _LandmarksField({required this.controller});
+
+  final BookingFlowController controller;
+
+  @override
+  State<_LandmarksField> createState() => _LandmarksFieldState();
+}
+
+class _LandmarksFieldState extends State<_LandmarksField> {
+  late final TextEditingController _textController;
+
+  @override
+  void initState() {
+    super.initState();
+    _textController = TextEditingController(
+      text: widget.controller.draft.landmarks,
+    );
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+    return AppTextField(
+      controller: _textController,
+      onChanged: widget.controller.setLandmarks,
+      placeholder: l10n.bfLandmarksPlaceholder,
+      placeholderStyle: theme.bodySmall.override(
+        font: GoogleFonts.plusJakartaSans(),
+        color: theme.textTertiary,
+      ),
+      prefixIcon: Icons.landscape_rounded,
+      radius: AppThemeData.radiusMd,
+      fillColor: theme.primaryBackground,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      maxLines: 3,
+    );
+  }
+}
+
+class _ArrivalCodeTile extends StatelessWidget {
+  const _ArrivalCodeTile({required this.controller});
+
+  final BookingFlowController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.secondaryBackground,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: theme.alternate),
+      ),
       child: Row(
         children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: theme.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(Icons.password_rounded, color: theme.primary),
+          ),
+          const SizedBox(width: 12),
           Expanded(
-            child: _SetupStepPill(
-              title: l10n.bfLocation,
-              done: true,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.bfRequireArrivalCode,
+                  style: theme.bodyMedium.override(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  l10n.bfProviderMustConfirmCode,
+                  style: theme.bodySmall.override(
+                    color: theme.secondaryText,
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(width: 8),
-          Expanded(
-            child: _SetupStepPill(
-              title: l10n.bfTime,
-              done: true,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: _SetupStepPill(
-              title: l10n.bfSetup,
-              active: true,
-            ),
+          AppSwitch(
+            value: controller.draft.requireArrivalCode,
+            onChanged: controller.setRequireArrivalCode,
+            activeColor: theme.primary,
           ),
         ],
       ),
@@ -294,63 +390,125 @@ class _SetupProgress extends StatelessWidget {
   }
 }
 
-class _SetupStepPill extends StatelessWidget {
-  const _SetupStepPill({
-    required this.title,
-    this.active = false,
-    this.done = false,
+class _EstimateSection extends StatelessWidget {
+  const _EstimateSection({
+    required this.isLoading,
+    required this.error,
+    required this.quote,
+    required this.onRetry,
   });
 
-  final String title;
-  final bool active;
-  final bool done;
+  final bool isLoading;
+  final String? error;
+  final BookingQuote quote;
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = AppTheme.of(context);
+    if (isLoading && quote.total <= 0) {
+      return const _EstimateSkeleton();
+    }
+    if (error != null) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.warning.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: theme.warning.withValues(alpha: 0.30),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.error_outline_rounded,
+                  color: theme.warning,
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    l10n.bfEstimateUnavailable,
+                    style: theme.bodySmall.override(
+                      color: theme.secondaryText,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: AppButton(
+                onPressed: () async {
+                  await onRetry();
+                },
+                variant: AppButtonVariant.outlined,
+                borderSide: BorderSide(color: theme.alternate),
+                foregroundColor: theme.primary,
+                borderRadius: 14,
+                child: Text(
+                  l10n.bfRetry,
+                  style: theme.bodyMedium.override(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return _PriceBreakdown(quote: quote);
+  }
+}
+
+class _EstimateSkeleton extends StatelessWidget {
+  const _EstimateSkeleton();
 
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
-    final color = done || active ? theme.primary : theme.alternate;
-    final background = done || active
-        ? theme.primary.withValues(alpha: active ? 0.14 : 0.08)
-        : theme.secondaryBackground;
-
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: color.withValues(alpha: done || active ? 0.5 : 1),
-        ),
+        color: theme.primaryBackground,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: theme.alternate),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Column(
         children: [
-          if (done)
-            Icon(
-              Icons.check_circle_rounded,
-              size: 16,
-              color: theme.primary,
-            )
-          else
-            Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                color: active ? theme.primary : theme.secondaryText,
-                shape: BoxShape.circle,
-              ),
+          for (var index = 0; index < 3; index++) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  width: 90,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: theme.alternate.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                Container(
+                  width: 48,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: theme.alternate.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              ],
             ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              title,
-              overflow: TextOverflow.ellipsis,
-              style: theme.bodySmall.override(
-                color: done || active ? theme.primary : theme.secondaryText,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
+            if (index < 2) const SizedBox(height: 16),
+          ],
         ],
       ),
     );
@@ -433,7 +591,11 @@ class _SummaryTile extends StatelessWidget {
                 ],
                 if (draft.scheduledDate != null && draft.scheduledTime != null)
                   Text(
-                    '${draft.scheduledDate!.month}/${draft.scheduledDate!.day} ${formatTimeOfDay(draft.scheduledTime!)}',
+                    l10n.bfOnDateAtTime(
+                      draft.scheduledDate!.month,
+                      draft.scheduledDate!.day,
+                      formatTimeOfDay(draft.scheduledTime!),
+                    ),
                     style: theme.bodySmall.override(
                       color: theme.secondaryText,
                     ),

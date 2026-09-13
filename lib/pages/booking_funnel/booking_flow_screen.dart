@@ -18,6 +18,7 @@ import 'booking_controller.dart';
 import 'booking_models.dart';
 import 'setup/booking_setup_screen.dart';
 import 'widgets/booking_flow_route.dart';
+import 'widgets/booking_step_spine.dart';
 import 'widgets/location_confirmation_panel.dart';
 import 'widgets/time_selection_panel.dart';
 
@@ -160,10 +161,19 @@ class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
     final l10n = AppLocalizations.of(context)!;
     final theme = AppTheme.of(context);
     final mediaQuery = MediaQuery.of(context);
+    // The bottom sheet (~300px tall) overlaps the map's lower part: the map
+    // stays full-bleed behind it, but the camera centers the pin in the
+    // visible region between the top card and the sheet's top edge.
+    final sheetOverlap = 300.0;
+    final visibleTop = mediaQuery.padding.top + 96;
+    final visibleBottom = mediaQuery.padding.bottom + sheetOverlap;
     final mapPadding = EdgeInsets.only(
-      top: mediaQuery.padding.top + 180,
+      // Google Maps centers the camera target inside the padded region, so
+      // equal-ish insets above/below place the pin in the middle of the area
+      // visible between the top card and the overlapping bottom sheet.
+      top: visibleTop,
       right: 16,
-      bottom: mediaQuery.padding.bottom + 300,
+      bottom: visibleBottom,
     );
 
     return Scaffold(
@@ -231,7 +241,7 @@ class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
               left: 16,
               right: 16,
               child: _FlowTopCard(
-                currentStep: _isLocationConfirmed ? 2 : 1,
+                stepIndex: _isLocationConfirmed ? 1 : 0,
                 title: controller.selectedServiceLabel(l10n),
                 subtitle: _heroSubtitle(controller, l10n),
                 address: controller.draft.address,
@@ -268,6 +278,9 @@ class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
                       )
                     : LocationConfirmationPanel(
                         address: controller.draft.address,
+                        serviceTitle: controller.selectedServiceLabel(l10n),
+                        serviceCategoryName:
+                            controller.draft.serviceCategoryName,
                         onEdit: () async {
                           await _editBookingPin(context, controller);
                         },
@@ -490,7 +503,7 @@ class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
 
 class _FlowTopCard extends StatelessWidget {
   const _FlowTopCard({
-    required this.currentStep,
+    required this.stepIndex,
     required this.title,
     required this.subtitle,
     required this.address,
@@ -498,7 +511,7 @@ class _FlowTopCard extends StatelessWidget {
     required this.onEditAddress,
   });
 
-  final int currentStep;
+  final int stepIndex;
   final String title;
   final String subtitle;
   final BookingAddress address;
@@ -536,7 +549,7 @@ class _FlowTopCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      l10n.bfStepOf(currentStep),
+                      l10n.bfStepOfCount(stepIndex + 1, 4),
                       style: theme.labelMedium.override(
                         color: theme.primary,
                         fontWeight: FontWeight.w700,
@@ -562,99 +575,16 @@ class _FlowTopCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: _StepPill(
-                  title: l10n.bfLocation,
-                  active: currentStep == 1,
-                  done: currentStep > 1,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _StepPill(
-                  title: l10n.bfTime,
-                  active: currentStep == 2,
-                  done: false,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _StepPill(
-                  title: l10n.bfSetup,
-                  active: currentStep == 3,
-                  done: false,
-                ),
-              ),
-            ],
-          ),
+          BookingStepSpine(steps: [
+            l10n.bfLocation,
+            l10n.bfTime,
+            l10n.bfDetails,
+            l10n.bfReview,
+          ], currentStep: stepIndex),
           const SizedBox(height: 14),
           _AddressBanner(
             address: address,
             onTap: onEditAddress,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StepPill extends StatelessWidget {
-  const _StepPill({
-    required this.title,
-    required this.active,
-    required this.done,
-  });
-
-  final String title;
-  final bool active;
-  final bool done;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
-    final color = done || active ? theme.primary : theme.alternate;
-    final background = done || active
-        ? theme.primary.withValues(alpha: active ? 0.14 : 0.08)
-        : theme.secondaryBackground;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-            color: color.withValues(alpha: done || active ? 0.5 : 1)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (done)
-            Icon(
-              Icons.check_circle_rounded,
-              size: 16,
-              color: theme.primary,
-            )
-          else
-            Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                color: active ? theme.primary : theme.secondaryText,
-                shape: BoxShape.circle,
-              ),
-            ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              title,
-              overflow: TextOverflow.ellipsis,
-              style: theme.bodySmall.override(
-                color: done || active ? theme.primary : theme.secondaryText,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
           ),
         ],
       ),

@@ -4,9 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
 
-import '/auth/base_auth_user_provider.dart';
-import '/auth/post_auth_navigation_flow.dart';
 import '/auth/auth_util.dart';
+import '/auth/post_auth_navigation_flow.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/components/cupertino_ui/app_button.dart';
 import '/components/cupertino_ui/cupertino_page_header.dart';

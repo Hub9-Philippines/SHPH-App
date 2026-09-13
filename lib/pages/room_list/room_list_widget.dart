@@ -142,7 +142,7 @@ class _RoomListWidgetState extends State<RoomListWidget> {
                                       ),
                                       child: Text(
                                         _statusLabel(status),
-                                        style: theme.bodySmall?.copyWith(
+                                        style: theme.bodySmall.copyWith(
                                           color: statusColor,
                                           fontWeight: FontWeight.w600,
                                           fontSize: 11,
@@ -154,7 +154,7 @@ class _RoomListWidgetState extends State<RoomListWidget> {
                                 const SizedBox(height: 4),
                                 Text(
                                   room['category_name']?.toString() ?? '',
-                                  style: theme.bodySmall?.copyWith(
+                                  style: theme.bodySmall.copyWith(
                                       color: theme.secondaryText),
                                 ),
                                 const SizedBox(height: 8),
@@ -168,14 +168,14 @@ class _RoomListWidgetState extends State<RoomListWidget> {
                                         room['heads_required'] ?? '?',
                                         room['seats_remaining'] ?? '?',
                                       ),
-                                      style: theme.bodySmall?.copyWith(
+                                      style: theme.bodySmall.copyWith(
                                           color: theme.secondaryText),
                                     ),
                                     const Spacer(),
                                     if (room['price_per_head'] != null)
                                       Text(
                                         '\$${room['price_per_head']}',
-                                        style: theme.bodyMedium?.copyWith(
+                                        style: theme.bodyMedium.copyWith(
                                             fontWeight: FontWeight.w600),
                                       ),
                                   ],

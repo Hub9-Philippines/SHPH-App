@@ -1234,6 +1234,18 @@ abstract class AppLocalizations {
   /// **'Matching flow'**
   String get bfMatchingFlow;
 
+  /// No description provided for @bfBroadcastFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Live matching unavailable'**
+  String get bfBroadcastFailedTitle;
+
+  /// No description provided for @bfBroadcastFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t reach the dispatch service, so this is a preview. Your booking is saved — retry from your bookings or contact support.'**
+  String get bfBroadcastFailedBody;
+
   /// No description provided for @bfNearestAvailableProvider.
   ///
   /// In en, this message translates to:
@@ -1780,6 +1792,60 @@ abstract class AppLocalizations {
   /// **'Stay on this screen while we look for the closest available professional.'**
   String get bfStayOnScreen;
 
+  /// No description provided for @bfSearching.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching'**
+  String get bfSearching;
+
+  /// No description provided for @bfSecondsRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds}s'**
+  String bfSecondsRemaining(Object seconds);
+
+  /// No description provided for @bfProvidersNotified.
+  ///
+  /// In en, this message translates to:
+  /// **'Providers notified'**
+  String get bfProvidersNotified;
+
+  /// No description provided for @bfProviderCountOne.
+  ///
+  /// In en, this message translates to:
+  /// **'1 provider'**
+  String get bfProviderCountOne;
+
+  /// No description provided for @bfProviderCountMany.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} providers'**
+  String bfProviderCountMany(Object count);
+
+  /// No description provided for @bfEstimatedFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated fee'**
+  String get bfEstimatedFee;
+
+  /// No description provided for @bfFeeRange.
+  ///
+  /// In en, this message translates to:
+  /// **'PHP {min} - {max}'**
+  String bfFeeRange(Object min, Object max);
+
+  /// No description provided for @bfJobsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} jobs'**
+  String bfJobsCount(Object count);
+
+  /// No description provided for @bfMinutesShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String bfMinutesShort(Object minutes);
+
   /// No description provided for @bfProAssigned.
   ///
   /// In en, this message translates to:
@@ -1833,6 +1899,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Step {currentStep} of 3'**
   String bfStepOf(Object currentStep);
+
+  /// No description provided for @bfStepOfCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {currentStep} of {totalSteps}'**
+  String bfStepOfCount(Object currentStep, Object totalSteps);
+
+  /// No description provided for @bfDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get bfDetails;
+
+  /// No description provided for @bfReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get bfReview;
+
+  /// No description provided for @bfRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get bfRetry;
+
+  /// No description provided for @bfEstimateUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the price estimate. Your draft is saved - retry or go back.'**
+  String get bfEstimateUnavailable;
 
   /// No description provided for @bfServices.
   ///
@@ -1911,6 +2007,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'CHANGE'**
   String get bfChange;
+
+  /// No description provided for @bfLandmarks.
+  ///
+  /// In en, this message translates to:
+  /// **'Landmarks'**
+  String get bfLandmarks;
 
   /// No description provided for @bfLandmarksPlaceholder.
   ///
@@ -2175,6 +2277,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Today at {time}'**
   String bfTodayAtTime(Object time);
+
+  /// No description provided for @bfOnDateAtTime.
+  ///
+  /// In en, this message translates to:
+  /// **'{month}/{day} at {time}'**
+  String bfOnDateAtTime(Object month, Object day, Object time);
 
   /// No description provided for @bfAsapTodayAfter.
   ///
@@ -3579,6 +3687,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search for services...'**
   String get spSearchPlaceholder;
+
+  /// No description provided for @spVoiceSearchNoResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Didn\'t catch that. Try again or type your search.'**
+  String get spVoiceSearchNoResult;
+
+  /// No description provided for @spVoiceSearchUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice search isn\'t available on this device. Please type your search instead.'**
+  String get spVoiceSearchUnavailable;
 
   /// No description provided for @spEmptyTitle.
   ///
@@ -6796,6 +6916,36 @@ abstract class AppLocalizations {
   /// **'Anonymous'**
   String get ppfAnonymous;
 
+  /// No description provided for @ppfCompletedBookings.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get ppfCompletedBookings;
+
+  /// No description provided for @ppfCompletedBookingsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'completed services'**
+  String get ppfCompletedBookingsSub;
+
+  /// No description provided for @ppfSeeAllReviews.
+  ///
+  /// In en, this message translates to:
+  /// **'See all reviews'**
+  String get ppfSeeAllReviews;
+
+  /// No description provided for @ppfLoadMoreReviews.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more reviews'**
+  String get ppfLoadMoreReviews;
+
+  /// No description provided for @ppfReviewsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider Reviews'**
+  String get ppfReviewsTitle;
+
   /// No description provided for @favTitle.
   ///
   /// In en, this message translates to:
@@ -7390,42 +7540,6 @@ abstract class AppLocalizations {
   /// **'Urgent Assistance'**
   String get ccUrgentAssistance;
 
-  /// No description provided for @emGetHelp.
-  ///
-  /// In en, this message translates to:
-  /// **'Get help now'**
-  String get emGetHelp;
-
-  /// No description provided for @emChoosePriority.
-  ///
-  /// In en, this message translates to:
-  /// **'How urgently do you need a pro?'**
-  String get emChoosePriority;
-
-  /// No description provided for @emEmergency.
-  ///
-  /// In en, this message translates to:
-  /// **'Emergency'**
-  String get emEmergency;
-
-  /// No description provided for @emEmergencyDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Immediate dispatch — a verified pro is sent to you right away.'**
-  String get emEmergencyDesc;
-
-  /// No description provided for @emUrgent.
-  ///
-  /// In en, this message translates to:
-  /// **'Urgent'**
-  String get emUrgent;
-
-  /// No description provided for @emUrgentDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Expedited service — a pro arrives within 15–30 minutes.'**
-  String get emUrgentDesc;
-
   /// No description provided for @ccTypeMessage.
   ///
   /// In en, this message translates to:
@@ -7503,36 +7617,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search services or categories...'**
   String get svSearchPlaceholder;
-
-  /// No description provided for @svExploreEveryService.
-  ///
-  /// In en, this message translates to:
-  /// **'Explore every service'**
-  String get svExploreEveryService;
-
-  /// No description provided for @svCountReady.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} services ready to book'**
-  String svCountReady(Object count);
-
-  /// No description provided for @svCountSorted.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} services sorted by {filter}'**
-  String svCountSorted(Object count, Object filter);
-
-  /// No description provided for @svSmartRanking.
-  ///
-  /// In en, this message translates to:
-  /// **'Smart ranking'**
-  String get svSmartRanking;
-
-  /// No description provided for @svAllCategories.
-  ///
-  /// In en, this message translates to:
-  /// **'All categories'**
-  String get svAllCategories;
 
   /// No description provided for @svNoServicesAvailable.
   ///

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '/api/models/service_listing.dart';
 import '/api/resources/services_api.dart';
 import '/app_state.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/services/auth_service.dart';
+import '/services/favorites_service.dart';
 import '/services/logging_service.dart';
 import '/utils/emergency_categories.dart';
 import '/utils/geo_utils.dart';
@@ -23,7 +26,65 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
   TextEditingController searchController = TextEditingController();
   FocusNode searchFocusNode = FocusNode();
 
+  /// Server-synced favorite listing IDs. Loaded from the favorites API on
+  /// page init and updated optimistically on toggle.
   final Set<int> favorites = <int>{};
+
+  /// Loads the user's favorites from the API into [favorites]. Best-effort:
+  /// failures keep whatever is already loaded (heart states stay consistent
+  /// within the session). Only meaningful when signed in.
+  Future<void> loadFavorites() async {
+    if (!AuthService.instance.isAuthenticated) {
+      return;
+    }
+    try {
+      final rows = await FavoritesService.instance.getFavoriteServices();
+      favorites
+        ..clear()
+        ..addAll(rows.map((row) => row.id));
+      LoggingService.debug(
+        'Loaded ${favorites.length} favorites',
+        tag: 'ServicesModel',
+      );
+    } catch (e) {
+      LoggingService.error(
+        'Failed to load favorites',
+        tag: 'ServicesModel',
+        error: e,
+      );
+    }
+  }
+
+  /// Optimistically toggles a favorite and syncs to the API. Returns the new
+  /// favorite state, or null when the API call failed (local state is then
+  /// reverted) or the user is not authenticated.
+  Future<bool?> toggleFavorite(int serviceId) async {
+    if (!AuthService.instance.isAuthenticated) {
+      return null;
+    }
+    final wasFavorite = favorites.contains(serviceId);
+    // Optimistic update so the heart reacts instantly.
+    if (wasFavorite) {
+      favorites.remove(serviceId);
+    } else {
+      favorites.add(serviceId);
+    }
+
+    final ok = wasFavorite
+        ? await FavoritesService.instance.removeFromFavorites(serviceId)
+        : await FavoritesService.instance.addToFavorites(serviceId);
+
+    if (!ok) {
+      // Revert on failure.
+      if (wasFavorite) {
+        favorites.add(serviceId);
+      } else {
+        favorites.remove(serviceId);
+      }
+      return null;
+    }
+    return !wasFavorite;
+  }
 
   List<String> get categories {
     if (allServices.isEmpty) {
@@ -55,6 +116,7 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
   @override
   void initState(BuildContext context) {
     filteredServices = List.from(allServices);
+    loadFavorites();
     _loadServicesFromDatabase().then((_) {
       isLoading = false;
       _coerceSelectedCategoryToAvailable();
@@ -97,7 +159,7 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
           'category': service.categoryName ?? 'Service',
           'description': service.description ?? '',
           'price': service.basePrice != null
-              ? 'PHP ${service.basePrice}${service.priceUnit ?? ''}'
+              ? 'PHP ${_formatPrice(service.basePrice!)}${_priceUnitSuffix(service.priceUnit)}'
               : 'PHP 0',
           'rating': double.tryParse(service.rating ?? '0') ?? 0.0,
           'reviewCount': service.reviewCount ?? 0,
@@ -109,7 +171,7 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
           'distanceKm': service.distanceKm ?? 99.0,
           'distanceText': service.distanceKm != null
               ? _formatDistance(service.distanceKm!)
-              : 'Unknown',
+              : _locationFallback(service),
           'providerLatitude': service.latitude,
           'providerLongitude': service.longitude,
           'nearbyPros': const <Map<String, dynamic>>[],
@@ -134,6 +196,42 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
       return '${(km * 1000).round()} m away';
     }
     return '${km.toStringAsFixed(1)} km away';
+  }
+
+  /// Renders the base price without a forced decimal (500, not 500.0) while
+  /// keeping fractional amounts intact (499.5).
+  static String _formatPrice(double price) {
+    if (price == price.roundToDouble()) {
+      return price.round().toString();
+    }
+    return price.toStringAsFixed(2);
+  }
+
+  /// Builds the " per visit"-style suffix with the leading space the raw
+  /// price_unit string lacks (previously rendered "PHP 500.0pervisit").
+  static String _priceUnitSuffix(String? unit) {
+    final trimmed = unit?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      return '';
+    }
+    return ' $trimmed';
+  }
+
+  /// Distance is only computed server-side when the request carries lat/lng.
+  /// Without it, show the listing's registered city instead of "Unknown";
+  /// null when nothing is on file (widget falls back to a localized label).
+  static String? _locationFallback(ShphServiceListing service) {
+    final city = service.city?.trim() ?? '';
+    final province = service.province?.trim() ?? '';
+    if (city.isNotEmpty) {
+      return province.isNotEmpty && province.toLowerCase() != city.toLowerCase()
+          ? '$city, $province'
+          : city;
+    }
+    if (province.isNotEmpty) {
+      return province;
+    }
+    return null;
   }
 
   void applyFilters() {
