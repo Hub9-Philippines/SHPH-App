@@ -300,8 +300,6 @@
   "@bfNameOnWay": {"placeholders": {"name": {}}},
   "bfStayOnScreen": "Stay on this screen while we look for the closest available professional.",
   "bfSearching": "Searching",
-  "bfSecondsRemaining": "{seconds}s",
-  "@bfSecondsRemaining": {"placeholders": {"seconds": {}}},
   "bfProvidersNotified": "Providers notified",
   "bfProviderCountOne": "1 provider",
   "bfProviderCountMany": "{count} providers",

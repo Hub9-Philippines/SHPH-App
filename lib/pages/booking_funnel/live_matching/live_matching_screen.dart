@@ -16,6 +16,8 @@ import '/api/resources/services_api.dart';
 import '/app_state.dart';
 import '/components/cupertino_ui/app_button.dart';
 import '/components/cupertino_ui/app_feedback.dart';
+import '/components/map_radar_scan.dart';
+import '/components/smooth_progress_bar.dart';
 import '/l10n/app_localizations.dart';
 import '/main.dart';
 import '/utils/geo_utils.dart';
@@ -52,11 +54,15 @@ class LiveMatchingScreen extends StatefulWidget {
 class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     with TickerProviderStateMixin {
   // ── Animation controllers ──────────────────────────────────────────
-  late final AnimationController _radarController;
   late final AnimationController _gradientController;
+
+  // ── Native map radar ripple (only when the screen shows a map) ─────
+  RadarScanController? _scanController;
 
   // ── Map ────────────────────────────────────────────────────────────
   GoogleMapController? _mapController;
+  Set<Marker>? _mapMarkers;
+  LatLng? _lastMarkerLocation;
 
   // ── Timer / stage ──────────────────────────────────────────────────
   Timer? _pollTimer;
@@ -85,10 +91,6 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
   void initState() {
     super.initState();
     bookingStatus = 'confirmation pending';
-    _radarController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 4800),
-    )..repeat();
 
     _gradientController = AnimationController(
       vsync: this,
@@ -106,6 +108,31 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     _generateNearbyPros();
 
     _pollTimer = Timer.periodic(const Duration(seconds: 3), (_) => _pollTick());
+  }
+
+  /// Lazily creates the native radar ripple controller once the theme is
+  /// available; the ripple only exists when the screen shows a map.
+  void _ensureScanController() {
+    if (!widget.showMap || _scanController != null) return;
+    _scanController = RadarScanController(
+      vsync: this,
+      center: _rippleCenter(),
+      ringColor: AppTheme.of(context).primary,
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _ensureScanController();
+  }
+
+  LatLng _rippleCenter() {
+    final draft = context.read<BookingFlowController?>()?.draft;
+    return LatLng(
+      draft?.latitude ?? 14.5995,
+      draft?.longitude ?? 120.9842,
+    );
   }
 
   Future<void> _generateNearbyPros() async {
@@ -232,7 +259,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
       }
       if (_secondsRemaining <= 0) {
         _timedOut = true;
-        _radarController.stop();
+        _scanController?.stop();
         _gradientController.stop();
         _pollTimer?.cancel();
       }
@@ -246,7 +273,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
         _timedOut = true;
         _secondsRemaining = 0;
       }
-      _radarController.stop();
+      _scanController?.stop();
       _gradientController.stop();
     });
     _pollTimer?.cancel();
@@ -310,7 +337,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     if (_matchedPro != null) {
       setState(() {
         _pollTimer?.cancel();
-        _radarController.stop();
+        _scanController?.stop();
         _gradientController.stop();
       });
     } else {
@@ -380,7 +407,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
       _matchedPro = pro;
       _providerLatLng = LatLng(lat, lng);
       _pollTimer?.cancel();
-      _radarController.stop();
+      _scanController?.stop();
       _gradientController.stop();
     });
   }
@@ -397,7 +424,10 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
       _lastExpandAt = null;
       bookingStatus = 'confirmation pending';
     });
-    _radarController.repeat();
+    if (widget.showMap) {
+      _ensureScanController();
+      _scanController?.restart();
+    }
     _gradientController.reset();
     _pollTimer = Timer.periodic(const Duration(seconds: 3), (_) => _pollTick());
   }
@@ -405,7 +435,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
   @override
   void dispose() {
     _pollTimer?.cancel();
-    _radarController.dispose();
+    _scanController?.dispose();
     _gradientController.dispose();
     super.dispose();
   }
@@ -523,8 +553,6 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
         widget.serviceTitle ?? draft?.serviceTitle ?? l10n.bfServiceRequest;
     final stage = _matchingStage(_secondsRemaining, l10n);
 
-    final showActive = !_timedOut && _matchedPro == null;
-
     if (_matchedPro != null && _providerLatLng != null) {
       return PopScope(
         canPop: false,
@@ -559,21 +587,11 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
       child: Scaffold(
         body: Stack(
           children: [
-            // ── Layer 1: Full-screen map ──────────────────────────
+            // ── Layer 1: Full-screen map (with native radar ripple) ──
             Positioned.fill(
               child: _mapBody(location),
             ),
 
-            // ── Layer 2: Radar / success pulse overlay ────────────
-            if (showActive)
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: _RadarPulse(
-                    controller: _radarController,
-                    theme: AppTheme.of(context),
-                  ),
-                ),
-              ),
             // ── Layer 3: Top status badge ─────────────────────────
             if (!_timedOut)
               Positioned(
@@ -658,7 +676,15 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
       );
     }
 
-    return GoogleMap(
+    final scan = _scanController;
+    // Stable marker set: rebuilt only when the provider marker appears or the
+    // pinned location changes, so per-tick platform diffs touch only circles.
+    final markers = (_providerLatLng == null && location == _lastMarkerLocation)
+        ? (_mapMarkers ??= _buildMapMarkers(location))
+        : _buildMapMarkers(location);
+    _lastMarkerLocation = location;
+
+    final map = GoogleMap(
       initialCameraPosition: CameraPosition(
         target: location,
         zoom: _zoomNearby,
@@ -674,26 +700,59 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
       onMapCreated: (controller) {
         _mapController = controller;
       },
-      markers: {
+      markers: markers,
+    );
+
+    if (scan == null) {
+      return map;
+    }
+    // Rebuilds only this GoogleMap widget with fresh circle data on every
+    // ripple tick — markers/tiles/camera are untouched.
+    return ValueListenableBuilder<Set<Circle>>(
+      valueListenable: scan,
+      builder: (context, circles, _) => GoogleMap(
+        key: ValueKey(markers),
+        initialCameraPosition: CameraPosition(
+          target: location,
+          zoom: _zoomNearby,
+        ),
+        zoomControlsEnabled: false,
+        compassEnabled: false,
+        myLocationButtonEnabled: false,
+        mapToolbarEnabled: false,
+        rotateGesturesEnabled: false,
+        tiltGesturesEnabled: false,
+        scrollGesturesEnabled: false,
+        zoomGesturesEnabled: false,
+        onMapCreated: (controller) {
+          _mapController = controller;
+        },
+        circles: circles,
+        markers: markers,
+      ),
+    );
+  }
+
+  Set<Marker> _buildMapMarkers(LatLng location) {
+    return {
+      Marker(
+        markerId: const MarkerId('booking_location'),
+        position: location,
+        anchor: const Offset(0.5, 1),
+        icon: BitmapDescriptor.defaultMarkerWithHue(
+          BitmapDescriptor.hueAzure,
+        ),
+      ),
+      if (_providerLatLng != null)
         Marker(
-          markerId: const MarkerId('booking_location'),
-          position: location,
+          markerId: const MarkerId('provider_location'),
+          position: _providerLatLng!,
           anchor: const Offset(0.5, 1),
           icon: BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueAzure,
+            BitmapDescriptor.hueGreen,
           ),
         ),
-        if (_providerLatLng != null)
-          Marker(
-            markerId: const MarkerId('provider_location'),
-            position: _providerLatLng!,
-            anchor: const Offset(0.5, 1),
-            icon: BitmapDescriptor.defaultMarkerWithHue(
-              BitmapDescriptor.hueGreen,
-            ),
-          ),
-      },
-    );
+    };
   }
 
   // ── Collapsible dashboard ──────────────────────────────────────────
@@ -1090,8 +1149,10 @@ class _AssignedProviderRouteMapState extends State<_AssignedProviderRouteMap> {
           bookingDate: widget.bookingDate,
           providerName: widget.pro['providerName'] as String? ?? l10n.bfProfessional,
           serviceTitle: widget.serviceTitle,
-          clientLocation: widget.clientLocation,
-          providerLocation: widget.providerLocation,
+          clientLatitude: widget.clientLocation.latitude,
+          clientLongitude: widget.clientLocation.longitude,
+          providerLatitude: widget.providerLocation.latitude,
+          providerLongitude: widget.providerLocation.longitude,
           providerPhoto: widget.pro['providerPhoto'] as String?,
           bookingReference: widget.referenceId,
           shouldPopToHome: true,
@@ -1756,90 +1817,8 @@ class _MatchingStage {
 }
 
 // ────────────────────────────────────────────────────────────────────────
-// Radar pulse — CustomPainter for 3 cascading concentric circles
-// ────────────────────────────────────────────────────────────────────────
-
-class _RadarPulse extends StatelessWidget {
-  const _RadarPulse({
-    required this.controller,
-    required this.theme,
-  });
-
-  final AnimationController controller;
-  final AppThemeData theme;
-
-  @override
-  Widget build(BuildContext context) => AnimatedBuilder(
-        animation: controller,
-        builder: (context, _) {
-          final progress = controller.value * 3.0;
-          return CustomPaint(
-            painter: _RadarPainter(
-              progress: progress,
-              primaryColor: theme.primary,
-            ),
-          );
-        },
-      );
-}
-
-class _RadarPainter extends CustomPainter {
-  _RadarPainter({
-    required this.progress,
-    required this.primaryColor,
-  });
-
-  final double progress;
-  final Color primaryColor;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final maxRadius = size.shortestSide * 0.38;
-
-    for (int i = 0; i < 3; i++) {
-      final phase = (progress + i * 0.33) % 1.0;
-      final curved = Curves.easeOutCubic.transform(phase);
-      final radius = math.max(10.0, curved * maxRadius);
-      final opacity = (1.0 - curved) *
-          (i == 0
-              ? 0.55
-              : i == 1
-                  ? 0.38
-                  : 0.22);
-
-      // Ring fill (glow)
-      final fillPaint = Paint()
-        ..color = primaryColor.withValues(alpha: opacity * 0.12)
-        ..style = PaintingStyle.fill;
-      canvas.drawCircle(center, radius, fillPaint);
-
-      // Ring stroke
-      final strokePaint = Paint()
-        ..color = primaryColor.withValues(alpha: opacity)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.0 + (1.0 - curved) * 1.5;
-      canvas.drawCircle(center, radius, strokePaint);
-    }
-
-    // Centre dot
-    final dotPaint = Paint()
-      ..color = primaryColor
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, 5, dotPaint);
-
-    // Centre glow
-    final glowPaint = Paint()
-      ..color = primaryColor.withValues(alpha: 0.25)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
-    canvas.drawCircle(center, 14, glowPaint);
-  }
-
-  @override
-  bool shouldRepaint(_RadarPainter old) => old.progress != progress;
-}
-
-// ────────────────────────────────────────────────────────────────────────
+// Match reveal — success pulse overlay when a provider is found
+// ────────────────────────────────────────────────────────────────────────// ────────────────────────────────────────────────────────────────────────
 // Match reveal — success pulse overlay when a provider is found
 // ────────────────────────────────────────────────────────────────────────
 
@@ -1993,7 +1972,7 @@ class _StatusBadge extends StatelessWidget {
                 ),
               ],
               const SizedBox(height: 10),
-              // Stage badge + countdown row
+              // Stage badge row
               Row(
                 children: [
                   Container(
@@ -2015,16 +1994,6 @@ class _StatusBadge extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (!isMatched) ...[
-                    const Spacer(),
-              Text(
-                l10n.bfSecondsRemaining(secondsRemaining),
-                style: theme.labelLarge.override(
-                  color: theme.secondaryText,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-                  ],
                 ],
               ),
               if (!isMatched) ...[
@@ -2099,13 +2068,16 @@ class _GradientBar extends StatelessWidget {
                 ],
               ),
             ),
-            child: FractionallySizedBox(
-              alignment: Alignment.centerLeft,
-              widthFactor: progress.clamp(0.0, 1.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(999),
-                  color: Colors.transparent,
+            child: SmoothProgress(
+              value: progress,
+              builder: (context, widthFactor) => FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                widthFactor: widthFactor,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(999),
+                    color: Colors.transparent,
+                  ),
                 ),
               ),
             ),
@@ -2224,24 +2196,6 @@ class _SearchingSheet extends StatelessWidget {
             stageIndex: stageIndex,
             progress: (secondsRemaining / _searchWindowSeconds).clamp(0.0, 1.0),
             theme: theme,
-          ),
-          const SizedBox(height: 8),
-          // Countdown
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Text(
-                l10n.bfSearching,
-                style: theme.bodySmall.override(color: theme.secondaryText),
-              ),
-              Text(
-                l10n.bfSecondsRemaining(secondsRemaining),
-                style: theme.labelLarge.override(
-                  color: theme.primary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
           ),
           const SizedBox(height: 14),
           // Header

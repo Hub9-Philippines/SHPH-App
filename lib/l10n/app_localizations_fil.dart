@@ -927,11 +927,6 @@ class AppLocalizationsFil extends AppLocalizations {
   String get bfSearching => 'Naghahanap';
 
   @override
-  String bfSecondsRemaining(Object seconds) {
-    return '${seconds}s';
-  }
-
-  @override
   String get bfProvidersNotified => 'Na-notify na mga provider';
 
   @override

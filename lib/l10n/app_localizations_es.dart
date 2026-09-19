@@ -917,11 +917,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get bfSearching => 'Searching';
 
   @override
-  String bfSecondsRemaining(Object seconds) {
-    return '${seconds}s';
-  }
-
-  @override
   String get bfProvidersNotified => 'Providers notified';
 
   @override

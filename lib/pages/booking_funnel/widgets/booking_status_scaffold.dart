@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '/components/map_radar_scan.dart';
 import '/theme/app_theme.dart';
 
 const double _kDefaultSheetMaxFraction = 0.64;
@@ -14,6 +15,7 @@ class BookingStatusScaffold extends StatelessWidget {
     this.showMap = true,
     this.markerHue = BitmapDescriptor.hueRed,
     this.markers,
+    this.radarScan,
     this.isDraggable = false,
     this.sheetMaxFraction = _kDefaultSheetMaxFraction,
     this.sheetInitialFraction = 0.35,
@@ -29,6 +31,10 @@ class BookingStatusScaffold extends StatelessWidget {
   final bool showMap;
   final double markerHue;
   final Set<Marker>? markers;
+
+  /// Optional native radar ripple driven by a [RadarScanController]. When
+  /// non-null the map is rebuilt per tick with fresh circle data only.
+  final RadarScanController? radarScan;
   final bool isDraggable;
   final double sheetMaxFraction;
   final double sheetInitialFraction;
@@ -64,32 +70,13 @@ class BookingStatusScaffold extends StatelessWidget {
               ),
               Positioned.fill(
                 child: showMap
-                    ? GoogleMap(
-                          initialCameraPosition: CameraPosition(
-                            target: location,
-                            zoom: 16,
-                          ),
-                          zoomControlsEnabled: false,
-                          compassEnabled: false,
-                          myLocationButtonEnabled: false,
-                          mapToolbarEnabled: false,
-                          rotateGesturesEnabled: false,
-                          tiltGesturesEnabled: false,
-                          scrollGesturesEnabled: false,
-                          zoomGesturesEnabled: false,
-                          padding: EdgeInsets.only(bottom: 48 + bottomInset),
-                          markers: markers ??
-                            {
-                              Marker(
-                                markerId: const MarkerId('booking_location'),
-                                position: location,
-                                anchor: const Offset(0.5, 1),
-                                icon: BitmapDescriptor.defaultMarkerWithHue(
-                                  markerHue,
-                                ),
-                              ),
-                            },
-                        )
+                    ? _RadarMapLayer(
+                        location: location,
+                        markerHue: markerHue,
+                        markers: markers,
+                        radarScan: radarScan,
+                        bottomInset: bottomInset,
+                      )
                     : const SizedBox.shrink(),
               ),
               if (center != null) Center(child: center!),
@@ -120,6 +107,81 @@ class BookingStatusScaffold extends StatelessWidget {
         },
       ),
     );
+  }
+}
+
+class _RadarMapLayer extends StatelessWidget {
+  const _RadarMapLayer({
+    required this.location,
+    required this.markerHue,
+    required this.bottomInset,
+    this.markers,
+    this.radarScan,
+  });
+
+  final LatLng location;
+  final double markerHue;
+  final Set<Marker>? markers;
+  final RadarScanController? radarScan;
+  final double bottomInset;
+
+  Set<Marker> get _defaultMarkers => {
+        Marker(
+          markerId: const MarkerId('booking_location'),
+          position: location,
+          anchor: const Offset(0.5, 1),
+          icon: BitmapDescriptor.defaultMarkerWithHue(markerHue),
+        ),
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final scan = radarScan;
+    final mapMarkers = markers ?? _defaultMarkers;
+
+    Widget map = GoogleMap(
+      initialCameraPosition: CameraPosition(
+        target: location,
+        zoom: 16,
+      ),
+      zoomControlsEnabled: false,
+      compassEnabled: false,
+      myLocationButtonEnabled: false,
+      mapToolbarEnabled: false,
+      rotateGesturesEnabled: false,
+      tiltGesturesEnabled: false,
+      scrollGesturesEnabled: false,
+      zoomGesturesEnabled: false,
+      padding: EdgeInsets.only(bottom: 48 + bottomInset),
+      markers: mapMarkers,
+    );
+
+    if (scan != null) {
+      // Rebuilds only the GoogleMap widget with fresh circle data per ripple
+      // tick; markers/tiles/camera stay untouched.
+      map = ValueListenableBuilder<Set<Circle>>(
+        valueListenable: scan,
+        builder: (context, circles, _) => GoogleMap(
+          initialCameraPosition: CameraPosition(
+            target: location,
+            zoom: 16,
+          ),
+          zoomControlsEnabled: false,
+          compassEnabled: false,
+          myLocationButtonEnabled: false,
+          mapToolbarEnabled: false,
+          rotateGesturesEnabled: false,
+          tiltGesturesEnabled: false,
+          scrollGesturesEnabled: false,
+          zoomGesturesEnabled: false,
+          padding: EdgeInsets.only(bottom: 48 + bottomInset),
+          markers: mapMarkers,
+          circles: circles,
+        ),
+      );
+    }
+
+    return map;
   }
 }
 

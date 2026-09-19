@@ -6,6 +6,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '/app_state.dart';
+import '/components/map_radar_scan.dart';
+import '/components/smooth_progress_bar.dart';
 import '/l10n/app_localizations.dart';
 import '/main.dart';
 import '/theme/app_theme.dart';
@@ -26,11 +28,13 @@ class TMBroadcastScreen extends StatefulWidget {
   State<TMBroadcastScreen> createState() => _TMBroadcastScreenState();
 }
 
-class _TMBroadcastScreenState extends State<TMBroadcastScreen> {
+class _TMBroadcastScreenState extends State<TMBroadcastScreen>
+    with TickerProviderStateMixin {
   String? _lastNotice;
   String? _lastError;
   bool _shownFailureDialog = false;
   bool _navigatedToActiveJob = false;
+  RadarScanController? _scanController;
 
   @override
   void initState() {
@@ -45,12 +49,48 @@ class _TMBroadcastScreenState extends State<TMBroadcastScreen> {
     });
   }
 
+  RadarScanController? _scanControllerFor(BuildContext context) {
+    _scanController ??= RadarScanController(
+      vsync: this,
+      center: _currentLocation(),
+      ringColor: AppTheme.of(context).primary,
+    );
+    _syncScanState(context.read<TMFlowController>());
+    return _scanController;
+  }
+
+  LatLng _currentLocation() {
+    final appState = FFAppState();
+    return LatLng(
+      appState.selectedLatitude ?? 14.5995,
+      appState.selectedLongitude ?? 120.9842,
+    );
+  }
+
+  /// Ripple runs while broadcasting; cleared on failure or match (the match
+  /// path navigates away, which disposes the controller).
+  void _syncScanState(TMFlowController controller) {
+    final scan = _scanController;
+    if (scan == null) {
+      return;
+    }
+    scan.updateCenter(_currentLocation());
+    if (controller.hasFailed || controller.hasMatchedProvider) {
+      scan.stop();
+    } else if (!scan.isAnimating) {
+      scan.restart();
+    }
+  }
+
+  @override
+  void dispose() {
+    _scanController?.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final appState = FFAppState();
-    final latitude = appState.selectedLatitude ?? 14.5995;
-    final longitude = appState.selectedLongitude ?? 120.9842;
-    final location = LatLng(latitude, longitude);
+    final location = _currentLocation();
 
     return Consumer<TMFlowController>(
       builder: (context, controller, _) {
@@ -67,13 +107,13 @@ class _TMBroadcastScreenState extends State<TMBroadcastScreen> {
           child: BookingStatusScaffold(
             location: location,
             markerHue: BitmapDescriptor.hueAzure,
+            radarScan: _scanControllerFor(context),
             topCard: _TMBroadcastTopCard(
               controller: controller,
               onBack: () {
                 unawaited(_backToPreviousStep(context, controller));
               },
             ),
-            center: controller.hasFailed ? null : const _TMLivePulse(),
             bottomSheet: BookingStatusBottomSheet(
               child: _TMBroadcastSheet(
                 controller: controller,
@@ -312,25 +352,27 @@ class _TMBroadcastTopCard extends StatelessWidget {
                     _TMDispatchModeChip(controller: controller),
                   ],
                   const Spacer(),
-                  Text(
-                    controller.hasFailed
-                        ? l10n.tmTimedOut
-                        : '${controller.secondsRemaining}s',
-                    style: theme.labelLarge.override(
-                      color: theme.secondaryText,
-                      fontWeight: FontWeight.w700,
+                  if (controller.hasFailed)
+                    Text(
+                      l10n.tmTimedOut,
+                      style: theme.labelLarge.override(
+                        color: theme.secondaryText,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
                 ],
               ),
               if (!controller.hasFailed) ...[
                 const SizedBox(height: 10),
-                LinearProgressIndicator(
+                SmoothProgress(
                   value: controller.secondsRemaining / 60,
-                  minHeight: 7,
-                  backgroundColor: theme.alternate.withValues(alpha: 0.25),
-                  color: theme.primary,
-                  borderRadius: BorderRadius.circular(999),
+                  builder: (context, value) => LinearProgressIndicator(
+                    value: value,
+                    minHeight: 7,
+                    backgroundColor: theme.alternate.withValues(alpha: 0.25),
+                    color: theme.primary,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
                 ),
               ],
             ],
@@ -549,97 +591,6 @@ class _TMDispatchModeChip extends StatelessWidget {
         style: theme.labelMedium.override(
           color: isServer ? const Color(0xFF246B38) : const Color(0xFF8A5A16),
           fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-}
-
-class _TMLivePulse extends StatefulWidget {
-  const _TMLivePulse();
-
-  @override
-  State<_TMLivePulse> createState() => _TMLivePulseState();
-}
-
-class _TMLivePulseState extends State<_TMLivePulse>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, _) {
-        final progress = _controller.value;
-        return IgnorePointer(
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              for (final base in [0.0, 0.33, 0.66])
-                _PulseRing(
-                  progress: (progress + base) % 1.0,
-                  color: theme.primary,
-                ),
-              Container(
-                width: 16,
-                height: 16,
-                decoration: BoxDecoration(
-                  color: theme.primary,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.primary.withValues(alpha: 0.45),
-                      blurRadius: 18,
-                      spreadRadius: 6,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _PulseRing extends StatelessWidget {
-  const _PulseRing({required this.progress, required this.color});
-
-  final double progress;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    final size = 60 + (progress * 140);
-    final opacity = 1 - progress;
-
-    return Opacity(
-      opacity: opacity * 0.42,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: color.withValues(alpha: 0.12),
-          border: Border.all(color: color.withValues(alpha: 0.34), width: 2),
         ),
       ),
     );

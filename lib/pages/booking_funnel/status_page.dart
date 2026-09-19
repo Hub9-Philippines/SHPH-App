@@ -3,7 +3,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '/api/resources/bookings_api.dart';
 import '/flutter_flow/flutter_flow_util.dart' hide LatLng;
@@ -21,8 +20,10 @@ class StatusPage extends StatefulWidget {
     required this.bookingDate,
     required this.providerName,
     required this.serviceTitle,
-    this.clientLocation,
-    this.providerLocation,
+    this.clientLatitude,
+    this.clientLongitude,
+    this.providerLatitude,
+    this.providerLongitude,
     this.providerPhoto,
     this.bookingReference,
     this.shouldPopToHome = false,
@@ -33,8 +34,13 @@ class StatusPage extends StatefulWidget {
   final DateTime bookingDate;
   final String providerName;
   final String serviceTitle;
-  final LatLng? clientLocation;
-  final LatLng? providerLocation;
+
+  /// Plain coordinates (no map on this page); used only to compute the
+  /// provider-to-client distance shown in the tracker.
+  final double? clientLatitude;
+  final double? clientLongitude;
+  final double? providerLatitude;
+  final double? providerLongitude;
   final String? providerPhoto;
 
   /// Optional SHPH booking id. When present the screen polls the real booking
@@ -48,21 +54,17 @@ class StatusPage extends StatefulWidget {
 
 class _StatusPageState extends State<StatusPage>
     with TickerProviderStateMixin {
-  /// The bottom card is a fixed, non-collapsible anchor at 45% of the
-  /// viewport height (spec: map-tracking-screen / non-collapsible sheet).
-  static const double _sheetHeightFactor = 0.45;
-
   late final AnimationController _pulseController;
 
-  GoogleMapController? _mapController;
   Timer? _statusPollTimer;
-  bool _mapReady = false;
 
-  LatLng _currentProviderLocation = const LatLng(14.5995, 120.9842);
   String _currentStatus = '';
   int _etaSeconds = 0;
 
-  final Set<Polyline> _polylines = {};
+  /// Provider position, updated by polling when the booking reports an
+  /// on-site service location. State only — nothing renders a map.
+  double? _providerLatitude;
+  double? _providerLongitude;
 
   static const int _kStageCount = 5;
 
@@ -125,16 +127,24 @@ class _StatusPageState extends State<StatusPage>
     return 0;
   }
 
-  LatLng get _clientLocation =>
-      widget.clientLocation ?? const LatLng(14.5995, 120.9842);
+  bool get _hasProviderDistance =>
+      widget.clientLatitude != null &&
+      widget.clientLongitude != null &&
+      _providerLatitude != null &&
+      _providerLongitude != null;
 
-  double _distanceToClient(LatLng from) {
+  double get _distanceToClientKm {
+    if (!_hasProviderDistance) {
+      return 0;
+    }
     const r = 6371.0;
-    final dLat = _toRadians(_clientLocation.latitude - from.latitude);
-    final dLon = _toRadians(_clientLocation.longitude - from.longitude);
+    final dLat =
+        _toRadians(widget.clientLatitude! - _providerLatitude!);
+    final dLon =
+        _toRadians(widget.clientLongitude! - _providerLongitude!);
     final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
-        math.cos(_toRadians(from.latitude)) *
-            math.cos(_toRadians(_clientLocation.latitude)) *
+        math.cos(_toRadians(_providerLatitude!)) *
+            math.cos(_toRadians(widget.clientLatitude!)) *
             math.sin(dLon / 2) *
             math.sin(dLon / 2);
     final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
@@ -146,8 +156,8 @@ class _StatusPageState extends State<StatusPage>
   @override
   void initState() {
     super.initState();
-    _currentProviderLocation =
-        widget.providerLocation ?? const LatLng(14.5995, 120.9842);
+    _providerLatitude = widget.providerLatitude;
+    _providerLongitude = widget.providerLongitude;
     _currentStatus = widget.bookingStatus;
 
     _pulseController = AnimationController(
@@ -185,15 +195,16 @@ class _StatusPageState extends State<StatusPage>
               _pulseController.stop();
               _pulseController.value = 0;
             }
-            // The booking's service location is the client location; when the
-            // provider is reported as on-site/arrived move it there.
+            // The booking's service location is where the provider works;
+            // when they are reported on-site/arrived, adopt it for the
+            // distance readout (state only — nothing renders a map).
             if ((newStatus == 'on_site' ||
                     newStatus == 'arrived' ||
                     newStatus == 'in_progress') &&
                 booking.serviceLat != null &&
                 booking.serviceLng != null) {
-              _currentProviderLocation =
-                  LatLng(booking.serviceLat!, booking.serviceLng!);
+              _providerLatitude = booking.serviceLat!.toDouble();
+              _providerLongitude = booking.serviceLng!.toDouble();
             }
           });
         }
@@ -212,24 +223,6 @@ class _StatusPageState extends State<StatusPage>
     poll();
   }
 
-  void _scheduleBoundsUpdate() {
-    if (_mapReady && _mapController != null) {
-      final bounds = LatLngBounds(
-        southwest: LatLng(
-          math.min(_clientLocation.latitude, _currentProviderLocation.latitude),
-          math.min(_clientLocation.longitude, _currentProviderLocation.longitude),
-        ),
-        northeast: LatLng(
-          math.max(_clientLocation.latitude, _currentProviderLocation.latitude),
-          math.max(_clientLocation.longitude, _currentProviderLocation.longitude),
-        ),
-      );
-      _mapController!.animateCamera(
-        CameraUpdate.newLatLngBounds(bounds, 80),
-      );
-    }
-  }
-
   @override
   void didUpdateWidget(covariant StatusPage oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -245,7 +238,6 @@ class _StatusPageState extends State<StatusPage>
   void dispose() {
     _pulseController.dispose();
     _statusPollTimer?.cancel();
-    _mapController?.dispose();
     super.dispose();
   }
 
@@ -316,119 +308,82 @@ class _StatusPageState extends State<StatusPage>
     final l10n = AppLocalizations.of(context)!;
     final theme = AppTheme.of(context);
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
-    final sheetHeight =
-        MediaQuery.sizeOf(context).height * _sheetHeightFactor;
     final stages = _buildStages(l10n);
 
     final scaffold = Scaffold(
       backgroundColor: theme.primaryBackground,
-      body: Stack(
-        children: [
-          // Full-bleed map canvas behind every overlay.
-          Positioned.fill(
-            child: GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: _clientLocation,
-                zoom: 14,
-              ),
-              padding: EdgeInsets.only(bottom: sheetHeight + bottomPadding),
-              zoomControlsEnabled: false,
-              myLocationButtonEnabled: false,
-              mapToolbarEnabled: false,
-              markers: {
-                Marker(
-                  markerId: const MarkerId('client_location'),
-                  position: _clientLocation,
-                  anchor: const Offset(0.5, 1),
-                  icon: BitmapDescriptor.defaultMarkerWithHue(
-                    BitmapDescriptor.hueAzure,
-                  ),
-                ),
-                Marker(
-                  markerId: const MarkerId('provider_location'),
-                  position: _currentProviderLocation,
-                  anchor: const Offset(0.5, 1),
-                  icon: BitmapDescriptor.defaultMarkerWithHue(
-                    BitmapDescriptor.hueGreen,
-                  ),
-                ),
-              },
-              polylines: _polylines,
-              onMapCreated: (controller) {
-                _mapController = controller;
-                _mapReady = true;
-                _scheduleBoundsUpdate();
-              },
-            ),
+      // Map-free themed background (same tokens as the booking scaffold's
+      // no-map branch).
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              theme.primaryBackground,
+              theme.secondaryBackground,
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-
-          // Floating back + home buttons — top-left over the map.
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 16, top: 16),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _FloatingCircleButton(
-                    icon: Icons.chevron_left_rounded,
-                    tooltip: l10n.bfBack,
-                    onTap: _handleBack,
-                  ),
-                  const SizedBox(width: 10),
-                  _FloatingCircleButton(
-                    icon: Icons.home_rounded,
-                    tooltip: l10n.bfHome,
-                    onTap: _goHome,
-                  ),
-                ],
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Top section: back/home buttons beside the provider card.
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: Row(
+                  children: [
+                    _FloatingCircleButton(
+                      icon: Icons.chevron_left_rounded,
+                      tooltip: l10n.bfBack,
+                      onTap: _handleBack,
+                    ),
+                    const SizedBox(width: 10),
+                    _FloatingCircleButton(
+                      icon: Icons.home_rounded,
+                      tooltip: l10n.bfHome,
+                      onTap: _goHome,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _ProviderCard(
+                        providerName: widget.providerName,
+                        providerPhoto: widget.providerPhoto,
+                        status: _currentStatus,
+                        serviceTitle: widget.serviceTitle,
+                        onContact: _openContact,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ),
-
-          // Floating provider card — near the top-center of the map.
-          SafeArea(
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(116, 16, 16, 0),
-                child: _ProviderCard(
+              // Timeline tracker expands into the space freed by the map.
+              Expanded(
+                child: _TrackingSheet(
+                  bottomInset: bottomPadding,
+                  theme: theme,
+                  l10n: l10n,
+                  stages: stages,
+                  activeStageIndex: _activeStageIndex,
+                  pulseValue: _pulseController,
+                  isTerminal: _isTerminal,
+                  isCompleted: _isCompleted,
                   providerName: widget.providerName,
-                  providerPhoto: widget.providerPhoto,
                   status: _currentStatus,
+                  bookingDate: widget.bookingDate,
+                  bookingReference: widget.bookingReference,
+                  etaSeconds: _etaSeconds,
+                  distanceKm: _distanceToClientKm,
                   serviceTitle: widget.serviceTitle,
-                  onContact: _openContact,
+                  onWriteReview: _writeReview,
+                  onViewInvoice: _viewInvoice,
                 ),
               ),
-            ),
+            ],
           ),
-
-          // Fixed, non-collapsible bottom sheet at 45% of the viewport.
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: _TrackingSheet(
-              height: sheetHeight,
-              bottomInset: bottomPadding,
-              theme: theme,
-              l10n: l10n,
-              stages: stages,
-              activeStageIndex: _activeStageIndex,
-              pulseValue: _pulseController,
-              isTerminal: _isTerminal,
-              isCompleted: _isCompleted,
-              providerName: widget.providerName,
-              status: _currentStatus,
-              bookingDate: widget.bookingDate,
-              bookingReference: widget.bookingReference,
-              etaSeconds: _etaSeconds,
-              distanceKm: _distanceToClient(_currentProviderLocation),
-              serviceTitle: widget.serviceTitle,
-              onWriteReview: _writeReview,
-              onViewInvoice: _viewInvoice,
-            ),
-          ),
-        ],
+        ),
       ),
     );
 
@@ -601,7 +556,6 @@ class _MapActionButton extends StatelessWidget {
 
 class _TrackingSheet extends StatelessWidget {
   const _TrackingSheet({
-    required this.height,
     required this.bottomInset,
     required this.theme,
     required this.l10n,
@@ -621,7 +575,6 @@ class _TrackingSheet extends StatelessWidget {
     this.bookingReference,
   });
 
-  final double height;
   final double bottomInset;
   final AppThemeData theme;
   final AppLocalizations l10n;
@@ -642,11 +595,13 @@ class _TrackingSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Map-free tracker: fills the Expanded body instead of anchoring to a
+    // fixed 45% sheet height.
     return Container(
-      height: height,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      decoration: BoxDecoration(
+        color: theme.secondaryBackground,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: AppThemeData.shadowCard,
       ),
       child: SingleChildScrollView(

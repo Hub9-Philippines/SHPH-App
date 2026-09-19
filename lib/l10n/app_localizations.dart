@@ -1798,12 +1798,6 @@ abstract class AppLocalizations {
   /// **'Searching'**
   String get bfSearching;
 
-  /// No description provided for @bfSecondsRemaining.
-  ///
-  /// In en, this message translates to:
-  /// **'{seconds}s'**
-  String bfSecondsRemaining(Object seconds);
-
   /// No description provided for @bfProvidersNotified.
   ///
   /// In en, this message translates to:

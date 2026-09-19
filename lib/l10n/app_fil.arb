@@ -299,8 +299,6 @@
   "@bfNameOnWay": {"placeholders": {"name": {}}},
   "bfStayOnScreen": "Manatili sa screen na ito habang hinahanap namin ang pinakamalapit na available na pro.",
   "bfSearching": "Naghahanap",
-  "bfSecondsRemaining": "{seconds}s",
-  "@bfSecondsRemaining": {"placeholders": {"seconds": {}}},
   "bfProvidersNotified": "Na-notify na mga provider",
   "bfProviderCountOne": "1 provider",
   "bfProviderCountMany": "{count} na provider",

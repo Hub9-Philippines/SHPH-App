@@ -1012,3 +1012,20 @@ OpenSpec change: explore-redesign-and-signin-merge.
 | Explore tab = 5-section feed: search+category shortcuts (View All â†’ /categories), hero offer banner (CTA â†’ /services), Top Rated Near You carousel (hidden without location), Recommended for You feed (RecommendationCard â†’ product detail), Invite & Earn footer (clipboard share); full categories grid removed from tab (still on /categories) | lib/main/explore/explore_widget.dart, lib/main/explore/explore_model.dart | âœ… Done |
 | Verification: lutter analyze 0 errors; explore_redesign_test 9/9; signin_merge_test 1/1; device smoke-test pending user | â€" | âœ… Done / â�³ smoke |
 | Follow-up noted: dedicated /api/recommendations/nearby|get-personalized endpoints exist on shph-api main but omit provider name/rating/photo in payload; current sections use /api/services/listings/?lat&lng&ordering=-rating which returns everything needed | â€" | ðŸ"Œ Deferred |
+
+### 13.14 Proximity Scan Ripple & Map-less Booking Tracking
+
+OpenSpec change: `proximity-scan-ripple`. Replaced pixel-based radar pulses with a
+native-geometry ripple, removed the visible search countdown timers, smoothed the
+progress indicators, and removed the map from the booking status tracking page.
+
+| Task | Files | Status |
+|------|-------|--------|
+| New shared native radar scan: `MapRadarScan.buildCircles(...)` (3 staggered ease-out rings, 0→3000 m over 30 s, fading opacity, solid ~60 m center dot) + `RadarScanController` (`ValueNotifier<Set<Circle>>` wrapping a 30 s looping `AnimationController`) | `lib/components/map_radar_scan.dart` (new) | ✅ Done |
+| Booking live-matching map: `GoogleMap.circles` driven via `ValueListenableBuilder<Set<Circle>>`; controller created in `initState` (when `showMap`), stopped on timeout/match, disposed on unmount; deleted `_RadarPulse` / `_RadarPainter` pixel overlay | `lib/pages/booking_funnel/live_matching/live_matching_screen.dart` | ✅ Done |
+| TM broadcast map: optional `RadarScanController? radarScan` on the shared scaffold feeds `GoogleMap.circles`; TM screen owns/starts/stops/disposes the controller; deleted `_TMLivePulse` / `_PulseRing` | `lib/pages/booking_funnel/widgets/booking_status_scaffold.dart`, `lib/pages/tm_flow/tm_broadcast_screen.dart` | ✅ Done |
+| Countdown timer text removed on both search screens (`bfSecondsRemaining` in `_StatusBadge`, `bfSearching`+count row in `_SearchingSheet`, `'Ns'` text in `_TMBroadcastTopCard`); internal `secondsRemaining` accounting, expiry sync and 180 s semantics unchanged | both search screens | ✅ Done |
+| Smooth progress: `TweenAnimationBuilder<double>` (~600 ms, easeOutCubic) glides `_GradientBar` width (booking) and `LinearProgressIndicator` value (TM); shared `SmoothProgressBar` helper extracted | `lib/components/smooth_progress_bar.dart` (new) | ✅ Done |
+| Map-less status page: removed `GoogleMap`, `_mapController`, `_mapReady`, `_polylines`, `_scheduleBoundsUpdate`, markers/polylines and map imports; replaced with themed `LinearGradient` background; `build` restructured from `Stack` into map-free tracker layout dropping the 45% `_sheetHeightFactor` anchor; polling, `_pulseController`, stage advance and on-site location resolution retained | `lib/pages/booking_funnel/status_page.dart` | ✅ Done |
+| Verification: `flutter analyze` 0 errors (815 info-lint baseline); `booking_funnel_test` + `booking_controller_test` + `booking_flow_redesign_test` + `booking_setup_widget_test` all passed (22 total); release APK smoke build skipped per user | — | ✅ Done / ⏭️ build skipped |
+| Manual phone verification (timer gone, smooth bar, ripple runs 30 s / 3000 m across zoom+rotation, map-free status page, no leaked tickers on back-navigation) | — | ⏳ Pending user |
