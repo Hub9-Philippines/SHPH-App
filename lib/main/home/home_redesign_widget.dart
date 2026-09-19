@@ -18,9 +18,9 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import '/pages/booking_funnel/booking_controller.dart';
 import '/pages/booking_funnel/booking_models.dart';
-import '/pages/booking_funnel/status_page.dart';
 import '/pages/booking_funnel/express_checkout_screen.dart';
 import '/pages/booking_funnel/widgets/booking_flow_route.dart';
+import '/pages/booking_funnel/widgets/emergency_service_panel.dart';
 import '/pages/booking_funnel/widgets/service_selection_panel.dart';
 import '/models/service_listing.dart';
 import '/services/auth_service.dart';
@@ -133,13 +133,15 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
 
   Future<void> _startBookingProcess({
     BookingUrgency urgency = BookingUrgency.rightNow,
+    ServiceListing? preselectedService,
   }) async {
-    final selectedService = await showModalBottomSheet<ServiceListing>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const ServiceSelectionPanel(),
-    );
+    final selectedService = preselectedService ??
+        await showModalBottomSheet<ServiceListing>(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (_) => const ServiceSelectionPanel(),
+        );
 
     if (!mounted || selectedService == null) {
       return;
@@ -184,11 +186,25 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
     );
   }
 
-  /// Launches the emergency/urgent flow directly: immediate on-demand
-  /// dispatch (rightNow urgency) through the express checkout and live
-  /// matching, same as the categories "Urgent Assistance" entry.
+  /// Launches the emergency/urgent flow via a dedicated picker that lists only
+/// emergency-category services, then starts the express checkout with
+/// right-now urgency (same as the categories "Urgent Assistance" entry).
   Future<void> _openEmergencyBooking() async {
-    await _startBookingProcess(urgency: BookingUrgency.rightNow);
+    final selectedService = await showModalBottomSheet<ServiceListing>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const EmergencyServicePanel(),
+    );
+
+    if (!mounted || selectedService == null) {
+      return;
+    }
+
+    await _startBookingProcess(
+      urgency: BookingUrgency.rightNow,
+      preselectedService: selectedService,
+    );
   }
 
   Future<bool> _confirmExit() async {
@@ -202,21 +218,13 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
         false;
   }
 
-  void _openTrackingPage(_HomeBookingData booking) {
-    final bookingStatus = booking.statusLabel.toLowerCase();
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => StatusPage(
-          bookingStatus: bookingStatus,
-          bookingDate: DateTime.now(),
-          providerName: booking.providerName,
-          serviceTitle: booking.title,
-            bookingReference: booking.bookingId.isNotEmpty
-              ? booking.bookingId
-              : null,
-          shouldPopToHome: true,
-        ),
-      ),
+  Future<void> _openTrackingPage(_HomeBookingData booking) async {
+    await context.pushNamed(
+      BookingDetailsWidget.routeName,
+      extra: <String, dynamic>{
+        'bookingId':
+            booking.bookingId.isNotEmpty ? booking.bookingId : null,
+      },
     );
   }
 
@@ -649,7 +657,7 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
           .map((r) {
             final listing = r.listing;
             return _TrendingProviderData(
-              providerId: listing.provider?.toString() ?? '${listing.id}',
+              providerId: listing.provider?.toString() ?? '',
               name: listing.providerName ?? '',
               category: listing.categoryName ?? 'Service',
               avatarUrl: listing.providerPhoto ?? '',
@@ -659,7 +667,7 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
               startingPrice: (listing.basePrice ?? 0).round(),
             );
           })
-          .where((p) => p.name.isNotEmpty)
+          .where((p) => p.name.isNotEmpty && p.providerId.isNotEmpty)
           .toList();
     } catch (e, s) {
       LoggingService.error(

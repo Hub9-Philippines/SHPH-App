@@ -568,7 +568,6 @@
   "bdSharedAfterAssignment": "Ibabahagi sa provider mo pagkatapos ma-assign",
   "bdBookingDetails": "Booking Details",
   "bdHeaderSubtitle": "Tingnan ang progress, schedule, at estado ng payment.",
-  "bdTrackOnMap": "I-track sa Map",
   "bdUnknown": "Unknown",
   "bdConfirmed": "Confirmed",
   "bdInProgress": "In Progress",
@@ -1610,5 +1609,10 @@
   "pfRemoveProfilePicture": "Alisin ang profile picture",
   "pfRemovePhotoTitle": "Alisin ang profile picture?",
   "pfRemovePhotoMessage": "Aalisin ang iyong larawan sa iyong pampublikong profile.",
-  "pfPhotoRemoved": "Inalis ang profile picture."
+  "pfPhotoRemoved": "Inalis ang profile picture.",
+  "emBadge": "Emergency",
+  "emTitle": "Emergency na Tulong",
+  "emSubtitle": "Mga agarang serbisyo sa iyong lugar, ipinapadala kaagad.",
+  "emEmpty": "Walang available na emergency services ngayon.",
+  "emClose": "Isara"
 }

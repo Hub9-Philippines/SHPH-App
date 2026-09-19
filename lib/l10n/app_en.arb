@@ -569,7 +569,6 @@
   "bdSharedAfterAssignment": "Shared with your provider after assignment",
   "bdBookingDetails": "Booking Details",
   "bdHeaderSubtitle": "Review progress, schedule, and payment state.",
-  "bdTrackOnMap": "Track on Map",
   "bdUnknown": "Unknown",
   "bdConfirmed": "Confirmed",
   "bdInProgress": "In Progress",
@@ -1610,5 +1609,10 @@
   "pfRemoveProfilePicture": "Remove profile picture",
   "pfRemovePhotoTitle": "Remove profile picture?",
   "pfRemovePhotoMessage": "Your photo will be removed from your public profile.",
-  "pfPhotoRemoved": "Profile picture removed."
+  "pfPhotoRemoved": "Profile picture removed.",
+  "emBadge": "Emergency",
+  "emTitle": "Emergency Help",
+  "emSubtitle": "Urgent services in your area, dispatched right now.",
+  "emEmpty": "No emergency services are available right now.",
+  "emClose": "Close"
 }

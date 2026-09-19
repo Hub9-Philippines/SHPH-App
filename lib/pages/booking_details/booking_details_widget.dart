@@ -10,7 +10,6 @@ import '/components/user_avatar.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import '/l10n/app_localizations.dart';
-import '/pages/booking_funnel/status_page.dart';
 import '/services/bookings_service.dart';
 import '/theme/app_theme.dart';
 import 'booking_details_model.dart';
@@ -161,14 +160,6 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
     }
   }
 
-  bool get _isTrackable {
-    final status = _model.booking?.status.toLowerCase() ?? '';
-    return status == 'pending' ||
-        status == 'confirmed' ||
-        status == 'in_progress' ||
-        status == 'en_route';
-  }
-
   bool get _isCancellable {
     final status = _model.booking?.status.toLowerCase() ?? '';
     return status == 'pending' || status == 'confirmed';
@@ -187,21 +178,6 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
         'providerPhoto': listing?['provider_photo'] as String?,
         'isVerified': false,
       },
-    );
-  }
-
-  void _openMap() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => StatusPage(
-          bookingStatus: _model.booking!.status,
-          bookingDate: _model.booking!.bookingDate,
-          providerName: _providerName,
-          serviceTitle:
-              _model.serviceListing?['title'] as String? ?? _l10n.bdYourBooking,
-          bookingReference: _model.booking!.id,
-        ),
-      ),
     );
   }
 
@@ -593,7 +569,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
         ],
       );
 
-  /// Zone 3 — sticky footer with map CTA and destructive cancel link.
+  /// Zone 3 — sticky footer with destructive cancel link.
   Widget _buildStickyFooter(BuildContext context) {
     final theme = AppTheme.of(context);
     return Container(
@@ -608,31 +584,6 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: FilledButton.icon(
-                onPressed:
-                    (_isTrackable && _model.booking != null) ? _openMap : null,
-                icon: const Icon(Icons.map_rounded, size: 20),
-                label: Text(
-                  _l10n.bdTrackOnMap,
-                  style: theme.titleSmall.override(
-                    font: GoogleFonts.plusJakartaSans(
-                        fontWeight: FontWeight.w700),
-                    color: Colors.white,
-                  ),
-                ),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppThemeData.actionPrimary,
-                  disabledBackgroundColor:
-                      AppThemeData.actionPrimary.withValues(alpha: 0.4),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppThemeData.radiusMd),
-                  ),
-                ),
-              ),
-            ),
             if (_isCancellable)
               TextButton.icon(
                 onPressed: _cancelBooking,

@@ -3280,12 +3280,6 @@ abstract class AppLocalizations {
   /// **'Review progress, schedule, and payment state.'**
   String get bdHeaderSubtitle;
 
-  /// No description provided for @bdTrackOnMap.
-  ///
-  /// In en, this message translates to:
-  /// **'Track on Map'**
-  String get bdTrackOnMap;
-
   /// No description provided for @bdUnknown.
   ///
   /// In en, this message translates to:
@@ -9093,6 +9087,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Profile picture removed.'**
   String get pfPhotoRemoved;
+
+  /// No description provided for @emBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency'**
+  String get emBadge;
+
+  /// No description provided for @emTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency Help'**
+  String get emTitle;
+
+  /// No description provided for @emSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgent services in your area, dispatched right now.'**
+  String get emSubtitle;
+
+  /// No description provided for @emEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No emergency services are available right now.'**
+  String get emEmpty;
+
+  /// No description provided for @emClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get emClose;
 }
 
 class _AppLocalizationsDelegate

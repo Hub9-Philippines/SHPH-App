@@ -59,7 +59,7 @@ class ShphServiceListing {
       title: json['title'] as String? ?? '',
       category: json['category'] as int?,
       categoryName: json['category_name'] as String?,
-      provider: json['provider'] as int?,
+      provider: json['provider'] as int? ?? json['provider_id'] as int?,
       providerName: json['provider_name'] as String?,
       providerPhoto: json['provider_photo'] as String?,
       description: json['description'] as String?,

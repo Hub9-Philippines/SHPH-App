@@ -68,17 +68,31 @@ class BookingStatusScaffold extends StatelessWidget {
                   ),
                 ),
               ),
-              Positioned.fill(
-                child: showMap
-                    ? _RadarMapLayer(
-                        location: location,
-                        markerHue: markerHue,
-                        markers: markers,
-                        radarScan: radarScan,
-                        bottomInset: bottomInset,
-                      )
-                    : const SizedBox.shrink(),
-              ),
+              if (showMap)
+                if (isDraggable)
+                  Positioned.fill(
+                    child: _RadarMapLayer(
+                      location: location,
+                      markerHue: markerHue,
+                      markers: markers,
+                      radarScan: radarScan,
+                      padding: EdgeInsets.only(bottom: 48 + bottomInset),
+                    ),
+                  )
+                else
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: sheetMaxHeight,
+                    child: _RadarMapLayer(
+                      location: location,
+                      markerHue: markerHue,
+                      markers: markers,
+                      radarScan: radarScan,
+                      padding: EdgeInsets.zero,
+                    ),
+                  ),
               if (center != null) Center(child: center!),
               if (isDraggable)
                 _DraggableBottomSheet(
@@ -114,16 +128,16 @@ class _RadarMapLayer extends StatelessWidget {
   const _RadarMapLayer({
     required this.location,
     required this.markerHue,
-    required this.bottomInset,
+    required this.padding,
     this.markers,
     this.radarScan,
   });
 
   final LatLng location;
   final double markerHue;
+  final EdgeInsets padding;
   final Set<Marker>? markers;
   final RadarScanController? radarScan;
-  final double bottomInset;
 
   Set<Marker> get _defaultMarkers => {
         Marker(
@@ -152,7 +166,7 @@ class _RadarMapLayer extends StatelessWidget {
       tiltGesturesEnabled: false,
       scrollGesturesEnabled: false,
       zoomGesturesEnabled: false,
-      padding: EdgeInsets.only(bottom: 48 + bottomInset),
+      padding: padding,
       markers: mapMarkers,
     );
 
@@ -174,7 +188,7 @@ class _RadarMapLayer extends StatelessWidget {
           tiltGesturesEnabled: false,
           scrollGesturesEnabled: false,
           zoomGesturesEnabled: false,
-          padding: EdgeInsets.only(bottom: 48 + bottomInset),
+          padding: padding,
           markers: mapMarkers,
           circles: circles,
         ),

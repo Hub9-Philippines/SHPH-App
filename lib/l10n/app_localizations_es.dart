@@ -1750,9 +1750,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Review progress, schedule, and payment state.';
 
   @override
-  String get bdTrackOnMap => 'Track on Map';
-
-  @override
   String get bdUnknown => 'Unknown';
 
   @override
@@ -4879,4 +4876,21 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get pfPhotoRemoved => 'Foto de perfil eliminada.';
+
+  @override
+  String get emBadge => 'Emergencia';
+
+  @override
+  String get emTitle => 'Ayuda de emergencia';
+
+  @override
+  String get emSubtitle =>
+      'Servicios urgentes en tu zona, con despacho inmediato.';
+
+  @override
+  String get emEmpty =>
+      'No hay servicios de emergencia disponibles en este momento.';
+
+  @override
+  String get emClose => 'Cerrar';
 }

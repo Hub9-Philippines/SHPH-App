@@ -117,5 +117,10 @@
   "pfRemoveProfilePicture": "Eliminar foto de perfil",
   "pfRemovePhotoTitle": "¿Eliminar foto de perfil?",
   "pfRemovePhotoMessage": "Tu foto se eliminará de tu perfil público.",
-  "pfPhotoRemoved": "Foto de perfil eliminada."
+  "pfPhotoRemoved": "Foto de perfil eliminada.",
+  "emBadge": "Emergencia",
+  "emTitle": "Ayuda de emergencia",
+  "emSubtitle": "Servicios urgentes en tu zona, con despacho inmediato.",
+  "emEmpty": "No hay servicios de emergencia disponibles en este momento.",
+  "emClose": "Cerrar"
 }

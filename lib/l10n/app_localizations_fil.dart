@@ -1765,9 +1765,6 @@ class AppLocalizationsFil extends AppLocalizations {
       'Tingnan ang progress, schedule, at estado ng payment.';
 
   @override
-  String get bdTrackOnMap => 'I-track sa Map';
-
-  @override
   String get bdUnknown => 'Unknown';
 
   @override
@@ -4908,4 +4905,20 @@ class AppLocalizationsFil extends AppLocalizations {
 
   @override
   String get pfPhotoRemoved => 'Inalis ang profile picture.';
+
+  @override
+  String get emBadge => 'Emergency';
+
+  @override
+  String get emTitle => 'Emergency na Tulong';
+
+  @override
+  String get emSubtitle =>
+      'Mga agarang serbisyo sa iyong lugar, ipinapadala kaagad.';
+
+  @override
+  String get emEmpty => 'Walang available na emergency services ngayon.';
+
+  @override
+  String get emClose => 'Isara';
 }
