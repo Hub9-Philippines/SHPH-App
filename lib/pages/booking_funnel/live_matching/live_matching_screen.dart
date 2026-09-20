@@ -82,8 +82,6 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
 
   // ── Zoom targets per stage ─────────────────────────────────────────
   static const _zoomNearby = 16.0;
-  static const _zoomChecking = 14.5;
-  static const _zoomSweep = 13.0;
   static const _zoomMatched = 15.0;
 
   // ── Lifecycle ──────────────────────────────────────────────────────
@@ -118,6 +116,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
       vsync: this,
       center: _rippleCenter(),
       ringColor: AppTheme.of(context).primary,
+      maxRadiusMeters: _currentRadiusKm * 1000,
     );
   }
 
@@ -210,6 +209,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
       final radiusRaw = response['radius_km'];
       if (radiusRaw is num && radiusRaw > 0) {
         _currentRadiusKm = radiusRaw.toDouble();
+        _onScanRadiusChanged();
       }
       _syncCountdownFromExpiry(response['expires_at'] as String?);
       if (!mounted || _timedOut) return;
@@ -295,6 +295,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     if (nextRadius <= _currentRadiusKm) return;
     _currentRadiusKm = nextRadius.toDouble();
     _lastExpandAt = now;
+    _onScanRadiusChanged();
     unawaited(_expandRadiusQuietly(jobId, nextRadius));
   }
 
@@ -440,26 +441,63 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     super.dispose();
   }
 
-  // ── Map zoom animation ────────────────────────────────────────────
+  // ── Map zoom / framing ─────────────────────────────────────────────
   void _animateMapZoom() {
-    final zoom = _targetZoom();
-    _mapController?.animateCamera(CameraUpdate.zoomTo(zoom));
-  }
-
-  double _targetZoom() {
     if (_matchedPro != null) {
-      return _zoomMatched;
+      _mapController?.animateCamera(CameraUpdate.zoomTo(_zoomMatched));
+      return;
     }
     if (_timedOut) {
-      return _zoomNearby;
+      _mapController?.animateCamera(CameraUpdate.zoomTo(_zoomNearby));
+      return;
     }
-    if (_secondsRemaining > 120) {
-      return _zoomNearby;
+    _fitCameraToRadius();
+  }
+
+  /// Reacts to a scan-radius change: re-sizes the ripple and re-frames the
+  /// map so the enlarged radius (and ripple) stays visible.
+  void _onScanRadiusChanged() {
+    _scanController?.updateMaxRadiusMeters(_currentRadiusKm * 1000);
+    _fitCameraToRadius();
+  }
+
+  /// Frames the map so the full current scan radius (and the ripple rings)
+  /// fit inside the viewport. No-op until the map controller is available.
+  void _fitCameraToRadius() {
+    final controller = _mapController;
+    if (controller == null) {
+      return;
     }
-    if (_secondsRemaining > 60) {
-      return _zoomChecking;
+    final bounds = _radiusBounds(
+      _rippleCenter(),
+      _currentRadiusKm * 1000,
+    );
+    try {
+      controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 96));
+    } catch (_) {
+      // Map not laid out yet — the initial camera position still applies.
     }
-    return _zoomSweep;
+  }
+
+  /// [LatLngBounds] bounding a circle of [radiusMeters] around [center].
+  static LatLngBounds _radiusBounds(LatLng center, double radiusMeters) {
+    const earthRadiusMeters = 6371000.0;
+    final latSpanDeg =
+        radiusMeters / earthRadiusMeters * (180 / math.pi);
+    final cosLat = math.cos(center.latitude * math.pi / 180).abs();
+    final lngSpanDeg = cosLat < 1e-6
+        ? latSpanDeg
+        : radiusMeters / (earthRadiusMeters * cosLat) * (180 / math.pi);
+    return LatLngBounds(
+      southwest: LatLng(
+        center.latitude - latSpanDeg,
+        center.longitude - lngSpanDeg,
+      ),
+      northeast: LatLng(
+        center.latitude + latSpanDeg,
+        center.longitude + lngSpanDeg,
+      ),
+    );
   }
 
   int _currentStage() {
@@ -699,6 +737,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
       zoomGesturesEnabled: false,
       onMapCreated: (controller) {
         _mapController = controller;
+        _fitCameraToRadius();
       },
       markers: markers,
     );
@@ -726,6 +765,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
         zoomGesturesEnabled: false,
         onMapCreated: (controller) {
           _mapController = controller;
+          _fitCameraToRadius();
         },
         circles: circles,
         markers: markers,

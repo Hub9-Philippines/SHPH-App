@@ -38,3 +38,44 @@ Activating the home-page profile button SHALL open the profile action content in
 #### Scenario: User dismisses profile actions
 - **WHEN** the profile action bottom sheet is open and the user dismisses it
 - **THEN** the sheet closes and the home page remains visible without navigating away
+
+### Requirement: Get Help opens emergency services modal
+The home "Get Help" card SHALL open a dedicated emergency services modal picker listing only services that belong to the emergency categories (Electrical, Locksmith, Plumbing, Pest Control). It SHALL NOT open the generic all-services selection panel used by the regular booking flow.
+
+#### Scenario: Get Help opens the emergency picker
+- **WHEN** the user taps "Get Help" on the home page
+- **THEN** a modal opens listing only emergency-category services and no non-emergency services
+
+#### Scenario: Emergency service selected
+- **WHEN** the user selects an emergency service from the picker
+- **THEN** the booking flow starts for that service with right-now (immediate) urgency
+
+#### Scenario: Emergency picker dismissed
+- **WHEN** the user dismisses the emergency modal
+- **THEN** the modal closes and the home page remains visible without navigating away
+
+### Requirement: Provider profiles behave consistently across home sections
+Tapping a provider in "Recommended for you" SHALL open the full provider profile page exactly as "View profile" in "Trending near you" does; the two entry points SHALL deliver the same functional provider profile.
+
+#### Scenario: Recommended provider opens the full profile
+- **WHEN** the user taps a provider card in "Recommended for you"
+- **THEN** the full provider profile page opens with the same content and behavior as "View profile" in "Trending near you"
+
+#### Scenario: Trending view profile unchanged
+- **WHEN** the user taps "View profile" in "Trending near you"
+- **THEN** the provider profile page opens as before
+
+### Requirement: Home page skeleton loading state
+While the home feed is loading, the home page SHALL render shimmer skeleton placeholders in place of its always-visible data-driven sections — the "Trending near you" provider rail and the "EXPLORE SERVICES" category rail — instead of empty rails, and SHALL swap those placeholders for the loaded content once the feed resolves. Static sections (emergency help, seasonal offer, referral banner) SHALL remain visible during loading. A pull-to-refresh gesture SHALL keep the currently displayed content on screen and must not replace it with skeleton placeholders.
+
+#### Scenario: Initial load shows skeleton placeholders
+- **WHEN** the home page begins loading its initial feed and the trending/category data is not yet available
+- **THEN** the "Trending near you" and "EXPLORE SERVICES" sections render shimmer skeleton placeholders (matching the Bookings/Messages skeleton pattern) instead of empty horizontal rails
+
+#### Scenario: Skeletons replaced by loaded content
+- **WHEN** the initial feed finishes loading
+- **THEN** the skeleton placeholders are replaced by the real trending-provider and category content
+
+#### Scenario: Refresh preserves visible content
+- **WHEN** the user triggers a pull-to-refresh while content is already displayed
+- **THEN** the displayed content stays on screen with the refresh indicator, and skeleton placeholders do not appear

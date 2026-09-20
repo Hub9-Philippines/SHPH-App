@@ -54,6 +54,7 @@ class _TMBroadcastScreenState extends State<TMBroadcastScreen>
       vsync: this,
       center: _currentLocation(),
       ringColor: AppTheme.of(context).primary,
+      maxRadiusMeters: context.read<TMFlowController>().searchRadiusKm * 1000,
     );
     _syncScanState(context.read<TMFlowController>());
     return _scanController;
@@ -74,7 +75,9 @@ class _TMBroadcastScreenState extends State<TMBroadcastScreen>
     if (scan == null) {
       return;
     }
-    scan.updateCenter(_currentLocation());
+    scan
+      ..updateCenter(_currentLocation())
+      ..updateMaxRadiusMeters(controller.searchRadiusKm * 1000);
     if (controller.hasFailed || controller.hasMatchedProvider) {
       scan.stop();
     } else if (!scan.isAnimating) {

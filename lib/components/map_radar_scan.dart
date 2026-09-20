@@ -7,13 +7,11 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 /// Replaces screen-pixel CustomPainter pulses with real map `Circle`s so the
 /// rings stay anchored to the pinned location, scale with the map tiles and
 /// never clip or shear under zoom/rotation. The outermost ring expands from
-/// 0 to 3000 ground-meters over exactly 30 seconds, looping indefinitely,
-/// with staggered rings that fade out as they approach the maximum radius.
+/// 0 to the current scan radius (ground-meters) over exactly 30 seconds,
+/// looping indefinitely, with staggered rings that fade out as they approach
+/// the maximum radius.
 class MapRadarScan {
   const MapRadarScan._();
-
-  /// Ground distance the outermost ring reaches at the end of a cycle.
-  static const double defaultMaxRadiusMeters = 3000;
 
   /// Number of staggered rings visible at any instant.
   static const int defaultRingCount = 3;
@@ -21,9 +19,6 @@ class MapRadarScan {
   /// Below this radius a ring would render as a degenerate speck; clamped so
   /// a phase-0 ring still reads as a small dot.
   static const double _minRingRadiusMeters = 80;
-
-  /// Radius of the solid center dot marking the pinned location.
-  static const double _centerDotRadiusMeters = 60;
 
   /// Per-ring base opacities (radar fade: inner rings strongest).
   static const List<double> _strokeOpacities = [0.42, 0.30, 0.20];
@@ -41,20 +36,10 @@ class MapRadarScan {
     LatLng center,
     double t, {
     required Color ringColor,
-    double maxRadiusMeters = defaultMaxRadiusMeters,
+    required double maxRadiusMeters,
     int ringCount = defaultRingCount,
   }) {
-    final circles = <Circle>{
-      Circle(
-        circleId: const CircleId('radar_center_dot'),
-        center: center,
-        radius: _centerDotRadiusMeters,
-        strokeWidth: 2,
-        strokeColor: ringColor,
-        fillColor: ringColor,
-        consumeTapEvents: false,
-      ),
-    };
+    final circles = <Circle>{};
 
     for (var i = 0; i < ringCount; i++) {
       final phase = (t + i / ringCount) % 1.0;
@@ -92,7 +77,7 @@ class RadarScanController extends ValueNotifier<Set<Circle>> {
     required TickerProvider vsync,
     required LatLng center,
     required Color ringColor,
-    double maxRadiusMeters = MapRadarScan.defaultMaxRadiusMeters,
+    required double maxRadiusMeters,
     int ringCount = MapRadarScan.defaultRingCount,
   })  : _center = center,
         _ringColor = ringColor,
@@ -114,7 +99,7 @@ class RadarScanController extends ValueNotifier<Set<Circle>> {
   late final AnimationController _animation;
   LatLng _center;
   final Color _ringColor;
-  final double _maxRadiusMeters;
+  double _maxRadiusMeters;
   final int _ringCount;
 
   LatLng get center => _center;
@@ -130,6 +115,19 @@ class RadarScanController extends ValueNotifier<Set<Circle>> {
       return;
     }
     _center = center;
+    if (isAnimating) {
+      _onTick();
+    }
+  }
+
+  /// Updates the maximum scan radius (ground-meters). No-op when the radius is
+  /// unchanged; otherwise the layer is recomputed at once so the running
+  /// animation adopts the new extent within the current cycle.
+  void updateMaxRadiusMeters(double maxRadiusMeters) {
+    if (maxRadiusMeters == _maxRadiusMeters) {
+      return;
+    }
+    _maxRadiusMeters = maxRadiusMeters;
     if (isAnimating) {
       _onTick();
     }
