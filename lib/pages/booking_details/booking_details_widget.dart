@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/api/resources/chat_api.dart';
+import '/api/resources/providers_api.dart';
 import '/api/resources/services_api.dart';
 import '/backend/supabase/database/tables/bookings.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/components/booking_step_indicator.dart';
+import '/components/call_accept_permission_sheet.dart';
+import '/components/contact_action_sheet.dart';
 import '/components/star_rating.dart';
 import '/components/user_avatar.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import '/l10n/app_localizations.dart';
 import '/services/bookings_service.dart';
+import '/services/chat_service.dart';
+import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
 import 'booking_details_model.dart';
 
@@ -90,6 +96,20 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
           } catch (_) {}
         }
 
+        String? providerPhone;
+        final providerId = service?['provider_id'] as String?;
+        if (providerId != null && providerId.trim().isNotEmpty) {
+          try {
+            final provider = await ShphProvidersApi.instance
+                .getProvider(providerId.trim());
+            providerPhone =
+                (provider['phone_number'] ?? provider['phone'] ?? null)
+                    as String?;
+          } catch (_) {
+            providerPhone = null;
+          }
+        }
+
         if (!mounted) {
           return;
         }
@@ -97,6 +117,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
         setState(() {
           _model.booking = booking;
           _model.serviceListing = service;
+          _model.providerPhone = providerPhone;
           _model.isLoading = false;
         });
       } else {
@@ -165,20 +186,184 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
     return status == 'pending' || status == 'confirmed';
   }
 
-  void _openContact({
-    required BuildContext context,
-  }) {
-    final listing = _model.serviceListing;
-    context.pushNamed(
-      ContactProviderWidget.routeName,
-      extra: <String, dynamic>{
-        'providerName':
-            listing?['provider_name'] as String? ?? _l10n.bdAssignedProvider,
-        'providerId': listing?['provider_id'] as String?,
-        'providerPhoto': listing?['provider_photo'] as String?,
-        'isVerified': false,
+  Future<void> _onCallPressed() async {
+    final choice = await showContactActionSheet(
+      context,
+      kind: ContactActionKind.call,
+      providerName: _providerName,
+      phoneAvailable: (_model.providerPhone ?? '').trim().isNotEmpty,
+    );
+    if (!mounted || choice == null) {
+      return;
+    }
+
+    switch (choice) {
+      case ContactActionChoice.callByNumber:
+        await _callByNumber();
+      case ContactActionChoice.inAppCall:
+        await _startInAppCall();
+      default:
+        break;
+    }
+  }
+
+  Future<void> _onMessagePressed() async {
+    final choice = await showContactActionSheet(
+      context,
+      kind: ContactActionKind.message,
+      providerName: _providerName,
+      phoneAvailable: (_model.providerPhone ?? '').trim().isNotEmpty,
+    );
+    if (!mounted || choice == null) {
+      return;
+    }
+
+    switch (choice) {
+      case ContactActionChoice.textSms:
+        await _textViaSms();
+      case ContactActionChoice.inAppChat:
+        await _openInAppChat();
+      default:
+        break;
+    }
+  }
+
+  Future<void> _callByNumber() async {
+    final phone = (_model.providerPhone ?? '').trim();
+    if (phone.isEmpty) {
+      _showSnack(_l10n.cpNoMobile);
+      return;
+    }
+    try {
+      await launchURL('tel:$phone');
+    } catch (e) {
+      LoggingService.error(
+        'Failed to launch phone dialer',
+        tag: 'BookingDetails',
+        error: e,
+      );
+      _showSnack(_l10n.cpCouldNotOpenDialer);
+    }
+  }
+
+  Future<void> _textViaSms() async {
+    final phone = (_model.providerPhone ?? '').trim();
+    if (phone.isEmpty) {
+      _showSnack(_l10n.cpNoMobile);
+      return;
+    }
+    try {
+      await launchURL('sms:$phone');
+    } catch (e) {
+      LoggingService.error(
+        'Failed to launch SMS',
+        tag: 'BookingDetails',
+        error: e,
+      );
+      _showSnack(_l10n.cpCouldNotOpenDialer);
+    }
+  }
+
+  Future<void> _openInAppChat() async {
+    final providerId = _providerId;
+    if (providerId == null || providerId.isEmpty) {
+      _showSnack(_l10n.cpCannotContact);
+      return;
+    }
+
+    try {
+      final thread = await ChatService.instance.getOrCreateDirectThread(
+        providerId: providerId,
+        providerName: _providerName,
+        providerPhoto: _model.serviceListing?['provider_photo'] as String?,
+      );
+      if (!mounted) {
+        return;
+      }
+      final roomId = thread?['id']?.toString();
+      if (roomId == null || roomId.isEmpty) {
+        _showSnack(_l10n.cpCouldNotOpenChat);
+        return;
+      }
+
+      await context.pushNamed(
+        ChatPageWidget.routeName,
+        pathParameters: {'roomId': roomId},
+        extra: <String, dynamic>{
+          'providerName': _providerName,
+          'providerPhoto': _model.serviceListing?['provider_photo'] as String?,
+        },
+      );
+    } catch (e) {
+      LoggingService.error(
+        'Failed to open in-app chat',
+        tag: 'BookingDetails',
+        error: e,
+      );
+      if (mounted) {
+        _showSnack(_l10n.cpCouldNotOpenChat);
+      }
+    }
+  }
+
+  Future<void> _startInAppCall() async {
+    final providerId = _providerId;
+    final calleeId = int.tryParse(providerId ?? '');
+    if (calleeId == null) {
+      _showSnack(_l10n.cpCannotContact);
+      return;
+    }
+
+    await CallAcceptPermissionSheet.show(
+      context,
+      callType: CallType.audio,
+      onPermissionGranted: () {
+        _initiateInAppCall(calleeId, providerId!);
       },
     );
+  }
+
+  Future<void> _initiateInAppCall(int calleeId, String providerId) async {
+    try {
+      final thread = await ChatService.instance.getOrCreateDirectThread(
+        providerId: providerId,
+        providerName: _providerName,
+        providerPhoto: _model.serviceListing?['provider_photo'] as String?,
+      );
+      if (!mounted) {
+        return;
+      }
+      final threadId = thread?['id']?.toString();
+      if (threadId == null || threadId.isEmpty) {
+        _showSnack(_l10n.cpCouldNotOpenChat);
+        return;
+      }
+
+      await ShphChatApi.instance.initiateCall({
+        'thread_id': threadId,
+        'callee_id': calleeId,
+        'media_type': 'audio',
+      });
+    } catch (e) {
+      LoggingService.error(
+        'Failed to initiate in-app call',
+        tag: 'BookingDetails',
+        error: e,
+      );
+      if (mounted) {
+        _showSnack(_l10n.cpCouldNotOpenDialer);
+      }
+    }
+  }
+
+  String? get _providerId =>
+      _model.serviceListing?['provider_id'] as String?;
+
+  void _showSnack(String message) {
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   String get _providerName =>
@@ -344,13 +529,13 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
               _FloatingCircleButton(
                 icon: Icons.call_rounded,
                 tooltip: _l10n.bdCallProvider,
-                onTap: () => _openContact(context: context),
+                onTap: _onCallPressed,
               ),
               const SizedBox(width: 8),
               _FloatingCircleButton(
                 icon: Icons.chat_bubble_rounded,
                 tooltip: _l10n.bdMessageProvider,
-                onTap: () => _openContact(context: context),
+                onTap: _onMessagePressed,
               ),
             ],
           ),

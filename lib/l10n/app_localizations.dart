@@ -4684,6 +4684,30 @@ abstract class AppLocalizations {
   /// **'Could not launch phone dialer'**
   String get cpCouldNotOpenDialer;
 
+  /// No description provided for @caCallByNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Call by number'**
+  String get caCallByNumber;
+
+  /// No description provided for @caInAppCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Call using the app'**
+  String get caInAppCall;
+
+  /// No description provided for @caTextSms.
+  ///
+  /// In en, this message translates to:
+  /// **'Text via SMS'**
+  String get caTextSms;
+
+  /// No description provided for @caInAppChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat in app'**
+  String get caInAppChat;
+
   /// No description provided for @epTitle.
   ///
   /// In en, this message translates to:
@@ -7377,6 +7401,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Allow Microphone'**
   String get ccAllowMic;
+
+  /// No description provided for @ccOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get ccOpenSettings;
 
   /// No description provided for @ccNoInternet.
   ///

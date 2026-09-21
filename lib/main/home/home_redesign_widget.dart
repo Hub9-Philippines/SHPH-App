@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '/api/models/booking.dart';
+import '/api/models/recommendation_item.dart';
 import '/api/models/service_listing.dart';
 import '/api/resources/bookings_api.dart';
 import '/api/resources/recommendations_api.dart';
@@ -446,7 +447,8 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
                             const SizedBox(height: 16),
                             SeasonalOfferCard(onTap: _startBookingProcess),
                             const SizedBox(height: 18),
-                            if (_hasBookingHistory) ...[
+                            if (_hasBookingHistory &&
+                                _recommendedProviders.isNotEmpty) ...[
                               _HomeSectionHeader(
                                 title: 'Recommended for you',
                                 subtitle:
@@ -511,7 +513,7 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
       _loadBookings(),
       _loadCategories(),
       _loadProviders(),
-      _loadNearbyRecommendations(),
+      _loadRecommendedProviders(),
     ]);
 
     if (!mounted) return;
@@ -521,8 +523,16 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
       _bookings = (results[0] as List<_HomeBookingData>?) ?? const [];
       _categories = (results[1] as List<_HomeCategoryData>?) ?? const [];
       _providers = (results[2] as List<_TrendingProviderData>?) ?? const [];
-      _recommendedProviders =
+      var recommended =
           (results[3] as List<_TrendingProviderData>?) ?? const [];
+      // Final fallback for "Recommended for you": reuse the top-rated
+      // providers already fetched for the trending rail so the section is
+      // never rendered with a bare header. Applied here because the providers
+      // list is only resolved once this batch completes.
+      if (recommended.isEmpty && _providers.isNotEmpty) {
+        recommended = _providers;
+      }
+      _recommendedProviders = recommended;
     });
   }
 
@@ -678,6 +688,47 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
       );
       return const [];
     }
+  }
+
+  Future<List<_TrendingProviderData>> _loadUserRecommendations() async {
+    try {
+      final items = await ShphRecommendationsApi.instance.user(limit: 10);
+
+      // Booking-history-personalized feed — each item embeds a listing with
+      // provider/rating/photo/category already parsed by the model.
+      return items
+          .map((RecommendationItem r) {
+            final listing = r.listing;
+            return _TrendingProviderData(
+              providerId: listing.provider?.toString() ?? '',
+              name: listing.providerName ?? '',
+              category: listing.categoryName ?? 'Service',
+              avatarUrl: listing.providerPhoto ?? '',
+              rating: double.tryParse(listing.rating ?? '0') ?? 0,
+              reviewCount: listing.reviewCount ?? 0,
+              distanceKm: listing.distanceKm ?? 0,
+              startingPrice: (listing.basePrice ?? 0).round(),
+            );
+          })
+          .where((p) => p.name.isNotEmpty && p.providerId.isNotEmpty)
+          .toList();
+    } catch (e, s) {
+      LoggingService.error(
+        'Failed to load home user recommendations',
+        tag: 'HomeRedesign',
+        error: e,
+        stackTrace: s,
+      );
+      return const [];
+    }
+  }
+
+  Future<List<_TrendingProviderData>> _loadRecommendedProviders() async {
+    final personalized = await _loadUserRecommendations();
+    if (personalized.isNotEmpty) {
+      return personalized;
+    }
+    return _loadNearbyRecommendations();
   }
 
   static _TrendingProviderData _fromListing(ShphServiceListing listing) {

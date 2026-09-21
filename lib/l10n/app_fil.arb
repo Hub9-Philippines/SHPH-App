@@ -821,6 +821,10 @@
   "cpMessageNotSent": "Hindi maipadala ang message.",
   "cpNoMobile": "Walang available na mobile number",
   "cpCouldNotOpenDialer": "Hindi mabuksan ang phone dialer",
+  "caCallByNumber": "Tumawag sa numero",
+  "caInAppCall": "Tumawag gamit ang app",
+  "caTextSms": "Text gamit ang SMS",
+  "caInAppChat": "Mag-chat sa app",
 
 
   "epTitle": "I-edit ang Profile",
@@ -1301,6 +1305,7 @@
   "ccAccessGranted": "Granted na ang access!",
   "ccAllowCamMic": "I-allow ang Camera & Microphone",
   "ccAllowMic": "I-allow ang Microphone",
+  "ccOpenSettings": "Buksan ang mga setting",
   "ccNoInternet": "Walang internet connection",
   "ccSeasonalDeals": "Tingnan ang Seasonal Deals",
   "cc60Off": "Kumuha ng 60% OFF!",

@@ -3,13 +3,17 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/api/models/review.dart';
+import '/api/resources/chat_api.dart';
 import '/api/resources/favorites_api.dart';
 import '/api/resources/providers_api.dart';
 import '/components/back_button/back_button_widget.dart';
+import '/components/call_accept_permission_sheet.dart';
+import '/components/contact_action_sheet.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
 import '/l10n/app_localizations.dart';
+import '/services/chat_service.dart';
 import '/services/favorites_service.dart';
 import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
@@ -68,6 +72,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
   void _logUsage(bool value) { /* no-op anchor so the analyzer sees _isProviderLoading used */ }
   String _providerName = '';
   String _providerPhoto = '';
+  String _providerPhone = '';
   bool _isVerified = false;
 
   AppLocalizations get _l10n => AppLocalizations.of(context)!;
@@ -81,6 +86,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
     _isVerified = widget.isVerified;
     _checkFavoriteStatus();
     _loadProviderProfile();
+    _loadProviderPhone();
     _loadReviews();
   }
 
@@ -167,6 +173,31 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
       if (mounted) {
         setState(() => _isProviderLoading = false);
       }
+    }
+  }
+
+  Future<void> _loadProviderPhone() async {
+    if (widget.providerId.isEmpty) {
+      return;
+    }
+
+    try {
+      final provider =
+          await ShphProvidersApi.instance.getProvider(widget.providerId);
+      if (!mounted) {
+        return;
+      }
+      final phoneValue = provider['phone_number'] ?? provider['phone'];
+      if (phoneValue is String) {
+        setState(() => _providerPhone = phoneValue.trim());
+      }
+    } catch (e, stackTrace) {
+      LoggingService.error(
+        'Failed to load provider phone',
+        tag: 'ProductPage',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -705,7 +736,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                     children: [
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: _openContactProvider,
+                          onPressed: _onContactPressed,
                           icon: const Icon(Icons.chat_bubble_outline_rounded),
                           label: Text(_l10n.ppContact),
                           style: OutlinedButton.styleFrom(
@@ -1062,13 +1093,13 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
             children: [
               Expanded(
                 child: FFButtonWidget(
-                  onPressed: _openContactProvider,
+                  onPressed: _onContactPressed,
                   text: _l10n.ppContact,
                   options: FFButtonOptions(
                     width: double.infinity,
                     height: 54,
                     color: const Color(0xFFF3F7FA),
-                    textStyle: AppTheme.of(context).titleSmall.override(
+                    textStyle: AppTheme.of(context).labelLarge.override(
                           font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
@@ -1089,7 +1120,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                     width: double.infinity,
                     height: 54,
                     color: AppTheme.of(context).primary,
-                    textStyle: AppTheme.of(context).titleSmall.override(
+                    textStyle: AppTheme.of(context).labelLarge.override(
                           font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
@@ -1118,21 +1149,167 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
     );
   }
 
-  void _openContactProvider() {
-    context.pushNamed(
-      ContactProviderWidget.routeName,
-      extra: {
-        'providerName': widget.providerName,
-        'providerId': widget.providerId,
-        'providerPhoto': widget.providerPhoto,
-        'isVerified': widget.isVerified,
-        'mobileNumber': null,
-        'serviceName': widget.serviceName,
-        'serviceCategory': widget.category,
-        'servicePrice': widget.price,
-        'serviceDescription': widget.description,
-      },
+  Future<void> _onContactPressed() async {
+    final choice = await showContactActionSheet(
+      context,
+      kind: ContactActionKind.all,
+      providerName: _providerName,
+      phoneAvailable: _providerPhone.trim().isNotEmpty,
     );
+    if (!mounted || choice == null) {
+      return;
+    }
+
+    switch (choice) {
+      case ContactActionChoice.inAppChat:
+        await _startInAppChat();
+      case ContactActionChoice.inAppCall:
+        await _startInAppCall();
+      case ContactActionChoice.callByNumber:
+        await _callByNumber();
+      case ContactActionChoice.textSms:
+        await _textViaSms();
+    }
+  }
+
+  Future<void> _startInAppChat() async {
+    final providerId = widget.providerId;
+    if (providerId.isEmpty) {
+      _showSnack(_l10n.cpCannotContact);
+      return;
+    }
+
+    try {
+      final thread = await ChatService.instance.getOrCreateDirectThread(
+        providerId: providerId,
+        providerName: _providerName,
+        providerPhoto: _providerPhoto,
+      );
+      if (!mounted) {
+        return;
+      }
+      final roomId = thread?['id']?.toString();
+      if (roomId == null || roomId.isEmpty) {
+        _showSnack(_l10n.cpCouldNotOpenChat);
+        return;
+      }
+
+      await context.pushNamed(
+        ChatPageWidget.routeName,
+        pathParameters: {'roomId': roomId},
+        extra: <String, dynamic>{
+          'providerName': _providerName,
+          'providerPhoto': _providerPhoto,
+        },
+      );
+    } catch (e, stackTrace) {
+      LoggingService.error(
+        'Failed to open in-app chat',
+        tag: 'ProductPage',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      if (mounted) {
+        _showSnack(_l10n.cpCouldNotOpenChat);
+      }
+    }
+  }
+
+  Future<void> _startInAppCall() async {
+    final calleeId = int.tryParse(widget.providerId.trim());
+    if (calleeId == null) {
+      _showSnack(_l10n.cpCannotContact);
+      return;
+    }
+
+    await CallAcceptPermissionSheet.show(
+      context,
+      callType: CallType.audio,
+      onPermissionGranted: () => _initiateInAppCall(calleeId),
+    );
+  }
+
+  Future<void> _initiateInAppCall(int calleeId) async {
+    try {
+      final thread = await ChatService.instance.getOrCreateDirectThread(
+        providerId: widget.providerId,
+        providerName: _providerName,
+        providerPhoto: _providerPhoto,
+      );
+      if (!mounted) {
+        return;
+      }
+      final threadId = thread?['id']?.toString();
+      if (threadId == null || threadId.isEmpty) {
+        _showSnack(_l10n.cpCouldNotOpenChat);
+        return;
+      }
+
+      await ShphChatApi.instance.initiateCall({
+        'thread_id': threadId,
+        'callee_id': calleeId,
+        'media_type': 'audio',
+      });
+    } catch (e, stackTrace) {
+      LoggingService.error(
+        'Failed to initiate in-app call',
+        tag: 'ProductPage',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      if (mounted) {
+        _showSnack(_l10n.cpCouldNotOpenDialer);
+      }
+    }
+  }
+
+  Future<void> _callByNumber() async {
+    final phone = _providerPhone.trim();
+    if (phone.isEmpty) {
+      _showSnack(_l10n.cpNoMobile);
+      return;
+    }
+    try {
+      await launchURL('tel:$phone');
+    } catch (e, stackTrace) {
+      LoggingService.error(
+        'Failed to launch phone dialer',
+        tag: 'ProductPage',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      if (mounted) {
+        _showSnack(_l10n.cpCouldNotOpenDialer);
+      }
+    }
+  }
+
+  Future<void> _textViaSms() async {
+    final phone = _providerPhone.trim();
+    if (phone.isEmpty) {
+      _showSnack(_l10n.cpNoMobile);
+      return;
+    }
+    try {
+      await launchURL('sms:$phone');
+    } catch (e, stackTrace) {
+      LoggingService.error(
+        'Failed to launch SMS',
+        tag: 'ProductPage',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      if (mounted) {
+        _showSnack(_l10n.cpCouldNotOpenDialer);
+      }
+    }
+  }
+
+  void _showSnack(String message) {
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _openBooking() {

@@ -2523,6 +2523,18 @@ class AppLocalizationsEs extends AppLocalizations {
   String get cpCouldNotOpenDialer => 'Could not launch phone dialer';
 
   @override
+  String get caCallByNumber => 'Llamar por número';
+
+  @override
+  String get caInAppCall => 'Llamar usando la app';
+
+  @override
+  String get caTextSms => 'Texto por SMS';
+
+  @override
+  String get caInAppChat => 'Chatear en la app';
+
+  @override
   String get epTitle => 'Edit Profile';
 
   @override
@@ -3957,6 +3969,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get ccAllowMic => 'Allow Microphone';
+
+  @override
+  String get ccOpenSettings => 'Abrir ajustes';
 
   @override
   String get ccNoInternet => 'No internet connection';

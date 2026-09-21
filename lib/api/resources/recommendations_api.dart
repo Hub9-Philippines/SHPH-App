@@ -1,4 +1,5 @@
 import '/api/models/nearby_recommendation.dart';
+import '/api/models/recommendation_item.dart';
 import '/api/shph_api_client.dart';
 
 /// Recommendations endpoints from SHPH API.yaml (`/api/recommendations/*`).
@@ -30,6 +31,25 @@ class ShphRecommendationsApi {
     final list = response.data ?? const [];
     return list
         .map((item) => NearbyRecommendation.fromJson(
+              item is Map<String, dynamic>
+                  ? item
+                  : <String, dynamic>{},
+            ))
+        .where((item) => item.listing.id != 0)
+        .toList();
+  }
+
+  /// POST /api/recommendations/user/ — personalized recommendations derived
+  /// from the user's booking history. Each item embeds a `RecommendationListing`.
+  Future<List<RecommendationItem>> user({int limit = 10}) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/api/recommendations/user/',
+      data: {'limit': limit},
+    );
+    final list = response.data?['recommendations'] as List<dynamic>? ??
+        const [];
+    return list
+        .map((item) => RecommendationItem.fromJson(
               item is Map<String, dynamic>
                   ? item
                   : <String, dynamic>{},

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '/components/cupertino_ui/app_button.dart';
 import '/l10n/app_localizations.dart';
@@ -45,8 +46,62 @@ class CallAcceptPermissionSheet extends StatefulWidget {
 class _CallAcceptPermissionSheetState extends State<CallAcceptPermissionSheet> {
   bool _granted = false;
   bool _denied = false;
+  bool _permanentlyDenied = false;
+  bool _isRequesting = false;
 
   AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
+  List<Permission> get _requiredPermissions =>
+      widget.callType == CallType.video
+          ? [Permission.camera, Permission.microphone]
+          : [Permission.microphone];
+
+  bool _isGranted(PermissionStatus status) =>
+      status == PermissionStatus.granted || status == PermissionStatus.limited;
+
+  Future<void> _requestPermissions() async {
+    setState(() {
+      _isRequesting = true;
+      _granted = false;
+      _denied = false;
+      _permanentlyDenied = false;
+    });
+
+    final statuses = <PermissionStatus>[];
+    for (final permission in _requiredPermissions) {
+      statuses.add(await permission.request());
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    final granted = statuses.every(_isGranted);
+    setState(() {
+      _isRequesting = false;
+      if (granted) {
+        _granted = true;
+      } else {
+        _denied = true;
+        _permanentlyDenied = statuses
+            .any((status) => status == PermissionStatus.permanentlyDenied);
+      }
+    });
+
+    if (granted) {
+      widget.onPermissionGranted?.call();
+    }
+  }
+
+  Future<void> _openAppSettings() async {
+    final opened = await openAppSettings();
+    if (!mounted) {
+      return;
+    }
+    if (opened) {
+      Navigator.of(context).pop();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -129,17 +184,23 @@ class _CallAcceptPermissionSheetState extends State<CallAcceptPermissionSheet> {
                 ],
               ),
             ),
+          if (_permanentlyDenied) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton.icon(
+                onPressed: _openAppSettings,
+                icon: const Icon(Icons.settings_rounded, size: 18),
+                label: Text(_l10n.ccOpenSettings),
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
             child: AppButton(
-              onPressed: () {
-                setState(() {
-                  _granted = true;
-                  _denied = false;
-                });
-                widget.onPermissionGranted?.call();
-              },
+              onPressed: _isRequesting || _granted ? null : _requestPermissions,
+              loading: _isRequesting,
               backgroundColor: theme.primary,
               foregroundColor: theme.onPrimary,
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -155,10 +216,12 @@ class _CallAcceptPermissionSheetState extends State<CallAcceptPermissionSheet> {
           SizedBox(
             width: double.infinity,
             child: AppButton(
-              onPressed: () {
-                widget.onDecline?.call();
-                Navigator.of(context).pop();
-              },
+              onPressed: _isRequesting
+                  ? null
+                  : () {
+                      widget.onDecline?.call();
+                      Navigator.of(context).pop();
+                    },
               variant: AppButtonVariant.text,
               child: Text(_l10n.ccDecline),
             ),

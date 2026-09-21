@@ -92,8 +92,13 @@ class ChatService {
       return null;
     }
 
+    final parsedId = int.tryParse(providerId.trim());
+    if (parsedId == null) {
+      return null;
+    }
+
     try {
-      return await _chatApi.getOrCreateThreadForBooking('');
+      return await _chatApi.getOrCreateDirectThread(parsedId);
     } catch (e) {
       LoggingService.error('getOrCreateDirectThread failed: $e',
           tag: 'ChatService');

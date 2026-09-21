@@ -58,4 +58,13 @@ class ShphChatApi {
     );
     return response.data ?? {};
   }
+
+  Future<Map<String, dynamic>> getOrCreateDirectThread(
+      int providerId) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/api/chat/threads/direct/',
+      data: {'provider_id': providerId},
+    );
+    return response.data ?? {};
+  }
 }

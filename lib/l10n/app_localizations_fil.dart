@@ -2540,6 +2540,18 @@ class AppLocalizationsFil extends AppLocalizations {
   String get cpCouldNotOpenDialer => 'Hindi mabuksan ang phone dialer';
 
   @override
+  String get caCallByNumber => 'Tumawag sa numero';
+
+  @override
+  String get caInAppCall => 'Tumawag gamit ang app';
+
+  @override
+  String get caTextSms => 'Text gamit ang SMS';
+
+  @override
+  String get caInAppChat => 'Mag-chat sa app';
+
+  @override
   String get epTitle => 'I-edit ang Profile';
 
   @override
@@ -3982,6 +3994,9 @@ class AppLocalizationsFil extends AppLocalizations {
 
   @override
   String get ccAllowMic => 'I-allow ang Microphone';
+
+  @override
+  String get ccOpenSettings => 'Buksan ang mga setting';
 
   @override
   String get ccNoInternet => 'Walang internet connection';

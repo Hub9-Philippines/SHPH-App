@@ -16,6 +16,7 @@ class BookingDetailsModel extends FlutterFlowModel<BookingDetailsWidget> {
   String? errorMessage;
   BookingsRow? booking;
   Map<String, dynamic>? serviceListing;
+  String? providerPhone;
 
   @override
   void initState(BuildContext context) {

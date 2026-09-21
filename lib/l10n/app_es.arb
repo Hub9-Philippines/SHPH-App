@@ -26,6 +26,7 @@
   "logOutTitle": "Cerrar sesión",
   "logOutConfirm": "¿Está seguro de que desea cerrar sesión?",
   "cancel": "Cancelar",
+  "ccOpenSettings": "Abrir ajustes",
   "logOutAction": "Cerrar sesión",
 
   "currentLanguage": "Idioma actual",
@@ -122,5 +123,9 @@
   "emTitle": "Ayuda de emergencia",
   "emSubtitle": "Servicios urgentes en tu zona, con despacho inmediato.",
   "emEmpty": "No hay servicios de emergencia disponibles en este momento.",
-  "emClose": "Cerrar"
+  "emClose": "Cerrar",
+  "caCallByNumber": "Llamar por número",
+  "caInAppCall": "Llamar usando la app",
+  "caTextSms": "Texto por SMS",
+  "caInAppChat": "Chatear en la app"
 }

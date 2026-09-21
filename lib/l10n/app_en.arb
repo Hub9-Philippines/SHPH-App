@@ -822,6 +822,10 @@
   "cpMessageNotSent": "Message could not be sent.",
   "cpNoMobile": "No mobile number available",
   "cpCouldNotOpenDialer": "Could not launch phone dialer",
+  "caCallByNumber": "Call by number",
+  "caInAppCall": "Call using the app",
+  "caTextSms": "Text via SMS",
+  "caInAppChat": "Chat in app",
 
 
   "epTitle": "Edit Profile",
@@ -1280,6 +1284,7 @@
   "ccAccessGranted": "Access granted!",
   "ccAllowCamMic": "Allow Camera & Microphone",
   "ccAllowMic": "Allow Microphone",
+  "ccOpenSettings": "Open settings",
   "ccNoInternet": "No internet connection",
   "ccSeasonalDeals": "Explore Seasonal Deals",
   "cc60Off": "Get 60% OFF!",
