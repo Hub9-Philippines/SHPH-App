@@ -93,8 +93,18 @@ class ContactActionSheet extends StatelessWidget {
             null,
           ),
         ] else ...[
-          (ContactActionChoice.callByNumber, Icons.call_rounded, l10n.caCallByNumber, l10n.cpPhoneUnavailable),
-          (ContactActionChoice.textSms, Icons.sms_outlined, l10n.caTextSms, l10n.cpPhoneUnavailable),
+          (
+            ContactActionChoice.callByNumber,
+            Icons.call_rounded,
+            l10n.caCallByNumber,
+            l10n.cpPhoneUnavailable
+          ),
+          (
+            ContactActionChoice.textSms,
+            Icons.sms_outlined,
+            l10n.caTextSms,
+            l10n.cpPhoneUnavailable
+          ),
         ],
       ];
     }
@@ -226,40 +236,43 @@ class _OptionTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
         border: Border.all(color: theme.border),
       ),
-      child: ListTile(
-        onTap: enabled ? onTap : null,
-        leading: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: enabled ? clipColor : theme.border,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Icon(
-            icon,
-            color: enabled ? clipIcon : theme.textTertiary,
-            size: 22,
-          ),
-        ),
-        title: Text(
-          label,
-          style: theme.bodyMedium.override(
-            font: GoogleFonts.plusJakartaSans(
-              fontWeight: FontWeight.w600,
+      child: Material(
+        type: MaterialType.transparency,
+        child: ListTile(
+          onTap: enabled ? onTap : null,
+          leading: Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: enabled ? clipColor : theme.border,
+              borderRadius: BorderRadius.circular(14),
             ),
-            color: enabled ? labelColor : theme.textTertiary,
+            child: Icon(
+              icon,
+              color: enabled ? clipIcon : theme.textTertiary,
+              size: 22,
+            ),
           ),
+          title: Text(
+            label,
+            style: theme.bodyMedium.override(
+              font: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w600,
+              ),
+              color: enabled ? labelColor : theme.textTertiary,
+            ),
+          ),
+          subtitle: subtitle != null
+              ? Text(
+                  subtitle!,
+                  style: theme.bodySmall.override(
+                    font: GoogleFonts.plusJakartaSans(),
+                    color: theme.secondaryText,
+                  ),
+                )
+              : null,
+          trailing: enabled ? const Icon(Icons.chevron_right_rounded) : null,
         ),
-        subtitle: subtitle != null
-            ? Text(
-                subtitle!,
-                style: theme.bodySmall.override(
-                  font: GoogleFonts.plusJakartaSans(),
-                  color: theme.secondaryText,
-                ),
-              )
-            : null,
-        trailing: enabled ? const Icon(Icons.chevron_right_rounded) : null,
       ),
     );
   }

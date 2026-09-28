@@ -89,13 +89,16 @@ class ShphBooking {
   /// The deployed serializer requires `scheduled_at` (the working web client
   /// always sends it and reads its field errors), so all three schedule keys
   /// derive from the single [scheduledAt] value. `total_price` is readOnly
-  /// server-side and must NOT be sent.
+  /// server-side and must NOT be sent. `status` is included so non-default
+  /// flows (e.g. `inquiry` bookings that back pre-booking chat threads) can
+  /// set it, matching the web client's `services.createBooking({ status })`.
   Map<String, dynamic> toCreateJson({
     required DateTime scheduledAt,
     String? notes,
   }) {
     return {
       'listing': listing,
+      'status': status,
       'scheduled_at': scheduledAt.toIso8601String(),
       'scheduled_date':
           '${scheduledAt.year.toString().padLeft(4, '0')}-${scheduledAt.month.toString().padLeft(2, '0')}-${scheduledAt.day.toString().padLeft(2, '0')}',

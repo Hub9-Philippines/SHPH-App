@@ -26,12 +26,18 @@ class ShphBookingRepository implements BookingRepository {
   double? lastEstFeeMax;
   bool lastBroadcastSucceeded = false;
 
+  /// Non-null when the last on-demand broadcast attempt failed (API error or
+  /// missing job id). Live matching uses this to distinguish a real failure
+  /// from the no-category preview fallback.
+  String? lastBroadcastError;
+
   void _resetBroadcastResult() {
     lastJobId = null;
     lastProviderCount = null;
     lastEstFeeMin = null;
     lastEstFeeMax = null;
     lastBroadcastSucceeded = false;
+    lastBroadcastError = null;
   }
 
   @override
@@ -65,6 +71,15 @@ class ShphBookingRepository implements BookingRepository {
   /// UI can show authoritative matching info instead of fabricated numbers.
   Future<void> _broadcastOnDemandJob(
       BookingDraft draft, String bookingId) async {
+    // [bookingId] kept for signature stability — see [broadcastOnDemandJobOnly].
+    await broadcastOnDemandJobOnly(draft);
+  }
+
+  /// Re-runs only the on-demand broadcast for an already-created booking.
+  /// Used by live matching's failure-card retry; results (job id, provider
+  /// count, fee range, error) land in the same [lastJobId] fields.
+  Future<void> broadcastOnDemandJobOnly(BookingDraft draft) async {
+    _resetBroadcastResult();
     final categoryId = draft.serviceCategoryId;
     if (categoryId == null) {
       LoggingService.warning(
@@ -74,7 +89,8 @@ class ShphBookingRepository implements BookingRepository {
       return;
     }
     try {
-      final payload = <String, dynamic>{
+      // Mirrors the web app's buildCreatePayload(): only fields the backend's
+      // OnDemandJobRequest schema actually declares. booking_ref / a synthetic      // scheduled_for were never part of the contract and rejected nothing,      // but a wrong extra field risks 400s and hides the real error.      final payload = <String, dynamic>{
         'category': categoryId,
         'client_lat': draft.latitude,
         'client_lng': draft.longitude,
@@ -84,10 +100,6 @@ class ShphBookingRepository implements BookingRepository {
           'address_detail':
               '${draft.address.line1}, ${draft.address.city}'.trim(),
         'radius_km': _broadcastRadiusKm(draft),
-        if (draft.urgency == BookingUrgency.rightNow ||
-            draft.urgency == BookingUrgency.laterToday)
-          'scheduled_for': _nowIso(),
-        'booking_ref': bookingId,
       };
 
       final response = await ShphOnDemandJobsApi.instance.createJob(payload);
@@ -110,6 +122,7 @@ class ShphBookingRepository implements BookingRepository {
       );
     } catch (e) {
       lastBroadcastSucceeded = false;
+      lastBroadcastError = e.toString();
       LoggingService.error(
         'On-demand broadcast failed: $e',
         tag: 'BookingRepository',
@@ -122,14 +135,6 @@ class ShphBookingRepository implements BookingRepository {
     // Keep the client honest: start with a small radius for ASAP, and let the
     // server drive expand-radius during the search.
     return 4;
-  }
-
-  static String _nowIso() {
-    final now = DateTime.now();
-    return '${now.year}-${now.month.toString().padLeft(2, '0')}-'
-        '${now.day.toString().padLeft(2, '0')}T'
-        '${now.hour.toString().padLeft(2, '0')}:'
-        '${now.minute.toString().padLeft(2, '0')}:00';
   }
 
   @override

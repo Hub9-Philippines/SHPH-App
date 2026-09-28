@@ -3,8 +3,13 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '/components/cupertino_ui/app_activity_indicator.dart';
 import '/components/cupertino_ui/cupertino_page_header.dart';
+import '/components/contact_action_sheet.dart';
+import '/index.dart'
+    show ChatPageWidget, ContactProviderWidget;
 import '/pages/provider_reviews/provider_reviews_widget.dart';
 import '/pages/product_page/product_page_widget.dart';
+import '/services/chat_service.dart';
+import '/services/logging_service.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
@@ -174,8 +179,114 @@ class _ProviderProfileWidgetState extends State<ProviderProfileWidget> {
                   color: theme.onPrimary.withValues(alpha: 0.82),
                 )),
           ],
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _onContactPressed,
+              icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
+              label: Text(_l10n.ppContact),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(46),
+                foregroundColor: theme.onPrimary,
+                side: BorderSide(
+                  color: theme.onPrimary.withValues(alpha: 0.6),
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                textStyle: GoogleFonts.plusJakartaSans(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
+    );
+  }
+
+  /// Opens the shared contact options sheet. Phone availability is unknown
+  /// on the bare provider payload, so phone-dependent rows stay enabled and
+  /// the sheet's handlers degrade gracefully (same as the product page).
+  Future<void> _onContactPressed() async {
+    final provider = _model.provider ?? const <String, dynamic>{};
+    final name = provider['display_name']?.toString() ??
+        provider['first_name']?.toString() ??
+        _l10n.ppfProvider;
+    final choice = await showContactActionSheet(
+      context,
+      kind: ContactActionKind.all,
+      providerName: name,
+      phoneAvailable: true,
+    );
+    if (!mounted || choice == null) {
+      return;
+    }
+    final providerId = widget.providerId.toString();
+    switch (choice) {
+      case ContactActionChoice.inAppChat:
+        await _openInAppChat(providerId, name);
+      case ContactActionChoice.inAppCall:
+      case ContactActionChoice.callByNumber:
+      case ContactActionChoice.textSms:
+        await _openContactProviderPage();
+    }
+  }
+
+  /// Opens a direct thread with this provider through the existing chat
+  /// service, then routes to the chat room.
+  Future<void> _openInAppChat(String providerId, String name) async {
+    final parsed = int.tryParse(providerId.trim());
+    if (parsed == null) {
+      await _openContactProviderPage();
+      return;
+    }
+    try {
+      final thread = await ChatService.instance.getOrCreateDirectThread(
+        providerId: providerId,
+        providerName: name,
+      );
+      final roomId = thread?['id']?.toString();
+      if (!mounted || roomId == null || roomId.isEmpty) {
+        await _openContactProviderPage();
+        return;
+      }
+      await context.pushNamed(
+        ChatPageWidget.routeName,
+        pathParameters: {'roomId': roomId},
+        extra: <String, dynamic>{
+          'providerName': name,
+          'providerPhoto':
+              _model.provider?['photo_url']?.toString() ?? '',
+        },
+      );
+    } catch (e) {
+      LoggingService.error(
+        'Provider profile chat failed: $e',
+        tag: 'ProviderProfile',
+        error: e,
+      );
+      if (mounted) {
+        await _openContactProviderPage();
+      }
+    }
+  }
+
+  /// Hands the remaining channels (call/SMS) to the dedicated contact
+  /// provider page, which owns phone lookup and dialer intents.
+  Future<void> _openContactProviderPage() async {
+    final provider = _model.provider ?? const <String, dynamic>{};
+    await context.pushNamed(
+      ContactProviderWidget.routeName,
+      extra: <String, dynamic>{
+        'providerId': widget.providerId.toString(),
+        'providerName': provider['display_name']?.toString() ??
+            provider['first_name']?.toString() ??
+            _l10n.ppfProvider,
+        'providerPhoto': provider['photo_url']?.toString(),
+      },
     );
   }
 

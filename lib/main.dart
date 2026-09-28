@@ -8,8 +8,12 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 
 import '/api/shph_api.dart';
+import '/components/audio_call_overlay.dart';
+import '/components/incoming_call_overlay.dart';
+import '/components/video_call_overlay.dart';
 import '/flutter_flow/token_refresh_manager.dart';
 import '/router/app_router.dart';
+import '/services/call_signal_models.dart';
 import '/theme/app_theme.dart';
 // Authentication imports - Using SHPH API for auth
 import 'auth/auth_manager_factory.dart';
@@ -22,8 +26,10 @@ import '/main/home/home_redesign_widget.dart';
 import 'index.dart';
 import 'l10n/app_localizations.dart';
 import 'services/auth_service.dart';
+import 'services/call_session_controller.dart';
 import 'services/connectivity_service.dart';
 import 'services/error_handler.dart';
+import 'services/websocket_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -79,7 +85,7 @@ class MyApp extends StatefulWidget {
       context.findAncestorStateOfType<_MyAppState>()!;
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   ThemeMode _themeMode = AppTheme.themeMode;
 
   late AppStateNotifier _appStateNotifier;
@@ -104,6 +110,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
     _appStateNotifier = AppStateNotifier.instance;
     _router =
@@ -116,6 +123,14 @@ class _MyAppState extends State<MyApp> {
     // Start automatic token refresh monitoring (Fix #5: Token Refresh Interceptor)
     TokenRefreshManager().startTokenRefreshMonitoring();
 
+    // Realtime layer: websocket + call session. Connects only when a session
+    // exists; auth transitions reconnect/disconnect below.
+    CallSessionController.instance; // constructs + subscribes to signaling
+    AuthService.instance.addListener(_onCallAuthChanged);
+    if (AuthService.instance.isAuthenticated) {
+      ShphWebSocketService.instance.connect();
+    }
+
     Future.delayed(
       const Duration(milliseconds: 1000),
       () => _appStateNotifier.stopShowingSplashImage(),
@@ -127,6 +142,33 @@ class _MyAppState extends State<MyApp> {
 
   void _onAuthChanged() {
     _emitCurrentUser();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      // Close the missed-call window: reconnect a dead/stale socket right
+      // away instead of waiting for the heartbeat silence timeout. A live
+      // call pings first so media doesn't fight a reconnecting socket.
+      final callActive = CallSessionController.instance.isCallActive;
+      if (AuthService.instance.isAuthenticated) {
+        unawaited(
+          ShphWebSocketService.instance.ensureAlive(pingFirst: callActive),
+        );
+      }
+    }
+  }
+
+  void _onCallAuthChanged() {
+    final authenticated = AuthService.instance.isAuthenticated;
+    if (authenticated) {
+      ShphWebSocketService.instance.connect();
+    } else {
+      // Drop the socket and any call state on logout.
+      ShphWebSocketService.instance.disconnect();
+      CallSessionController.instance.resetAfterLogout();
+    }
   }
 
   void _emitCurrentUser() {
@@ -158,7 +200,9 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     AuthService.instance.removeListener(_onAuthChanged);
+    AuthService.instance.removeListener(_onCallAuthChanged);
     widget.appState.removeListener(_onAppStateChanged);
     super.dispose();
   }
@@ -214,6 +258,11 @@ class _MyAppState extends State<MyApp> {
                           isOffline: connectivity.isOffline,
                         ),
                       ),
+                      // Global call surfaces: incoming-call banner on any
+                      // screen + the in-call overlay, which the user can
+                      // minimize to a PiP (web parity with
+                      // IncomingCallOverlay/VideoCallOverlay in App.vue).
+                      const CallLayerHost(),
                     ],
                   ),
                 )),
@@ -371,6 +420,51 @@ class _NavBarPageState extends State<NavBarPage> {
           },
         ),
       ),
+    );
+  }
+}
+
+/// Global call UI host, mounted above the router in the app shell.
+///
+/// - `ringing`: shows the incoming-call banner overlay.
+/// - `outgoing/connecting/active`: shows the full-screen call overlay for the
+///   current media type, which the user can minimize to a picture-in-picture
+///   bubble to get back to the chat room without ending the call.
+/// - `ended`: brief state; the overlay disappears on its own once the
+///   controller settles back to `idle`.
+///
+/// Web parity: the web app keeps `VideoCallOverlay` mounted globally in
+/// `App.vue` with a minimize control, so the call is a layer over the current
+/// screen rather than a pushed route. This host is mounted from
+/// `MaterialApp.router`'s `builder`, whose context sits *above* the `Router`
+/// widget, so no `GoRouter`/`Navigator` lookup is available here — which is
+/// exactly why the call surface is an overlay and not a route push.
+class CallLayerHost extends StatelessWidget {
+  const CallLayerHost({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = CallSessionController.instance;
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) {
+        switch (controller.state) {
+          case CallUiState.ringing:
+            return const IncomingCallOverlay();
+          case CallUiState.outgoing:
+          case CallUiState.connecting:
+          case CallUiState.active:
+          case CallUiState.ended:
+          case CallUiState.failed:
+            // `ended`/`failed` render the outcome panel (e.g. "Call declined")
+            // and auto-dismiss back to idle via the controller's grace timer.
+            return controller.mediaType == CallMediaType.video
+                ? const VideoCallOverlay()
+                : const AudioCallOverlay();
+          case CallUiState.idle:
+            return const SizedBox.shrink();
+        }
+      },
     );
   }
 }

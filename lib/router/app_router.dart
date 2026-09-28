@@ -490,6 +490,10 @@ class AppRouter {
                     state.uri.queryParameters['price'],
                 imageUrl: extra?['imageUrl'] as String? ??
                     state.uri.queryParameters['imageUrl'],
+                providerName: extra?['providerName'] as String?,
+                providerId: extra?['providerId'] as String?,
+                providerPhoto: extra?['providerPhoto'] as String?,
+                isVerified: extra?['isVerified'] as bool? ?? false,
               );
             },
           ),
@@ -507,6 +511,9 @@ class AppRouter {
                 bookingDate: extra?['bookingDate'] as String?,
                 bookingTime: extra?['bookingTime'] as String?,
                 notes: extra?['notes'] as String?,
+                providerName: extra?['providerName'] as String?,
+                providerPhoto: extra?['providerPhoto'] as String?,
+                isVerified: extra?['isVerified'] as bool? ?? false,
               );
             },
           ),

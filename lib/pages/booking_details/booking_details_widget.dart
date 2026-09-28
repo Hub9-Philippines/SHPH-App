@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart' as webrtc;
 import 'package:google_fonts/google_fonts.dart';
 
-import '/api/resources/chat_api.dart';
 import '/api/resources/providers_api.dart';
 import '/api/resources/services_api.dart';
 import '/backend/supabase/database/tables/bookings.dart';
@@ -15,7 +15,9 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import '/l10n/app_localizations.dart';
 import '/services/bookings_service.dart';
+import '/services/call_session_controller.dart';
 import '/services/chat_service.dart';
+import '/services/in_app_call_launcher.dart';
 import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
 import 'booking_details_model.dart';
@@ -276,6 +278,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
         providerId: providerId,
         providerName: _providerName,
         providerPhoto: _model.serviceListing?['provider_photo'] as String?,
+        listingId: _model.serviceListing?['id'] as int?,
       );
       if (!mounted) {
         return;
@@ -314,44 +317,63 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
       return;
     }
 
+    // Permission gate acquires the mic stream before the call starts so a
+    // first-ever call works (web parity with CallPermissionPage).
     await CallAcceptPermissionSheet.show(
       context,
       callType: CallType.audio,
-      onPermissionGranted: () {
-        _initiateInAppCall(calleeId, providerId!);
+      onMediaAcquired: (stream) {
+        _initiateInAppCall(calleeId, providerId!, preAcquiredStream: stream);
       },
     );
   }
 
-  Future<void> _initiateInAppCall(int calleeId, String providerId) async {
+  Future<void> _initiateInAppCall(
+    int calleeId,
+    String providerId, {
+    webrtc.MediaStream? preAcquiredStream,
+  }) async {
     try {
       final thread = await ChatService.instance.getOrCreateDirectThread(
         providerId: providerId,
         providerName: _providerName,
         providerPhoto: _model.serviceListing?['provider_photo'] as String?,
+        listingId: _model.serviceListing?['id'] as int?,
       );
       if (!mounted) {
+        preAcquiredStream?.getTracks().forEach((t) => t.stop());
         return;
       }
       final threadId = thread?['id']?.toString();
       if (threadId == null || threadId.isEmpty) {
+        preAcquiredStream?.getTracks().forEach((t) => t.stop());
         _showSnack(_l10n.cpCouldNotOpenChat);
         return;
       }
 
-      await ShphChatApi.instance.initiateCall({
-        'thread_id': threadId,
-        'callee_id': calleeId,
-        'media_type': 'audio',
-      });
+      // The call is placed from inside the direct chat room (web parity with
+      // ContactProviderPage.vue). The in-call surface is a global overlay, so
+      // the user can minimize it back to a PiP and keep chatting.
+      await InAppCallLauncher.startInChatRoom(
+        context: context,
+        threadId: threadId,
+        calleeId: calleeId.toString(),
+        participant: CallParticipant(
+          id: calleeId.toString(),
+          name: _providerName,
+          photo: _model.serviceListing?['provider_photo'] as String?,
+        ),
+        preAcquiredStream: preAcquiredStream,
+      );
     } catch (e) {
+      preAcquiredStream?.getTracks().forEach((t) => t.stop());
       LoggingService.error(
         'Failed to initiate in-app call',
         tag: 'BookingDetails',
         error: e,
       );
       if (mounted) {
-        _showSnack(_l10n.cpCouldNotOpenDialer);
+        _showSnack(_l10n.csCallFailed);
       }
     }
   }

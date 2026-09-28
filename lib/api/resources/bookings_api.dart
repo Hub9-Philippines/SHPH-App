@@ -37,6 +37,7 @@ class ShphBookingsApi {
     required int listingId,
     required DateTime scheduledAt,
     String? notes,
+    String status = 'pending',
   }) async {
     final response = await _client.post<Map<String, dynamic>>(
       '/api/services/bookings/',
@@ -45,7 +46,7 @@ class ShphBookingsApi {
       data: ShphBooking(
         id: '',
         listing: listingId,
-        status: 'pending',
+        status: status,
       ).toCreateJson(
         scheduledAt: scheduledAt,
         notes: notes,

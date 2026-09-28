@@ -163,4 +163,26 @@ void main() {
     expect(find.text('Providers are busy, try again'), findsOneWidget);
     expect(find.text('Adjust booking'), findsOneWidget);
   });
+
+  testWidgets('Live matching shows retryable failure card after broadcast error',
+      (tester) async {
+    final repo = ShphBookingRepository()..lastBroadcastError = 'boom';
+    final controller = BookingFlowController(
+      repository: repo,
+      initialDraft: _draft(),
+    );
+
+    await tester.pumpWidget(
+      _buildApp(
+        controller: controller,
+        child: LiveMatchingScreen(
+          bookingDate: DateTime(2026, 7, 5),
+          showMap: false,
+        ),
+      ),
+    );
+    expect(find.text('Live matching unavailable'), findsOneWidget);
+    expect(find.text('Retry live search'), findsOneWidget);
+    expect(find.text('View booking details'), findsOneWidget);
+  });
 }

@@ -617,6 +617,19 @@ class AppLocalizationsFil extends AppLocalizations {
       'Hindi naabot ang dispatch service, kaya preview lang ito. Naka-save ang booking mo — subukang muli sa bookings o makipag-ugnayan sa support.';
 
   @override
+  String get bfBroadcastFailedRetryBody =>
+      'Hindi naabot ang dispatch service, kaya walang na-aabot na provider. Naka-save ang booking mo — subukan muli ang search sa ibaba.';
+
+  @override
+  String get bfBroadcastRetry => 'Subukang muli ang live search';
+
+  @override
+  String get bfBroadcastRetrying => 'Sinusubukan muli...';
+
+  @override
+  String get bfViewBookingDetails => 'Tingnan ang detalye ng booking';
+
+  @override
   String get bfNearestAvailableProvider =>
       'Pinakamalapit na available na provider';
 
@@ -3219,6 +3232,61 @@ class AppLocalizationsFil extends AppLocalizations {
   String get ckSent => 'Naisend';
 
   @override
+  String get ckSearchMessages => 'Maghanap ng mga mensahe';
+
+  @override
+  String get ckSearchHint => 'Maghanap sa chat na ito';
+
+  @override
+  String get ckNoSearchResults => 'Walang tumugmang mensahe';
+
+  @override
+  String get ckStartAudioCall => 'Simulan ang audio call';
+
+  @override
+  String get ckStartVideoCall => 'Simulan ang video call';
+
+  @override
+  String get ckMoreOptions => 'Iba pang opsyon';
+
+  @override
+  String get ckViewBooking => 'Tingnan ang booking';
+
+  @override
+  String get ckBlockUser => 'I-block ang user';
+
+  @override
+  String get ckBlockConfirm =>
+      'I-block ang user na ito? Hindi na siya makakapadala ng mensahe sa iyo sa anumang chat.';
+
+  @override
+  String get ckBlockDone => 'Na-block ang user';
+
+  @override
+  String get ckBlockFailed => 'Hindi ma-block ang user. Pakisubukan muli.';
+
+  @override
+  String get ckAttach => 'Mag-attach ng larawan';
+
+  @override
+  String get ckStickers => 'Mga sticker';
+
+  @override
+  String get ckQuickReplyHello => 'Hello! Available ba ito?';
+
+  @override
+  String get ckQuickReplyTomorrow => 'Pwede ba kayo bukas?';
+
+  @override
+  String get ckQuickReplyRate => 'Magkano ang rate niyo?';
+
+  @override
+  String get ckQuickReplyThanks => 'Salamat!';
+
+  @override
+  String get ckImageMessage => 'Larawan';
+
+  @override
   String get pcTitle => 'Gumawa ng Project';
 
   @override
@@ -4936,4 +5004,68 @@ class AppLocalizationsFil extends AppLocalizations {
 
   @override
   String get emClose => 'Isara';
+
+  @override
+  String get cpCallingRinging => 'Tumatawag…';
+
+  @override
+  String get cpCallingConnecting => 'Kumokonekta…';
+
+  @override
+  String get callEndedText => 'Tapos na ang tawag';
+
+  @override
+  String get callBtnMute => 'I-mute';
+
+  @override
+  String get callBtnUnmute => 'I-unmute';
+
+  @override
+  String get callBtnCamOff => 'Nakapatay ang camera';
+
+  @override
+  String get callBtnCamOn => 'Naka-on ang camera';
+
+  @override
+  String get callBtnSpeaker => 'Speaker';
+
+  @override
+  String get callBtnSwitchCamera => 'Palit';
+
+  @override
+  String get callBtnEnd => 'Tapusin';
+
+  @override
+  String get callBtnMinimize => 'I-minimize';
+
+  @override
+  String get callBtnExpand => 'Palawakin ang tawag';
+
+  @override
+  String get csIncomingCall => 'Papasok na tawag';
+
+  @override
+  String get csCallDeclined => 'Tinanggihan ang tawag.';
+
+  @override
+  String get csCallFailed => 'Hindi matawag ngayon.';
+
+  @override
+  String get csNoAnswer => 'Walang sumagot';
+
+  @override
+  String get csCameraNeeded =>
+      'Kailangan ng access sa camera para sa video call.';
+
+  @override
+  String get callPermCameraNeeded =>
+      'Kailangan ng access sa camera para sa video call.';
+
+  @override
+  String get csConnectionFailed =>
+      'Nabigo ang koneksyon ng tawag. Pakisubukan muli.';
+
+  @override
+  String get csMediaDenied =>
+      'Kailangan ng access sa mikropono para sa mga tawag. Pakisubukan muli.';
 }

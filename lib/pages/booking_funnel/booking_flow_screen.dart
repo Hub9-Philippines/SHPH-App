@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
@@ -18,6 +20,7 @@ import 'booking_controller.dart';
 import 'booking_models.dart';
 import 'setup/booking_setup_screen.dart';
 import 'widgets/booking_flow_route.dart';
+import 'widgets/booking_map_sheet_host.dart';
 import 'widgets/booking_step_spine.dart';
 import 'widgets/location_confirmation_panel.dart';
 import 'widgets/time_selection_panel.dart';
@@ -89,8 +92,9 @@ class _CleaningBookingFlowView extends StatefulWidget {
 class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
   late LatLng _center;
   bool _isLocationConfirmed = false;
-  GoogleMapController? _mapController;
   late final bool _prefersSelectedAddressCenter;
+
+  static const double _panelMaxFraction = 0.64;
 
   @override
   void initState() {
@@ -139,21 +143,10 @@ class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
               latitude: position.latitude,
               longitude: position.longitude,
             );
-        await _animateToCurrentLocation();
       }
     } catch (_) {
       return;
     }
-  }
-
-  Future<void> _animateToCurrentLocation() async {
-    final controller = _mapController;
-    if (controller == null) {
-      return;
-    }
-    await controller.animateCamera(
-      CameraUpdate.newCameraPosition(CameraPosition(target: _center, zoom: 16)),
-    );
   }
 
   @override
@@ -161,65 +154,53 @@ class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
     final l10n = AppLocalizations.of(context)!;
     final theme = AppTheme.of(context);
     final mediaQuery = MediaQuery.of(context);
-    // The bottom sheet (~300px tall) overlaps the map's lower part: the map
-    // stays full-bleed behind it, but the camera centers the pin in the
-    // visible region between the top card and the sheet's top edge.
-    final sheetOverlap = 300.0;
-    final visibleTop = mediaQuery.padding.top + 96;
-    final visibleBottom = mediaQuery.padding.bottom + sheetOverlap;
-    final mapPadding = EdgeInsets.only(
-      // Google Maps centers the camera target inside the padded region, so
-      // equal-ish insets above/below place the pin in the middle of the area
-      // visible between the top card and the overlapping bottom sheet.
-      top: visibleTop,
-      right: 16,
-      bottom: visibleBottom,
-    );
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: _center,
-                zoom: 16,
-              ),
-              myLocationEnabled: false,
-              myLocationButtonEnabled: false,
-              padding: mapPadding,
-              zoomControlsEnabled: false,
-              compassEnabled: false,
-              mapToolbarEnabled: false,
-              scrollGesturesEnabled: false,
-              zoomGesturesEnabled: false,
-              rotateGesturesEnabled: false,
-              tiltGesturesEnabled: false,
-              onMapCreated: (controller) {
-                _mapController = controller;
-                _animateToCurrentLocation();
-              },
-              onCameraMove: (position) {
-                _center = position.target;
-              },
-              onCameraIdle: () {
-                if (!mounted) {
-                  return;
-                }
-                context.read<BookingFlowController>().setCoordinates(
-                      latitude: _center.latitude,
-                      longitude: _center.longitude,
-                    );
-              },
-              markers: {
-                Marker(
-                  markerId: const MarkerId('selected_booking_pin'),
-                  position: _center,
-                ),
-              },
+      // The host paints the map `Positioned.fill`, so full-bleed coverage is
+      // structural, and derives the camera padding from the *measured* height of
+      // whichever panel is showing — no fixed pixel overlap. The pin stays
+      // framed in the band between the top card and the panel's top edge, and
+      // the camera re-frames when the step swaps panels.
+      body: BookingMapSheetHost(
+        maxSheetFraction: _panelMaxFraction,
+        // The panel already applies its own `SafeArea(top: false)`, so the
+        // measured height includes the bottom inset.
+        includeBottomSafeArea: false,
+        topCameraPadding: 96,
+        bottomCameraPadding: 24,
+        mapBuilder: (context, cameraPadding) {
+          return GoogleMap(
+            initialCameraPosition: CameraPosition(
+              target: _center,
+              zoom: 16,
             ),
-          ),
+            myLocationEnabled: false,
+            myLocationButtonEnabled: false,
+            // Sheet-derived padding: the camera frames the pin in the visible
+            // band between the top card and the bottom sheet.
+            padding: cameraPadding,
+            zoomControlsEnabled: false,
+            compassEnabled: false,
+            mapToolbarEnabled: false,
+            scrollGesturesEnabled: false,
+            zoomGesturesEnabled: false,
+            rotateGesturesEnabled: false,
+            tiltGesturesEnabled: false,
+            onMapCreated: (controller) {
+              // Controller retained only if future framing needs it.
+            },
+            // Map gestures are all disabled, so the camera never moves after
+            // creation; no camera-event handlers are consumed on purpose.
+            markers: {
+              Marker(
+                markerId: const MarkerId('selected_booking_pin'),
+                position: _center,
+              ),
+            },
+          );
+        },
+        overlays: [
           Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
@@ -235,12 +216,12 @@ class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
               ),
             ),
           ),
-          Consumer<BookingFlowController>(
-            builder: (context, controller, _) => Positioned(
-              top: mediaQuery.padding.top + 12,
-              left: 16,
-              right: 16,
-              child: _FlowTopCard(
+          Positioned(
+            top: mediaQuery.padding.top + 12,
+            left: 16,
+            right: 16,
+            child: Consumer<BookingFlowController>(
+              builder: (context, controller, _) => _FlowTopCard(
                 stepIndex: _isLocationConfirmed ? 1 : 0,
                 title: controller.selectedServiceLabel(l10n),
                 subtitle: _heroSubtitle(controller, l10n),
@@ -260,40 +241,36 @@ class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
               ),
             ),
           ),
-          Consumer<BookingFlowController>(
-            builder: (context, controller, _) => Align(
-              alignment: Alignment.bottomCenter,
-              child: SafeArea(
-                top: false,
-                child: _isLocationConfirmed
-                    ? TimeSelectionPanel(
-                        serviceTitle: controller.selectedServiceLabel(l10n),
-                        urgency: controller.draft.urgency,
-                        scheduledDate: controller.draft.scheduledDate,
-                        scheduledTime: controller.draft.scheduledTime,
-                        onUrgencyChanged: controller.setUrgency,
-                        onPickLaterToday: _pickLaterToday,
-                        onPickScheduledSlot: _pickScheduledSlot,
-                        onNext: () => _openServiceConfig(context, controller),
-                      )
-                    : LocationConfirmationPanel(
-                        address: controller.draft.address,
-                        serviceTitle: controller.selectedServiceLabel(l10n),
-                        serviceCategoryName:
-                            controller.draft.serviceCategoryName,
-                        onEdit: () async {
-                          await _editBookingPin(context, controller);
-                        },
-                        onConfirm: () {
-                          setState(() {
-                            _isLocationConfirmed = true;
-                          });
-                        },
-                      ),
-              ),
-            ),
-          ),
         ],
+        sheet: Consumer<BookingFlowController>(
+          builder: (context, controller, _) => SafeArea(
+            top: false,
+            child: _isLocationConfirmed
+                ? TimeSelectionPanel(
+                    serviceTitle: controller.selectedServiceLabel(l10n),
+                    urgency: controller.draft.urgency,
+                    scheduledDate: controller.draft.scheduledDate,
+                    scheduledTime: controller.draft.scheduledTime,
+                    onUrgencyChanged: controller.setUrgency,
+                    onPickLaterToday: _pickLaterToday,
+                    onPickScheduledSlot: _pickScheduledSlot,
+                    onNext: () => _openServiceConfig(context, controller),
+                  )
+                : LocationConfirmationPanel(
+                    address: controller.draft.address,
+                    serviceTitle: controller.selectedServiceLabel(l10n),
+                    serviceCategoryName: controller.draft.serviceCategoryName,
+                    onEdit: () async {
+                      await _editBookingPin(context, controller);
+                    },
+                    onConfirm: () {
+                      setState(() {
+                        _isLocationConfirmed = true;
+                      });
+                    },
+                  ),
+          ),
+        ),
       ),
     );
   }
@@ -416,7 +393,6 @@ class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
       _center = LatLng(latitude, longitude);
       _isLocationConfirmed = false;
     });
-    await _animateToCurrentLocation();
   }
 
   Future<void> _editBookingPin(
@@ -489,7 +465,6 @@ class _CleaningBookingFlowViewState extends State<_CleaningBookingFlowView> {
       _center = LatLng(latitude, longitude);
       _isLocationConfirmed = false;
     });
-    await _animateToCurrentLocation();
   }
 
   String _heroSubtitle(BookingFlowController controller, AppLocalizations l10n) {

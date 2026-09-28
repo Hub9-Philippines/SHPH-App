@@ -23,6 +23,10 @@ class BookingWidget extends StatefulWidget {
     this.price,
     this.imageUrl,
     this.serviceId,
+    this.providerName,
+    this.providerId,
+    this.providerPhoto,
+    this.isVerified = false,
   });
 
   final String? serviceName;
@@ -30,6 +34,14 @@ class BookingWidget extends StatefulWidget {
   final String? price;
   final String? imageUrl;
   final int? serviceId;
+
+  /// Provider context, handed over by the service/product page's "Book now".
+  /// Display-only: the booking is created from [serviceId] and the backend
+  /// derives the provider, but the funnel shows who the booking is with.
+  final String? providerName;
+  final String? providerId;
+  final String? providerPhoto;
+  final bool isVerified;
 
   static String routeName = 'Booking';
   static String routePath = '/booking';
@@ -136,6 +148,10 @@ class _BookingWidgetState extends State<BookingWidget> {
         'category': widget.category,
         'price': widget.price,
         'imageUrl': widget.imageUrl,
+        'providerName': widget.providerName,
+        'providerId': widget.providerId,
+        'providerPhoto': widget.providerPhoto,
+        'isVerified': widget.isVerified,
         'bookingDate': _model.selectedDate!.toIso8601String(),
         'bookingTime': _model.selectedTime!.format(context),
         'notes': _model.notesController.text.isNotEmpty
@@ -354,11 +370,69 @@ class _BookingWidgetState extends State<BookingWidget> {
                           color: Colors.white,
                         ),
                   ),
+                  if ((widget.providerName ?? '').trim().isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    _buildProviderRow(),
+                  ],
                 ],
               ),
             ),
           ],
         ),
+      );
+
+  /// "Booking with <name>" line, carried over from the service page so the
+  /// funnel always names the provider the user tapped "Book now" on.
+  Widget _buildProviderRow() => Row(
+        children: [
+          ClipOval(
+            child: SizedBox(
+              width: 26,
+              height: 26,
+              child: (widget.providerPhoto ?? '').trim().isEmpty
+                  ? ColoredBox(
+                      color: Colors.white.withValues(alpha: 0.18),
+                      child: const Icon(
+                        Icons.person_rounded,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    )
+                  : Image.network(
+                      widget.providerPhoto!.trim(),
+                      width: 26,
+                      height: 26,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => ColoredBox(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        child: const Icon(
+                          Icons.person_rounded,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                      ),
+                    ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              widget.providerName!.trim(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTheme.of(context).labelMedium.override(
+                    font: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    color: Colors.white,
+                  ),
+            ),
+          ),
+          if (widget.isVerified) ...[
+            const SizedBox(width: 4),
+            const Icon(Icons.verified_rounded, color: Colors.white, size: 14),
+          ],
+        ],
       );
 
   Widget _buildServiceImage() {

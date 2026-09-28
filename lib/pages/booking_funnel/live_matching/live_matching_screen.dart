@@ -24,8 +24,11 @@ import '/utils/geo_utils.dart';
 import '/theme/app_theme.dart';
 import '../status_page.dart';
 import '../../../api/app_config.dart';
+import '../../booking_details/booking_details_widget.dart';
 import '../booking_controller.dart';
 import '../booking_models.dart';
+import '../booking_repository.dart';
+import '../widgets/booking_map_sheet_host.dart';
 
 // ────────────────────────────────────────────────────────────────────────
 // Screen
@@ -79,6 +82,10 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
   List<Map<String, dynamic>> _nearbyPros = [];
   LatLng? _providerLatLng;
   String bookingStatus = 'confirmation pending';
+
+  /// True while a user-initiated broadcast retry is in flight (failure card
+  /// spinner).
+  bool _isRetryingBroadcast = false;
 
   // ── Zoom targets per stage ─────────────────────────────────────────
   static const _zoomNearby = 16.0;
@@ -413,6 +420,47 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     });
   }
 
+  /// Re-runs ONLY the on-demand broadcast (the booking already exists) and
+  /// resumes polling on success. Used by the failure card's retry action.
+  Future<void> _retryBroadcast() async {
+    if (_isRetryingBroadcast) return;
+    final booking = context.read<BookingFlowController?>();
+    final draft = booking?.draft;
+    if (booking == null || draft == null) return;
+
+    setState(() => _isRetryingBroadcast = true);
+    try {
+      final repo = booking.repository;
+      if (repo is ShphBookingRepository) {
+        await repo.broadcastOnDemandJobOnly(draft);
+      }
+    } catch (_) {
+      // Repository records the error; the card simply re-renders it.
+    }
+    if (!mounted) return;
+    setState(() => _isRetryingBroadcast = false);
+
+    final jobId = booking.liveJobId ?? '';
+    if (jobId.isNotEmpty) {
+      // Broadcast recovered — flip back to the real polling loop.
+      _pollTimer?.cancel();
+      setState(() {
+        _liveJobId = jobId;
+        _isRealJob = true;
+        _timedOut = false;
+      });
+      if (widget.showMap) {
+        _ensureScanController();
+        _scanController?.restart();
+      }
+      _gradientController.reset();
+      _pollTimer = Timer.periodic(
+        const Duration(seconds: 3),
+        (_) => _pollTick(),
+      );
+    }
+  }
+
   void _retryProviderSearch() {
     _pollTimer?.cancel();
     _generateNearbyPros();
@@ -630,7 +678,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
               child: _mapBody(location),
             ),
 
-            // ── Layer 3: Top status badge ─────────────────────────
+            // ── Layer 3: Top status badge ────────────────────────
             if (!_timedOut)
               Positioned(
                 top: 0,
@@ -645,6 +693,10 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
                   stageIndex: _currentStage(),
                   matchedPro: _matchedPro,
                   broadcastFailed: !_isRealJob,
+                  broadcastError: booking?.liveBroadcastError,
+                  isRetryingBroadcast: _isRetryingBroadcast,
+                  onRetryBroadcast: _retryBroadcast,
+                  onViewBooking: () => _openBookingDetails(booking),
                 ),
               ),
 
@@ -659,6 +711,20 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Opens the created booking's detail page as the failure card's escape
+  /// route (the booking exists even when the broadcast failed).
+  void _openBookingDetails(BookingFlowController? booking) {
+    final bookingId = booking?.activeReferenceId;
+    if (bookingId == null || bookingId.isEmpty) {
+      return;
+    }
+    Navigator.of(context, rootNavigator: true).push(
+      MaterialPageRoute(
+        builder: (_) => BookingDetailsWidget(bookingId: bookingId),
       ),
     );
   }
@@ -945,8 +1011,6 @@ class _AssignedProviderRouteMapState extends State<_AssignedProviderRouteMap> {
   String? _routeError;
   String? _routeDistanceText;
   int? _routeEtaMinutes;
-  double _bottomSheetExtent = _collapsedSheetExtent;
-  double? _sheetContentHeight;
   bool _mapReady = false;
 
   @override
@@ -1151,27 +1215,6 @@ class _AssignedProviderRouteMapState extends State<_AssignedProviderRouteMap> {
     return '${(meters / 1000).toStringAsFixed(1)} km';
   }
 
-  double _dynamicMaxSheetExtent(double availableHeight) {
-    if (availableHeight <= 0 || _sheetContentHeight == null) {
-      return _expandedSheetExtent;
-    }
-
-    final measuredExtent = (_sheetContentHeight! / availableHeight)
-        .clamp(_collapsedSheetExtent, _expandedSheetExtent)
-        .toDouble();
-    return math.max(_collapsedSheetExtent, measuredExtent);
-  }
-
-  void _handleSheetContentHeightChanged(double height) {
-    if (((_sheetContentHeight ?? 0) - height).abs() < 1) {
-      return;
-    }
-    setState(() {
-      _sheetContentHeight = height;
-    });
-    _scheduleBoundsUpdate();
-  }
-
   bool _isBookingToday() {
     final now = DateTime.now();
     final date = widget.bookingDate;
@@ -1214,17 +1257,6 @@ class _AssignedProviderRouteMapState extends State<_AssignedProviderRouteMap> {
     );
   }
 
-  bool _handleSheetNotification(DraggableScrollableNotification notification) {
-    if ((notification.extent - _bottomSheetExtent).abs() < 0.002) {
-      return false;
-    }
-    setState(() {
-      _bottomSheetExtent = notification.extent;
-    });
-    _scheduleBoundsUpdate();
-    return false;
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -1250,117 +1282,104 @@ class _AssignedProviderRouteMapState extends State<_AssignedProviderRouteMap> {
             bookingStatus: widget.bookingStatus,
           ),
           Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final maxSheetExtent =
-                    _dynamicMaxSheetExtent(constraints.maxHeight);
-                final currentSheetExtent = _bottomSheetExtent.clamp(
-                  _collapsedSheetExtent,
-                  maxSheetExtent,
-                );
-                final mapPadding = EdgeInsets.only(
-                  top: 16,
-                  bottom: constraints.maxHeight * currentSheetExtent +
-                      bottomPadding +
-                      24,
-                  left: 16,
-                  right: 16,
-                );
-
-                return NotificationListener<DraggableScrollableNotification>(
-                  onNotification: _handleSheetNotification,
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
-                        child: GoogleMap(
-                          initialCameraPosition: CameraPosition(
-                            target: widget.clientLocation,
-                            zoom: 14,
-                          ),
-                          padding: mapPadding,
-                          zoomControlsEnabled: false,
-                          myLocationButtonEnabled: false,
-                          mapToolbarEnabled: false,
-                          markers: {
-                            Marker(
-                              markerId: const MarkerId('client_location'),
-                              position: widget.clientLocation,
-                              anchor: const Offset(0.5, 1),
-                              icon: BitmapDescriptor.defaultMarkerWithHue(
-                                BitmapDescriptor.hueAzure,
-                              ),
-                            ),
-                            Marker(
-                              markerId: const MarkerId('provider_location'),
-                              position: widget.providerLocation,
-                              anchor: const Offset(0.5, 1),
-                              icon: BitmapDescriptor.defaultMarkerWithHue(
-                                BitmapDescriptor.hueRed,
-                              ),
-                            ),
-                          },
-                          polylines: {
-                            Polyline(
-                              polylineId: const PolylineId('provider_route'),
-                              points: _routePoints.isEmpty
-                                  ? [
-                                      widget.clientLocation,
-                                      widget.providerLocation,
-                                    ]
-                                  : _routePoints,
-                              color: theme.primary,
-                              width: 5,
-                              jointType: JointType.round,
-                              startCap: Cap.roundCap,
-                              endCap: Cap.roundCap,
-                            ),
-                          },
-                          onMapCreated: (controller) {
-                            _mapController = controller;
-                            _mapReady = true;
-                            _scheduleBoundsUpdate();
-                          },
-                        ),
-                      ),
-                      Positioned.fill(
-                        child: MediaQuery.removePadding(
-                          context: context,
-                          removeBottom: true,
-                          child: DraggableScrollableSheet(
-                            initialChildSize: _collapsedSheetExtent,
-                            minChildSize: _collapsedSheetExtent,
-                            maxChildSize: maxSheetExtent,
-                            builder: (context, scrollController) =>
-                                _AssignedRouteBottomSheet(
-                              scrollController: scrollController,
-                              theme: theme,
-                              providerName: name,
-                              providerPhoto: photo,
-                              rating: rating,
-                              distanceText: distanceText,
-                              etaMinutes: etaMinutes,
-                              completedJobs: completedJobs,
-                              addressLabel: widget.addressLabel,
-                              addressLine: widget.addressLine,
-                              referenceId: widget.referenceId,
-                              routeError: _routeError,
-                              bottomInset: bottomPadding,
-                              onContentHeightChanged:
-                                  _handleSheetContentHeightChanged,
-                              bookingStatus: widget.bookingStatus,
-                              isBookingToday: _isBookingToday(),
-                              onFindAnotherProvider:
-                                  widget.onFindAnotherProvider,
-                              onViewStatus: _openStatusPage,
-                              onViewBookings: _openBookingsPage,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
+            child: BookingMapSheetHost(
+              resizable: BookingResizableSheet(
+                initialFraction: _collapsedSheetExtent,
+                minFraction: _collapsedSheetExtent,
+                maxFraction: _expandedSheetExtent,
+              ),
+              // The sheet's max extent grows with its measured content height,
+              // clamped to the collapsed/expanded bounds — the same rule the
+              // screen used to apply privately.
+              maxExtentBuilder: (availableHeight, measuredContentHeight) {
+                if (availableHeight <= 0 || measuredContentHeight == null) {
+                  return _expandedSheetExtent;
+                }
+                final measuredExtent = (measuredContentHeight! / availableHeight)
+                    .clamp(_collapsedSheetExtent, _expandedSheetExtent)
+                    .toDouble();
+                return math.max(_collapsedSheetExtent, measuredExtent);
               },
+              includeTopSafeArea: false,
+              topCameraPadding: 16,
+              bottomCameraPadding: 24,
+              horizontalCameraPadding: 16,
+              removeBottomPaddingForDraggable: true,
+              onSheetContentHeightChanged: (_) => _scheduleBoundsUpdate(),
+              mapBuilder: (context, cameraPadding) => GoogleMap(
+                initialCameraPosition: CameraPosition(
+                  target: widget.clientLocation,
+                  zoom: 14,
+                ),
+                padding: cameraPadding,
+                zoomControlsEnabled: false,
+                myLocationButtonEnabled: false,
+                mapToolbarEnabled: false,
+                markers: {
+                  Marker(
+                    markerId: const MarkerId('client_location'),
+                    position: widget.clientLocation,
+                    anchor: const Offset(0.5, 1),
+                    icon: BitmapDescriptor.defaultMarkerWithHue(
+                      BitmapDescriptor.hueAzure,
+                    ),
+                  ),
+                  Marker(
+                    markerId: const MarkerId('provider_location'),
+                    position: widget.providerLocation,
+                    anchor: const Offset(0.5, 1),
+                    icon: BitmapDescriptor.defaultMarkerWithHue(
+                      BitmapDescriptor.hueRed,
+                    ),
+                  ),
+                },
+                polylines: {
+                  Polyline(
+                    polylineId: const PolylineId('provider_route'),
+                    points: _routePoints.isEmpty
+                        ? [
+                            widget.clientLocation,
+                            widget.providerLocation,
+                          ]
+                        : _routePoints,
+                    color: theme.primary,
+                    width: 5,
+                    jointType: JointType.round,
+                    startCap: Cap.roundCap,
+                    endCap: Cap.roundCap,
+                  ),
+                },
+                onMapCreated: (controller) {
+                  _mapController = controller;
+                  _mapReady = true;
+                  _scheduleBoundsUpdate();
+                },
+              ),
+              sheetBuilder: (context, onHeightChanged, scrollController) =>
+                  _AssignedRouteBottomSheet(
+                scrollController: scrollController!,
+                theme: theme,
+                providerName: name,
+                providerPhoto: photo,
+                rating: rating,
+                distanceText: distanceText,
+                etaMinutes: etaMinutes,
+                completedJobs: completedJobs,
+                addressLabel: widget.addressLabel,
+                addressLine: widget.addressLine,
+                referenceId: widget.referenceId,
+                routeError: _routeError,
+                bottomInset: bottomPadding,
+                onContentHeightChanged: (height) {
+                  onHeightChanged(height);
+                  _scheduleBoundsUpdate();
+                },
+                bookingStatus: widget.bookingStatus,
+                isBookingToday: _isBookingToday(),
+                onFindAnotherProvider: widget.onFindAnotherProvider,
+                onViewStatus: _openStatusPage,
+                onViewBookings: _openBookingsPage,
+              ),
             ),
           ),
         ],
@@ -1876,6 +1895,10 @@ class _StatusBadge extends StatelessWidget {
     required this.stageIndex,
     this.matchedPro,
     this.broadcastFailed = false,
+    this.broadcastError,
+    this.isRetryingBroadcast = false,
+    this.onRetryBroadcast,
+    this.onViewBooking,
   });
 
   final String serviceTitle;
@@ -1890,6 +1913,14 @@ class _StatusBadge extends StatelessWidget {
   /// screen is then running an honest preview countdown instead of polling
   /// the server, and the user must be told.
   final bool broadcastFailed;
+
+  /// Repository-reported broadcast error. When non-null the card becomes a
+  /// real failure state (error message + retry + view booking) instead of the
+  /// category-less preview warning.
+  final String? broadcastError;
+  final bool isRetryingBroadcast;
+  final VoidCallback? onRetryBroadcast;
+  final VoidCallback? onViewBooking;
 
   @override
   Widget build(BuildContext context) {
@@ -1999,7 +2030,10 @@ class _StatusBadge extends StatelessWidget {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              l10n.bfBroadcastFailedBody,
+                              (broadcastError != null &&
+                                  broadcastError!.trim().isNotEmpty)
+                                  ? l10n.bfBroadcastFailedRetryBody
+                                  : l10n.bfBroadcastFailedBody,
                               style: theme.labelSmall.override(
                                 color: theme.secondaryText,
                               ),
@@ -2010,6 +2044,63 @@ class _StatusBadge extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (onRetryBroadcast != null) ...[
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: isRetryingBroadcast
+                          ? null
+                          : onRetryBroadcast,
+                      icon: isRetryingBroadcast
+                          ? SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: theme.primary,
+                              ),
+                            )
+                          : const Icon(Icons.refresh_rounded, size: 16),
+                      label: Text(
+                        isRetryingBroadcast
+                            ? l10n.bfBroadcastRetrying
+                            : l10n.bfBroadcastRetry,
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(38),
+                        side: BorderSide(color: theme.primary),
+                        foregroundColor: theme.primary,
+                        textStyle: GoogleFonts.plusJakartaSans(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppThemeData.radiusMd),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+                if (onViewBooking != null) ...[
+                  const SizedBox(height: 6),
+                  SizedBox(
+                    width: double.infinity,
+                    child: TextButton.icon(
+                      onPressed: onViewBooking,
+                      icon: const Icon(Icons.receipt_long_rounded, size: 16),
+                      label: Text(l10n.bfViewBookingDetails),
+                      style: TextButton.styleFrom(
+                        foregroundColor: theme.secondaryText,
+                        textStyle: GoogleFonts.plusJakartaSans(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ],
               const SizedBox(height: 10),
               // Stage badge row

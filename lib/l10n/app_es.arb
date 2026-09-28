@@ -127,5 +127,17 @@
   "caCallByNumber": "Llamar por número",
   "caInAppCall": "Llamar usando la app",
   "caTextSms": "Texto por SMS",
+  "cpCallingRinging": "Llamando…",
+  "cpCallingConnecting": "Conectando…",
+  "callEndedText": "Llamada finalizada",
+  "callBtnMute": "Silenciar",
+  "callBtnUnmute": "Activar micrófono",
+  "callBtnCamOff": "Cámara apagada",
+  "callBtnCamOn": "Cámara encendida",
+  "callBtnSpeaker": "Altavoz",
+  "callBtnEnd": "Colgar",
+  "csIncomingCall": "Llamada entrante",
+  "csCallDeclined": "Llamada rechazada.",
+  "csCallFailed": "No se pudo realizar la llamada en este momento.",
   "caInAppChat": "Chatear en la app"
 }

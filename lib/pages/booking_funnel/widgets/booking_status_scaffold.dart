@@ -3,6 +3,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '/components/map_radar_scan.dart';
 import '/theme/app_theme.dart';
+import 'booking_map_sheet_host.dart';
 
 const double _kDefaultSheetMaxFraction = 0.64;
 
@@ -44,81 +45,71 @@ class BookingStatusScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
-    final bottomInset = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final sheetMaxHeight = constraints.maxHeight * sheetMaxFraction;
-
-          return Stack(
-            children: [
-              Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        theme.primaryBackground,
-                        theme.secondaryBackground,
-                      ],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                  ),
-                ),
-              ),
-              if (showMap)
-                if (isDraggable)
-                  Positioned.fill(
-                    child: _RadarMapLayer(
-                      location: location,
-                      markerHue: markerHue,
-                      markers: markers,
-                      radarScan: radarScan,
-                      padding: EdgeInsets.only(bottom: 48 + bottomInset),
-                    ),
-                  )
-                else
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: sheetMaxHeight,
-                    child: _RadarMapLayer(
-                      location: location,
-                      markerHue: markerHue,
-                      markers: markers,
-                      radarScan: radarScan,
-                      padding: EdgeInsets.zero,
-                    ),
-                  ),
-              if (center != null) Center(child: center!),
-              if (isDraggable)
-                _DraggableBottomSheet(
-                  child: bottomSheet,
-                  initialFraction: sheetInitialFraction,
-                  minFraction: sheetMinFraction,
-                  maxFraction: sheetMaxDraggableFraction,
-                )
-              else
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxHeight: sheetMaxHeight),
-                    child: bottomSheet,
-                  ),
-                ),
-              if (topCard != null)
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: topCard!,
-                ),
-            ],
-          );
-        },
+      // The host paints the map `Positioned.fill` in every mode, so the map's
+      // bottom edge can never be bounded by a layout box — that bounded map was
+      // what left a band of background between the map and the sheet. The camera
+      // padding is derived from the measured sheet height, or from the sheet's
+      // live drag extent when [isDraggable].
+      body: BookingMapSheetHost(
+        maxSheetFraction: sheetMaxFraction,
+        fallbackSheetFraction: sheetMaxFraction,
+        topCameraPadding: 0,
+        bottomCameraPadding: 0,
+        horizontalCameraPadding: 0,
+        // The sheet is expected to handle its own bottom safe-area inset
+        // (`BookingStatusBottomSheet` and the draggable sheet both apply a
+        // `SafeArea(top: false)`), so the measured height must not have the
+        // inset added again.
+        includeBottomSafeArea: false,
+        includeTopSafeArea: false,
+        resizable: isDraggable
+            ? BookingResizableSheet(
+                initialFraction: sheetInitialFraction,
+                minFraction: sheetMinFraction,
+                maxFraction: sheetMaxDraggableFraction,
+              )
+            : null,
+        // Painted under the map. An opaque map hides it, so it only shows
+        // through on the map-free path.
+        background: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                theme.primaryBackground,
+                theme.secondaryBackground,
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        // The map-free path must not construct a map widget at all, so this
+        // resolves to an empty box instead of a GoogleMap.
+        mapBuilder: (context, cameraPadding) => showMap
+            ? _RadarMapLayer(
+                location: location,
+                markerHue: markerHue,
+                markers: markers,
+                radarScan: radarScan,
+                padding: cameraPadding,
+              )
+            : const SizedBox.shrink(),
+        overlays: [
+          if (center != null) Center(child: center!),
+        ],
+        sheet: bottomSheet,
+        aboveSheet: [
+          if (topCard != null)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: topCard!,
+            ),
+        ],
       ),
     );
   }
@@ -153,9 +144,54 @@ class _RadarMapLayer extends StatelessWidget {
     final scan = radarScan;
     final mapMarkers = markers ?? _defaultMarkers;
 
-    Widget map = GoogleMap(
+    Widget map = _CameraReframingMap(
+      padding: padding,
+      target: location,
+      mapMarkers: mapMarkers,
+      circles: const <Circle>{},
+    );
+
+    if (scan != null) {
+      // Rebuilds only the GoogleMap widget with fresh circle data per ripple
+      // tick; markers/tiles/camera stay untouched.
+      map = ValueListenableBuilder<Set<Circle>>(
+        valueListenable: scan,
+        builder: (context, circles, _) => _CameraReframingMap(
+          padding: padding,
+          target: location,
+          mapMarkers: mapMarkers,
+          circles: circles,
+        ),
+      );
+    }
+
+    return map;
+  }
+}
+
+/// GoogleMap with the sheet-derived camera padding. Padding shapes the
+/// camera's framing so the marker stays centered in the visible band above
+/// the sheet.
+class _CameraReframingMap extends StatelessWidget {
+  const _CameraReframingMap({
+    required this.padding,
+    required this.target,
+    required this.mapMarkers,
+    required this.circles,
+  });
+
+  /// Visible band above the sheet, expressed as map-style insets (top inset
+  /// from the screen's top edge, bottom inset from the screen's bottom edge).
+  final EdgeInsets padding;
+  final LatLng target;
+  final Set<Marker> mapMarkers;
+  final Set<Circle> circles;
+
+  @override
+  Widget build(BuildContext context) {
+    return GoogleMap(
       initialCameraPosition: CameraPosition(
-        target: location,
+        target: target,
         zoom: 16,
       ),
       zoomControlsEnabled: false,
@@ -168,34 +204,8 @@ class _RadarMapLayer extends StatelessWidget {
       zoomGesturesEnabled: false,
       padding: padding,
       markers: mapMarkers,
+      circles: circles,
     );
-
-    if (scan != null) {
-      // Rebuilds only the GoogleMap widget with fresh circle data per ripple
-      // tick; markers/tiles/camera stay untouched.
-      map = ValueListenableBuilder<Set<Circle>>(
-        valueListenable: scan,
-        builder: (context, circles, _) => GoogleMap(
-          initialCameraPosition: CameraPosition(
-            target: location,
-            zoom: 16,
-          ),
-          zoomControlsEnabled: false,
-          compassEnabled: false,
-          myLocationButtonEnabled: false,
-          mapToolbarEnabled: false,
-          rotateGesturesEnabled: false,
-          tiltGesturesEnabled: false,
-          scrollGesturesEnabled: false,
-          zoomGesturesEnabled: false,
-          padding: padding,
-          markers: mapMarkers,
-          circles: circles,
-        ),
-      );
-    }
-
-    return map;
   }
 }
 

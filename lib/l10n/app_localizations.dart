@@ -1246,6 +1246,30 @@ abstract class AppLocalizations {
   /// **'We couldn\'t reach the dispatch service, so this is a preview. Your booking is saved — retry from your bookings or contact support.'**
   String get bfBroadcastFailedBody;
 
+  /// No description provided for @bfBroadcastFailedRetryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t reach the dispatch service, so no providers are being notified. Your booking is saved — retry the search below.'**
+  String get bfBroadcastFailedRetryBody;
+
+  /// No description provided for @bfBroadcastRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry live search'**
+  String get bfBroadcastRetry;
+
+  /// No description provided for @bfBroadcastRetrying.
+  ///
+  /// In en, this message translates to:
+  /// **'Retrying...'**
+  String get bfBroadcastRetrying;
+
+  /// No description provided for @bfViewBookingDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'View booking details'**
+  String get bfViewBookingDetails;
+
   /// No description provided for @bfNearestAvailableProvider.
   ///
   /// In en, this message translates to:
@@ -5950,6 +5974,114 @@ abstract class AppLocalizations {
   /// **'Sent'**
   String get ckSent;
 
+  /// No description provided for @ckSearchMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Search messages'**
+  String get ckSearchMessages;
+
+  /// No description provided for @ckSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search in this chat'**
+  String get ckSearchHint;
+
+  /// No description provided for @ckNoSearchResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching messages'**
+  String get ckNoSearchResults;
+
+  /// No description provided for @ckStartAudioCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Start audio call'**
+  String get ckStartAudioCall;
+
+  /// No description provided for @ckStartVideoCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Start video call'**
+  String get ckStartVideoCall;
+
+  /// No description provided for @ckMoreOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'More options'**
+  String get ckMoreOptions;
+
+  /// No description provided for @ckViewBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'View booking'**
+  String get ckViewBooking;
+
+  /// No description provided for @ckBlockUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Block user'**
+  String get ckBlockUser;
+
+  /// No description provided for @ckBlockConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Block this user? They will no longer be able to message you in any chat.'**
+  String get ckBlockConfirm;
+
+  /// No description provided for @ckBlockDone.
+  ///
+  /// In en, this message translates to:
+  /// **'User blocked'**
+  String get ckBlockDone;
+
+  /// No description provided for @ckBlockFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not block this user. Please try again.'**
+  String get ckBlockFailed;
+
+  /// No description provided for @ckAttach.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach image'**
+  String get ckAttach;
+
+  /// No description provided for @ckStickers.
+  ///
+  /// In en, this message translates to:
+  /// **'Stickers'**
+  String get ckStickers;
+
+  /// No description provided for @ckQuickReplyHello.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello! Is this available?'**
+  String get ckQuickReplyHello;
+
+  /// No description provided for @ckQuickReplyTomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Can you come tomorrow?'**
+  String get ckQuickReplyTomorrow;
+
+  /// No description provided for @ckQuickReplyRate.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s your rate?'**
+  String get ckQuickReplyRate;
+
+  /// No description provided for @ckQuickReplyThanks.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you!'**
+  String get ckQuickReplyThanks;
+
+  /// No description provided for @ckImageMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo'**
+  String get ckImageMessage;
+
   /// No description provided for @pcTitle.
   ///
   /// In en, this message translates to:
@@ -9147,6 +9279,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Close'**
   String get emClose;
+
+  /// No description provided for @cpCallingRinging.
+  ///
+  /// In en, this message translates to:
+  /// **'Ringing…'**
+  String get cpCallingRinging;
+
+  /// No description provided for @cpCallingConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get cpCallingConnecting;
+
+  /// No description provided for @callEndedText.
+  ///
+  /// In en, this message translates to:
+  /// **'Call ended'**
+  String get callEndedText;
+
+  /// No description provided for @callBtnMute.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute'**
+  String get callBtnMute;
+
+  /// No description provided for @callBtnUnmute.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute'**
+  String get callBtnUnmute;
+
+  /// No description provided for @callBtnCamOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera off'**
+  String get callBtnCamOff;
+
+  /// No description provided for @callBtnCamOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera on'**
+  String get callBtnCamOn;
+
+  /// No description provided for @callBtnSpeaker.
+  ///
+  /// In en, this message translates to:
+  /// **'Speaker'**
+  String get callBtnSpeaker;
+
+  /// No description provided for @callBtnSwitchCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Flip'**
+  String get callBtnSwitchCamera;
+
+  /// No description provided for @callBtnEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'End'**
+  String get callBtnEnd;
+
+  /// No description provided for @callBtnMinimize.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimize'**
+  String get callBtnMinimize;
+
+  /// No description provided for @callBtnExpand.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand call'**
+  String get callBtnExpand;
+
+  /// No description provided for @csIncomingCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming call'**
+  String get csIncomingCall;
+
+  /// No description provided for @csCallDeclined.
+  ///
+  /// In en, this message translates to:
+  /// **'Call declined.'**
+  String get csCallDeclined;
+
+  /// No description provided for @csCallFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not place the call right now.'**
+  String get csCallFailed;
+
+  /// No description provided for @csNoAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'No answer'**
+  String get csNoAnswer;
+
+  /// No description provided for @csCameraNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera access is required for video calls.'**
+  String get csCameraNeeded;
+
+  /// No description provided for @callPermCameraNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera access is required for video calls.'**
+  String get callPermCameraNeeded;
+
+  /// No description provided for @csConnectionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Call connection failed. Please try again.'**
+  String get csConnectionFailed;
+
+  /// No description provided for @csMediaDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone access is needed for calls. Please try again.'**
+  String get csMediaDenied;
 }
 
 class _AppLocalizationsDelegate

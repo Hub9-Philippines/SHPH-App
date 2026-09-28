@@ -608,6 +608,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'We couldn\'t reach the dispatch service, so this is a preview. Your booking is saved — retry from your bookings or contact support.';
 
   @override
+  String get bfBroadcastFailedRetryBody =>
+      'We couldn\'t reach the dispatch service, so no providers are being notified. Your booking is saved — retry the search below.';
+
+  @override
+  String get bfBroadcastRetry => 'Retry live search';
+
+  @override
+  String get bfBroadcastRetrying => 'Retrying...';
+
+  @override
+  String get bfViewBookingDetails => 'View booking details';
+
+  @override
   String get bfNearestAvailableProvider => 'Nearest available provider';
 
   @override
@@ -3196,6 +3209,61 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ckSent => 'Sent';
 
   @override
+  String get ckSearchMessages => 'Search messages';
+
+  @override
+  String get ckSearchHint => 'Search in this chat';
+
+  @override
+  String get ckNoSearchResults => 'No matching messages';
+
+  @override
+  String get ckStartAudioCall => 'Start audio call';
+
+  @override
+  String get ckStartVideoCall => 'Start video call';
+
+  @override
+  String get ckMoreOptions => 'More options';
+
+  @override
+  String get ckViewBooking => 'View booking';
+
+  @override
+  String get ckBlockUser => 'Block user';
+
+  @override
+  String get ckBlockConfirm =>
+      'Block this user? They will no longer be able to message you in any chat.';
+
+  @override
+  String get ckBlockDone => 'User blocked';
+
+  @override
+  String get ckBlockFailed => 'Could not block this user. Please try again.';
+
+  @override
+  String get ckAttach => 'Attach image';
+
+  @override
+  String get ckStickers => 'Stickers';
+
+  @override
+  String get ckQuickReplyHello => 'Hello! Is this available?';
+
+  @override
+  String get ckQuickReplyTomorrow => 'Can you come tomorrow?';
+
+  @override
+  String get ckQuickReplyRate => 'What\'s your rate?';
+
+  @override
+  String get ckQuickReplyThanks => 'Thank you!';
+
+  @override
+  String get ckImageMessage => 'Photo';
+
+  @override
   String get pcTitle => 'Create Project';
 
   @override
@@ -4905,4 +4973,66 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get emClose => 'Close';
+
+  @override
+  String get cpCallingRinging => 'Ringing…';
+
+  @override
+  String get cpCallingConnecting => 'Connecting…';
+
+  @override
+  String get callEndedText => 'Call ended';
+
+  @override
+  String get callBtnMute => 'Mute';
+
+  @override
+  String get callBtnUnmute => 'Unmute';
+
+  @override
+  String get callBtnCamOff => 'Camera off';
+
+  @override
+  String get callBtnCamOn => 'Camera on';
+
+  @override
+  String get callBtnSpeaker => 'Speaker';
+
+  @override
+  String get callBtnSwitchCamera => 'Flip';
+
+  @override
+  String get callBtnEnd => 'End';
+
+  @override
+  String get callBtnMinimize => 'Minimize';
+
+  @override
+  String get callBtnExpand => 'Expand call';
+
+  @override
+  String get csIncomingCall => 'Incoming call';
+
+  @override
+  String get csCallDeclined => 'Call declined.';
+
+  @override
+  String get csCallFailed => 'Could not place the call right now.';
+
+  @override
+  String get csNoAnswer => 'No answer';
+
+  @override
+  String get csCameraNeeded => 'Camera access is required for video calls.';
+
+  @override
+  String get callPermCameraNeeded =>
+      'Camera access is required for video calls.';
+
+  @override
+  String get csConnectionFailed => 'Call connection failed. Please try again.';
+
+  @override
+  String get csMediaDenied =>
+      'Microphone access is needed for calls. Please try again.';
 }

@@ -61,6 +61,10 @@ class BookingFlowController extends ChangeNotifier {
   double? get liveEstFeeMax => _shphRepo?.lastEstFeeMax;
   bool get liveBroadcastSucceeded => _shphRepo?.lastBroadcastSucceeded ?? false;
 
+  /// Non-null when the last on-demand broadcast attempt failed (API error or
+  /// missing job id). Drives the live matching failure card.
+  String? get liveBroadcastError => _shphRepo?.lastBroadcastError;
+
   ShphBookingRepository? get _shphRepo => repository is ShphBookingRepository
       ? repository as ShphBookingRepository
       : null;

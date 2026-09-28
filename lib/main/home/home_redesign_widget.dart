@@ -42,6 +42,14 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
   late final VoidCallback _scrollListener;
   bool _isHeaderCompact = false;
 
+  /// Scroll-fraction collapse of the pinned header: 0 = fully expanded
+  /// greeting, 1 = fully compact bar. Quantized to 2% steps so the header
+  /// rebuilds ~50x per full collapse instead of per-frame.
+  double _headerCollapseProgress = 0.0;
+
+  /// Scroll offset (px) at which the header is fully collapsed.
+  static const double _headerCollapseRange = 96;
+
   List<_HomeBookingData> _bookings = const [];
   List<_HomeCategoryData> _categories = const [];
   List<_TrendingProviderData> _providers = const [];
@@ -90,9 +98,18 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
   }
 
   void _handleScroll() {
-    final compact = _scrollController.hasClients && _scrollController.offset > 28;
-    if (compact != _isHeaderCompact) {
+    if (!_scrollController.hasClients) {
+      return;
+    }
+    final raw =
+        (_scrollController.offset / _headerCollapseRange).clamp(0.0, 1.0);
+    // Quantize to 0.02 steps: enough granularity to feel continuous while
+    // keeping setState calls (and rebuild churn) to a minimum.
+    final t = (raw * 50).roundToDouble() / 50;
+    final compact = raw >= 1.0;
+    if (t != _headerCollapseProgress || compact != _isHeaderCompact) {
       setState(() {
+        _headerCollapseProgress = t;
         _isHeaderCompact = compact;
       });
     }
@@ -493,6 +510,7 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
                     avatarUrl: currentUserPhoto,
                     hasUnreadNotifications: hasUnreadNotifications,
                     isCompact: _isHeaderCompact,
+                    collapseProgress: _headerCollapseProgress,
                     onNotificationTap: () => context.pushNamed(
                       MyNotificationsWidget.routeName,
                     ),
@@ -655,9 +673,20 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
         appState.selectedLatitude,
         appState.selectedLongitude,
       );
+      // The deployed API rejects a location-less body with 400
+      // "Location required." even though the OpenAPI schema marks lat/lng
+      // nullable. Skip the round-trip entirely when we have no fix — the
+      // caller already falls back to the top-rated providers rail.
+      if (!useLocation) {
+        LoggingService.debug(
+          'Skipping nearby recommendations — no location available',
+          tag: 'HomeRedesign',
+        );
+        return const [];
+      }
       final nearby = await ShphRecommendationsApi.instance.nearby(
-        lat: useLocation ? appState.selectedLatitude : null,
-        lng: useLocation ? appState.selectedLongitude : null,
+        lat: appState.selectedLatitude,
+        lng: appState.selectedLongitude,
         radius: 10,
         limit: 10,
       );

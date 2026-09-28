@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart' as webrtc;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/api/resources/providers_api.dart';
 import '/backend/supabase/database/tables/profiles.dart';
+import '/components/call_accept_permission_sheet.dart';
 import '/components/cupertino_ui/app_text_field.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
 import '/l10n/app_localizations.dart';
+import '/services/call_session_controller.dart';
 import '/services/chat_service.dart';
+import '/services/in_app_call_launcher.dart';
 import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
 import 'contact_provider_model.dart';
@@ -134,6 +139,7 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
         providerId: providerId,
         providerName: _providerDisplayName ?? widget.providerName,
         providerPhoto: _providerPhotoUrl ?? widget.providerPhoto,
+        listingId: await _resolveFirstListingId(),
       );
       if (thread == null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -153,6 +159,28 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
           SnackBar(content: Text(_l10n.cpCouldNotOpenChat)),
         );
       }
+      return null;
+    }
+  }
+
+  /// Lazily resolves one of the provider's listing ids so the chat fallback
+  /// can create an inquiry-booking thread when the direct endpoint is
+  /// unavailable. Returns null on error or when the provider has no listings.
+  Future<int?> _resolveFirstListingId() async {
+    final providerId = widget.providerId;
+    final parsedId = int.tryParse(providerId?.trim() ?? '');
+    if (parsedId == null) {
+      return null;
+    }
+    try {
+      final listings =
+          await ShphProvidersApi.instance.listProviderListings(parsedId);
+      return listings.results.isEmpty ? null : listings.results.first.id;
+    } catch (e) {
+      LoggingService.warning(
+        'Failed to resolve provider listing for chat fallback: $e',
+        tag: 'ContactProvider',
+      );
       return null;
     }
   }
@@ -232,6 +260,65 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
     } finally {
       if (mounted) {
         setState(() => _isSending = false);
+      }
+    }
+  }
+
+  /// In-app WebRTC call through the permission gate — the media stream is
+  /// acquired here and handed to the call service so a first-ever call works
+  /// (web parity with CallPermissionPage).
+  Future<void> _startInAppCall() async {
+    if (_isOpeningChat) return;
+    await CallAcceptPermissionSheet.show(
+      context,
+      callType: CallType.audio,
+      onMediaAcquired: (stream) => _initiateInAppCall(preAcquiredStream: stream),
+    );
+  }
+
+  Future<void> _initiateInAppCall({
+    webrtc.MediaStream? preAcquiredStream,
+  }) async {
+    try {
+      final thread = await _ensureDirectThread();
+      final threadId = thread?['id']?.toString();
+      if (!mounted || threadId == null || threadId.isEmpty) {
+        preAcquiredStream?.getTracks().forEach((t) => t.stop());
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(_l10n.cpCouldNotOpenChat)),
+          );
+        }
+        return;
+      }
+      final calleeId = widget.providerId?.trim() ?? '';
+      if (calleeId.isEmpty) {
+        preAcquiredStream?.getTracks().forEach((t) => t.stop());
+        return;
+      }
+      await InAppCallLauncher.startInChatRoom(
+        context: context,
+        threadId: threadId,
+        calleeId: calleeId,
+        participant: CallParticipant(
+          id: calleeId,
+          name: _providerDisplayName ?? widget.providerName,
+          photo: _providerPhotoUrl ?? widget.providerPhoto,
+        ),
+        preAcquiredStream: preAcquiredStream,
+      );
+    } catch (e, stackTrace) {
+      preAcquiredStream?.getTracks().forEach((t) => t.stop());
+      LoggingService.error(
+        'Failed to initiate in-app call',
+        tag: 'ContactProvider',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_l10n.csCallFailed)),
+        );
       }
     }
   }
@@ -376,6 +463,35 @@ class _ContactProviderWidgetState extends State<ContactProviderWidget> {
                               ),
                             ),
                             const SizedBox(width: 12),
+                            Expanded(
+                              child: FFButtonWidget(
+                                onPressed: _startInAppCall,
+                                text: _l10n.caInAppCall,
+                                icon: const FaIcon(
+                                  FontAwesomeIcons.phoneVolume,
+                                  size: 16,
+                                ),
+                                options: FFButtonOptions(
+                                  width: double.infinity,
+                                  height: 54,
+                                  color: const Color(0xFF0F8A6C)
+                                      .withValues(alpha: 0.85),
+                                  textStyle:
+                                      AppTheme.of(context).titleSmall.override(
+                                            font: GoogleFonts.plusJakartaSans(
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                            color: Colors.white,
+                                          ),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
                             Expanded(
                               child: FFButtonWidget(
                                 onPressed: _isOpeningChat ? null : _startChat,

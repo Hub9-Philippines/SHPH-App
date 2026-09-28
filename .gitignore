@@ -96,3 +96,5 @@ temp_*.txt
 /backend/aws/cdk/node_modules/
 /provider-landing/node_modules/
 /provider-landing/.next/
+# Widget Preview related
+.widget_preview/

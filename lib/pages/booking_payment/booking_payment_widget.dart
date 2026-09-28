@@ -25,6 +25,9 @@ class BookingPaymentWidget extends StatefulWidget {
     this.bookingDate,
     this.bookingTime,
     this.notes,
+    this.providerName,
+    this.providerPhoto,
+    this.isVerified = false,
   });
 
   final int? serviceId;
@@ -35,6 +38,13 @@ class BookingPaymentWidget extends StatefulWidget {
   final String? bookingDate;
   final String? bookingTime;
   final String? notes;
+
+  /// Provider context passed along from the booking form for display. The
+  /// booking itself is created from [serviceId]; the backend derives the
+  /// provider from the listing.
+  final String? providerName;
+  final String? providerPhoto;
+  final bool isVerified;
 
   static String routeName = 'BookingPayment';
   static String routePath = '/booking-payment';
@@ -429,11 +439,69 @@ class _BookingPaymentWidgetState extends State<BookingPaymentWidget> {
                           color: Colors.white,
                         ),
                   ),
+                  if ((widget.providerName ?? '').trim().isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    _buildProviderRow(),
+                  ],
                 ],
               ),
             ),
           ],
         ),
+      );
+
+  /// Names the provider carried over from the booking form, so the payment
+  /// step always shows who the money is going to.
+  Widget _buildProviderRow() => Row(
+        children: [
+          ClipOval(
+            child: SizedBox(
+              width: 26,
+              height: 26,
+              child: (widget.providerPhoto ?? '').trim().isEmpty
+                  ? ColoredBox(
+                      color: Colors.white.withValues(alpha: 0.18),
+                      child: const Icon(
+                        Icons.person_rounded,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    )
+                  : Image.network(
+                      widget.providerPhoto!.trim(),
+                      width: 26,
+                      height: 26,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => ColoredBox(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        child: const Icon(
+                          Icons.person_rounded,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                      ),
+                    ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              widget.providerName!.trim(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTheme.of(context).labelMedium.override(
+                    font: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    color: Colors.white,
+                  ),
+            ),
+          ),
+          if (widget.isVerified) ...[
+            const SizedBox(width: 4),
+            const Icon(Icons.verified_rounded, color: Colors.white, size: 14),
+          ],
+        ],
       );
 
   Widget _buildScheduleSummary() => Container(

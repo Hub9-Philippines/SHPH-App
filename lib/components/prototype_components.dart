@@ -1,3 +1,5 @@
+import 'dart:ui' show lerpDouble;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -129,6 +131,7 @@ class PrototypeAppHeader extends StatelessWidget {
     required this.onAvatarTap,
     required this.onSearchTap,
     this.onMicTap,
+    this.collapseProgress,
   });
 
   final String userName;
@@ -140,9 +143,18 @@ class PrototypeAppHeader extends StatelessWidget {
   final VoidCallback onSearchTap;
   final VoidCallback? onMicTap;
 
+  /// 0.0 = fully expanded greeting view, 1.0 = fully compact bar. When
+  /// provided, padding, greeting opacity, and the search bar collapse
+  /// continuously with scroll position; [isCompact] then only controls the
+  /// surface-color flip at the fully-collapsed end. Null keeps the old
+  /// binary two-state behavior.
+  final double? collapseProgress;
+
   @override
   Widget build(BuildContext context) {
     final hasAvatar = avatarUrl.trim().isNotEmpty;
+    final t = (collapseProgress ?? (isCompact ? 1.0 : 0.0))
+        .clamp(0.0, 1.0);
     final actions = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -185,47 +197,56 @@ class PrototypeAppHeader extends StatelessWidget {
       ],
     );
 
+    // Continuous interpolation between the two states.
+    final paddingTop = lerpDouble(12, 8, t)!;
+    final paddingBottom = lerpDouble(16, 8, t)!;
+    final greetingOpacity = 1.0 - t;
+    final searchBarHeight = lerpDouble(48.0, 40.0, t)!;
+
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 240),
+      duration: collapseProgress == null
+          ? const Duration(milliseconds: 240)
+          : Duration.zero,
       curve: Curves.easeInOut,
-      padding:
-          EdgeInsets.fromLTRB(20, isCompact ? 8 : 12, 20, isCompact ? 8 : 16),
+      padding: EdgeInsets.fromLTRB(20, paddingTop, 20, paddingBottom),
       decoration: BoxDecoration(
-        color: isCompact ? AppDesignTokens.surface : null,
-        gradient: isCompact
-            ? null
-            : const LinearGradient(
+        color: Color.lerp(
+          null,
+          AppDesignTokens.surface,
+          t,
+        ),
+        gradient: t < 1.0
+            ? LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Color(0xFFECFDF5),
-                  Color(0xFFF4FFFC),
-                  AppDesignTokens.canvas
+                  Color.lerp(const Color(0xFFECFDF5),
+                      AppDesignTokens.surface, t)!,
+                  Color.lerp(const Color(0xFFF4FFFC),
+                      AppDesignTokens.surface, t)!,
+                  Color.lerp(AppDesignTokens.canvas,
+                      AppDesignTokens.surface, t)!,
                 ],
-              ),
+              )
+            : null,
       ),
-      child: isCompact
-          ? Row(
-              children: [
-                Expanded(
-                  child: _SearchTriggerBar(
-                    onTap: onSearchTap,
-                    onMicTap: onMicTap,
-                    isCompact: true,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                actions,
-              ],
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: ClipRect(
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    heightFactor: t < 1.0
+                        ? lerpDouble(1.0, 0.08, t)!.clamp(0.08, 1.0)
+                        : 0.08,
+                    child: Opacity(
+                      opacity: greetingOpacity,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -244,18 +265,24 @@ class PrototypeAppHeader extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    actions,
-                  ],
+                  ),
                 ),
-                const SizedBox(height: 16),
-                _SearchTriggerBar(
-                  onTap: onSearchTap,
-                  onMicTap: onMicTap,
-                  isCompact: false,
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 12),
+              actions,
+            ],
+          ),
+          SizedBox(height: lerpDouble(16.0, 0.0, t)),
+          // The search bar is shared by both states — it only compresses
+          // (height + horizontal padding) as the header collapses.
+          _SearchTriggerBar(
+            onTap: onSearchTap,
+            onMicTap: onMicTap,
+            height: searchBarHeight,
+            horizontalPadding: lerpDouble(16.0, 14.0, t)!,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -315,20 +342,22 @@ class _SearchTriggerBar extends StatelessWidget {
   const _SearchTriggerBar({
     required this.onTap,
     this.onMicTap,
-    required this.isCompact,
+    required this.height,
+    required this.horizontalPadding,
   });
 
   final VoidCallback onTap;
   final VoidCallback? onMicTap;
-  final bool isCompact;
+  final double height;
+  final double horizontalPadding;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: isCompact ? 40 : 48,
-        padding: EdgeInsets.symmetric(horizontal: isCompact ? 14 : 16),
+        height: height,
+        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
         decoration: BoxDecoration(
           color: AppDesignTokens.surface,
           borderRadius: BorderRadius.circular(AppDesignTokens.radiusMd),
@@ -341,7 +370,7 @@ class _SearchTriggerBar extends StatelessWidget {
           children: [
             const Icon(Icons.search_rounded,
                 size: 20, color: AppDesignTokens.inkMuted),
-            SizedBox(width: isCompact ? 10 : 12),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
                 'What service do you need...',

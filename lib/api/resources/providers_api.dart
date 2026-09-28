@@ -9,9 +9,13 @@ class ShphProvidersApi {
   static final ShphProvidersApi instance = ShphProvidersApi._();
   final _client = ShphApiClient.instance;
 
+  /// Fetch a provider's public profile. Points at the real public provider
+  /// endpoint (`/api/providers/{id}/` → `ProviderProfileResponse`); there is no
+  /// public `/api/users/{id}/` route. The response does not expose the
+  /// provider's phone number.
   Future<Map<String, dynamic>> getProvider(dynamic id) async {
     final response =
-        await _client.get<Map<String, dynamic>>('/api/users/$id/');
+        await _client.get<Map<String, dynamic>>('/api/providers/$id/');
     return response.data ?? {};
   }
 

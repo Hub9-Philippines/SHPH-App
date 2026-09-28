@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart' as webrtc;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/api/models/review.dart';
-import '/api/resources/chat_api.dart';
 import '/api/resources/favorites_api.dart';
 import '/api/resources/providers_api.dart';
 import '/components/back_button/back_button_widget.dart';
@@ -13,8 +13,10 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
 import '/l10n/app_localizations.dart';
+import '/services/call_session_controller.dart';
 import '/services/chat_service.dart';
 import '/services/favorites_service.dart';
+import '/services/in_app_call_launcher.dart';
 import '/services/logging_service.dart';
 import '/theme/app_theme.dart';
 import 'product_page_model.dart';
@@ -86,7 +88,6 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
     _isVerified = widget.isVerified;
     _checkFavoriteStatus();
     _loadProviderProfile();
-    _loadProviderPhone();
     _loadReviews();
   }
 
@@ -152,15 +153,20 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
     setState(() {});
     // _isProviderLoading kept for a future provider-card skeleton state.
     try {
-      final profile = await ShphProvidersApi.instance.getProviderProfile(widget.providerId);
+      final profile =
+          await ShphProvidersApi.instance.getProviderProfile(widget.providerId);
       if (!mounted) {
         return;
       }
 
+      final phoneValue = profile['phone_number'] ?? profile['phone'];
       setState(() {
         _providerName = profile['display_name']?.toString() ?? widget.providerName;
         _providerPhoto = profile['photo_url']?.toString() ?? widget.providerPhoto ?? '';
         _isVerified = profile['kyc_verified'] == true || _isVerified;
+        if (phoneValue is String && phoneValue.trim().isNotEmpty) {
+          _providerPhone = phoneValue.trim();
+        }
         _isProviderLoading = false;
       });
     } catch (e, stackTrace) {
@@ -173,31 +179,6 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
       if (mounted) {
         setState(() => _isProviderLoading = false);
       }
-    }
-  }
-
-  Future<void> _loadProviderPhone() async {
-    if (widget.providerId.isEmpty) {
-      return;
-    }
-
-    try {
-      final provider =
-          await ShphProvidersApi.instance.getProvider(widget.providerId);
-      if (!mounted) {
-        return;
-      }
-      final phoneValue = provider['phone_number'] ?? provider['phone'];
-      if (phoneValue is String) {
-        setState(() => _providerPhone = phoneValue.trim());
-      }
-    } catch (e, stackTrace) {
-      LoggingService.error(
-        'Failed to load provider phone',
-        tag: 'ProductPage',
-        error: e,
-        stackTrace: stackTrace,
-      );
     }
   }
 
@@ -731,38 +712,8 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                           color: const Color(0xFF64748B),
                         ),
                   ),
-                  const SizedBox(height: 14),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: _onContactPressed,
-                          icon: const Icon(Icons.chat_bubble_outline_rounded),
-                          label: Text(_l10n.ppContact),
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size.fromHeight(46),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: FilledButton.icon(
-                          onPressed: _openBooking,
-                          icon: const Icon(Icons.calendar_today_rounded),
-                          label: Text(_l10n.ppBookNow),
-                          style: FilledButton.styleFrom(
-                            minimumSize: const Size.fromHeight(46),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  // Contact / Book Now live only in the persistent bottom
+                  // bar (web parity) — no inline CTA row here.
                 ],
               ),
             ),
@@ -1095,6 +1046,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                 child: FFButtonWidget(
                   onPressed: _onContactPressed,
                   text: _l10n.ppContact,
+                  icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
                   options: FFButtonOptions(
                     width: double.infinity,
                     height: 54,
@@ -1103,6 +1055,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                           font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
+                          fontSize: 14,
                           color: const Color(0xFF17212B),
                         ),
                     borderRadius: BorderRadius.circular(18),
@@ -1124,6 +1077,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                           font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
+                          fontSize: 14,
                           color: AppTheme.of(context).onPrimary,
                         ),
                     borderRadius: BorderRadius.circular(18),
@@ -1184,6 +1138,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
         providerId: providerId,
         providerName: _providerName,
         providerPhoto: _providerPhoto,
+        listingId: widget.serviceId,
       );
       if (!mounted) {
         return;
@@ -1222,35 +1177,55 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
       return;
     }
 
+    // Permission gate acquires the mic stream before the call starts so a
+    // first-ever call works (web parity with CallPermissionPage).
     await CallAcceptPermissionSheet.show(
       context,
       callType: CallType.audio,
-      onPermissionGranted: () => _initiateInAppCall(calleeId),
+      onMediaAcquired: (stream) {
+        _initiateInAppCall(calleeId, preAcquiredStream: stream);
+      },
     );
   }
 
-  Future<void> _initiateInAppCall(int calleeId) async {
+  Future<void> _initiateInAppCall(
+    int calleeId, {
+    webrtc.MediaStream? preAcquiredStream,
+  }) async {
     try {
       final thread = await ChatService.instance.getOrCreateDirectThread(
         providerId: widget.providerId,
         providerName: _providerName,
         providerPhoto: _providerPhoto,
+        listingId: widget.serviceId,
       );
       if (!mounted) {
+        preAcquiredStream?.getTracks().forEach((t) => t.stop());
         return;
       }
       final threadId = thread?['id']?.toString();
       if (threadId == null || threadId.isEmpty) {
+        preAcquiredStream?.getTracks().forEach((t) => t.stop());
         _showSnack(_l10n.cpCouldNotOpenChat);
         return;
       }
 
-      await ShphChatApi.instance.initiateCall({
-        'thread_id': threadId,
-        'callee_id': calleeId,
-        'media_type': 'audio',
-      });
+      // The call is placed from inside the direct chat room (web parity with
+      // ContactProviderPage.vue). The in-call surface is a global overlay, so
+      // the user can minimize it back to a PiP and keep chatting.
+      await InAppCallLauncher.startInChatRoom(
+        context: context,
+        threadId: threadId,
+        calleeId: calleeId.toString(),
+        participant: CallParticipant(
+          id: calleeId.toString(),
+          name: _providerName,
+          photo: _providerPhoto,
+        ),
+        preAcquiredStream: preAcquiredStream,
+      );
     } catch (e, stackTrace) {
+      preAcquiredStream?.getTracks().forEach((t) => t.stop());
       LoggingService.error(
         'Failed to initiate in-app call',
         tag: 'ProductPage',
@@ -1258,7 +1233,7 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
         stackTrace: stackTrace,
       );
       if (mounted) {
-        _showSnack(_l10n.cpCouldNotOpenDialer);
+        _showSnack(_l10n.csCallFailed);
       }
     }
   }
