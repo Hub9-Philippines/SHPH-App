@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Serbisyo Mobile App — Production Readiness Audit</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --primary-dark: #0284c7;
+      --border: #334155;
+      --accent: #818cf8;
+      --danger: #f87171;
+      --warning: #fbbf24;
+      --success: #34d399;
+      --code-bg: #0b1120;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      padding: 32px 16px;
+    }
+
+    .container {
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 40px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 24px;
+    }
+
+    h1 {
+      font-size: 2.25rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 8px;
+      background: linear-gradient(to right, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .meta-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-top: 12px;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(51, 65, 85, 0.4);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-danger { background: rgba(248, 113, 113, 0.15); color: var(--danger); border: 1px solid rgba(248, 113, 113, 0.3); }
+    .badge-warning { background: rgba(251, 191, 36, 0.15); color: var(--warning); border: 1px solid rgba(251, 191, 36, 0.3); }
+    .badge-success { background: rgba(52, 211, 153, 0.15); color: var(--success); border: 1px solid rgba(52, 211, 153, 0.3); }
+    .badge-info { background: rgba(56, 189, 248, 0.15); color: var(--primary); border: 1px solid rgba(56, 189, 248, 0.3); }
+
+    section {
+      margin-bottom: 44px;
+    }
+
+    h2 {
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-left: 4px solid var(--primary);
+      padding-left: 12px;
+    }
+
+    h3 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin: 18px 0 8px 0;
+    }
+
+    p {
+      margin-bottom: 12px;
+      color: #cbd5e1;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    }
+
+    .card.alert-card {
+      border-left: 4px solid var(--danger);
+    }
+
+    .card.resolved-card {
+      border-left: 4px solid var(--success);
+    }
+
+    .card.warning-card {
+      border-left: 4px solid var(--warning);
+    }
+
+    ul, ol {
+      margin-left: 20px;
+      margin-bottom: 14px;
+      color: #cbd5e1;
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.88em;
+      background: var(--code-bg);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #38bdf8;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    pre {
+      background: var(--code-bg);
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 12px 0;
+      border: 1px solid var(--border);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.88rem;
+      color: #e2e8f0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      background: var(--card-bg);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    th, td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.92rem;
+    }
+
+    th {
+      background: #111827;
+      color: #f1f5f9;
+      font-weight: 600;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 768px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Serbisyo Mobile App — Production Readiness Audit</h1>
+      <div class="meta-bar">
+        <div class="meta-item"><strong>Date:</strong> October 3, 2026</div>
+        <div class="meta-item"><strong>Target:</strong> Flutter Client App (<code>com.hub9.serbisyohubph</code>)</div>
+        <div class="meta-item"><strong>Reference:</strong> Web App (Vue 3 + Ionic 8)</div>
+        <div class="meta-item"><strong>Backend:</strong> SHPH REST API (Supabase removed)</div>
+        <div class="meta-item"><span class="badge badge-success">Upstream Synced (4270445)</span></div>
+      </div>
+    </header>
+
+    <!-- SECTION 1 -->
+    <section>
+      <h2>1. Executive Summary</h2>
+      <div class="card">
+        <p>A comprehensive architectural and code-level audit was conducted across the Serbisyo Flutter client app. The app has achieved substantial stability: static analysis passes with <strong>0 errors</strong>, the Supabase backend was cleanly excised in favor of the SHPH REST API, core authentication, localization (en/fil), and profile management are in place, and upstream commit <code>4270445</code> delivered in-app WebRTC calling and fixed chat sender ownership.</p>
+        <p>However, several <strong>critical blockers, payment integration mismatches, orphaned screens, and navigation glitches</strong> must be addressed before the app can be released to production:</p>
+        <ul>
+          <li><strong>Broken Digital Payments:</strong> Card and E-wallet checkouts point to nonexistent endpoints (<code>/api/payments/stripe/*</code>, <code>/api/payments/maya/*</code>). The backend uses <strong>PayMongo</strong>.</li>
+          <li><strong>Silent Data Loss in Payment Methods:</strong> Adding cards writes to an unregistered <code>DataTableStore</code>, causing added payment methods to immediately vanish.</li>
+          <li><strong>Navigation Glitch on <code>/category</code>:</strong> The <code>/category</code> route references <code>NavBarPage(initialPage: 'Category')</code>, which lacks <code>'Category'</code> and silently falls back to Home.</li>
+          <li><strong>Booking Funnel Divergence:</strong> Parallel checkout paths exist. Home uses modern live-matching, while Product Detail pages route to legacy FlutterFlow checkouts.</li>
+          <li><strong>Missing 5th Tab:</strong> Web reference features a 5-tab shell (Home, Explore, Bookings, Messages, Profile); mobile lacks the Explore tab.</li>
+          <li><strong>Push Notifications Stub:</strong> Background notifications lack native FCM/APNs registration and point to an obsolete domain.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- SECTION 2 -->
+    <section>
+      <h2>2. Upstream Synchronization Status (Commit <code>4270445</code>)</h2>
+      <div class="card resolved-card">
+        <p>Remote changes from <code>origin/main</code> were pulled and cleanly integrated, resolving several previously identified audit gaps:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Area</th>
+              <th>Pre-Sync State</th>
+              <th>Current Synced State</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>WebRTC Calling</strong></td>
+              <td>Simulated mock enum without RTP capture</td>
+              <td>Real WebRTC calling engine (<code>webrtc_call_service.dart</code>, <code>websocket_service.dart</code>, audio/video floating overlays)</td>
+              <td><span class="badge badge-success">Delivered Upstream</span></td>
+            </tr>
+            <tr>
+              <td><strong>Chat Sender Ownership</strong></td>
+              <td>Broken <code>senderId == 'client'</code> string check (messages inverted to left bubble)</td>
+              <td>Fixed: Compares <code>senderId == me</code> (using <code>currentUser.uid</code>)</td>
+              <td><span class="badge badge-success">Resolved Upstream</span></td>
+            </tr>
+            <tr>
+              <td><strong>Live Matching Failure Flow</strong></td>
+              <td>Preview countdown only; no failure recovery</td>
+              <td>Retryable failure card with retry button and view-booking navigation integrated into bottom sheet</td>
+              <td><span class="badge badge-success">Integrated & Verified</span></td>
+            </tr>
+            <tr>
+              <td><strong>Dependency Lock</strong></td>
+              <td>Conflict on <code>intl: 0.20.3</code> vs Flutter SDK pin</td>
+              <td>Pinned to <code>intl: 0.20.2</code> matching SDK constraints</td>
+              <td><span class="badge badge-success">Clean Pub Get</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 3 -->
+    <section>
+      <h2>3. Critical Functional Blockers (Must Fix)</h2>
+
+      <div class="card alert-card">
+        <h3>3.1 Digital Payment Integration Breakdown (PayMongo Mismatch) <span class="badge badge-danger">Blocker</span></h3>
+        <p><strong>Files:</strong> <code>lib/services/payment_controller.dart</code> & <code>lib/pages/booking_payment/booking_payment_widget.dart</code></p>
+        <p><strong>Root Cause:</strong></p>
+        <ol>
+          <li><code>_fetchStripeClientSecret()</code> posts to <code>$baseUrl/api/payments/stripe/create-intent</code>.</li>
+          <li><code>_fetchMayaCheckoutUrl()</code> posts to <code>$baseUrl/api/payments/maya/create-checkout</code>.</li>
+          <li>Neither endpoint exists in <code>SHPH API.yaml</code>. The backend payment suite is built on <strong>PayMongo</strong> (<code>/api/payments/create-intent/</code>, <code>/api/payments/checkout-session/</code>, <code>/api/payments/confirm/</code>).</li>
+          <li>In <code>processMayaPayment()</code>, the code receives the checkout URL and immediately returns <code>PaymentStatus.success</code> without ever launching the payment browser or waiting for callback confirmation.</li>
+        </ol>
+        <p><strong>Impact:</strong> Digital payments 404 or fake success. Only Cash on Delivery functions.</p>
+      </div>
+
+      <div class="card alert-card">
+        <h3>3.2 Silent Data Loss in Payment Methods <span class="badge badge-danger">Blocker</span></h3>
+        <p><strong>Files:</strong> <code>lib/main/payment_methods/payment_methods_model.dart</code> & <code>lib/backend/supabase/database/table.dart</code></p>
+        <p><strong>Root Cause:</strong> When a user adds a credit card or e-wallet, the code calls <code>PaymentMethodsTable().insert(...)</code> which queries <code>DataTableStore.instance</code>. <code>DataTableStore</code> has zero registered datasources. All queries return empty lists.</p>
+        <p><strong>Impact:</strong> Any payment method added by a user is silently discarded.</p>
+      </div>
+
+      <div class="card alert-card">
+        <h3>3.3 Navigation Silent Fallback on <code>/category</code> <span class="badge badge-warning">High Priority</span></h3>
+        <p><strong>Files:</strong> <code>lib/router/app_router.dart</code> (line 211) & <code>lib/main.dart</code> (lines 254–259)</p>
+        <p><strong>Root Cause:</strong> <code>app_router.dart</code> returns <code>NavBarPage(initialPage: 'Category')</code>, but <code>NavBarPage._tabs</code> only defines <code>'Home'</code>, <code>'Bookings'</code>, <code>'Messages'</code>, and <code>'Profile'</code>. The index lookup returns <code>-1</code>, defaulting to index <code>0</code> (Home).</p>
+        <p><strong>Impact:</strong> Any category navigation deep link fails silently and sends users to Home.</p>
+      </div>
+    </section>
+
+    <!-- SECTION 4 -->
+    <section>
+      <h2>4. Booking Funnel Divergence</h2>
+      <div class="card">
+        <p>Three divergent booking flows exist in the client codebase:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Path 1: Home Modern Flow</th>
+              <th>Path 2: Product Detail Flow</th>
+              <th>Path 3: TaskMatch Flow</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Entry Point</strong></td>
+              <td>Home Quick Actions / Emergency</td>
+              <td>Product Page ("Book Now")</td>
+              <td>None (Orphaned)</td>
+            </tr>
+            <tr>
+              <td><strong>Controller</strong></td>
+              <td><code>BookingFlowController</code></td>
+              <td>StatefulWidget state</td>
+              <td><code>TMActiveJobScreen</code> state</td>
+            </tr>
+            <tr>
+              <td><strong>Quoting</strong></td>
+              <td>Server quote via <code>ShphBookingsApi.estimateBooking</code></td>
+              <td>Local string computation</td>
+              <td>Mock pricing</td>
+            </tr>
+            <tr>
+              <td><strong>Matching UX</strong></td>
+              <td>Modern <code>LiveMatchingScreen</code> with bottom sheet</td>
+              <td>Direct confirmation screen</td>
+              <td><code>TMBroadcastScreen</code> (180s timer)</td>
+            </tr>
+          </tbody>
+        </table>
+        <p><strong>Recommendation:</strong> Deprecate Path 2 & Path 3. Wire <code>ProductPageWidget</code> to open <code>ExpressCheckoutScreen</code> backed by <code>BookingFlowController</code>.</p>
+      </div>
+    </section>
+
+    <!-- SECTION 5 -->
+    <section>
+      <h2>5. Orphaned Screens & Dead UI Audit</h2>
+      <div class="card">
+        <table>
+          <thead>
+            <tr>
+              <th>Screen Name</th>
+              <th>File Path</th>
+              <th>Route Path</th>
+              <th>Why It Is Orphaned</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Disputes</strong></td>
+              <td><code>lib/pages/disputes/disputes_widget.dart</code></td>
+              <td><code>/disputes</code></td>
+              <td>No link from Booking Details or Profile.</td>
+            </tr>
+            <tr>
+              <td><strong>Report Problem</strong></td>
+              <td><code>lib/pages/report_problem/report_problem_widget.dart</code></td>
+              <td><code>/reportProblem</code></td>
+              <td>No link from Help Center or Profile.</td>
+            </tr>
+            <tr>
+              <td><strong>Client On-Demand Jobs</strong></td>
+              <td><code>lib/pages/client_ondemand_jobs/</code></td>
+              <td><code>/client-on-demand-jobs</code></td>
+              <td>Route registered, no UI button routes to it.</td>
+            </tr>
+            <tr>
+              <td><strong>Collaborative Rooms</strong></td>
+              <td><code>lib/pages/room_list/</code> (4 files)</td>
+              <td><code>/roomList</code>, <code>/roomDetail/:id</code></td>
+              <td>No entry point in client app shell.</td>
+            </tr>
+            <tr>
+              <td><strong>Projects Hub</strong></td>
+              <td><code>lib/pages/project_list/</code> (3 files)</td>
+              <td><code>/projectList</code>, <code>/projectDetail/:id</code></td>
+              <td>No entry point in client app shell.</td>
+            </tr>
+            <tr>
+              <td><strong>ETA Tracking</strong></td>
+              <td><code>lib/pages/eta_tracking/</code></td>
+              <td><code>/eta/:token</code></td>
+              <td>Never launched from bookings or live matching.</td>
+            </tr>
+            <tr>
+              <td><strong>Wallet Quick Actions</strong></td>
+              <td><code>lib/pages/wallet/wallet_widget.dart</code></td>
+              <td><code>/wallet</code></td>
+              <td>Top-Up, Send, and Withdraw buttons are empty callbacks <code>() {}</code>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 6 -->
+    <section>
+      <h2>6. Prioritized Production Roadmap</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Phase 1: P0 Critical Blockers</h3>
+          <ul>
+            <li>Replace Stripe/Maya stubs with PayMongo API integration</li>
+            <li>Connect payment methods to persistent storage / backend</li>
+            <li>Fix <code>/category</code> route navigation in <code>NavBarPage</code></li>
+            <li>Clean up stale <code>test/widget_test.dart</code> counter boilerplate</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Phase 2: P1 Funnel Consolidation</h3>
+          <ul>
+            <li>Route <code>ProductPageWidget</code> into <code>ExpressCheckout</code></li>
+            <li>Implement PayMongo in-app checkout WebView flow</li>
+            <li>Wire Wallet actions or hide unready transaction features</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Phase 3: P2 Shell & Navigation Parity</h3>
+          <ul>
+            <li>Restore 5-tab bottom navigation (Reintroduce Explore tab)</li>
+            <li>Link Disputes and Report Problem from Booking Details & Help</li>
+            <li>Prune dead TaskMatch, Room, and Project files</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Phase 4: P3 Release Hardening</h3>
+          <ul>
+            <li>Integrate native FCM background push notifications</li>
+            <li>Replace 210+ hardcoded colors with theme tokens</li>
+            <li>Configure Android release signing keystore</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>
