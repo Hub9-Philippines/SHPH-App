@@ -18,6 +18,7 @@ import '/l10n/app_localizations.dart';
 import '/theme/app_theme.dart';
 import '/utils/geo_utils.dart';
 import '../../pages/booking_funnel/booking_controller.dart';
+import '../../pages/booking_funnel/booking_flow_screen.dart';
 import '../../pages/booking_funnel/booking_models.dart';
 import '../../pages/booking_funnel/express_checkout_screen.dart';
 import '../../pages/booking_funnel/widgets/booking_flow_route.dart';
@@ -612,11 +613,12 @@ class _ServicesScreenState extends State<ServicesScreen> {
     );
   }
 
-  void _openExpressCheckout(
-      BuildContext context, Map<String, dynamic> service) {
-    final appState = FFAppState();
-    final lat = appState.selectedLatitude ?? GeoUtils.fallbackLat;
-    final lng = appState.selectedLongitude ?? GeoUtils.fallbackLng;
+  Future<void> _openExpressCheckout(
+      BuildContext context, Map<String, dynamic> service) async {
+    final guarded =
+        await BookingFlowController.checkAndGuardActiveMatching(context);
+    if (guarded || !context.mounted) return;
+
     final listing = ServiceListing(
       id: service['id'] as int,
       title: service['title'] as String,
@@ -627,37 +629,10 @@ class _ServicesScreenState extends State<ServicesScreen> {
       thumbnail: service['imageUrl'] as String?,
       isTimeMaterial: service['isTimeMaterial'] as bool? ?? false,
     );
-    final controller = BookingFlowController(
-      initialDraft: BookingDraft(
-        urgency: BookingUrgency.rightNow,
-        rooms: 1,
-        cleaningType: ServiceType.standard,
-        paymentMethod: BookingPaymentMethod.gcash,
-        address: BookingAddress(
-          label: appState.selectedLocationMode == 'device'
-              ? _l10n.hmCurrentDeviceLocation
-              : appState.selectedAddressLabel.isNotEmpty
-                  ? appState.selectedAddressLabel
-                  : _l10n.bfPinnedLocation,
-          line1: appState.selectedLocationMode == 'device'
-              ? _l10n.svPinnedAddress
-              : appState.selectedAddressLine1.isNotEmpty
-                  ? appState.selectedAddressLine1
-                  : _l10n.svPinnedAddress,
-          city: appState.selectedAddressCity.isNotEmpty
-              ? appState.selectedAddressCity
-              : 'Metro Manila',
-        ),
-        latitude: lat,
-        longitude: lng,
-      ),
-    )..setService(listing);
+
     Navigator.of(context).push(
       buildBookingFlowRoute(
-        ChangeNotifierProvider.value(
-          value: controller,
-          child: ExpressCheckoutScreen(service: listing),
-        ),
+        BookingFlowScreen(selectedService: listing),
       ),
     );
   }
@@ -876,29 +851,18 @@ class _ServicesScreenState extends State<ServicesScreen> {
                       foregroundColor: Colors.white,
                       borderRadius: AppThemeData.radiusSm,
                       padding: const EdgeInsets.symmetric(
-                        horizontal: AppThemeData.spaceMd,
-                        vertical: 9,
+                        horizontal: 14,
+                        vertical: 8.5,
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            _l10n.ccBookNow,
-                            style: theme.labelLarge.override(
-                              font: GoogleFonts.plusJakartaSans(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 11.5,
-                              ),
-                              color: theme.onPrimary,
-                            ),
+                      child: Text(
+                        _l10n.ccBookNow,
+                        style: theme.labelLarge.override(
+                          font: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
                           ),
-                          const SizedBox(width: 4),
-                          const Icon(
-                            Icons.arrow_forward_rounded,
-                            size: 14,
-                            color: Colors.white,
-                          ),
-                        ],
+                          color: theme.onPrimary,
+                        ),
                       ),
                     ),
                   ],

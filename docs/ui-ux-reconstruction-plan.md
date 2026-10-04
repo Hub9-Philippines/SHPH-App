@@ -1029,3 +1029,24 @@ progress indicators, and removed the map from the booking status tracking page.
 | Map-less status page: removed `GoogleMap`, `_mapController`, `_mapReady`, `_polylines`, `_scheduleBoundsUpdate`, markers/polylines and map imports; replaced with themed `LinearGradient` background; `build` restructured from `Stack` into map-free tracker layout dropping the 45% `_sheetHeightFactor` anchor; polling, `_pulseController`, stage advance and on-site location resolution retained | `lib/pages/booking_funnel/status_page.dart` | ✅ Done |
 | Verification: `flutter analyze` 0 errors (815 info-lint baseline); `booking_funnel_test` + `booking_controller_test` + `booking_flow_redesign_test` + `booking_setup_widget_test` all passed (22 total); release APK smoke build skipped per user | — | ✅ Done / ⏭️ build skipped |
 | Manual phone verification (timer gone, smooth bar, ripple runs 30 s / 3000 m across zoom+rotation, map-free status page, no leaked tickers on back-navigation) | — | ⏳ Pending user |
+
+### 13.15 Booking Flow Accordion Rework
+
+OpenSpec change: `booking-flow-accordion-rework`. Rebuilt `/booking-flow` as a
+single-page accordion (Location, Time, Details, Review — exactly one expanded,
+later stages locked until prerequisites validate), removed Google Maps and step
+numbers/spine from the booking stages, added a persistent bottom action bar whose
+final action hands off to the booking payment page, fixed light-mode
+filled-button label contrast, and made the live-matching ripple center track the
+pin through padding/camera changes.
+
+| Task | Files | Status |
+|------|-------|--------|
+| Shared stage-content extraction: `DetailsStageContent` (+`scrollable` flag), `ReviewStageContent` (owns estimate UI + label helpers), public `AddressBanner`, `TimeSelectionPanel.showNextButton`; `BookingSetupScreen` and `CheckoutScreen` recomposed as thin shells | `lib/pages/booking_funnel/widgets/{details_stage_content,review_stage_content,address_banner}.dart`, `setup/booking_setup_screen.dart`, `checkout/checkout_screen.dart` | ✅ Done |
+| Single-page accordion: `_StageCard` ×4 (tappable headers, collapsed summaries, done checks, `maxUnlocked` gating), one-at-a-time expand with `AnimatedSize`, no `GoogleMap`/geolocator/`BookingStepSpine`/`bfStepOfCount` anywhere in the funnel | `lib/pages/booking_funnel/booking_flow_screen.dart` | ✅ Done |
+| Persistent bottom bar: estimate total + single CTA (`bfContinue` stages 0–2, `bkProceed` on Review, disabled until the server quote lands); stage validation snackbars (`bkErrSelectAddress`, `bfScheduleMandatoryError`); entry bootstrap `refreshQuote()` in a post-frame callback | same | ✅ Done |
+| Payment handoff: Proceed → `pushNamed('BookingPayment')` carrying router-read extras (`serviceId`/`serviceName`/`category`/`price` `'PHP N'`/`imageUrl`/`providerName`/`providerPhoto`/`notes`/concrete `bookingDate`+`bookingTime`); express checkout, live matching, status and legacy `/booking` untouched | `booking_flow_screen.dart`, verified vs `lib/router/app_router.dart` | ✅ Done |
+| Light-mode filled button labels: explicit `color: theme.onPrimary`/`Colors.white` on every filled `AppButton` label across the funnel (checkout submit + return-to-live-matching, status write-review, live-matching `_SheetPrimaryButton`/back-to-home, setup CTA, bottom bar) — fixed at call sites per design decision 6 | funnel widgets listed | ✅ Done |
+| Ripple pin anchoring: `_pinScreenOffset` re-sync on GoogleMap `padding` change (post-frame + 300 ms delayed pass), throttled `onCameraMove` (~100 ms), post-frame after `_fitCameraToRadius()`, keeping `onCameraIdle`/`onMapCreated` | `live_matching/live_matching_screen.dart` | ✅ Done |
+| Tests: accordion progression, schedule snackbar blocks Time advance, Proceed extras via mini GoRouter harness, funnel renders no `GoogleMap` (new `test/booking_flow_accordion_test.dart`); regression suite green | `test/` | ✅ Done |
+| Verification: `flutter analyze` 0 errors (941 info + 14 warning pre-existing noise); `booking_funnel_test` + `booking_setup_widget_test` + `booking_controller_test` + `booking_flow_redesign_test` + `booking_flow_accordion_test` all passed (35 total); `openspec validate --strict` passes; no new l10n keys | — | ✅ Done |

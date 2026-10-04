@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -10,6 +9,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '/api/models/service_listing.dart';
+import '/models/service_listing.dart';
 import '/api/resources/bookings_api.dart';
 import '/api/resources/ondemand_jobs_api.dart';
 import '/api/resources/services_api.dart';
@@ -28,6 +28,8 @@ import '../../booking_details/booking_details_widget.dart';
 import '../booking_controller.dart';
 import '../booking_models.dart';
 import '../booking_repository.dart';
+import '../booking_flow_screen.dart';
+import '../widgets/booking_flow_route.dart';
 import '../widgets/booking_map_sheet_host.dart';
 
 // ────────────────────────────────────────────────────────────────────────
@@ -87,6 +89,18 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
   /// spinner).
   bool _isRetryingBroadcast = false;
 
+  // ── Fluid sheet & map viewport extent ─────────────────────────────
+  double _bottomSheetExtent = 0.45;
+  double _settledSheetExtent = 0.45;
+  Offset? _pinScreenOffset;
+  DraggableScrollableController? _sheetController;
+  Timer? _boundsUpdateTimer;
+
+  // ── Ripple pin resync (map padding / camera moves) ────────────────
+  EdgeInsets? _lastMapPadding;
+  DateTime _lastCameraMoveSync = DateTime.fromMillisecondsSinceEpoch(0);
+  Timer? _pinResyncTimer;
+
   // ── Zoom targets per stage ─────────────────────────────────────────
   static const _zoomNearby = 16.0;
   static const _zoomMatched = 15.0;
@@ -102,11 +116,31 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
       duration: const Duration(milliseconds: 1100),
     );
 
-    // Real on-demand job id (when the broadcast succeeded). When present the
-    // screen polls the server for the real matching status; otherwise it runs
-    // an honest countdown that never fabricates a match.
-    _liveJobId = context.read<BookingFlowController?>()?.liveJobId;
-    _isRealJob = (_liveJobId ?? '').isNotEmpty;
+    _sheetController = DraggableScrollableController();
+
+    // Read initial dispatch state if controller was already running
+    final booking = context.read<BookingFlowController?>();
+    if (booking != null) {
+      _liveJobId = booking.liveJobId;
+      _isRealJob = (_liveJobId ?? '').isNotEmpty;
+      if (booking.liveMatchingSecondsRemaining > 0 &&
+          booking.liveMatchingSecondsRemaining < _searchWindowSeconds) {
+        _secondsRemaining = booking.liveMatchingSecondsRemaining;
+      }
+      _bottomSheetExtent = booking.lastSheetExtent.clamp(0.15, 0.85);
+      _settledSheetExtent = _bottomSheetExtent;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          booking
+            ..setMatchingActive(true)
+            ..setMinimized(false);
+        }
+      });
+    } else {
+      _liveJobId = null;
+      _isRealJob = false;
+      _settledSheetExtent = _bottomSheetExtent;
+    }
 
     // Generate nearby pros immediately — context is valid in initState
     // because the widget is already in the tree when pushed via Navigator.
@@ -260,6 +294,9 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     }
     setState(() {
       _secondsRemaining--;
+      context
+          .read<BookingFlowController?>()
+          ?.setLiveMatchingSecondsRemaining(_secondsRemaining);
       if (_secondsRemaining % 30 == 0 && _secondsRemaining < _searchWindowSeconds) {
         _gradientController.forward(from: 0.0);
         _animateMapZoom();
@@ -401,7 +438,9 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
 
   void _useNearestRealPro() {
     final pro = _closestNearbyPro();
-    if (pro == null) return;
+    if (pro == null) {
+      return;
+    }
     _adoptMatchedPro(pro: pro);
   }
 
@@ -481,8 +520,53 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     _pollTimer = Timer.periodic(const Duration(seconds: 3), (_) => _pollTick());
   }
 
+  void _onRetryMatching() {
+    if (_isRealJob) {
+      _retryBroadcast();
+    } else {
+      _retryProviderSearch();
+    }
+  }
+
+  void _openScheduleInstead() {
+    final booking = context.read<BookingFlowController?>();
+    if (booking != null) {
+      booking.setUrgency(BookingUrgency.scheduled);
+      booking.setMatchingActive(false);
+      booking.setMinimized(false);
+    }
+    final draft = booking?.draft;
+    final listing = draft == null
+        ? null
+        : ServiceListing(
+            id: draft.serviceListingId ?? 0,
+            title: draft.serviceTitle ?? 'Service',
+            categoryName: draft.serviceCategoryName,
+            description: draft.serviceDescription,
+            basePrice: draft.serviceBasePrice,
+            priceUnit: draft.servicePriceUnit,
+            thumbnail: draft.serviceImageUrl,
+          );
+
+    if (listing != null) {
+      Navigator.of(context).pushReplacement(
+        buildBookingFlowRoute(
+          BookingFlowScreen(
+            selectedService: listing,
+            initialUrgency: BookingUrgency.scheduled,
+          ),
+        ),
+      );
+    } else {
+      _goHome();
+    }
+  }
+
   @override
   void dispose() {
+    _boundsUpdateTimer?.cancel();
+    _pinResyncTimer?.cancel();
+    _sheetController?.dispose();
     _pollTimer?.cancel();
     _scanController?.dispose();
     _gradientController.dispose();
@@ -525,6 +609,13 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     } catch (_) {
       // Map not laid out yet — the initial camera position still applies.
     }
+    // The fit animation moves the camera under us; refresh the ripple center
+    // once this frame lands, then again whenever the camera settles.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _updatePinScreenOffset();
+      }
+    });
   }
 
   /// [LatLngBounds] bounding a circle of [radiusMeters] around [center].
@@ -591,37 +682,86 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     );
   }
 
-  // ── Cancel / back ──────────────────────────────────────────────────
-  void _onBackOrCancel() {
-    if (_timedOut) {
-      _popClean();
-      return;
-    }
-    _showCancelDialog();
+  Future<void> _updatePinScreenOffset() async {
+    final controller = _mapController;
+    if (controller == null || !mounted) return;
+    try {
+      final screenCoord = await controller.getScreenCoordinate(_rippleCenter());
+      if (!mounted) return;
+      final newOffset = Offset(
+        screenCoord.x.toDouble(),
+        screenCoord.y.toDouble(),
+      );
+      _scanController?.updateScreenOffset(newOffset);
+      if (_pinScreenOffset != newOffset) {
+        setState(() {
+          _pinScreenOffset = newOffset;
+        });
+      }
+    } catch (_) {}
   }
 
-  void _showCancelDialog() {
+  void _scheduleBoundsUpdate() {
+    _boundsUpdateTimer?.cancel();
+    _boundsUpdateTimer = Timer(const Duration(milliseconds: 150), () {
+      if (mounted) {
+        setState(() {
+          _settledSheetExtent = _bottomSheetExtent;
+        });
+        _fitCameraToRadius();
+        _updatePinScreenOffset();
+      }
+    });
+  }
+
+  // ── Cancel / back / minimize ─────────────────────────────────────────
+  void _onMinimize() {
+    final booking = context.read<BookingFlowController?>();
+    booking?.setMatchingActive(true);
+    booking?.setMinimized(true);
+    booking?.setLastSheetExtent(_bottomSheetExtent);
+    booking?.setLiveMatchingSecondsRemaining(_secondsRemaining);
+    if (mounted) {
+      _goHome();
+    }
+  }
+
+  void _onBackOrCancel() {
+    if (_timedOut || _matchedPro != null) {
+      _goHome();
+      return;
+    }
+    _onMinimize();
+  }
+
+  Future<void> _showCancelDialog() async {
     final l10n = AppLocalizations.of(context)!;
-    AppFeedback.confirmDialog(
+    final confirmed = await AppFeedback.confirmDialog(
       context: context,
       title: l10n.bfCancelProviderSearchQ,
       message: l10n.bfCancelSearchBody,
       confirmText: l10n.bfCancelSearch,
       cancelText: l10n.bfContinueSearch,
       destructive: true,
-    ).then((value) {
-      if (value == true) {
-        _popClean();
-      }
-    });
+    );
+    if (!mounted || confirmed != true) {
+      return;
+    }
+    final booking = context.read<BookingFlowController?>();
+    booking?.setMatchingActive(false);
+    booking?.setMinimized(false);
+    final jobId = _liveJobId;
+    if (jobId != null && jobId.isNotEmpty) {
+      ShphOnDemandJobsApi.instance.cancelJob(jobId).ignore();
+    }
+    _goHome();
   }
 
   void _popClean() {
     final booking = context.read<BookingFlowController?>();
-    booking?.setMatchingActive(true);
     booking?.setLiveSearchTimedOut(true);
     if (mounted) {
-      Navigator.of(context).pop();
+      _goHome();
     }
   }
 
@@ -643,7 +783,9 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
       return PopScope(
         canPop: false,
         onPopInvokedWithResult: (didPop, _) {
-          if (!didPop) _goHome();
+          if (!didPop) {
+            _goHome();
+          }
         },
         child: _AssignedProviderRouteMap(
           clientLocation: location,
@@ -663,55 +805,68 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
       );
     }
 
-    return PopScope(
-      canPop: _matchedPro != null || _timedOut,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) {
-          _onBackOrCancel();
-        }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final currentSheetExtent = _settledSheetExtent.clamp(0.15, 0.85);
+        final mapPadding = EdgeInsets.only(
+          bottom: constraints.maxHeight * currentSheetExtent,
+        );
+
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, _) {
+            if (didPop) {
+              return;
+            }
+            _onBackOrCancel();
+          },
+          child: Scaffold(
+            backgroundColor: AppTheme.of(context).primaryBackground,
+            body: NotificationListener<DraggableScrollableNotification>(
+              onNotification: (notification) {
+                if ((notification.extent - _bottomSheetExtent).abs() > 0.005) {
+                  setState(() {
+                    _bottomSheetExtent = notification.extent;
+                  });
+                  booking?.setLastSheetExtent(notification.extent);
+                  _scheduleBoundsUpdate();
+                }
+                return false;
+              },
+              child: Stack(
+                children: [
+                  // ── Layer 1: Full-screen map (with dynamic bottom padding) ──
+                  Positioned.fill(
+                    child: _mapBody(location, mapPadding),
+                  ),
+
+                  // ── Layer 2: Top minimize floating button ──
+                  if (!_timedOut)
+                    Positioned(
+                      key: const ValueKey('live_matching_top_minimize_btn'),
+                      top: MediaQuery.of(context).padding.top + 8,
+                      left: 16,
+                      child: _TopMinimizeButton(
+                        onTap: _onMinimize,
+                      ),
+                    ),
+
+                  // ── Layer 3: Collapsible dashboard ──
+                  Positioned.fill(
+                    key: const ValueKey('live_matching_dashboard_layer'),
+                    child: _buildDashboard(
+                      stage: stage,
+                      draft: draft,
+                      booking: booking,
+                      serviceTitle: serviceTitle,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
       },
-      child: Scaffold(
-        body: Stack(
-          children: [
-            // ── Layer 1: Full-screen map (with native radar ripple) ──
-            Positioned.fill(
-              child: _mapBody(location),
-            ),
-
-            // ── Layer 3: Top status badge ────────────────────────
-            if (!_timedOut)
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: _StatusBadge(
-                  serviceTitle: serviceTitle,
-                  stageLabel: stage.label,
-                  stageSubtitle: stage.subtitle,
-                  secondsRemaining: _secondsRemaining,
-                  gradientValue: _gradientController,
-                  stageIndex: _currentStage(),
-                  matchedPro: _matchedPro,
-                  broadcastFailed: !_isRealJob,
-                  broadcastError: booking?.liveBroadcastError,
-                  isRetryingBroadcast: _isRetryingBroadcast,
-                  onRetryBroadcast: _retryBroadcast,
-                  onViewBooking: () => _openBookingDetails(booking),
-                ),
-              ),
-
-            // ── Layer 4: Collapsible dashboard ──────────────────
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: _buildDashboard(
-                stage: stage,
-                draft: draft,
-                booking: booking,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -764,7 +919,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
   }
 
   // ── Map widget ──────────────────────────────────────────────────────
-  Widget _mapBody(LatLng location) {
+  Widget _mapBody(LatLng location, EdgeInsets padding) {
     if (!widget.showMap) {
       return DecoratedBox(
         decoration: BoxDecoration(
@@ -780,6 +935,25 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
       );
     }
 
+    // The GoogleMap viewport shifts when its padding changes (sheet settle),
+    // which invalidates the cached pin screen offset without a camera event.
+    // Re-sync once this frame lands, plus one delayed pass for the platform
+    // view to finish applying the new viewport.
+    if (_lastMapPadding != padding) {
+      _lastMapPadding = padding;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _updatePinScreenOffset();
+        }
+      });
+      _pinResyncTimer?.cancel();
+      _pinResyncTimer = Timer(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          _updatePinScreenOffset();
+        }
+      });
+    }
+
     final scan = _scanController;
     // Stable marker set: rebuilt only when the provider marker appears or the
     // pinned location changes, so per-tick platform diffs touch only circles.
@@ -793,6 +967,7 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
         target: location,
         zoom: _zoomNearby,
       ),
+      padding: padding,
       zoomControlsEnabled: false,
       compassEnabled: false,
       myLocationButtonEnabled: false,
@@ -804,6 +979,19 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
       onMapCreated: (controller) {
         _mapController = controller;
         _fitCameraToRadius();
+        _updatePinScreenOffset();
+      },
+      // Camera fits animate for a while; re-sync the ripple center at most
+      // every 100 ms so the ring tracks the pin tip during the move.
+      onCameraMove: (_) {
+        final now = DateTime.now();
+        if (now.difference(_lastCameraMoveSync).inMilliseconds >= 100) {
+          _lastCameraMoveSync = now;
+          _updatePinScreenOffset();
+        }
+      },
+      onCameraIdle: () {
+        _updatePinScreenOffset();
       },
       markers: markers,
     );
@@ -811,31 +999,20 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     if (scan == null) {
       return map;
     }
-    // Rebuilds only this GoogleMap widget with fresh circle data on every
-    // ripple tick — markers/tiles/camera are untouched.
-    return ValueListenableBuilder<Set<Circle>>(
-      valueListenable: scan,
-      builder: (context, circles, _) => GoogleMap(
-        key: ValueKey(markers),
-        initialCameraPosition: CameraPosition(
-          target: location,
-          zoom: _zoomNearby,
+
+    return Stack(
+      children: [
+        map,
+        ValueListenableBuilder<bool>(
+          valueListenable: scan.isScanningListenable,
+          builder: (context, isScanning, _) => MapRadarPulseOverlay(
+            ringColor: AppTheme.of(context).primary,
+            isScanning: isScanning && _matchedPro == null && !_timedOut,
+            mapPadding: padding,
+            customCenterOffset: _pinScreenOffset,
+          ),
         ),
-        zoomControlsEnabled: false,
-        compassEnabled: false,
-        myLocationButtonEnabled: false,
-        mapToolbarEnabled: false,
-        rotateGesturesEnabled: false,
-        tiltGesturesEnabled: false,
-        scrollGesturesEnabled: false,
-        zoomGesturesEnabled: false,
-        onMapCreated: (controller) {
-          _mapController = controller;
-          _fitCameraToRadius();
-        },
-        circles: circles,
-        markers: markers,
-      ),
+      ],
     );
   }
 
@@ -866,97 +1043,98 @@ class _LiveMatchingScreenState extends State<LiveMatchingScreen>
     required _MatchingStage stage,
     required BookingDraft? draft,
     required BookingFlowController? booking,
+    required String serviceTitle,
   }) {
     final l10n = AppLocalizations.of(context)!;
     final theme = AppTheme.of(context);
+    final totalFare =
+        booking?.serverQuote?.total ?? booking?.draft.serviceBasePrice ?? 0.0;
+    final paymentMethod = booking?.paymentLabel(l10n) ?? 'GCash';
+    final appliedTip = booking?.tipAmount ?? 0.0;
+
+    final initialSize = ((!_isRealJob && _matchedPro == null && !_timedOut)
+            ? math.max(_bottomSheetExtent, 0.65)
+            : _bottomSheetExtent)
+        .clamp(0.15, 0.85);
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.38,
-      minChildSize: 0.12,
-      maxChildSize: 0.82,
+      key: const ValueKey('live_matching_sheet'),
+      controller: _sheetController,
+      initialChildSize: initialSize,
+      minChildSize: 0.15,
+      maxChildSize: 0.85,
       snap: true,
-      snapSizes: const [0.12, 0.38, 0.72],
-      snapAnimationDuration: const Duration(milliseconds: 320),
+      snapSizes: const [0.15, 0.45, 0.85],
+      snapAnimationDuration: const Duration(milliseconds: 280),
       builder: (context, scrollController) => Container(
-        clipBehavior: Clip.hardEdge,
-        decoration: const BoxDecoration(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-        ),
-        child: BackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Container(
-            decoration: BoxDecoration(
-              color: theme.primaryBackground.withValues(alpha: 0.78),
-              border: Border(
-                top: BorderSide(
-                  color: Colors.white.withValues(alpha: 0.12),
-                  width: 0.5,
-                ),
-              ),
+        decoration: BoxDecoration(
+          color: theme.primaryBackground,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.14),
+              blurRadius: 24,
+              offset: const Offset(0, -6),
             ),
-            child: ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(32)),
-              child: _timedOut
-                  ? _TimeoutSheet(
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          child: _timedOut
+              ? _TimeoutSheet(
+                  scrollController: scrollController,
+                  theme: theme,
+                  onRetrySearch: _onRetryMatching,
+                  onScheduleInstead: _openScheduleInstead,
+                  onCancelSearch: _showCancelDialog,
+                )
+              : _matchedPro != null
+                  ? _MatchedSheet(
                       scrollController: scrollController,
                       theme: theme,
-                      onAdjustBooking: _popClean,
-                      onBackHome: () =>
-                          Navigator.of(context, rootNavigator: true)
-                              .pushAndRemoveUntil(
-                        MaterialPageRoute(
-                          builder: (_) => const NavBarPage(
-                            initialPage: 'Home',
-                            disableResizeToAvoidBottomInset: true,
-                          ),
-                        ),
-                        (route) => false,
-                      ),
+                      pro: _matchedPro!,
+                      addressLabel:
+                          draft?.address.label ?? l10n.bfPinnedLocation,
+                      addressLine:
+                          '${draft?.address.line1 ?? l10n.bfLocationLoading}${(draft?.address.city ?? '').isNotEmpty ? ', ${draft!.address.city}' : ''}',
+                      referenceId: booking?.activeReferenceId,
+                      onBackHome: _goHome,
                     )
-                  : _matchedPro != null
-                      ?                           _MatchedSheet(
-                          scrollController: scrollController,
-                          theme: theme,
-                          pro: _matchedPro!,
-                          addressLabel:
-                              draft?.address.label ?? l10n.bfPinnedLocation,
-                          addressLine:
-                              '${draft?.address.line1 ?? l10n.bfLocationLoading}${(draft?.address.city ?? '').isNotEmpty ? ', ${draft!.address.city}' : ''}',
-                          referenceId: booking?.activeReferenceId,
-                          onBackHome: () =>
-                              Navigator.of(context, rootNavigator: true)
-                                  .pushAndRemoveUntil(
-                            MaterialPageRoute(
-                              builder: (_) => const NavBarPage(
-                                initialPage: 'Home',
-                                disableResizeToAvoidBottomInset: true,
-                              ),
-                            ),
-                            (route) => false,
-                          ),
-                        )
-                      :                           _SearchingSheet(
-                          scrollController: scrollController,
-                          theme: theme,
-                          stageLabel: stage.label,
-                          stageSubtitle: stage.subtitle,
-                          addressLabel:
-                              draft?.address.label ?? l10n.bfPinnedLocation,
-                          addressLine:
-                              '${draft?.address.line1 ?? l10n.bfLocationLoading}${(draft?.address.city ?? '').isNotEmpty ? ', ${draft!.address.city}' : ''}',
-                          referenceId:
-                              booking?.liveJobId ?? booking?.activeReferenceId,
-                          providerCount: booking?.liveProviderCount,
-                          feeMin: booking?.liveEstFeeMin,
-                          feeMax: booking?.liveEstFeeMax,
-                          secondsRemaining: _secondsRemaining,
-                          gradientValue: _gradientController,
-                          stageIndex: _currentStage(),
-                          onCancel: _showCancelDialog,
-                        ),
-            ),
-          ),
+                  : _SearchingSheet(
+                      scrollController: scrollController,
+                      theme: theme,
+                      stageLabel: stage.label,
+                      stageSubtitle: stage.subtitle,
+                      addressLabel:
+                          draft?.address.label ?? l10n.bfPinnedLocation,
+                      addressLine:
+                          '${draft?.address.line1 ?? l10n.bfLocationLoading}${(draft?.address.city ?? '').isNotEmpty ? ', ${draft!.address.city}' : ''}',
+                      serviceTitle: serviceTitle,
+                      paymentMethod: paymentMethod,
+                      totalFare: totalFare,
+                      appliedTip: appliedTip,
+                      referenceId:
+                          booking?.liveJobId ?? booking?.activeReferenceId,
+                      providerCount: booking?.liveProviderCount,
+                      feeMin: booking?.liveEstFeeMin,
+                      feeMax: booking?.liveEstFeeMax,
+                      secondsRemaining: _secondsRemaining,
+                      searchRadiusKm: _currentRadiusKm,
+                      gradientValue: _gradientController,
+                      stageIndex: _currentStage(),
+                      broadcastFailed: !_isRealJob,
+                      broadcastError: booking?.liveBroadcastError,
+                      isRetryingBroadcast: _isRetryingBroadcast,
+                      onRetryBroadcast: _retryBroadcast,
+                      onViewBooking: () => _openBookingDetails(booking),
+                      onCancel: _showCancelDialog,
+                      onMinimize: _onMinimize,
+                      onTipSubmitted: (tip) async {
+                        if (booking != null) {
+                          await booking.updateTip(tip);
+                        }
+                      },
+                    ),
         ),
       ),
     );
@@ -1810,6 +1988,7 @@ class _SheetPrimaryButton extends StatelessWidget {
                 label,
                 style: theme.titleMedium.override(
                   fontWeight: FontWeight.w700,
+                  color: Colors.white,
                 ),
               ),
             ],
@@ -1875,274 +2054,6 @@ class _MatchingStage {
   final String subtitle;
 }
 
-// ────────────────────────────────────────────────────────────────────────
-// Match reveal — success pulse overlay when a provider is found
-// ────────────────────────────────────────────────────────────────────────// ────────────────────────────────────────────────────────────────────────
-// Match reveal — success pulse overlay when a provider is found
-// ────────────────────────────────────────────────────────────────────────
-
-// ────────────────────────────────────────────────────────────────────────
-// Top status badge — glassmorphic card with animated gradient bar
-// ────────────────────────────────────────────────────────────────────────
-
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({
-    required this.serviceTitle,
-    required this.stageLabel,
-    required this.stageSubtitle,
-    required this.secondsRemaining,
-    required this.gradientValue,
-    required this.stageIndex,
-    this.matchedPro,
-    this.broadcastFailed = false,
-    this.broadcastError,
-    this.isRetryingBroadcast = false,
-    this.onRetryBroadcast,
-    this.onViewBooking,
-  });
-
-  final String serviceTitle;
-  final String stageLabel;
-  final String stageSubtitle;
-  final int secondsRemaining;
-  final Animation<double> gradientValue;
-  final int stageIndex;
-  final Map<String, dynamic>? matchedPro;
-
-  /// True when the on-demand broadcast failed so no live job exists; the
-  /// screen is then running an honest preview countdown instead of polling
-  /// the server, and the user must be told.
-  final bool broadcastFailed;
-
-  /// Repository-reported broadcast error. When non-null the card becomes a
-  /// real failure state (error message + retry + view booking) instead of the
-  /// category-less preview warning.
-  final String? broadcastError;
-  final bool isRetryingBroadcast;
-  final VoidCallback? onRetryBroadcast;
-  final VoidCallback? onViewBooking;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = AppTheme.of(context);
-    final isMatched = matchedPro != null;
-
-    return SafeArea(
-      bottom: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: theme.primaryBackground.withValues(alpha: 0.88),
-            borderRadius: BorderRadius.circular(26),
-            border: Border.all(
-              color: isMatched
-                  ? theme.success.withValues(alpha: 0.30)
-                  : Colors.white.withValues(alpha: 0.18),
-            ),
-            boxShadow: AppThemeData.shadowCard,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header row
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      serviceTitle,
-                      style: theme.bodyMedium.override(
-                        fontWeight: FontWeight.w700,
-                        color: theme.secondaryText,
-                      ),
-                    ),
-                  ),
-                  if (isMatched)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: theme.success.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        l10n.bfAssigned,
-                        style: theme.labelSmall.override(
-                          color: theme.success,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 2),
-              Text(
-                isMatched
-                    ? l10n.bfProviderAssigned
-                    : l10n.bfFindingNearestProvider,
-                style: theme.titleMedium.override(
-                  font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                stageSubtitle,
-                style: theme.bodySmall.override(
-                  color: theme.secondaryText,
-                ),
-              ),
-              if (broadcastFailed && !isMatched) ...[
-                const SizedBox(height: 10),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: theme.warning.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(AppThemeData.radiusMd),
-                    border: Border.all(
-                      color: theme.warning.withValues(alpha: 0.45),
-                    ),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        Icons.warning_amber_rounded,
-                        size: 18,
-                        color: theme.warning,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l10n.bfBroadcastFailedTitle,
-                              style: theme.labelSmall.override(
-                                fontWeight: FontWeight.w800,
-                                color: theme.primaryText,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              (broadcastError != null &&
-                                  broadcastError!.trim().isNotEmpty)
-                                  ? l10n.bfBroadcastFailedRetryBody
-                                  : l10n.bfBroadcastFailedBody,
-                              style: theme.labelSmall.override(
-                                color: theme.secondaryText,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (onRetryBroadcast != null) ...[
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: isRetryingBroadcast
-                          ? null
-                          : onRetryBroadcast,
-                      icon: isRetryingBroadcast
-                          ? SizedBox(
-                              width: 14,
-                              height: 14,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: theme.primary,
-                              ),
-                            )
-                          : const Icon(Icons.refresh_rounded, size: 16),
-                      label: Text(
-                        isRetryingBroadcast
-                            ? l10n.bfBroadcastRetrying
-                            : l10n.bfBroadcastRetry,
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size.fromHeight(38),
-                        side: BorderSide(color: theme.primary),
-                        foregroundColor: theme.primary,
-                        textStyle: GoogleFonts.plusJakartaSans(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(AppThemeData.radiusMd),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-                if (onViewBooking != null) ...[
-                  const SizedBox(height: 6),
-                  SizedBox(
-                    width: double.infinity,
-                    child: TextButton.icon(
-                      onPressed: onViewBooking,
-                      icon: const Icon(Icons.receipt_long_rounded, size: 16),
-                      label: Text(l10n.bfViewBookingDetails),
-                      style: TextButton.styleFrom(
-                        foregroundColor: theme.secondaryText,
-                        textStyle: GoogleFonts.plusJakartaSans(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-              const SizedBox(height: 10),
-              // Stage badge row
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isMatched
-                          ? theme.success.withValues(alpha: 0.10)
-                          : theme.primary.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      stageLabel,
-                      style: theme.labelMedium.override(
-                        color: isMatched ? theme.success : theme.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              if (!isMatched) ...[
-                const SizedBox(height: 10),
-                _GradientBar(
-                  gradientValue: gradientValue,
-                  stageIndex: stageIndex,
-                  progress: secondsRemaining / _searchWindowSeconds,
-                  theme: theme,
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 // ────────────────────────────────────────────────────────────────────────
 // Animated gradient progress bar
@@ -2227,6 +2138,681 @@ class _GradientStage {
 }
 
 // ────────────────────────────────────────────────────────────────────────
+// Top minimize button
+// ────────────────────────────────────────────────────────────────────────
+
+class _TopMinimizeButton extends StatelessWidget {
+  const _TopMinimizeButton({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: theme.primaryBackground.withValues(alpha: 0.92),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.18),
+            ),
+            boxShadow: AppThemeData.shadowCard,
+          ),
+          child: Icon(
+            Icons.keyboard_arrow_down_rounded,
+            size: 26,
+            color: theme.primaryText,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// Matching header bar (Move It parity drag handle & status)
+// ────────────────────────────────────────────────────────────────────────
+
+class _MatchingHeaderBar extends StatelessWidget {
+  const _MatchingHeaderBar({
+    required this.theme,
+    required this.stageLabel,
+    required this.stageSubtitle,
+    required this.searchRadiusKm,
+    required this.onMinimize,
+    required this.secondsRemaining,
+    required this.gradientValue,
+    required this.stageIndex,
+  });
+
+  final AppThemeData theme;
+  final String stageLabel;
+  final String stageSubtitle;
+  final double searchRadiusKm;
+  final VoidCallback onMinimize;
+  final int secondsRemaining;
+  final Animation<double> gradientValue;
+  final int stageIndex;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Drag handle pill
+        Center(
+          child: Container(
+            width: 44,
+            height: 5,
+            decoration: BoxDecoration(
+              color: theme.alternate,
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            InkWell(
+              onTap: onMinimize,
+              borderRadius: BorderRadius.circular(999),
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: theme.secondaryBackground,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: theme.alternate),
+                ),
+                child: Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: theme.primaryText,
+                  size: 22,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.bfFindingNearestProvider,
+                    style: theme.titleMedium.override(
+                      font: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w800,
+                      ),
+                      color: theme.primaryText,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    stageSubtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.bodySmall.override(
+                      color: theme.secondaryText,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: theme.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.radar_rounded,
+                    size: 14,
+                    color: theme.primary,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${searchRadiusKm.toStringAsFixed(0)} km',
+                    style: theme.labelSmall.override(
+                      color: theme.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        _GradientBar(
+          gradientValue: gradientValue,
+          stageIndex: stageIndex,
+          progress: (secondsRemaining / _searchWindowSeconds).clamp(0.0, 1.0),
+          theme: theme,
+        ),
+      ],
+    );
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// Tip & incentive unit (Move It parity)
+// ────────────────────────────────────────────────────────────────────────
+
+class _TipSelectionCard extends StatefulWidget {
+  const _TipSelectionCard({
+    required this.theme,
+    required this.onTipSubmitted,
+    this.appliedTip = 0.0,
+  });
+
+  final AppThemeData theme;
+  final Future<void> Function(double tip) onTipSubmitted;
+  final double appliedTip;
+
+  @override
+  State<_TipSelectionCard> createState() => _TipSelectionCardState();
+}
+
+class _TipSelectionCardState extends State<_TipSelectionCard> {
+  double? _selectedTip;
+  bool _isSubmitting = false;
+
+  final List<double> _presetTips = const [25.0, 50.0, 100.0];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.appliedTip > 0) {
+      _selectedTip = widget.appliedTip;
+    }
+  }
+
+  Future<void> _submitTip() async {
+    final tip = _selectedTip;
+    if (tip == null || tip <= 0 || _isSubmitting) {
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      await widget.onTipSubmitted(tip);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Tip of ₱${tip.toStringAsFixed(2)} added!'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _showCustomTipDialog() async {
+    final controller = TextEditingController(
+      text: _selectedTip != null && !_presetTips.contains(_selectedTip)
+          ? _selectedTip!.toStringAsFixed(0)
+          : '',
+    );
+    final theme = widget.theme;
+
+    final customAmount = await showDialog<double>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: theme.primaryBackground,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Enter Custom Tip',
+          style: theme.titleMedium.override(
+            font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+          ),
+        ),
+        content: TextField(
+          controller: controller,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          autofocus: true,
+          decoration: InputDecoration(
+            prefixText: '₱ ',
+            hintText: 'e.g. 150',
+            filled: true,
+            fillColor: theme.secondaryBackground,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: theme.alternate),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(
+              'Cancel',
+              style: theme.bodyMedium.override(color: theme.secondaryText),
+            ),
+          ),
+          AppButton(
+            onPressed: () {
+              final val = double.tryParse(controller.text.trim());
+              if (val != null && val > 0) {
+                Navigator.of(dialogContext).pop(val);
+              }
+            },
+            backgroundColor: theme.primary,
+            foregroundColor: theme.onPrimary,
+            borderRadius: 12,
+            child: const Text('Set Tip'),
+          ),
+        ],
+      ),
+    );
+
+    if (customAmount != null && mounted) {
+      setState(() {
+        _selectedTip = customAmount;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = widget.theme;
+    final isCustomSelected =
+        _selectedTip != null && !_presetTips.contains(_selectedTip);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.secondaryBackground,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: theme.alternate),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: theme.primary.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.volunteer_activism_rounded,
+                  color: theme.primary,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Add a tip; 100% goes to the provider',
+                      style: theme.bodyMedium.override(
+                        font: GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w700,
+                        ),
+                        color: theme.primaryText,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Tips incentivize nearby pros to accept faster',
+                      style: theme.bodySmall.override(
+                        color: theme.secondaryText,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              ..._presetTips.map((preset) {
+                final isSelected = _selectedTip == preset;
+                return Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          _selectedTip = isSelected ? null : preset;
+                        });
+                      },
+                      borderRadius:
+                          BorderRadius.circular(AppThemeData.radiusPill),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? theme.primary
+                              : theme.primaryBackground,
+                          borderRadius:
+                              BorderRadius.circular(AppThemeData.radiusPill),
+                          border: Border.all(
+                            color:
+                                isSelected ? theme.primary : theme.alternate,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          '₱${preset.toStringAsFixed(0)}',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color:
+                                isSelected ? Colors.white : theme.primaryText,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+              Expanded(
+                child: InkWell(
+                  onTap: _showCustomTipDialog,
+                  borderRadius: BorderRadius.circular(AppThemeData.radiusPill),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isCustomSelected
+                          ? theme.primary
+                          : theme.primaryBackground,
+                      borderRadius:
+                          BorderRadius.circular(AppThemeData.radiusPill),
+                      border: Border.all(
+                        color:
+                            isCustomSelected ? theme.primary : theme.alternate,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      isCustomSelected
+                          ? '₱${_selectedTip!.toStringAsFixed(0)}'
+                          : 'Custom',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: isCustomSelected
+                            ? Colors.white
+                            : theme.primaryText,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (_selectedTip != null && _selectedTip! > 0) ...[
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: AppButton(
+                onPressed: _isSubmitting ? null : _submitTip,
+                backgroundColor: theme.primary,
+                foregroundColor: theme.onPrimary,
+                borderRadius: 14,
+                width: double.infinity,
+                child: _isSubmitting
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        'Submit tip (₱${_selectedTip!.toStringAsFixed(2)})',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// Booking route details tile (Service location, category, payment, fare)
+// ────────────────────────────────────────────────────────────────────────
+
+class _BookingRouteDetailsTile extends StatelessWidget {
+  const _BookingRouteDetailsTile({
+    required this.theme,
+    required this.addressLabel,
+    required this.addressLine,
+    required this.serviceTitle,
+    required this.paymentMethod,
+    required this.totalFare,
+    this.tipAmount = 0.0,
+  });
+
+  final AppThemeData theme;
+  final String addressLabel;
+  final String addressLine;
+  final String serviceTitle;
+  final String paymentMethod;
+  final double totalFare;
+  final double tipAmount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.secondaryBackground,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: theme.alternate),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Service Location Row with Blue Dot
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 5),
+                child: Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: theme.primary,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.primary.withValues(alpha: 0.35),
+                        blurRadius: 6,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Service Location',
+                      style: theme.labelSmall.override(
+                        color: theme.secondaryText,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      addressLine.isNotEmpty ? addressLine : addressLabel,
+                      style: theme.bodyMedium.override(
+                        fontWeight: FontWeight.w600,
+                        color: theme.primaryText,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.only(left: 5),
+            child: Container(
+              width: 2,
+              height: 12,
+              color: theme.alternate,
+            ),
+          ),
+          const SizedBox(height: 4),
+          // Target Category / Service Row with Red Dot
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 5),
+                child: Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: theme.error,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.error.withValues(alpha: 0.35),
+                        blurRadius: 6,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Category / Service',
+                      style: theme.labelSmall.override(
+                        color: theme.secondaryText,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      serviceTitle,
+                      style: theme.bodyMedium.override(
+                        fontWeight: FontWeight.w600,
+                        color: theme.primaryText,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 14),
+            child: Divider(height: 1),
+          ),
+          // Payment Method Row
+          Row(
+            children: [
+              Icon(Icons.payment_rounded, size: 20, color: theme.secondaryText),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Payment Method',
+                  style: theme.bodyMedium.override(
+                    color: theme.secondaryText,
+                  ),
+                ),
+              ),
+              Text(
+                paymentMethod,
+                style: theme.bodyMedium.override(
+                  fontWeight: FontWeight.w700,
+                  color: theme.primaryText,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // Total Fare Breakdown Row
+          Row(
+            children: [
+              Icon(Icons.receipt_long_rounded, size: 20, color: theme.primary),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Total Fare',
+                      style: theme.bodyMedium.override(
+                        fontWeight: FontWeight.w600,
+                        color: theme.primaryText,
+                      ),
+                    ),
+                    if (tipAmount > 0)
+                      Text(
+                        'Includes ₱${tipAmount.toStringAsFixed(2)} tip',
+                        style: theme.bodySmall.override(
+                          color: theme.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Text(
+                '₱${totalFare.toStringAsFixed(2)}',
+                style: theme.titleMedium.override(
+                  fontWeight: FontWeight.w800,
+                  color: theme.primary,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────
 // Searching sheet (collapsible dashboard content)
 // ────────────────────────────────────────────────────────────────────────
 
@@ -2238,14 +2824,26 @@ class _SearchingSheet extends StatelessWidget {
     required this.stageSubtitle,
     required this.addressLabel,
     required this.addressLine,
+    required this.serviceTitle,
+    required this.paymentMethod,
+    required this.totalFare,
+    required this.appliedTip,
     required this.onCancel,
+    required this.onMinimize,
+    required this.onTipSubmitted,
     required this.secondsRemaining,
+    required this.searchRadiusKm,
     required this.gradientValue,
     required this.stageIndex,
     this.referenceId,
     this.providerCount,
     this.feeMin,
     this.feeMax,
+    this.broadcastFailed = false,
+    this.broadcastError,
+    this.isRetryingBroadcast = false,
+    this.onRetryBroadcast,
+    this.onViewBooking,
   });
 
   final ScrollController scrollController;
@@ -2254,148 +2852,194 @@ class _SearchingSheet extends StatelessWidget {
   final String stageSubtitle;
   final String addressLabel;
   final String addressLine;
+  final String serviceTitle;
+  final String paymentMethod;
+  final double totalFare;
+  final double appliedTip;
   final VoidCallback onCancel;
+  final VoidCallback onMinimize;
+  final Future<void> Function(double tip) onTipSubmitted;
   final String? referenceId;
   final int? providerCount;
   final double? feeMin;
   final double? feeMax;
   final int secondsRemaining;
+  final double searchRadiusKm;
   final Animation<double> gradientValue;
   final int stageIndex;
-
-  static String _roundFee(double value) {
-    if (!value.isFinite) {
-      return '0';
-    }
-    return value.toStringAsFixed(0);
-  }
+  final bool broadcastFailed;
+  final String? broadcastError;
+  final bool isRetryingBroadcast;
+  final VoidCallback? onRetryBroadcast;
+  final VoidCallback? onViewBooking;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return ListView(
-        controller: scrollController,
-        padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
-        children: [
-          // Drag handle
-          Center(
-            child: Container(
-              width: 42,
-              height: 5,
-              decoration: BoxDecoration(
-                color: theme.alternate,
-                borderRadius: BorderRadius.circular(999),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Stage card
+      controller: scrollController,
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      children: [
+        _MatchingHeaderBar(
+          theme: theme,
+          stageLabel: stageLabel,
+          stageSubtitle: stageSubtitle,
+          searchRadiusKm: searchRadiusKm,
+          onMinimize: onMinimize,
+          secondsRemaining: secondsRemaining,
+          gradientValue: gradientValue,
+          stageIndex: stageIndex,
+        ),
+        if (broadcastFailed) ...[
+          const SizedBox(height: 12),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: theme.primary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(18),
+              color: theme.warning.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppThemeData.radiusMd),
               border: Border.all(
-                color: theme.primary.withValues(alpha: 0.18),
+                color: theme.warning.withValues(alpha: 0.45),
               ),
             ),
-            child: Column(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  stageLabel,
-                  style: theme.labelLarge.override(
-                    color: theme.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
+                Icon(
+                  Icons.warning_amber_rounded,
+                  size: 20,
+                  color: theme.warning,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  stageSubtitle,
-                  style: theme.bodySmall.override(
-                    color: theme.secondaryText,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.bfBroadcastFailedTitle,
+                        style: theme.labelMedium.override(
+                          fontWeight: FontWeight.w800,
+                          color: theme.primaryText,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        (broadcastError != null &&
+                                broadcastError!.trim().isNotEmpty)
+                            ? l10n.bfBroadcastFailedRetryBody
+                            : l10n.bfBroadcastFailedBody,
+                        style: theme.bodySmall.override(
+                          color: theme.secondaryText,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 14),
-          // Gradient progress bar
-          _GradientBar(
-            gradientValue: gradientValue,
-            stageIndex: stageIndex,
-            progress: (secondsRemaining / _searchWindowSeconds).clamp(0.0, 1.0),
-            theme: theme,
-          ),
-          const SizedBox(height: 14),
-          // Header
-          Text(
-            l10n.bfSearchingNearbyProviders,
-            style: theme.titleMedium.override(
-              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+          if (onRetryBroadcast != null) ...[
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: isRetryingBroadcast ? null : onRetryBroadcast,
+                icon: isRetryingBroadcast
+                    ? SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: theme.primary,
+                        ),
+                      )
+                    : const Icon(Icons.refresh_rounded, size: 16),
+                label: Text(
+                  isRetryingBroadcast
+                      ? l10n.bfBroadcastRetrying
+                      : l10n.bfBroadcastRetry,
+                ),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(38),
+                  side: BorderSide(color: theme.primary),
+                  foregroundColor: theme.primary,
+                  textStyle: GoogleFonts.plusJakartaSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppThemeData.radiusMd),
+                  ),
+                ),
+              ),
             ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            l10n.bfStayOnScreen,
-            style: theme.bodyMedium.override(
-              color: theme.secondaryText,
+          ],
+          if (onViewBooking != null) ...[
+            const SizedBox(height: 6),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton.icon(
+                onPressed: onViewBooking,
+                icon: const Icon(Icons.receipt_long_rounded, size: 16),
+                label: Text(l10n.bfViewBookingDetails),
+                style: TextButton.styleFrom(
+                  foregroundColor: theme.secondaryText,
+                  textStyle: GoogleFonts.plusJakartaSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
+          ],
+        ],
+        const SizedBox(height: 18),
+        _TipSelectionCard(
+          theme: theme,
+          onTipSubmitted: onTipSubmitted,
+          appliedTip: appliedTip,
+        ),
+        const SizedBox(height: 16),
+        _BookingRouteDetailsTile(
+          theme: theme,
+          addressLabel: addressLabel,
+          addressLine: addressLine,
+          serviceTitle: serviceTitle,
+          paymentMethod: paymentMethod,
+          totalFare: totalFare,
+          tipAmount: appliedTip,
+        ),
+        if ((referenceId ?? '').isNotEmpty) ...[
+          const SizedBox(height: 14),
           _MetaRow(
             theme: theme,
-            icon: Icons.place_rounded,
-            title: addressLabel,
-            subtitle: addressLine,
-          ),
-          if ((referenceId ?? '').isNotEmpty) ...[
-            const SizedBox(height: 12),
-            _MetaRow(
-              theme: theme,
-              icon: Icons.tag_rounded,
-              title: l10n.bfSearchReference,
-              subtitle: referenceId!,
-            ),
-          ],
-          if (providerCount != null && providerCount! > 0) ...[
-            const SizedBox(height: 12),
-              _MetaRow(
-                theme: theme,
-                icon: Icons.people_alt_outlined,
-                title: l10n.bfProvidersNotified,
-                subtitle: providerCount! == 1
-                    ? l10n.bfProviderCountOne
-                    : l10n.bfProviderCountMany(providerCount!),
-              ),
-          ],
-          if (feeMin != null && feeMax != null) ...[
-            const SizedBox(height: 12),
-              _MetaRow(
-                theme: theme,
-                icon: Icons.request_quote_outlined,
-                title: l10n.bfEstimatedFee,
-                subtitle:
-                    l10n.bfFeeRange(_roundFee(feeMin!), _roundFee(feeMax!)),
-              ),
-          ],
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            height: 54,
-            child: AppButton(
-              onPressed: onCancel,
-              variant: AppButtonVariant.outlined,
-              borderSide: BorderSide(color: theme.alternate),
-              foregroundColor: theme.secondaryText,
-              borderRadius: 16,
-              width: double.infinity,
-              child: Text(l10n.bfCancelSearch),
-            ),
+            icon: Icons.tag_rounded,
+            title: 'Search Reference',
+            subtitle: referenceId!,
           ),
         ],
-      );
+        const SizedBox(height: 20),
+        SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: AppButton(
+            onPressed: onCancel,
+            variant: AppButtonVariant.outlined,
+            borderSide: BorderSide(color: theme.error),
+            foregroundColor: theme.error,
+            borderRadius: 16,
+            width: double.infinity,
+            child: Text(
+              'Cancel Booking',
+              style: theme.bodyMedium.override(
+                fontWeight: FontWeight.w700,
+                color: theme.error,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -2615,6 +3259,7 @@ class _MatchedSheet extends StatelessWidget {
               l10n.bfBackToHome,
               style: theme.titleMedium.override(
                 fontWeight: FontWeight.w700,
+                color: theme.onPrimary,
               ),
             ),
           ),
@@ -2679,14 +3324,16 @@ class _TimeoutSheet extends StatelessWidget {
   const _TimeoutSheet({
     required this.scrollController,
     required this.theme,
-    required this.onAdjustBooking,
-    required this.onBackHome,
+    required this.onRetrySearch,
+    required this.onScheduleInstead,
+    required this.onCancelSearch,
   });
 
   final ScrollController scrollController;
   final AppThemeData theme;
-  final VoidCallback onAdjustBooking;
-  final VoidCallback onBackHome;
+  final VoidCallback onRetrySearch;
+  final VoidCallback onScheduleInstead;
+  final VoidCallback onCancelSearch;
 
   @override
   Widget build(BuildContext context) {
@@ -2726,28 +3373,59 @@ class _TimeoutSheet extends StatelessWidget {
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
-            height: 54,
+            height: 52,
             child: AppButton(
-              onPressed: onAdjustBooking,
+              onPressed: onRetrySearch,
               backgroundColor: theme.primary,
               foregroundColor: theme.onPrimary,
               borderRadius: 16,
               width: double.infinity,
-              child: Text(l10n.bfAdjustBooking),
+              child: Text(
+                l10n.tmSearchAgain,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
-            height: 54,
+            height: 52,
             child: AppButton(
-              onPressed: onBackHome,
+              onPressed: onScheduleInstead,
               variant: AppButtonVariant.outlined,
-              borderSide: BorderSide(color: theme.alternate),
+              borderSide: BorderSide(color: theme.primary),
+              foregroundColor: theme.primary,
+              borderRadius: 16,
+              width: double.infinity,
+              child: Text(
+                l10n.tmScheduleInstead,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: AppButton(
+              onPressed: onCancelSearch,
+              variant: AppButtonVariant.text,
               foregroundColor: theme.secondaryText,
               borderRadius: 16,
               width: double.infinity,
-              child: Text(l10n.bfBackHome),
+              child: Text(
+                l10n.bfCancelSearch,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
         ],

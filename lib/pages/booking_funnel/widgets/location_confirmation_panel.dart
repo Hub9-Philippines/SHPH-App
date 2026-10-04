@@ -44,9 +44,10 @@ class LocationConfirmationPanel extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Center(
             child: Container(
@@ -229,6 +230,7 @@ class LocationConfirmationPanel extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 }

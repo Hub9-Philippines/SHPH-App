@@ -722,6 +722,16 @@ class AppLocalizationsFil extends AppLocalizations {
   String get bfSearchingNearbyProviders => 'Naghahanap ng providers sa malapit';
 
   @override
+  String get bfSearchInProgressTitle => 'Search in Progress';
+
+  @override
+  String get bfSearchInProgressBody =>
+      'You already have an active provider search running. Please wait for a match or cancel your existing search before starting a new booking.';
+
+  @override
+  String get bfViewActiveSearch => 'View Active Search';
+
+  @override
   String get bfSelectATime => 'Pumili ng oras';
 
   @override
@@ -5068,4 +5078,32 @@ class AppLocalizationsFil extends AppLocalizations {
   @override
   String get csMediaDenied =>
       'Kailangan ng access sa mikropono para sa mga tawag. Pakisubukan muli.';
+
+  @override
+  String get bfDispatchModeTitle => 'Booking Type';
+
+  @override
+  String get bfOnDemandTitle => 'On-Demand (Immediate)';
+
+  @override
+  String get bfOnDemandSubtitle =>
+      'Urgent / Emergency broadcast to nearest available providers right now';
+
+  @override
+  String get bfStandardBookingTitle => 'Standard Booking (Scheduled)';
+
+  @override
+  String get bfStandardBookingSubtitle =>
+      'Reserve a confirmed slot for an upcoming date and time';
+
+  @override
+  String get bfPickDateTime => 'Pick Date & Time';
+
+  @override
+  String get bfScheduleMandatoryError =>
+      'Please select a scheduled date and time before proceeding.';
+
+  @override
+  String get bfInstantDispatchBanner =>
+      'Instant Dispatch: Nearest providers will be notified immediately upon checkout.';
 }

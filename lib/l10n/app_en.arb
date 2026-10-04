@@ -238,6 +238,9 @@
   "bfScheduledReservation": "Scheduled reservation",
   "bfSearchReference": "Search reference",
   "bfSearchingNearbyProviders": "Searching nearby providers",
+  "bfSearchInProgressTitle": "Search in Progress",
+  "bfSearchInProgressBody": "You already have an active provider search running. Please wait for a match or cancel your existing search before starting a new booking.",
+  "bfViewActiveSearch": "View Active Search",
   "bfSelectATime": "Select a time",
   "bfSelectedService": "Selected service",
   "bfServiceCompleted": "Service has been completed",
@@ -1661,5 +1664,13 @@
   "csCameraNeeded": "Camera access is required for video calls.",
   "callPermCameraNeeded": "Camera access is required for video calls.",
   "csConnectionFailed": "Call connection failed. Please try again.",
-  "csMediaDenied": "Microphone access is needed for calls. Please try again."
+  "csMediaDenied": "Microphone access is needed for calls. Please try again.",
+  "bfDispatchModeTitle": "Booking Type",
+  "bfOnDemandTitle": "On-Demand (Immediate)",
+  "bfOnDemandSubtitle": "Urgent / Emergency broadcast to nearest available providers right now",
+  "bfStandardBookingTitle": "Standard Booking (Scheduled)",
+  "bfStandardBookingSubtitle": "Reserve a confirmed slot for an upcoming date and time",
+  "bfPickDateTime": "Pick Date & Time",
+  "bfScheduleMandatoryError": "Please select a scheduled date and time before proceeding.",
+  "bfInstantDispatchBanner": "Instant Dispatch: Nearest providers will be notified immediately upon checkout."
 }

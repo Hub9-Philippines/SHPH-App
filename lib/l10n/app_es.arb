@@ -139,5 +139,19 @@
   "csIncomingCall": "Llamada entrante",
   "csCallDeclined": "Llamada rechazada.",
   "csCallFailed": "No se pudo realizar la llamada en este momento.",
-  "caInAppChat": "Chatear en la app"
+  "caInAppChat": "Chatear en la app",
+  "bfDispatchModeTitle": "Tipo de Reserva",
+  "bfOnDemandTitle": "Bajo Demanda (Inmediato)",
+  "bfOnDemandSubtitle": "Transmisión urgente/emergencia a proveedores cercanos ahora mismo",
+  "bfStandardBookingTitle": "Reserva Estándar (Programada)",
+  "bfStandardBookingSubtitle": "Reserve un espacio confirmado para una fecha y hora próxima",
+  "bfPickDateTime": "Elegir Fecha y Hora",
+  "bfScheduleMandatoryError": "Seleccione una fecha y hora programada antes de continuar.",
+  "bfInstantDispatchBanner": "Despacho Inmediato: Los proveedores cercanos serán notificados inmediatamente.",
+  "bfSearchInProgressTitle": "Búsqueda en curso",
+  "bfSearchInProgressBody": "Ya tienes una búsqueda de proveedor activa. Espera a que coincida o cancela tu búsqueda existente antes de comenzar una nueva reserva.",
+  "bfViewActiveSearch": "Ver búsqueda activa",
+  "tmSearchAgain": "Buscar de nuevo",
+  "tmScheduleInstead": "Programar en su lugar",
+  "bfCancelSearch": "Cancelar búsqueda"
 }

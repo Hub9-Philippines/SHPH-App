@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 enum BookingUrgency { rightNow, laterToday, scheduled }
 
+enum BookingDispatchMode { onDemand, scheduled }
+
 enum ServiceType { standard, deep, premium }
 
 enum BookingPaymentMethod { gcash, maya, card, qrPh, cod }
@@ -34,6 +36,7 @@ class BookingAddress {
 @immutable
 class BookingDraft {
   const BookingDraft({
+    this.dispatchMode = BookingDispatchMode.onDemand,
     required this.urgency,
     required this.rooms,
     required this.cleaningType,
@@ -55,8 +58,10 @@ class BookingDraft {
     this.reservationToken,
     this.landmarks = '',
     this.requireArrivalCode = true,
+    this.tipAmount = 0.0,
   });
 
+  final BookingDispatchMode dispatchMode;
   final int? serviceListingId;
   final String? serviceTitle;
   final String? serviceCategoryName;
@@ -83,7 +88,11 @@ class BookingDraft {
   /// Client preference: require a start PIN before work begins.
   final bool requireArrivalCode;
 
+  /// Optional client incentive tip added during live matching or booking.
+  final double tipAmount;
+
   BookingDraft copyWith({
+    BookingDispatchMode? dispatchMode,
     int? serviceListingId,
     String? serviceTitle,
     String? serviceCategoryName,
@@ -105,8 +114,15 @@ class BookingDraft {
     String? reservationToken,
     String? landmarks,
     bool? requireArrivalCode,
+    double? tipAmount,
   }) =>
       BookingDraft(
+        dispatchMode: dispatchMode ??
+            (urgency != null
+                ? (urgency == BookingUrgency.scheduled
+                    ? BookingDispatchMode.scheduled
+                    : BookingDispatchMode.onDemand)
+                : this.dispatchMode),
         serviceListingId: serviceListingId ?? this.serviceListingId,
         serviceTitle: serviceTitle ?? this.serviceTitle,
         serviceCategoryName: serviceCategoryName ?? this.serviceCategoryName,
@@ -128,6 +144,7 @@ class BookingDraft {
         reservationToken: reservationToken ?? this.reservationToken,
         landmarks: landmarks ?? this.landmarks,
         requireArrivalCode: requireArrivalCode ?? this.requireArrivalCode,
+        tipAmount: tipAmount ?? this.tipAmount,
       );
 }
 
@@ -143,6 +160,7 @@ class BookingQuote {
     this.vat = 0,
     this.platformFeePercent,
     this.vatPercent,
+    this.tip = 0,
     required this.total,
   });
 
@@ -155,6 +173,7 @@ class BookingQuote {
   final double vat;
   final String? platformFeePercent;
   final String? vatPercent;
+  final double tip;
   final double total;
 
   factory BookingQuote.fromApi(Map<String, dynamic> json) {

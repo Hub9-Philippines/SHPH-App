@@ -498,7 +498,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get bfCancelMatching => 'Cancel matching';
 
   @override
-  String get bfCancelSearch => 'Cancel search';
+  String get bfCancelSearch => 'Cancelar búsqueda';
 
   @override
   String get bfCheckingAvailability => 'Checking availability';
@@ -711,6 +711,16 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get bfSearchingNearbyProviders => 'Searching nearby providers';
+
+  @override
+  String get bfSearchInProgressTitle => 'Búsqueda en curso';
+
+  @override
+  String get bfSearchInProgressBody =>
+      'Ya tienes una búsqueda de proveedor activa. Espera a que coincida o cancela tu búsqueda existente antes de comenzar una nueva reserva.';
+
+  @override
+  String get bfViewActiveSearch => 'Ver búsqueda activa';
 
   @override
   String get bfSelectATime => 'Select a time';
@@ -1306,10 +1316,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'We finished both search windows without a provider match. You can retry, switch to the scheduled flow, or head back home.';
 
   @override
-  String get tmSearchAgain => 'Search again';
+  String get tmSearchAgain => 'Buscar de nuevo';
 
   @override
-  String get tmScheduleInstead => 'Schedule instead';
+  String get tmScheduleInstead => 'Programar en su lugar';
 
   @override
   String get tmExpandingSearchNotice =>
@@ -5038,4 +5048,32 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get csMediaDenied =>
       'Microphone access is needed for calls. Please try again.';
+
+  @override
+  String get bfDispatchModeTitle => 'Tipo de Reserva';
+
+  @override
+  String get bfOnDemandTitle => 'Bajo Demanda (Inmediato)';
+
+  @override
+  String get bfOnDemandSubtitle =>
+      'Transmisión urgente/emergencia a proveedores cercanos ahora mismo';
+
+  @override
+  String get bfStandardBookingTitle => 'Reserva Estándar (Programada)';
+
+  @override
+  String get bfStandardBookingSubtitle =>
+      'Reserve un espacio confirmado para una fecha y hora próxima';
+
+  @override
+  String get bfPickDateTime => 'Elegir Fecha y Hora';
+
+  @override
+  String get bfScheduleMandatoryError =>
+      'Seleccione una fecha y hora programada antes de continuar.';
+
+  @override
+  String get bfInstantDispatchBanner =>
+      'Despacho Inmediato: Los proveedores cercanos serán notificados inmediatamente.';
 }

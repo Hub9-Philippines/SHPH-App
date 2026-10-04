@@ -20,6 +20,7 @@ import '/index.dart';
 import '/pages/booking_funnel/booking_controller.dart';
 import '/pages/booking_funnel/booking_models.dart';
 import '/pages/booking_funnel/express_checkout_screen.dart';
+import '/pages/booking_funnel/live_matching/live_matching_floating_banner.dart';
 import '/pages/booking_funnel/widgets/booking_flow_route.dart';
 import '/pages/booking_funnel/widgets/emergency_service_panel.dart';
 import '/pages/booking_funnel/widgets/service_selection_panel.dart';
@@ -517,6 +518,13 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
                     onAvatarTap: _openProfileActions,
                     onSearchTap: _openSearchPage,
                   ),
+                ),
+                // Floating live matching restoration banner
+                const Positioned(
+                  left: 16,
+                  right: 16,
+                  bottom: 16,
+                  child: LiveMatchingFloatingBanner(),
                 ),
               ],
             ),

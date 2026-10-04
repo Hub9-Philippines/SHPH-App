@@ -775,8 +775,6 @@ paths:
         required: true
       security:
       - jwtAuth: []
-      - cookieAuth: []
-      - jwtAuth: []
       - {}
       responses:
         '200':
@@ -842,8 +840,6 @@ paths:
             schema:
               $ref: '#/components/schemas/LogoutRequest'
       security:
-      - jwtAuth: []
-      - cookieAuth: []
       - jwtAuth: []
       - {}
       responses:
@@ -1203,8 +1199,6 @@ paths:
         required: true
       security:
       - jwtAuth: []
-      - cookieAuth: []
-      - jwtAuth: []
       - {}
       responses:
         '200':
@@ -1256,8 +1250,6 @@ paths:
               $ref: '#/components/schemas/PasswordResetConfirmRequest'
         required: true
       security:
-      - jwtAuth: []
-      - cookieAuth: []
       - jwtAuth: []
       - {}
       responses:
@@ -1437,8 +1429,6 @@ paths:
         required: true
       security:
       - jwtAuth: []
-      - cookieAuth: []
-      - jwtAuth: []
       - {}
       responses:
         '200':
@@ -1476,8 +1466,6 @@ paths:
               $ref: '#/components/schemas/RegisterRequest'
         required: true
       security:
-      - jwtAuth: []
-      - cookieAuth: []
       - jwtAuth: []
       - {}
       responses:
@@ -1540,8 +1528,6 @@ paths:
         required: true
       security:
       - jwtAuth: []
-      - cookieAuth: []
-      - jwtAuth: []
       - {}
       responses:
         '201':
@@ -1602,8 +1588,6 @@ paths:
               $ref: '#/components/schemas/RegisterResendRequest'
       security:
       - jwtAuth: []
-      - cookieAuth: []
-      - jwtAuth: []
       - {}
       responses:
         '201':
@@ -1655,8 +1639,6 @@ paths:
               $ref: '#/components/schemas/RegisterVerifyRequest'
         required: true
       security:
-      - jwtAuth: []
-      - cookieAuth: []
       - jwtAuth: []
       - {}
       responses:
@@ -1831,6 +1813,56 @@ paths:
                     status_code: 401
                   summary: Raised exception with a single detail message (403/404/etc.)
           description: ''
+  /api/auth/social/apple/:
+    post:
+      operationId: auth_social_apple_create
+      description: |-
+        Authenticate or register via a Firebase Apple ID token. Returns JWT tokens.
+
+        **Frontend:** LoginPage.vue, RegisterPage.vue
+      summary: Apple social login
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SocialGoogleLoginRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SocialGoogleLoginRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SocialGoogleLoginRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SocialGoogleLoginDone'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SocialGoogleLoginDone'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleDetailError'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleDetailError'
+          description: ''
   /api/auth/social/google/:
     post:
       operationId: auth_social_google_create
@@ -1854,8 +1886,6 @@ paths:
               $ref: '#/components/schemas/SocialGoogleLoginRequest'
         required: true
       security:
-      - jwtAuth: []
-      - cookieAuth: []
       - jwtAuth: []
       - {}
       responses:
@@ -2034,8 +2064,6 @@ paths:
               $ref: '#/components/schemas/TokenRefreshRequestRequest'
         required: true
       security:
-      - jwtAuth: []
-      - cookieAuth: []
       - jwtAuth: []
       - {}
       responses:
@@ -6250,6 +6278,1536 @@ paths:
               schema:
                 $ref: '#/components/schemas/HealthCheckFailedResponse'
           description: ''
+  /api/hr-interviews/admin-blocks/:
+    get:
+      operationId: hr_interviews_admin_blocks_list
+      description: ViewSet for admin slot blocking.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - hr-interviews
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAdminSlotBlockList'
+          description: ''
+    post:
+      operationId: hr_interviews_admin_blocks_create
+      description: ViewSet for admin slot blocking.
+      tags:
+      - hr-interviews
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdminSlotBlockRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminSlotBlockRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdminSlotBlockRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminSlotBlock'
+          description: ''
+  /api/hr-interviews/admin-blocks/{id}/:
+    get:
+      operationId: hr_interviews_admin_blocks_retrieve_by_id
+      description: ViewSet for admin slot blocking.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this admin slot block.
+        required: true
+      tags:
+      - hr-interviews
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminSlotBlock'
+          description: ''
+    put:
+      operationId: hr_interviews_admin_blocks_update_by_id
+      description: ViewSet for admin slot blocking.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this admin slot block.
+        required: true
+      tags:
+      - hr-interviews
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdminSlotBlockRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminSlotBlockRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdminSlotBlockRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminSlotBlock'
+          description: ''
+    patch:
+      operationId: hr_interviews_admin_blocks_partial_update_by_id
+      description: ViewSet for admin slot blocking.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this admin slot block.
+        required: true
+      tags:
+      - hr-interviews
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAdminSlotBlockRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAdminSlotBlockRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAdminSlotBlockRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminSlotBlock'
+          description: ''
+    delete:
+      operationId: hr_interviews_admin_blocks_destroy_by_id
+      description: ViewSet for admin slot blocking.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this admin slot block.
+        required: true
+      tags:
+      - hr-interviews
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/hr-interviews/admin-blocks/{id}/unblock/:
+    post:
+      operationId: hr_interviews_admin_blocks_unblock_create_by_id
+      description: Unblock a slot.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this admin slot block.
+        required: true
+      tags:
+      - hr-interviews
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdminSlotBlockRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminSlotBlockRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdminSlotBlockRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminSlotBlock'
+          description: ''
+  /api/hr-interviews/assignments/:
+    get:
+      operationId: hr_interviews_assignments_list
+      description: |-
+        ViewSet for interview assignments.
+
+        Reads stay scoped by role in ``get_queryset`` (admin sees all, HR
+        sees their own, candidates see theirs). Writes are HR-Admin-only:
+        assignment rows are minted by the booking flows themselves, so an
+        arbitrary authenticated caller must not forge one — a
+        ``candidate=self / hr_staff=self`` row would bypass the round-robin
+        self-assignment exclusion, and a row naming a colleague poisons the
+        ``has_conflict`` check to block their draws.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - hr-interviews
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedInterviewAssignmentList'
+          description: ''
+    post:
+      operationId: hr_interviews_assignments_create
+      description: |-
+        ViewSet for interview assignments.
+
+        Reads stay scoped by role in ``get_queryset`` (admin sees all, HR
+        sees their own, candidates see theirs). Writes are HR-Admin-only:
+        assignment rows are minted by the booking flows themselves, so an
+        arbitrary authenticated caller must not forge one — a
+        ``candidate=self / hr_staff=self`` row would bypass the round-robin
+        self-assignment exclusion, and a row naming a colleague poisons the
+        ``has_conflict`` check to block their draws.
+      tags:
+      - hr-interviews
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InterviewAssignmentRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterviewAssignmentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InterviewAssignmentRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewAssignment'
+          description: ''
+  /api/hr-interviews/assignments/{id}/:
+    get:
+      operationId: hr_interviews_assignments_retrieve_by_id
+      description: |-
+        ViewSet for interview assignments.
+
+        Reads stay scoped by role in ``get_queryset`` (admin sees all, HR
+        sees their own, candidates see theirs). Writes are HR-Admin-only:
+        assignment rows are minted by the booking flows themselves, so an
+        arbitrary authenticated caller must not forge one — a
+        ``candidate=self / hr_staff=self`` row would bypass the round-robin
+        self-assignment exclusion, and a row naming a colleague poisons the
+        ``has_conflict`` check to block their draws.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this interview assignment.
+        required: true
+      tags:
+      - hr-interviews
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewAssignment'
+          description: ''
+    put:
+      operationId: hr_interviews_assignments_update_by_id
+      description: |-
+        ViewSet for interview assignments.
+
+        Reads stay scoped by role in ``get_queryset`` (admin sees all, HR
+        sees their own, candidates see theirs). Writes are HR-Admin-only:
+        assignment rows are minted by the booking flows themselves, so an
+        arbitrary authenticated caller must not forge one — a
+        ``candidate=self / hr_staff=self`` row would bypass the round-robin
+        self-assignment exclusion, and a row naming a colleague poisons the
+        ``has_conflict`` check to block their draws.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this interview assignment.
+        required: true
+      tags:
+      - hr-interviews
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InterviewAssignmentRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterviewAssignmentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InterviewAssignmentRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewAssignment'
+          description: ''
+    patch:
+      operationId: hr_interviews_assignments_partial_update_by_id
+      description: |-
+        ViewSet for interview assignments.
+
+        Reads stay scoped by role in ``get_queryset`` (admin sees all, HR
+        sees their own, candidates see theirs). Writes are HR-Admin-only:
+        assignment rows are minted by the booking flows themselves, so an
+        arbitrary authenticated caller must not forge one — a
+        ``candidate=self / hr_staff=self`` row would bypass the round-robin
+        self-assignment exclusion, and a row naming a colleague poisons the
+        ``has_conflict`` check to block their draws.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this interview assignment.
+        required: true
+      tags:
+      - hr-interviews
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedInterviewAssignmentRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedInterviewAssignmentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedInterviewAssignmentRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewAssignment'
+          description: ''
+    delete:
+      operationId: hr_interviews_assignments_destroy_by_id
+      description: |-
+        ViewSet for interview assignments.
+
+        Reads stay scoped by role in ``get_queryset`` (admin sees all, HR
+        sees their own, candidates see theirs). Writes are HR-Admin-only:
+        assignment rows are minted by the booking flows themselves, so an
+        arbitrary authenticated caller must not forge one — a
+        ``candidate=self / hr_staff=self`` row would bypass the round-robin
+        self-assignment exclusion, and a row naming a colleague poisons the
+        ``has_conflict`` check to block their draws.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this interview assignment.
+        required: true
+      tags:
+      - hr-interviews
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/hr-interviews/assignments/{id}/cancel/:
+    post:
+      operationId: hr_interviews_assignments_cancel_create_by_id
+      description: Cancel an interview.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this interview assignment.
+        required: true
+      tags:
+      - hr-interviews
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InterviewAssignmentRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterviewAssignmentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InterviewAssignmentRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewAssignment'
+          description: ''
+  /api/hr-interviews/assignments/{id}/complete/:
+    post:
+      operationId: hr_interviews_assignments_complete_create_by_id
+      description: Mark interview as completed.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this interview assignment.
+        required: true
+      tags:
+      - hr-interviews
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InterviewAssignmentRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterviewAssignmentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InterviewAssignmentRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewAssignment'
+          description: ''
+  /api/hr-interviews/availability-exceptions/:
+    get:
+      operationId: hr_interviews_availability_exceptions_list
+      description: |-
+        ViewSet for HR availability exceptions — these rows also steer
+        which HR staff the draw treats as available.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - hr-interviews
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedHRAvailabilityExceptionList'
+          description: ''
+    post:
+      operationId: hr_interviews_availability_exceptions_create
+      description: |-
+        ViewSet for HR availability exceptions — these rows also steer
+        which HR staff the draw treats as available.
+      tags:
+      - hr-interviews
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HRAvailabilityExceptionRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HRAvailabilityExceptionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/HRAvailabilityExceptionRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HRAvailabilityException'
+          description: ''
+  /api/hr-interviews/availability-exceptions/{id}/:
+    get:
+      operationId: hr_interviews_availability_exceptions_retrieve_by_id
+      description: |-
+        ViewSet for HR availability exceptions — these rows also steer
+        which HR staff the draw treats as available.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this hr availability exception.
+        required: true
+      tags:
+      - hr-interviews
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HRAvailabilityException'
+          description: ''
+    put:
+      operationId: hr_interviews_availability_exceptions_update_by_id
+      description: |-
+        ViewSet for HR availability exceptions — these rows also steer
+        which HR staff the draw treats as available.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this hr availability exception.
+        required: true
+      tags:
+      - hr-interviews
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HRAvailabilityExceptionRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HRAvailabilityExceptionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/HRAvailabilityExceptionRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HRAvailabilityException'
+          description: ''
+    patch:
+      operationId: hr_interviews_availability_exceptions_partial_update_by_id
+      description: |-
+        ViewSet for HR availability exceptions — these rows also steer
+        which HR staff the draw treats as available.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this hr availability exception.
+        required: true
+      tags:
+      - hr-interviews
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedHRAvailabilityExceptionRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedHRAvailabilityExceptionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedHRAvailabilityExceptionRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HRAvailabilityException'
+          description: ''
+    delete:
+      operationId: hr_interviews_availability_exceptions_destroy_by_id
+      description: |-
+        ViewSet for HR availability exceptions — these rows also steer
+        which HR staff the draw treats as available.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this hr availability exception.
+        required: true
+      tags:
+      - hr-interviews
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/hr-interviews/availability-profiles/:
+    get:
+      operationId: hr_interviews_availability_profiles_list
+      description: ViewSet for HR availability profiles — the round-robin draw pool.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - hr-interviews
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedHRAvailabilityProfileList'
+          description: ''
+    post:
+      operationId: hr_interviews_availability_profiles_create
+      description: ViewSet for HR availability profiles — the round-robin draw pool.
+      tags:
+      - hr-interviews
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HRAvailabilityProfileRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HRAvailabilityProfileRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/HRAvailabilityProfileRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HRAvailabilityProfile'
+          description: ''
+  /api/hr-interviews/availability-profiles/{id}/:
+    get:
+      operationId: hr_interviews_availability_profiles_retrieve_by_id
+      description: ViewSet for HR availability profiles — the round-robin draw pool.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this hr availability profile.
+        required: true
+      tags:
+      - hr-interviews
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HRAvailabilityProfile'
+          description: ''
+    put:
+      operationId: hr_interviews_availability_profiles_update_by_id
+      description: ViewSet for HR availability profiles — the round-robin draw pool.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this hr availability profile.
+        required: true
+      tags:
+      - hr-interviews
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HRAvailabilityProfileRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HRAvailabilityProfileRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/HRAvailabilityProfileRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HRAvailabilityProfile'
+          description: ''
+    patch:
+      operationId: hr_interviews_availability_profiles_partial_update_by_id
+      description: ViewSet for HR availability profiles — the round-robin draw pool.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this hr availability profile.
+        required: true
+      tags:
+      - hr-interviews
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedHRAvailabilityProfileRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedHRAvailabilityProfileRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedHRAvailabilityProfileRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HRAvailabilityProfile'
+          description: ''
+    delete:
+      operationId: hr_interviews_availability_profiles_destroy_by_id
+      description: ViewSet for HR availability profiles — the round-robin draw pool.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this hr availability profile.
+        required: true
+      tags:
+      - hr-interviews
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/hr-interviews/config/:
+    get:
+      operationId: hr_interviews_config_list
+      description: ViewSet for interview system configuration.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - hr-interviews
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedInterviewSystemConfigList'
+          description: ''
+    post:
+      operationId: hr_interviews_config_create
+      description: ViewSet for interview system configuration.
+      tags:
+      - hr-interviews
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InterviewSystemConfigRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterviewSystemConfigRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InterviewSystemConfigRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewSystemConfig'
+          description: ''
+  /api/hr-interviews/config/{id}/:
+    get:
+      operationId: hr_interviews_config_retrieve_by_id
+      description: ViewSet for interview system configuration.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Interview System Configuration.
+        required: true
+      tags:
+      - hr-interviews
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewSystemConfig'
+          description: ''
+    put:
+      operationId: hr_interviews_config_update_by_id
+      description: ViewSet for interview system configuration.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Interview System Configuration.
+        required: true
+      tags:
+      - hr-interviews
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InterviewSystemConfigRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterviewSystemConfigRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InterviewSystemConfigRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewSystemConfig'
+          description: ''
+    patch:
+      operationId: hr_interviews_config_partial_update_by_id
+      description: ViewSet for interview system configuration.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Interview System Configuration.
+        required: true
+      tags:
+      - hr-interviews
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedInterviewSystemConfigRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedInterviewSystemConfigRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedInterviewSystemConfigRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewSystemConfig'
+          description: ''
+    delete:
+      operationId: hr_interviews_config_destroy_by_id
+      description: ViewSet for interview system configuration.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Interview System Configuration.
+        required: true
+      tags:
+      - hr-interviews
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/hr-interviews/dashboard/my_availability/:
+    get:
+      operationId: hr_interviews_dashboard_my_availability_retrieve
+      description: Get current HR's availability profile.
+      tags:
+      - hr-interviews
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/hr-interviews/dashboard/my_interviews/:
+    get:
+      operationId: hr_interviews_dashboard_my_interviews_retrieve
+      description: Get current HR's assigned interviews.
+      tags:
+      - hr-interviews
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/hr-interviews/reassignment-logs/:
+    get:
+      operationId: hr_interviews_reassignment_logs_list
+      description: |-
+        Read-only audit log plus the ``reassign`` writer action.
+
+        Deliberately NOT a ModelViewSet: create/update/destroy on an audit
+        trail would let the same admin the log holds accountable rewrite or
+        erase history. The only writer is ``reassign`` below, which stamps
+        ``request.user`` at the ORM layer.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - hr-interviews
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedInterviewReassignmentLogList'
+          description: ''
+  /api/hr-interviews/reassignment-logs/{id}/:
+    get:
+      operationId: hr_interviews_reassignment_logs_retrieve_by_id
+      description: |-
+        Read-only audit log plus the ``reassign`` writer action.
+
+        Deliberately NOT a ModelViewSet: create/update/destroy on an audit
+        trail would let the same admin the log holds accountable rewrite or
+        erase history. The only writer is ``reassign`` below, which stamps
+        ``request.user`` at the ORM layer.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this interview reassignment
+          log.
+        required: true
+      tags:
+      - hr-interviews
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewReassignmentLog'
+          description: ''
+  /api/hr-interviews/reassignment-logs/reassign/:
+    post:
+      operationId: hr_interviews_reassignment_logs_reassign_create
+      description: Reassign an interview to different HR or slot.
+      tags:
+      - hr-interviews
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InterviewReassignmentLogRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterviewReassignmentLogRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InterviewReassignmentLogRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewReassignmentLog'
+          description: ''
+  /api/hr-interviews/rotation-states/:
+    get:
+      operationId: hr_interviews_rotation_states_list
+      description: ViewSet for HR rotation state management.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - hr-interviews
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedHRRotationStateList'
+          description: ''
+    post:
+      operationId: hr_interviews_rotation_states_create
+      description: ViewSet for HR rotation state management.
+      tags:
+      - hr-interviews
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HRRotationStateRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HRRotationStateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/HRRotationStateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HRRotationState'
+          description: ''
+  /api/hr-interviews/rotation-states/{id}/:
+    get:
+      operationId: hr_interviews_rotation_states_retrieve_by_id
+      description: ViewSet for HR rotation state management.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this hr rotation state.
+        required: true
+      tags:
+      - hr-interviews
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HRRotationState'
+          description: ''
+    put:
+      operationId: hr_interviews_rotation_states_update_by_id
+      description: ViewSet for HR rotation state management.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this hr rotation state.
+        required: true
+      tags:
+      - hr-interviews
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HRRotationStateRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HRRotationStateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/HRRotationStateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HRRotationState'
+          description: ''
+    patch:
+      operationId: hr_interviews_rotation_states_partial_update_by_id
+      description: ViewSet for HR rotation state management.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this hr rotation state.
+        required: true
+      tags:
+      - hr-interviews
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedHRRotationStateRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedHRRotationStateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedHRRotationStateRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HRRotationState'
+          description: ''
+    delete:
+      operationId: hr_interviews_rotation_states_destroy_by_id
+      description: ViewSet for HR rotation state management.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this hr rotation state.
+        required: true
+      tags:
+      - hr-interviews
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/hr-interviews/slots/:
+    get:
+      operationId: hr_interviews_slots_list
+      description: |-
+        ViewSet for interview slots.
+
+        Reads stay open — candidates browse and book from the same pool.
+        Unsafe methods are HR-Admin-only except ``book`` (the candidate
+        self-service path): a forged slot defaults to ``status='available'``
+        and is immediately bookable, minting real assignments that name
+        drawn HR staff; a PATCH reshapes capacity and times; a DELETE
+        cascades every scheduled assignment on the slot away.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - hr-interviews
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedInterviewSlotList'
+          description: ''
+    post:
+      operationId: hr_interviews_slots_create
+      description: |-
+        ViewSet for interview slots.
+
+        Reads stay open — candidates browse and book from the same pool.
+        Unsafe methods are HR-Admin-only except ``book`` (the candidate
+        self-service path): a forged slot defaults to ``status='available'``
+        and is immediately bookable, minting real assignments that name
+        drawn HR staff; a PATCH reshapes capacity and times; a DELETE
+        cascades every scheduled assignment on the slot away.
+      tags:
+      - hr-interviews
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InterviewSlotRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterviewSlotRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InterviewSlotRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewSlot'
+          description: ''
+  /api/hr-interviews/slots/{id}/:
+    get:
+      operationId: hr_interviews_slots_retrieve_by_id
+      description: |-
+        ViewSet for interview slots.
+
+        Reads stay open — candidates browse and book from the same pool.
+        Unsafe methods are HR-Admin-only except ``book`` (the candidate
+        self-service path): a forged slot defaults to ``status='available'``
+        and is immediately bookable, minting real assignments that name
+        drawn HR staff; a PATCH reshapes capacity and times; a DELETE
+        cascades every scheduled assignment on the slot away.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this interview slot.
+        required: true
+      tags:
+      - hr-interviews
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewSlot'
+          description: ''
+    put:
+      operationId: hr_interviews_slots_update_by_id
+      description: |-
+        ViewSet for interview slots.
+
+        Reads stay open — candidates browse and book from the same pool.
+        Unsafe methods are HR-Admin-only except ``book`` (the candidate
+        self-service path): a forged slot defaults to ``status='available'``
+        and is immediately bookable, minting real assignments that name
+        drawn HR staff; a PATCH reshapes capacity and times; a DELETE
+        cascades every scheduled assignment on the slot away.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this interview slot.
+        required: true
+      tags:
+      - hr-interviews
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InterviewSlotRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterviewSlotRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InterviewSlotRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewSlot'
+          description: ''
+    patch:
+      operationId: hr_interviews_slots_partial_update_by_id
+      description: |-
+        ViewSet for interview slots.
+
+        Reads stay open — candidates browse and book from the same pool.
+        Unsafe methods are HR-Admin-only except ``book`` (the candidate
+        self-service path): a forged slot defaults to ``status='available'``
+        and is immediately bookable, minting real assignments that name
+        drawn HR staff; a PATCH reshapes capacity and times; a DELETE
+        cascades every scheduled assignment on the slot away.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this interview slot.
+        required: true
+      tags:
+      - hr-interviews
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedInterviewSlotRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedInterviewSlotRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedInterviewSlotRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewSlot'
+          description: ''
+    delete:
+      operationId: hr_interviews_slots_destroy_by_id
+      description: |-
+        ViewSet for interview slots.
+
+        Reads stay open — candidates browse and book from the same pool.
+        Unsafe methods are HR-Admin-only except ``book`` (the candidate
+        self-service path): a forged slot defaults to ``status='available'``
+        and is immediately bookable, minting real assignments that name
+        drawn HR staff; a PATCH reshapes capacity and times; a DELETE
+        cascades every scheduled assignment on the slot away.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this interview slot.
+        required: true
+      tags:
+      - hr-interviews
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/hr-interviews/slots/available/:
+    get:
+      operationId: hr_interviews_slots_available_retrieve
+      description: Get available slots for candidates.
+      tags:
+      - hr-interviews
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewSlot'
+          description: ''
+  /api/hr-interviews/slots/book/:
+    post:
+      operationId: hr_interviews_slots_book_create
+      description: Book an interview slot with round-robin assignment.
+      tags:
+      - hr-interviews
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InterviewSlotRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterviewSlotRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InterviewSlotRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewSlot'
+          description: ''
   /api/kyc/admin/:
     get:
       operationId: kyc_admin_list
@@ -6326,45 +7884,289 @@ paths:
                     status_code: 401
                   summary: Raised exception with a single detail message (403/404/etc.)
           description: ''
-  /api/kyc/admin/{id}/{action}/:
+  /api/kyc/interview/book/:
     post:
-      operationId: kyc_admin_create_by_id
+      operationId: kyc_interview_book_create
       description: |-
-        Admin action on a KYC submission: approve or reject. For reject, optional rejection_reason in body.
+        Book one of the admin-managed interview slots. Only callable while the submission is in docs_approved or partially_approved status. Transitions to interview_scheduled.
 
-        **Frontend:** KycPage.vue, IdVerifyPage.vue, ReviewScanPage.vue, Admin dashboard
-      summary: 'Admin: Approve/reject KYC'
-      parameters:
-      - in: path
-        name: action
-        schema:
-          type: string
-        required: true
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
+        **Frontend:** KycInterviewSchedulerModal.vue
+      summary: Book an interview slot
       tags:
       - KYC
       requestBody:
         content:
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/AdminKycActionRequest'
+              $ref: '#/components/schemas/InterviewBookingRequest'
           application/json:
             schema:
-              $ref: '#/components/schemas/AdminKycActionRequest'
+              $ref: '#/components/schemas/InterviewBookingRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/AdminKycActionRequest'
+              $ref: '#/components/schemas/InterviewBookingRequest'
+        required: true
       security:
       - jwtAuth: []
       - cookieAuth: []
       - jwtAuth: []
       responses:
-        '204':
-          description: No response body
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KycSubmission'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+              examples:
+                FieldValidationError:
+                  value:
+                    error: true
+                    detail:
+                      category:
+                      - Invalid pk "999" - object does not exist.
+                    status_code: 400
+                  summary: Raised ValidationError with field-level messages
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+              examples:
+                SimpleDetailMessage:
+                  value:
+                    error: true
+                    detail:
+                      detail: Authentication credentials were not provided.
+                    status_code: 401
+                  summary: Raised exception with a single detail message (403/404/etc.)
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleDetailError'
+          description: ''
+  /api/kyc/interview/reschedule/:
+    post:
+      operationId: kyc_interview_reschedule_create
+      description: |-
+        Move the booked interview to a different slot. Limited to 2 reschedules per booking.
+
+        **Frontend:** KycInterviewSchedulerModal.vue
+      summary: Reschedule a booked interview
+      tags:
+      - KYC
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InterviewBookingRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterviewBookingRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InterviewBookingRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KycSubmission'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+              examples:
+                FieldValidationError:
+                  value:
+                    error: true
+                    detail:
+                      category:
+                      - Invalid pk "999" - object does not exist.
+                    status_code: 400
+                  summary: Raised ValidationError with field-level messages
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+              examples:
+                SimpleDetailMessage:
+                  value:
+                    error: true
+                    detail:
+                      detail: Authentication credentials were not provided.
+                    status_code: 401
+                  summary: Raised exception with a single detail message (403/404/etc.)
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleDetailError'
+          description: ''
+  /api/kyc/interview/room/:
+    post:
+      operationId: kyc_interview_room_create
+      description: |-
+        Get or create the admin chat thread used as the video call room for the booked HR interview. Returns the thread id, whether the join window is currently open, and how early it opens.
+
+        **Frontend:** KycStatusCard.vue / ChatPage call flow
+      summary: Join the interview call room
+      tags:
+      - KYC
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KycInterviewRoomResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+              examples:
+                FieldValidationError:
+                  value:
+                    error: true
+                    detail:
+                      category:
+                      - Invalid pk "999" - object does not exist.
+                    status_code: 400
+                  summary: Raised ValidationError with field-level messages
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+              examples:
+                SimpleDetailMessage:
+                  value:
+                    error: true
+                    detail:
+                      detail: Authentication credentials were not provided.
+                    status_code: 401
+                  summary: Raised exception with a single detail message (403/404/etc.)
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleDetailError'
+          description: ''
+  /api/kyc/interview/slots/:
+    get:
+      operationId: kyc_interview_slots_retrieve
+      description: |-
+        Admin-managed HR interview availability for the scheduling calendar, grouped by date. Only active, future, untaken slots are returned. Requires a submission that can book or reschedule an interview — the payload names staff interviewers, so it is not enumerable by arbitrary accounts.
+
+        **Frontend:** KycInterviewSchedulerModal.vue
+      summary: List bookable interview slots
+      tags:
+      - KYC
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KycInterviewSlotsResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+              examples:
+                FieldValidationError:
+                  value:
+                    error: true
+                    detail:
+                      category:
+                      - Invalid pk "999" - object does not exist.
+                    status_code: 400
+                  summary: Raised ValidationError with field-level messages
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+              examples:
+                SimpleDetailMessage:
+                  value:
+                    error: true
+                    detail:
+                      detail: Authentication credentials were not provided.
+                    status_code: 401
+                  summary: Raised exception with a single detail message (403/404/etc.)
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleDetailError'
+          description: ''
+    post:
+      operationId: kyc_interview_slots_create
+      description: |-
+        Admin-managed HR interview availability for the scheduling calendar, grouped by date. Only active, future, untaken slots are returned. Requires a submission that can book or reschedule an interview — the payload names staff interviewers, so it is not enumerable by arbitrary accounts.
+
+        **Frontend:** KycInterviewSchedulerModal.vue
+      summary: List bookable interview slots
+      tags:
+      - KYC
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KycInterviewSlotsResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+              examples:
+                FieldValidationError:
+                  value:
+                    error: true
+                    detail:
+                      category:
+                      - Invalid pk "999" - object does not exist.
+                    status_code: 400
+                  summary: Raised ValidationError with field-level messages
+          description: ''
         '401':
           content:
             application/json:
@@ -6493,7 +8295,7 @@ paths:
       description: |-
         Get the authenticated user
 
-        **Frontend:** KycPage.vue, IdVerifyPage.vue, ReviewScanPage.vue, Admin dashboard's KYC submission status and history.
+        **Frontend:** KycPage.vue, IdVerifyPage.vue, ReviewScanPage.vue, Admin dashboard's KYC submission status and history. Optional `submitter_role` (query param) scopes the read to that track's row; absent → the user's most recent submission.
       summary: Get KYC status
       tags:
       - KYC
@@ -6978,6 +8780,48 @@ paths:
                     status_code: 400
                   summary: Raised ValidationError with field-level messages
           description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+              examples:
+                SimpleDetailMessage:
+                  value:
+                    error: true
+                    detail:
+                      detail: Authentication credentials were not provided.
+                    status_code: 401
+                  summary: Raised exception with a single detail message (403/404/etc.)
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleDetailError'
+          description: ''
+    delete:
+      operationId: notifications_destroy_by_id
+      description: |-
+        Permanently delete a notification owned by the authenticated user. Another user's notification returns 404.
+
+        **Frontend:** NotificationsPage.vue
+      summary: Delete notification
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Notifications
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
         '401':
           content:
             application/json:
@@ -11525,7 +13369,7 @@ paths:
     patch:
       operationId: services_bookings_partial_update_by_id
       description: |-
-        Partially update a specific booking (e.g., status change).
+        Partially update a specific booking (e.g., status change). A status change to 'cancelled' runs the same cancellation pipeline as POST /bookings/<id>/cancel/ — it reverses any wallet payment and, for a client-initiated cancel, charges the announced cancellation fee.
 
         **Frontend:** HomePage.vue, ExplorePage.vue, ServiceDetailPage.vue, BookingsPage.vue, BookingDetailPage.vue, PostServicePage.vue, ProviderDashboardPage.vue, SearchPage.vue
       summary: Partial update booking
@@ -14068,7 +15912,11 @@ paths:
           description: ''
     post:
       operationId: services_on_demand_estimate_create
-      description: GET /services/on-demand/estimate/?category_id=X&lat=Y&lng=Z&radius=4
+      description: |-
+        GET /services/on-demand/estimate/?category_id=X&lat=Y&lng=Z&radius=4&scheduled_for=<ISO>
+
+        ``scheduled_for`` prices the rush/night premium at the job's scheduled
+        time (default: now, matching what an immediate job is charged at accept).
       tags:
       - services
       security:
@@ -16682,12 +18530,6 @@ components:
       properties:
         admin_notes:
           type: string
-    AdminKycActionRequest:
-      type: object
-      description: POST /kyc/admin/<pk>/<action>/ request.
-      properties:
-        rejection_reason:
-          type: string
     AdminKycSubmissionRequest:
       type: object
       properties:
@@ -16721,7 +18563,9 @@ components:
           format: double
           nullable: true
         submitter_role:
-          $ref: '#/components/schemas/KycSubmissionRoleEnum'
+          allOf:
+          - $ref: '#/components/schemas/KycSubmissionRoleEnum'
+          default: provider
         nbi_clearance_url:
           oneOf:
           - type: string
@@ -16770,7 +18614,7 @@ components:
           type: integer
           maximum: 2147483647
           minimum: 0
-        document_rejections: {}
+        item_reviews: {}
         interview_scheduled_at:
           type: string
           format: date-time
@@ -16781,6 +18625,24 @@ components:
           nullable: true
         interview_notes:
           type: string
+        interview_slot:
+          type: integer
+          nullable: true
+        interview_reschedule_count:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        interview_skill_ids: {}
+        interview_feedback:
+          type: string
+        interview_improvement_areas: {}
+        reapply_eligible_at:
+          type: string
+          format: date-time
+          nullable: true
+        interviewer:
+          type: integer
+          nullable: true
       required:
       - id_type
     AdminPayoutRequest:
@@ -16846,6 +18708,78 @@ components:
           exclusiveMinimum: true
       required:
       - amount
+    AdminSlotBlock:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        slot:
+          allOf:
+          - $ref: '#/components/schemas/InterviewSlot'
+          readOnly: true
+        hr_staff:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        reason:
+          $ref: '#/components/schemas/AdminSlotBlockReasonEnum'
+        reason_display:
+          type: string
+          readOnly: true
+        notes:
+          type: string
+        blocked_by:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        is_active:
+          type: boolean
+      required:
+      - blocked_by
+      - created_at
+      - hr_staff
+      - id
+      - reason
+      - reason_display
+      - slot
+    AdminSlotBlockReasonEnum:
+      enum:
+      - emergency
+      - meeting
+      - maintenance
+      - capacity_limit
+      - other
+      type: string
+      description: |-
+        * `emergency` - Emergency
+        * `meeting` - Meeting
+        * `maintenance` - System Maintenance
+        * `capacity_limit` - Capacity Limit
+        * `other` - Other
+    AdminSlotBlockRequest:
+      type: object
+      properties:
+        slot_id:
+          type: integer
+          writeOnly: true
+        hr_staff_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        reason:
+          $ref: '#/components/schemas/AdminSlotBlockReasonEnum'
+        notes:
+          type: string
+        is_active:
+          type: boolean
+      required:
+      - reason
+      - slot_id
     AdminStatsResponse:
       type: object
       properties:
@@ -17299,6 +19233,14 @@ components:
             breaks the same invariant that keeps this off the broadcast fan-out.
             Anyone else gets nothing.
           readOnly: true
+        client_phone:
+          type: string
+          description: |-
+            Client phone number — released on the same terms as client_address.
+
+            The client always sees their own number; the provider sees it only
+            after the booking leaves PENDING; anyone else gets "".
+          readOnly: true
         completion_photo_url:
           oneOf:
           - type: string
@@ -17308,6 +19250,8 @@ components:
             maxLength: 0
         completion_photo_urls:
           readOnly: true
+        completion_notes:
+          type: string
         has_review:
           type: boolean
           readOnly: true
@@ -17333,6 +19277,7 @@ components:
       - client_confirmed_arrival
       - client_id
       - client_name
+      - client_phone
       - client_photo
       - completion_photo_urls
       - created_at
@@ -17425,9 +19370,12 @@ components:
           additionalProperties: {}
         completion_photo_url:
           type: string
+        completion_notes:
+          type: string
       required:
       - booking_id
       - client_name
+      - completion_notes
       - completion_photo_url
       - created_at
       - fee_breakdown
@@ -17553,6 +19501,8 @@ components:
             maxLength: 200
           - type: string
             maxLength: 0
+        completion_notes:
+          type: string
       required:
       - listing
     BookingRescheduleRequestRequest:
@@ -17638,6 +19588,8 @@ components:
             maxLength: 200
           - type: string
             maxLength: 0
+        completion_notes:
+          type: string
         pin:
           type: string
           writeOnly: true
@@ -18791,6 +20743,199 @@ components:
       properties:
         title:
           type: string
+    HRAvailabilityException:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        hr_staff:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        date:
+          type: string
+          format: date
+        start_time:
+          type: string
+          format: time
+          nullable: true
+        end_time:
+          type: string
+          format: time
+          nullable: true
+        reason:
+          $ref: '#/components/schemas/HRAvailabilityExceptionReasonEnum'
+        reason_display:
+          type: string
+          readOnly: true
+        notes:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - date
+      - hr_staff
+      - id
+      - reason
+      - reason_display
+    HRAvailabilityExceptionReasonEnum:
+      enum:
+      - vacation
+      - sick_leave
+      - meeting
+      - emergency
+      - other
+      type: string
+      description: |-
+        * `vacation` - Vacation
+        * `sick_leave` - Sick Leave
+        * `meeting` - Meeting
+        * `emergency` - Emergency
+        * `other` - Other
+    HRAvailabilityExceptionRequest:
+      type: object
+      properties:
+        hr_staff_id:
+          type: integer
+          writeOnly: true
+        date:
+          type: string
+          format: date
+        start_time:
+          type: string
+          format: time
+          nullable: true
+        end_time:
+          type: string
+          format: time
+          nullable: true
+        reason:
+          $ref: '#/components/schemas/HRAvailabilityExceptionReasonEnum'
+        notes:
+          type: string
+      required:
+      - date
+      - reason
+    HRAvailabilityProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        hr_staff:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        day_of_week:
+          allOf:
+          - $ref: '#/components/schemas/DayOfWeekEnum'
+          minimum: -2147483648
+          maximum: 2147483647
+        day_of_week_display:
+          type: string
+          readOnly: true
+        start_time:
+          type: string
+          format: time
+        end_time:
+          type: string
+          format: time
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - day_of_week
+      - day_of_week_display
+      - end_time
+      - hr_staff
+      - id
+      - start_time
+      - updated_at
+    HRAvailabilityProfileRequest:
+      type: object
+      properties:
+        hr_staff_id:
+          type: integer
+          writeOnly: true
+        day_of_week:
+          allOf:
+          - $ref: '#/components/schemas/DayOfWeekEnum'
+          minimum: -2147483648
+          maximum: 2147483647
+        start_time:
+          type: string
+          format: time
+        end_time:
+          type: string
+          format: time
+        is_active:
+          type: boolean
+      required:
+      - day_of_week
+      - end_time
+      - start_time
+    HRRotationState:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        hr_staff:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        last_assigned_time:
+          type: string
+          format: date-time
+          nullable: true
+        assignment_count:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        position_in_queue:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        last_updated:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - hr_staff
+      - id
+      - last_updated
+    HRRotationStateRequest:
+      type: object
+      properties:
+        hr_staff_id:
+          type: integer
+          writeOnly: true
+        last_assigned_time:
+          type: string
+          format: date-time
+          nullable: true
+        assignment_count:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        position_in_queue:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+      required:
+      - hr_staff_id
     HealthCheckFailedResponse:
       type: object
       properties:
@@ -18821,6 +20966,356 @@ components:
         * `national_id` - national_id
         * `passport` - passport
         * `drivers_license` - drivers_license
+    InterviewAssignment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        candidate:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        hr_staff:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        slot:
+          allOf:
+          - $ref: '#/components/schemas/InterviewSlot'
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/InterviewAssignmentStatusEnum'
+        status_display:
+          type: string
+          readOnly: true
+        meeting_link:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        notes:
+          type: string
+        hr_notes:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        completed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - candidate
+      - completed_at
+      - created_at
+      - hr_staff
+      - id
+      - slot
+      - status_display
+      - updated_at
+    InterviewAssignmentRequest:
+      type: object
+      properties:
+        candidate_id:
+          type: integer
+          writeOnly: true
+        hr_staff_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        slot_id:
+          type: integer
+          writeOnly: true
+        status:
+          $ref: '#/components/schemas/InterviewAssignmentStatusEnum'
+        meeting_link:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        notes:
+          type: string
+        hr_notes:
+          type: string
+      required:
+      - candidate_id
+      - slot_id
+    InterviewAssignmentStatusEnum:
+      enum:
+      - scheduled
+      - completed
+      - cancelled
+      - no_show
+      - rescheduled
+      type: string
+      description: |-
+        * `scheduled` - Scheduled
+        * `completed` - Completed
+        * `cancelled` - Cancelled
+        * `no_show` - No Show
+        * `rescheduled` - Rescheduled
+    InterviewBookingRequest:
+      type: object
+      properties:
+        slot_id:
+          type: integer
+      required:
+      - slot_id
+    InterviewReassignmentLog:
+      type: object
+      description: |-
+        Output-only — the viewset is read-only; the only writer is the
+        ``reassign`` action, which sets these at the ORM layer.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        assignment:
+          allOf:
+          - $ref: '#/components/schemas/InterviewAssignment'
+          readOnly: true
+        original_hr:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        new_hr:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        original_slot:
+          allOf:
+          - $ref: '#/components/schemas/InterviewSlot'
+          readOnly: true
+        new_slot:
+          allOf:
+          - $ref: '#/components/schemas/InterviewSlot'
+          readOnly: true
+        reason:
+          type: string
+        reassigned_by:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - assignment
+      - created_at
+      - id
+      - new_hr
+      - new_slot
+      - original_hr
+      - original_slot
+      - reason
+      - reassigned_by
+    InterviewReassignmentLogRequest:
+      type: object
+      description: |-
+        Output-only — the viewset is read-only; the only writer is the
+        ``reassign`` action, which sets these at the ORM layer.
+      properties:
+        reason:
+          type: string
+          minLength: 1
+      required:
+      - reason
+    InterviewSlot:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        capacity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        remaining_capacity:
+          type: integer
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/InterviewSlotStatusEnum'
+          readOnly: true
+        status_display:
+          type: string
+          readOnly: true
+        available_capacity:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - available_capacity
+      - created_at
+      - end_time
+      - id
+      - remaining_capacity
+      - start_time
+      - status
+      - status_display
+      - updated_at
+    InterviewSlotRequest:
+      type: object
+      properties:
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        capacity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+      required:
+      - end_time
+      - start_time
+    InterviewSlotStatusEnum:
+      enum:
+      - available
+      - fully_booked
+      - blocked
+      - expired
+      type: string
+      description: |-
+        * `available` - Available
+        * `fully_booked` - Fully Booked
+        * `blocked` - Blocked
+        * `expired` - Expired
+    InterviewSystemConfig:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        slot_duration_minutes:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        inter_slot_buffer_minutes:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        advance_booking_window_days:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        minimum_lead_time_hours:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        global_concurrent_limit:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        round_robin_fairness_window_days:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        auto_reschedule_on_block:
+          type: boolean
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_by:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+      required:
+      - id
+      - updated_at
+      - updated_by
+    InterviewSystemConfigRequest:
+      type: object
+      properties:
+        slot_duration_minutes:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        inter_slot_buffer_minutes:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        advance_booking_window_days:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        minimum_lead_time_hours:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        global_concurrent_limit:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        round_robin_fairness_window_days:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        auto_reschedule_on_block:
+          type: boolean
+    KycInterviewDay:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        slots:
+          type: array
+          items:
+            $ref: '#/components/schemas/InterviewSlot'
+      required:
+      - date
+      - slots
+    KycInterviewRoomResponse:
+      type: object
+      properties:
+        thread_id:
+          type: string
+          nullable: true
+        joinable:
+          type: boolean
+        join_early_minutes:
+          type: integer
+      required:
+      - join_early_minutes
+      - joinable
+      - thread_id
+    KycInterviewSlotsResponse:
+      type: object
+      properties:
+        days:
+          type: array
+          items:
+            $ref: '#/components/schemas/KycInterviewDay'
+      required:
+      - days
     KycResubmitRequestRequest:
       type: object
       properties:
@@ -18836,6 +21331,9 @@ components:
         nbi_clearance:
           type: string
           format: binary
+        resume:
+          type: string
+          format: binary
         credentials:
           type: array
           items:
@@ -18849,6 +21347,11 @@ components:
           items:
             type: string
             format: binary
+        submitter_role:
+          type: string
+          minLength: 1
+          description: Track whose submission is being fixed (customer|provider).
+            Absent → most recent.
     KycSubmission:
       type: object
       properties:
@@ -18859,26 +21362,17 @@ components:
           type: string
           maxLength: 50
         id_front_url:
-          oneOf:
-          - type: string
-            format: uri
-            default: ''
-          - type: string
-            maxLength: 0
+          type: string
+          format: uri
+          readOnly: true
         id_back_url:
-          oneOf:
-          - type: string
-            format: uri
-            default: ''
-          - type: string
-            maxLength: 0
+          type: string
+          format: uri
+          readOnly: true
         selfie_url:
-          oneOf:
-          - type: string
-            format: uri
-            default: ''
-          - type: string
-            maxLength: 0
+          type: string
+          format: uri
+          readOnly: true
         liveness_score:
           type: number
           format: double
@@ -18895,26 +21389,17 @@ components:
         submitter_role:
           $ref: '#/components/schemas/KycSubmissionRoleEnum'
         nbi_clearance_url:
-          oneOf:
-          - type: string
-            format: uri
-            default: ''
-          - type: string
-            maxLength: 0
+          type: string
+          format: uri
+          readOnly: true
         portfolio_url:
-          oneOf:
-          - type: string
-            format: uri
-            default: ''
-          - type: string
-            maxLength: 0
+          type: string
+          format: uri
+          readOnly: true
         resume_url:
-          oneOf:
-          - type: string
-            format: uri
-            default: ''
-          - type: string
-            maxLength: 0
+          type: string
+          format: uri
+          readOnly: true
         selected_services: {}
         operating_areas: {}
         credential_urls:
@@ -18963,6 +21448,23 @@ components:
           type: integer
           readOnly: true
         document_rejections:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          description: |-
+            Rejected document slots derived from ``item_reviews``.
+
+            Preserves the historical payload shape the resubmit UI and API
+            contract already consume — [{"slot", "reason", "rejected_at"}] —
+            while item_reviews remains the single canonical store. Skill
+            verdicts (skill:<id>) are excluded; a rejected skill surfaces here
+            through its paired credential:<id> entry instead — even when the
+            credential itself was not marked rejected, so every rejected trade
+            still produces an actionable re-upload card (re-uploading stronger
+            evidence is the fix the page offers).
+          readOnly: true
+        item_reviews:
           readOnly: true
         interview_scheduled_at:
           type: string
@@ -18977,29 +21479,90 @@ components:
         interview_notes:
           type: string
           readOnly: true
+        interview_slot:
+          allOf:
+          - $ref: '#/components/schemas/InterviewSlot'
+          readOnly: true
+        interview_thread_id:
+          type: string
+          readOnly: true
+        interview_reschedule_count:
+          type: integer
+          readOnly: true
+        reschedules_remaining:
+          type: integer
+          readOnly: true
+        max_interview_reschedules:
+          type: string
+          readOnly: true
+        interview_skill_ids:
+          readOnly: true
+        interview_feedback:
+          type: string
+          readOnly: true
+        interview_improvement_areas:
+          readOnly: true
+        reapply_eligible_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        interviewer_name:
+          type: string
+          nullable: true
+          readOnly: true
+        can_schedule_interview:
+          type: boolean
+          readOnly: true
+        interview_joinable:
+          type: boolean
+          readOnly: true
+        can_reapply:
+          type: boolean
+          readOnly: true
         timeline:
           type: array
           items: {}
           readOnly: true
       required:
+      - can_reapply
+      - can_schedule_interview
       - credential_urls
       - document_rejections
       - effective_rejection_type
       - id
+      - id_back_url
+      - id_front_url
       - id_type
       - interview_completed_at
+      - interview_feedback
+      - interview_improvement_areas
+      - interview_joinable
       - interview_notes
+      - interview_reschedule_count
       - interview_scheduled_at
+      - interview_skill_ids
+      - interview_slot
+      - interview_thread_id
+      - interviewer_name
       - is_fatally_rejected
       - is_fixably_rejected
       - is_interview_stage
       - is_under_review
+      - item_reviews
       - liveness_decision
+      - max_interview_reschedules
+      - nbi_clearance_url
+      - portfolio_url
       - portfolio_urls
+      - reapply_eligible_at
       - ref_id
       - rejection_reason
       - rejection_type
+      - reschedules_remaining
+      - resume_url
       - review_required
+      - selfie_url
       - status
       - submission_attempt
       - submitted_at
@@ -19019,42 +21582,15 @@ components:
         selfie:
           type: string
           format: binary
-        id_front_url:
-          oneOf:
-          - type: string
-            format: uri
-          - type: string
-            maxLength: 0
-        id_back_url:
-          oneOf:
-          - type: string
-            format: uri
-          - type: string
-            maxLength: 0
-        selfie_url:
-          oneOf:
-          - type: string
-            format: uri
-          - type: string
-            maxLength: 0
-        nbi_clearance_url:
-          oneOf:
-          - type: string
-            format: uri
-          - type: string
-            maxLength: 0
-        portfolio_url:
-          oneOf:
-          - type: string
-            format: uri
-          - type: string
-            maxLength: 0
-        resume_url:
-          oneOf:
-          - type: string
-            format: uri
-          - type: string
-            maxLength: 0
+        nbi_clearance:
+          type: string
+          format: binary
+        portfolio:
+          type: string
+          format: binary
+        resume:
+          type: string
+          format: binary
         submitter_role:
           type: string
           minLength: 1
@@ -19093,8 +21629,12 @@ components:
       enum:
       - pending
       - resubmitted
+      - docs_approved
+      - partially_approved
       - interview_scheduled
+      - interview_completed
       - interview_passed
+      - interview_failed
       - approved
       - rejected_fixable
       - rejected_fatal
@@ -19103,8 +21643,12 @@ components:
       description: |-
         * `pending` - Pending Review
         * `resubmitted` - Resubmitted
+        * `docs_approved` - Documents Approved
+        * `partially_approved` - Partially Approved
         * `interview_scheduled` - Interview Scheduled
+        * `interview_completed` - Interview Completed
         * `interview_passed` - Interview Passed
+        * `interview_failed` - Interview Failed
         * `approved` - Approved
         * `rejected_fixable` - Rejected (Fixable)
         * `rejected_fatal` - Rejected (Fatal)
@@ -19827,6 +22371,9 @@ components:
           type: string
           format: date-time
           nullable: true
+        voucher_code:
+          type: string
+          maxLength: 50
         is_batch:
           type: boolean
         batch_count:
@@ -19844,6 +22391,24 @@ components:
           readOnly: true
           nullable: true
         estimated_fee_max:
+          type: number
+          format: double
+          maximum: 100000000
+          minimum: -100000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          readOnly: true
+          nullable: true
+        estimated_earnings_min:
+          type: number
+          format: double
+          maximum: 100000000
+          minimum: -100000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          readOnly: true
+          nullable: true
+        estimated_earnings_max:
           type: number
           format: double
           maximum: 100000000
@@ -19875,6 +22440,8 @@ components:
       - client_lng
       - created_at
       - description
+      - estimated_earnings_max
+      - estimated_earnings_min
       - estimated_fee_max
       - estimated_fee_min
       - expires_at
@@ -19914,12 +22481,15 @@ components:
       properties:
         detail:
           type: string
+        fee:
+          type: string
         fee_charged:
           type: string
         free:
           type: boolean
       required:
       - detail
+      - fee
       - fee_charged
       - free
     OnDemandJobCreateResponse:
@@ -20024,6 +22594,9 @@ components:
           type: string
           format: date-time
           nullable: true
+        voucher_code:
+          type: string
+          maxLength: 50
         is_batch:
           type: boolean
         batch_count:
@@ -20277,6 +22850,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AdminPayoutRequest'
+    PaginatedAdminSlotBlockList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminSlotBlock'
     PaginatedCategoryList:
       type: object
       required:
@@ -20386,6 +22982,167 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/EarningsTransaction'
+    PaginatedHRAvailabilityExceptionList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/HRAvailabilityException'
+    PaginatedHRAvailabilityProfileList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/HRAvailabilityProfile'
+    PaginatedHRRotationStateList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/HRRotationState'
+    PaginatedInterviewAssignmentList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/InterviewAssignment'
+    PaginatedInterviewReassignmentLogList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/InterviewReassignmentLog'
+    PaginatedInterviewSlotList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/InterviewSlot'
+    PaginatedInterviewSystemConfigList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/InterviewSystemConfig'
     PaginatedPaginatedAddressList:
       type: object
       required:
@@ -20599,6 +23356,22 @@ components:
           nullable: true
         is_default:
           type: boolean
+    PatchedAdminSlotBlockRequest:
+      type: object
+      properties:
+        slot_id:
+          type: integer
+          writeOnly: true
+        hr_staff_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        reason:
+          $ref: '#/components/schemas/AdminSlotBlockReasonEnum'
+        notes:
+          type: string
+        is_active:
+          type: boolean
     PatchedBookingLocationRequest:
       type: object
       description: PATCH /services/bookings/<pk>/location/ request + response.
@@ -20664,6 +23437,8 @@ components:
             maxLength: 200
           - type: string
             maxLength: 0
+        completion_notes:
+          type: string
         pin:
           type: string
           writeOnly: true
@@ -20678,6 +23453,132 @@ components:
       properties:
         title:
           type: string
+    PatchedHRAvailabilityExceptionRequest:
+      type: object
+      properties:
+        hr_staff_id:
+          type: integer
+          writeOnly: true
+        date:
+          type: string
+          format: date
+        start_time:
+          type: string
+          format: time
+          nullable: true
+        end_time:
+          type: string
+          format: time
+          nullable: true
+        reason:
+          $ref: '#/components/schemas/HRAvailabilityExceptionReasonEnum'
+        notes:
+          type: string
+    PatchedHRAvailabilityProfileRequest:
+      type: object
+      properties:
+        hr_staff_id:
+          type: integer
+          writeOnly: true
+        day_of_week:
+          allOf:
+          - $ref: '#/components/schemas/DayOfWeekEnum'
+          minimum: -2147483648
+          maximum: 2147483647
+        start_time:
+          type: string
+          format: time
+        end_time:
+          type: string
+          format: time
+        is_active:
+          type: boolean
+    PatchedHRRotationStateRequest:
+      type: object
+      properties:
+        hr_staff_id:
+          type: integer
+          writeOnly: true
+        last_assigned_time:
+          type: string
+          format: date-time
+          nullable: true
+        assignment_count:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        position_in_queue:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+    PatchedInterviewAssignmentRequest:
+      type: object
+      properties:
+        candidate_id:
+          type: integer
+          writeOnly: true
+        hr_staff_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        slot_id:
+          type: integer
+          writeOnly: true
+        status:
+          $ref: '#/components/schemas/InterviewAssignmentStatusEnum'
+        meeting_link:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        notes:
+          type: string
+        hr_notes:
+          type: string
+    PatchedInterviewSlotRequest:
+      type: object
+      properties:
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        capacity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+    PatchedInterviewSystemConfigRequest:
+      type: object
+      properties:
+        slot_duration_minutes:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        inter_slot_buffer_minutes:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        advance_booking_window_days:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        minimum_lead_time_hours:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        global_concurrent_limit:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        round_robin_fairness_window_days:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        auto_reschedule_on_block:
+          type: boolean
     PatchedNotificationPreferenceUpdateRequest:
       type: object
       description: PATCH /notifications/preferences/ request (flattened camelCase
@@ -20902,6 +23803,16 @@ components:
           maxLength: 20
         is_active:
           type: boolean
+        service_latitude:
+          type: number
+          format: double
+          writeOnly: true
+          nullable: true
+        service_longitude:
+          type: number
+          format: double
+          writeOnly: true
+          nullable: true
     PayMongoWebhookAck:
       type: object
       description: 200 ack returned by PayMongo webhook.
@@ -23841,6 +26752,17 @@ components:
         kyc_skipped:
           type: boolean
           readOnly: true
+        service_location:
+          type: object
+          additionalProperties: {}
+          description: |-
+            The provider's declared account-level match-from point.
+
+            Read back only on self-serializations (/users/me/, auth responses)
+            and the staff-only admin user list — never on public provider
+            surfaces, which go through ProviderProfileView's inline serializer.
+            x is longitude, y is latitude.
+          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -23856,6 +26778,7 @@ components:
       - kyc_skipped
       - photo_url
       - role
+      - service_location
     UserPattern:
       type: object
       properties:
@@ -23936,6 +26859,46 @@ components:
             $ref: '#/components/schemas/RecommendationItem'
       required:
       - recommendations
+    UserRequest:
+      type: object
+      properties:
+        display_name:
+          type: string
+          maxLength: 150
+        first_name:
+          type: string
+          maxLength: 150
+        middle_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        bio:
+          type: string
+        birthdate:
+          type: string
+          format: date
+          nullable: true
+        gender:
+          oneOf:
+          - $ref: '#/components/schemas/GenderEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        phone_number:
+          type: string
+          maxLength: 20
+        is_active:
+          type: boolean
+        service_latitude:
+          type: number
+          format: double
+          writeOnly: true
+          nullable: true
+        service_longitude:
+          type: number
+          format: double
+          writeOnly: true
+          nullable: true
     UserRoleEnum:
       enum:
       - client
@@ -24350,12 +27313,14 @@ components:
       - payment
       - reversal
       - tip
+      - fee
       type: string
       description: |-
         * `topup` - Top-up
         * `payment` - Booking payment
         * `reversal` - Reversal
         * `tip` - Tip
+        * `fee` - Cancellation fee
     _ClientJob:
       type: object
       properties:

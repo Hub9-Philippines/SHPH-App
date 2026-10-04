@@ -6,7 +6,10 @@ import 'package:serbisyohubph/pages/booking_funnel/booking_models.dart';
 import 'package:serbisyohubph/pages/booking_funnel/booking_repository.dart';
 import 'package:serbisyohubph/pages/booking_funnel/checkout/checkout_screen.dart';
 import 'package:serbisyohubph/pages/booking_funnel/live_matching/live_matching_screen.dart';
+import 'package:serbisyohubph/pages/booking_funnel/widgets/booking_map_sheet_host.dart';
 import 'package:serbisyohubph/l10n/app_localizations.dart';
+import 'package:serbisyohubph/models/service_listing.dart';
+import 'package:serbisyohubph/pages/booking_funnel/booking_flow_screen.dart';
 
 class _FakeBookingRepository implements BookingRepository {
   _FakeBookingRepository();
@@ -161,7 +164,11 @@ void main() {
     await tester.pump(const Duration(seconds: 541));
 
     expect(find.text('Providers are busy, try again'), findsOneWidget);
-    expect(find.text('Adjust booking'), findsOneWidget);
+    expect(find.text('Search again'), findsOneWidget);
+    expect(find.text('Schedule instead'), findsOneWidget);
+    await tester.drag(find.byType(ListView).last, const Offset(0, -200));
+    await tester.pump();
+    expect(find.text('Cancel search'), findsOneWidget);
   });
 
   testWidgets('Live matching shows retryable failure card after broadcast error',
@@ -181,8 +188,92 @@ void main() {
         ),
       ),
     );
-    expect(find.text('Live matching unavailable'), findsOneWidget);
+    expect(find.text('Live matching unavailable'), findsOneWidget);
     expect(find.text('Retry live search'), findsOneWidget);
     expect(find.text('View booking details'), findsOneWidget);
+  });
+
+  testWidgets('Checkout button branches by dispatchMode', (tester) async {
+    final controller = BookingFlowController(
+      repository: _FakeBookingRepository(),
+      initialDraft: _draft(urgency: BookingUrgency.rightNow),
+    );
+
+    await tester.pumpWidget(
+      _buildApp(
+        controller: controller,
+        child: const CheckoutScreen(showLiveMap: false),
+      ),
+    );
+
+    expect(find.text('Find Active Cleaner Now'), findsOneWidget);
+
+    controller.setDispatchMode(BookingDispatchMode.scheduled);
+    controller.setSchedule(
+      date: DateTime(2026, 6, 25),
+      time: const TimeOfDay(hour: 9, minute: 30),
+      urgency: BookingUrgency.scheduled,
+    );
+    await tester.pump();
+
+    expect(find.text('Confirm & Reserve Slot'), findsOneWidget);
+  });
+
+  testWidgets(
+      'BookingMapSheetHost derives camera padding keeping pin area unoccluded',
+      (tester) async {
+    EdgeInsets? derivedPadding;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            height: 800,
+            width: 400,
+            child: BookingMapSheetHost(
+              includeBottomSafeArea: false,
+              includeTopSafeArea: false,
+              topCameraPadding: 80,
+              bottomCameraPadding: 20,
+              maxSheetFraction: 0.7,
+              mapBuilder: (context, padding) {
+                derivedPadding = padding;
+                return const SizedBox.expand();
+              },
+              sheet: const SizedBox(height: 300, key: Key('bottom_sheet')),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(derivedPadding, isNotNull);
+    // Bottom padding equals sheet height (300) + bottomCameraPadding (20) = 320
+    expect(derivedPadding!.bottom, 320);
+    // Top padding equals 80
+    expect(derivedPadding!.top, 80);
+    // Visible map area height: 800 - 320 - 80 = 400px entirely free of occlusion!
+    final visibleHeight = 800 - derivedPadding!.bottom - derivedPadding!.top;
+    expect(visibleHeight, 400);
+  });
+
+  testWidgets('BookingFlowScreen renders without error', (tester) async {
+    final listing = ServiceListing(
+      id: 1,
+      title: 'Home Cleaning',
+      categoryName: 'Cleaning',
+      description: 'Test description',
+      basePrice: 500,
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: BookingFlowScreen(selectedService: listing),
+      ),
+    );
+    await tester.pump();
+    expect(find.byType(BookingFlowScreen), findsOneWidget);
   });
 }

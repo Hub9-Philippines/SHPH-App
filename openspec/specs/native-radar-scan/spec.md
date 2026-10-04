@@ -7,15 +7,15 @@ Defines the native-geometry map scanning ripple used on the proximity-search map
 ## Requirements
 
 ### Requirement: Radar ripple rendered with native map geometry
-The radial ripple effect on a proximity-search map SHALL be rendered using the map SDK's native circle layers (Google Maps `Circle`s), NOT screen-pixel overlay widgets or widget-bounded CustomPainters. It SHALL be centered on the pinned booking/client location.
+The radial ripple scan effect on a proximity-search map SHALL be rendered using a hardware-accelerated Flutter canvas overlay (`CustomPainter` / `MapRadarPulseOverlay`), NOT native Google Maps `Circle` layers updated frame-by-frame over the platform channel. It SHALL be anchored to the projected screen position of the pinned booking/client location.
 
-#### Scenario: Ripple stays pinned during map zoom
-- **WHEN** the user zooms the map while the ripple animates
-- **THEN** each ring remains anchored to the pinned location and its on-screen size scales with the map tiles, with no clipping or drift
+#### Scenario: Ripple stays pinned during map zoom and drag
+- **WHEN** the user zooms or pans the map while the ripple animates
+- **THEN** each ring remains centered at the screen position of the pinned marker with no clipping, frame drops, or detachments
 
-#### Scenario: Ripple behaves correctly during map rotation
-- **WHEN** the map is rotated while the ripple animates
-- **THEN** the rings stay centered on the pinned location and do not shear, detach, or get clipped at the widget edge
+#### Scenario: Ripple behaves correctly across all device tiers
+- **WHEN** the radar ripple runs on low-end or high-refresh mobile devices
+- **THEN** zero platform channel method calls are generated per animation tick, running smoothly at native display refresh rate (60 to 120 FPS)
 
 ### Requirement: Geographically true radius expansion
 The ripple rings SHALL expand from 0 to exactly 3000 meters of geographic radius, so their diameter corresponds to real-world ground distance around the pinned location.
@@ -47,15 +47,15 @@ The ripple SHALL show at least 2, and targeted 3, staggered expanding rings that
 - **THEN** its opacity has fallen to near zero so the sweep fades instead of popping
 
 ### Requirement: Smooth 60 fps updates without full-map rebuilds
-The ripple SHALL update at a smooth display rate (target 60 fps) and SHALL NOT rebuild the entire map widget tree on every animation tick; only the circle-layer data that changes each tick is updated.
+The ripple SHALL update at a smooth display rate (target 60 to 120 FPS) directly on Flutter's render tree without sending circle updates over the platform bridge, and without rebuilding the GoogleMap widget tree.
 
-#### Scenario: Ticks update only circle data
+#### Scenario: Ticks update only canvas painter
 - **WHEN** the ripple animation ticks
-- **THEN** the map, markers, and all non-ripple children are not rebuilt, and the ripple layer updates its radius/opacity per tick
+- **THEN** only the lightweight CustomPainter repaints, keeping CPU and bridge utilization near zero
 
 #### Scenario: High tick rate during animation
-- **WHEN** the ripple animates for 1 second
-- **THEN** roughly 60 geometry updates occur with the visible motion appearing continuous
+- **WHEN** the ripple animates continuously
+- **THEN** frame times remain within the 16 ms (or 8 ms on 120 Hz) frame budget without stalling the UI thread
 
 ### Requirement: Resource cleanup on unmount
 The ripple animation controller and any associated timers SHALL be disposed/cancelled when the owning widget is unmounted, leaving no running tickers behind.

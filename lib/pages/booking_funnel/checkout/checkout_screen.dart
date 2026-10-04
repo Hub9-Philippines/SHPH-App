@@ -17,7 +17,7 @@ import '../booking_success_screen.dart';
 import '../live_matching/live_matching_screen.dart';
 import '../widgets/booking_flow_route.dart';
 import '../widgets/booking_status_scaffold.dart';
-import '../widgets/booking_step_spine.dart';
+import '../widgets/review_stage_content.dart';
 
 class CheckoutScreen extends StatelessWidget {
   const CheckoutScreen({
@@ -33,7 +33,8 @@ class CheckoutScreen extends StatelessWidget {
           final l10n = AppLocalizations.of(context)!;
           final draft = controller.draft;
           final quote = controller.quote;
-          final isScheduled = draft.urgency == BookingUrgency.scheduled;
+          final isScheduled = draft.dispatchMode == BookingDispatchMode.scheduled ||
+              draft.urgency == BookingUrgency.scheduled;
           final isImmediate = !isScheduled;
           final location = gmaps.LatLng(draft.latitude, draft.longitude);
 
@@ -52,11 +53,12 @@ class CheckoutScreen extends StatelessWidget {
                       quote: quote,
                       isScheduled: isScheduled,
                       scheduleLabel: isScheduled
-                          ? _formatSchedule(draft, l10n)
-                          : _asapLabel(draft, l10n),
+                          ? formatScheduleLabel(draft, l10n)
+                          : formatAsapLabel(draft, l10n),
                       serviceLevelLabel:
-                          _serviceLevelLabel(draft.serviceCategoryName, l10n),
-                      quantityLabel: _quantityLabel(draft.serviceCategoryName, l10n),
+                          serviceLevelLabelFor(draft.serviceCategoryName, l10n),
+                      quantityLabel:
+                          quantityLabelFor(draft.serviceCategoryName, l10n),
                       onResume: () {
                         controller.setMatchingActive(false);
                         unawaited(
@@ -75,14 +77,13 @@ class CheckoutScreen extends StatelessWidget {
                         );
                       },
                       onCancel: () {
-                        controller.setMatchingActive(false);
-                        controller.setLiveSearchTimedOut(false);
+                        controller
+                          ..setMatchingActive(false)
+                          ..setLiveSearchTimedOut(false);
                       },
                     )
                   : _CheckoutSheet(
                       controller: controller,
-                      quote: quote,
-                      isScheduled: isScheduled,
                       isImmediate: isImmediate,
                       title: isScheduled
                           ? l10n.bfReviewScheduledBooking
@@ -100,12 +101,6 @@ class CheckoutScreen extends StatelessWidget {
                       },
                       onBack: () => Navigator.of(context).pop(),
                       buttonLabel: _buttonLabel(draft, l10n),
-                      scheduleLabel: isScheduled
-                          ? _formatSchedule(draft, l10n)
-                          : _asapLabel(draft, l10n),
-                      quantityLabel: _quantityLabel(draft.serviceCategoryName, l10n),
-                      serviceLevelLabel:
-                          _serviceLevelLabel(draft.serviceCategoryName, l10n),
                     ),
             ),
           ),
@@ -118,9 +113,10 @@ class CheckoutScreen extends StatelessWidget {
     BookingFlowController controller,
   ) async {
     final l10n = AppLocalizations.of(context)!;
-    final urgency = controller.draft.urgency;
+    final isScheduled = controller.draft.dispatchMode == BookingDispatchMode.scheduled ||
+        controller.draft.urgency == BookingUrgency.scheduled;
 
-    if (urgency == BookingUrgency.scheduled) {
+    if (isScheduled) {
       final success = await controller.attachReservationToken(l10n);
       if (!context.mounted) {
         return;
@@ -249,85 +245,25 @@ class CheckoutScreen extends StatelessWidget {
     }
     return draft.scheduledDate ?? DateTime.now();
   }
-
-  String _asapLabel(BookingDraft draft, AppLocalizations l10n) {
-    if (draft.urgency == BookingUrgency.laterToday &&
-        draft.scheduledTime != null) {
-      return l10n.bfAsapTodayAfter(formatTimeOfDay(draft.scheduledTime!));
-    }
-    if (draft.urgency == BookingUrgency.laterToday) {
-      return l10n.bfLaterToday;
-    }
-    return l10n.bfAsapFindingProvider;
-  }
-
-  String _formatSchedule(BookingDraft draft, AppLocalizations l10n) {
-    if (draft.urgency == BookingUrgency.rightNow) {
-      return l10n.bfNow;
-    }
-    if (draft.urgency == BookingUrgency.laterToday &&
-        draft.scheduledTime != null) {
-      return l10n.bfTodayAtTime(formatTimeOfDay(draft.scheduledTime!));
-    }
-    if (draft.urgency == BookingUrgency.scheduled &&
-        draft.scheduledDate != null &&
-        draft.scheduledTime != null) {
-      return l10n.bfOnDateAtTime(
-        draft.scheduledDate!.month,
-        draft.scheduledDate!.day,
-        formatTimeOfDay(draft.scheduledTime!),
-      );
-    }
-    return l10n.bfSelectATime;
-  }
-
-  String _quantityLabel(String? categoryName, AppLocalizations l10n) {
-    final normalized = (categoryName ?? '').toLowerCase();
-    if (normalized.contains('clean')) {
-      return l10n.bfRooms;
-    }
-    if (normalized.contains('repair') || normalized.contains('install')) {
-      return l10n.bfItems;
-    }
-    return l10n.bfQuantity;
-  }
-
-  String _serviceLevelLabel(String? categoryName, AppLocalizations l10n) {
-    final normalized = (categoryName ?? '').toLowerCase();
-    if (normalized.contains('clean')) {
-      return l10n.bfCleaningType;
-    }
-    return l10n.bfServiceLevel;
-  }
 }
 
 class _CheckoutSheet extends StatelessWidget {
   const _CheckoutSheet({
     required this.controller,
-    required this.quote,
-    required this.isScheduled,
     required this.isImmediate,
     required this.title,
     required this.subtitle,
     required this.buttonLabel,
-    required this.scheduleLabel,
-    required this.quantityLabel,
-    required this.serviceLevelLabel,
     required this.onPickAddress,
     required this.onBack,
     required this.onSubmit,
   });
 
   final BookingFlowController controller;
-  final BookingQuote quote;
-  final bool isScheduled;
   final bool isImmediate;
   final String title;
   final String subtitle;
   final String buttonLabel;
-  final String scheduleLabel;
-  final String quantityLabel;
-  final String serviceLevelLabel;
   final Future<void> Function() onPickAddress;
   final VoidCallback onBack;
   final Future<void> Function()? onSubmit;
@@ -336,7 +272,6 @@ class _CheckoutSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = AppTheme.of(context);
-    final draft = controller.draft;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -385,92 +320,15 @@ class _CheckoutSheet extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 14),
-        Padding(
-          padding: const EdgeInsets.only(bottom: 2),
-          child: BookingStepSpine(
-            steps: [
-              l10n.bfLocation,
-              l10n.bfTime,
-              l10n.bfDetails,
-              l10n.bfReview,
-            ],
-            currentStep: 3,
-          ),
-        ),
-        const SizedBox(height: 14),
         Flexible(
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _ModeBanner(
-                  isScheduled: isScheduled,
-                  title: isScheduled
-                      ? l10n.bfScheduledReservation
-                      : l10n.bfInstantProviderSearch,
-                  subtitle: isScheduled
-                      ? l10n.bfLockInSlot
-                      : l10n.bfSearchSavedPin,
-                ),
-                const SizedBox(height: 14),
-                _SummaryGrid(
-                  rows: [
-                    _SummaryItem(
-                      label: l10n.bfService,
-                      value: controller.selectedServiceLabel(l10n),
-                    ),
-                    _SummaryItem(
-                      label: isScheduled
-                          ? l10n.bfScheduledDateTime
-                          : l10n.bfDispatchMode,
-                      value: scheduleLabel,
-                    ),
-                    _SummaryItem(
-                      label: quantityLabel,
-                      value: '${draft.rooms}',
-                    ),
-                    _SummaryItem(
-                      label: serviceLevelLabel,
-                      value: controller.cleaningTypeLabel(l10n),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                _ActionRowCard(
-                  icon: Icons.place_rounded,
-                  title: draft.address.label,
-                  subtitle: '${draft.address.line1}, ${draft.address.city}',
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: onPickAddress,
-                ),
-                const SizedBox(height: 14),
-                _SectionTitle(title: l10n.bfPaymentMethod),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: [
-                    _Pill(
-                      label: 'GCash',
-                      selected:
-                          draft.paymentMethod == BookingPaymentMethod.gcash,
-                      onTap: () => controller
-                          .setPaymentMethod(BookingPaymentMethod.gcash),
-                    ),
-                    _Pill(
-                      label: l10n.tmPmtCard,
-                      selected:
-                          draft.paymentMethod == BookingPaymentMethod.card,
-                      onTap: () => controller
-                          .setPaymentMethod(BookingPaymentMethod.card),
-                    ),
-                    _Pill(
-                      label: l10n.bkPmtCOD,
-                      selected: draft.paymentMethod == BookingPaymentMethod.cod,
-                      onTap: () =>
-                          controller.setPaymentMethod(BookingPaymentMethod.cod),
-                    ),
-                  ],
+                ReviewStageContent(
+                  controller: controller,
+                  onPickAddress: onPickAddress,
+                  onBack: onBack,
                 ),
                 if (isImmediate) ...[
                   const SizedBox(height: 14),
@@ -482,15 +340,6 @@ class _CheckoutSheet extends StatelessWidget {
                     icon: Icons.bolt_rounded,
                   ),
                 ],
-                const SizedBox(height: 14),
-                if (controller.quoteError != null) ...[
-                  _EstimateRetryBanner(
-                    onRetry: controller.refreshQuote,
-                    onBack: onBack,
-                  ),
-                  const SizedBox(height: 14),
-                ],
-                _TotalCard(total: quote.total),
               ],
             ),
           ),
@@ -513,6 +362,7 @@ class _CheckoutSheet extends StatelessWidget {
               buttonLabel,
               style: theme.titleMedium.override(
                 fontWeight: FontWeight.w700,
+                color: theme.onPrimary,
               ),
             ),
           ),
@@ -549,9 +399,10 @@ class _MatchingWaitingSheet extends StatelessWidget {
     final theme = AppTheme.of(context);
     final draft = controller.draft;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
         Center(
           child: Container(
             width: 42,
@@ -646,6 +497,7 @@ class _MatchingWaitingSheet extends StatelessWidget {
               l10n.bfReturnToLiveMatching,
               style: theme.titleSmall.override(
                 fontWeight: FontWeight.w700,
+                color: theme.onPrimary,
               ),
             ),
           ),
@@ -666,6 +518,7 @@ class _MatchingWaitingSheet extends StatelessWidget {
           ),
         ),
       ],
+    ),
     );
   }
 }
@@ -697,207 +550,6 @@ class _WaitingInfoRow extends StatelessWidget {
               theme.bodySmall.override(fontWeight: FontWeight.w600),
         ),
       ],
-    );
-  }
-}
-
-class _ModeBanner extends StatelessWidget {
-  const _ModeBanner({
-    required this.isScheduled,
-    required this.title,
-    required this.subtitle,
-  });
-
-  final bool isScheduled;
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isScheduled
-            ? theme.primary.withValues(alpha: 0.08)
-            : theme.primary.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: isScheduled
-              ? theme.primary.withValues(alpha: 0.28)
-              : theme.primary.withValues(alpha: 0.18),
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: isScheduled
-                  ? theme.primary.withValues(alpha: 0.14)
-                  : theme.alternate,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              isScheduled ? Icons.event_available_rounded : Icons.bolt_rounded,
-              color: theme.primary,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: theme.titleSmall.override(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: theme.bodySmall.override(
-                    color: theme.secondaryText,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SummaryGrid extends StatelessWidget {
-  const _SummaryGrid({required this.rows});
-
-  final List<_SummaryItem> rows;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.secondaryBackground,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: theme.alternate),
-      ),
-      child: Column(
-        children: rows
-            .map(
-              (row) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        row.label,
-                        style: theme.bodyMedium.override(
-                          color: theme.secondaryText,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        row.value,
-                        textAlign: TextAlign.right,
-                        style: theme.bodyMedium.override(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            )
-            .toList(),
-      ),
-    );
-  }
-}
-
-class _SummaryItem {
-  const _SummaryItem({
-    required this.label,
-    required this.value,
-  });
-
-  final String label;
-  final String value;
-}
-
-class _ActionRowCard extends StatelessWidget {
-  const _ActionRowCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.trailing,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Widget trailing;
-  final Future<void> Function() onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
-    return InkWell(
-      onTap: () async {
-        await onTap();
-      },
-      borderRadius: BorderRadius.circular(22),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: theme.secondaryBackground,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: theme.alternate),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: theme.primary.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(icon, color: theme.primary),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: theme.bodyMedium.override(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: theme.bodySmall.override(
-                      color: theme.secondaryText,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            trailing,
-          ],
-        ),
-      ),
     );
   }
 }
@@ -972,160 +624,6 @@ class _SimpleNote extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _TotalCard extends StatelessWidget {
-  const _TotalCard({required this.total});
-
-  final double total;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = AppTheme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: theme.primary.withValues(alpha: 0.18),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            l10n.bfEstimatedTotal,
-            style: theme.bodyLarge.override(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          Text(
-            'PHP ${total.toStringAsFixed(0)}',
-            style: theme.titleLarge.override(
-              fontWeight: FontWeight.w700,
-              color: theme.primary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _EstimateRetryBanner extends StatelessWidget {
-  const _EstimateRetryBanner({
-    required this.onRetry,
-    required this.onBack,
-  });
-
-  final Future<void> Function() onRetry;
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = AppTheme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.warning.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: theme.warning.withValues(alpha: 0.30),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(
-                Icons.error_outline_rounded,
-                size: 20,
-                color: theme.warning,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  l10n.bfEstimateUnavailable,
-                  style: theme.bodySmall.override(
-                    color: theme.secondaryText,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 44,
-                  child: AppButton(
-                    onPressed: () async {
-                      await onRetry();
-                    },
-                    variant: AppButtonVariant.outlined,
-                    borderSide: BorderSide(color: theme.alternate),
-                    foregroundColor: theme.primary,
-                    borderRadius: 14,
-                    child: Text(
-                      l10n.bfRetry,
-                      style: theme.bodyMedium.override(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              TextButton(
-                onPressed: onBack,
-                child: Text(
-                  l10n.bfBack,
-                  style: theme.bodyMedium.override(
-                    color: theme.secondaryText,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Pill extends StatelessWidget {
-  const _Pill({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
-    return ChoiceChip(
-      label: Text(label),
-      selected: selected,
-      onSelected: (_) => onTap(),
-      selectedColor: theme.primary.withValues(alpha: 0.14),
-      labelStyle: theme.bodyMedium.override(
-        fontWeight: FontWeight.w600,
-        color: selected ? theme.primary : theme.primaryText,
-      ),
-      side: BorderSide(color: selected ? theme.primary : theme.alternate),
     );
   }
 }

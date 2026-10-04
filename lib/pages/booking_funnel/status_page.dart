@@ -704,6 +704,7 @@ class _TrackingSheet extends StatelessWidget {
                           font: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w700,
                           ),
+                          color: Colors.white,
                         ),
                       ),
                     ],

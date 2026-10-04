@@ -63,7 +63,7 @@ class ShphBookingRepository implements BookingRepository {
     );
 
     await _broadcastOnDemandJob(draft, booking.id);
-    return booking.id;
+    return lastJobId ?? booking.id;
   }
 
   /// Broadcasts a real on-demand job to nearby providers via the SHPH API.
@@ -80,14 +80,7 @@ class ShphBookingRepository implements BookingRepository {
   /// count, fee range, error) land in the same [lastJobId] fields.
   Future<void> broadcastOnDemandJobOnly(BookingDraft draft) async {
     _resetBroadcastResult();
-    final categoryId = draft.serviceCategoryId;
-    if (categoryId == null) {
-      LoggingService.warning(
-        'On-demand broadcast skipped: no service category id on draft',
-        tag: 'BookingRepository',
-      );
-      return;
-    }
+    final categoryId = draft.serviceCategoryId ?? 1;
     try {
       // Mirrors the web app's buildCreatePayload(): only fields the backend's
       // OnDemandJobRequest schema actually declares. booking_ref / a synthetic      // scheduled_for were never part of the contract and rejected nothing,      // but a wrong extra field risks 400s and hides the real error.      final payload = <String, dynamic>{

@@ -14,6 +14,8 @@ class TimeSelectionPanel extends StatelessWidget {
     required this.onPickLaterToday,
     required this.onPickScheduledSlot,
     required this.onNext,
+    this.embedded = false,
+    this.showNextButton = true,
     super.key,
     this.scheduledDate,
     this.scheduledTime,
@@ -27,12 +29,125 @@ class TimeSelectionPanel extends StatelessWidget {
   final Future<void> Function(BuildContext context) onPickLaterToday;
   final Future<void> Function(BuildContext context) onPickScheduledSlot;
   final VoidCallback onNext;
+  final bool embedded;
+
+  /// Hides the panel's internal Continue button (the accordion page drives
+  /// advancement from its persistent bottom bar instead).
+  final bool showNextButton;
 
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final scheduleSummary = _buildSummary(l10n);
+
+    final timingContent = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.bfWhenNeedService(serviceTitle.toLowerCase()),
+          style: theme.titleMedium.override(
+            font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          l10n.bfPickDispatchSpeed,
+          style: theme.bodySmall.override(
+            color: theme.secondaryText,
+          ),
+        ),
+        if (scheduleSummary != null) ...[
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: theme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: theme.primary.withValues(alpha: 0.18),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.schedule_rounded,
+                  size: 18,
+                  color: theme.primary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    scheduleSummary,
+                    style: theme.labelMedium.override(
+                      color: theme.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+        const SizedBox(height: 14),
+        _TimeCard(
+          title: l10n.bfRightNowTitle,
+          subtitle: l10n.bfInstantDispatch,
+          icon: Icons.bolt_rounded,
+          selected: urgency == BookingUrgency.rightNow,
+          onTap: () => onUrgencyChanged(BookingUrgency.rightNow),
+        ),
+        const SizedBox(height: 10),
+        _TimeCard(
+          title: l10n.bfLaterTodayTitle,
+          subtitle: l10n.bfPickSpecificTime,
+          icon: Icons.schedule_rounded,
+          selected: urgency == BookingUrgency.laterToday,
+          onTap: () async {
+            onUrgencyChanged(BookingUrgency.laterToday);
+            await onPickLaterToday(context);
+          },
+        ),
+        const SizedBox(height: 10),
+        _TimeCard(
+          title: l10n.bfScheduleAnotherDay,
+          subtitle: l10n.bfChooseAnyFutureSlot,
+          icon: Icons.calendar_month_rounded,
+          selected: urgency == BookingUrgency.scheduled,
+          onTap: () async {
+            onUrgencyChanged(BookingUrgency.scheduled);
+            await onPickScheduledSlot(context);
+          },
+        ),
+        if (showNextButton) ...[
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: AppButton(
+              onPressed: onNext,
+              backgroundColor: theme.primary,
+              foregroundColor: theme.onPrimary,
+              borderRadius: 18,
+              width: double.infinity,
+              child: Text(
+                l10n.bfContinueToSetup,
+                style: theme.titleMedium.override(
+                  fontWeight: FontWeight.w700,
+                  color: theme.onPrimary,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+
+    if (embedded) {
+      return timingContent;
+    }
 
     return Container(
       width: double.infinity,
@@ -51,132 +166,40 @@ class TimeSelectionPanel extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 42,
-              height: 5,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 42,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: theme.alternate,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: theme.alternate,
+                color: theme.primary.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(999),
               ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: theme.primary.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              l10n.bfChooseTiming,
-              style: theme.labelMedium.override(
-                color: theme.primary,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            l10n.bfWhenNeedService(serviceTitle.toLowerCase()),
-            style: theme.titleMedium.override(
-              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            l10n.bfPickDispatchSpeed,
-            style: theme.bodySmall.override(
-              color: theme.secondaryText,
-            ),
-          ),
-          if (scheduleSummary != null) ...[
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: theme.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: theme.primary.withValues(alpha: 0.18),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.schedule_rounded,
-                    size: 18,
-                    color: theme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      scheduleSummary,
-                      style: theme.labelMedium.override(
-                        color: theme.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-          const SizedBox(height: 14),
-          _TimeCard(
-            title: l10n.bfRightNowTitle,
-            subtitle: l10n.bfInstantDispatch,
-            icon: Icons.bolt_rounded,
-            selected: urgency == BookingUrgency.rightNow,
-            onTap: () => onUrgencyChanged(BookingUrgency.rightNow),
-          ),
-          const SizedBox(height: 10),
-          _TimeCard(
-            title: l10n.bfLaterTodayTitle,
-            subtitle: l10n.bfPickSpecificTime,
-            icon: Icons.schedule_rounded,
-            selected: urgency == BookingUrgency.laterToday,
-            onTap: () async {
-              onUrgencyChanged(BookingUrgency.laterToday);
-              await onPickLaterToday(context);
-            },
-          ),
-          const SizedBox(height: 10),
-          _TimeCard(
-            title: l10n.bfScheduleAnotherDay,
-            subtitle: l10n.bfChooseAnyFutureSlot,
-            icon: Icons.calendar_month_rounded,
-            selected: urgency == BookingUrgency.scheduled,
-            onTap: () async {
-              onUrgencyChanged(BookingUrgency.scheduled);
-              await onPickScheduledSlot(context);
-            },
-          ),
-          const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            height: 58,
-            child: AppButton(
-              onPressed: onNext,
-              backgroundColor: theme.primary,
-              foregroundColor: theme.onPrimary,
-              borderRadius: 18,
-              width: double.infinity,
               child: Text(
-                l10n.bfContinueToSetup,
-                style: theme.titleMedium.override(
+                l10n.bfChooseTiming,
+                style: theme.labelMedium.override(
+                  color: theme.primary,
                   fontWeight: FontWeight.w700,
-                  color: theme.onPrimary,
                 ),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            timingContent,
+          ],
+        ),
       ),
     );
   }

@@ -1,33 +1,26 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+
 import '/app_state.dart';
 import '/l10n/app_localizations.dart';
 import '/models/service_listing.dart';
 import '/services/logging_service.dart';
+import '/theme/app_theme.dart';
 import '/utils/geo_utils.dart';
 import 'booking_models.dart';
 import 'booking_repository.dart';
+import 'live_matching/live_matching_screen.dart';
+import 'widgets/booking_flow_route.dart';
 
 class BookingFlowController extends ChangeNotifier {
   BookingFlowController({
     BookingRepository? repository,
     BookingDraft? initialDraft,
   })  : repository = repository ?? ShphBookingRepository(),
-        _draft = initialDraft ??
-            const BookingDraft(
-              urgency: BookingUrgency.rightNow,
-              rooms: 1,
-              cleaningType: ServiceType.standard,
-              paymentMethod: BookingPaymentMethod.gcash,
-              address: BookingAddress(
-                label: 'Home',
-                line1: '123 Example Street',
-                city: 'Metro Manila',
-              ),
-              latitude: 14.5995,
-              longitude: 120.9842,
-            ),
+        _draft = _resolveInitialDraft(initialDraft),
         _isLoadingData = true {
     // Flip the loading flag after the current microtask so the skeleton
     // renders for exactly one frame before the real content appears.
@@ -51,6 +44,157 @@ class BookingFlowController extends ChangeNotifier {
   bool isMatchingActive = false;
   String? activeReferenceId;
   String? lastError;
+
+  /// Globally tracked active controller during background live matching.
+  static BookingFlowController? activeInstance;
+
+  /// ValueNotifier exposing the active background matching controller to home widgets.
+  static final ValueNotifier<BookingFlowController?> activeMatchingNotifier =
+      ValueNotifier<BookingFlowController?>(null);
+
+  /// Checks if any provider search is currently active in the background.
+  static bool get isAnyMatchingActive {
+    final active = activeInstance ?? activeMatchingNotifier.value;
+    return active != null && active.isMatchingActive && !active.liveSearchTimedOut;
+  }
+
+  /// Checks if matching is in progress, and if so shows an advisory collision dialog.
+  /// Returns `true` if booking was guarded/intercepted, `false` to proceed.
+  static Future<bool> checkAndGuardActiveMatching(BuildContext context) async {
+    final active = activeInstance ?? activeMatchingNotifier.value;
+    if (active != null && active.isMatchingActive && !active.liveSearchTimedOut) {
+      final l10n = AppLocalizations.of(context)!;
+      final theme = AppTheme.of(context);
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppThemeData.radiusLg),
+          ),
+          backgroundColor: theme.secondaryBackground,
+          title: Text(
+            l10n.bfSearchInProgressTitle,
+            style: theme.titleMedium.override(
+              font: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+            ),
+          ),
+          content: Text(
+            l10n.bfSearchInProgressBody,
+            style: theme.bodyMedium.override(
+              font: GoogleFonts.plusJakartaSans(),
+              color: theme.secondaryText,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(
+                l10n.cancel,
+                style: theme.labelLarge.override(
+                  color: theme.secondaryText,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.primary,
+                foregroundColor: theme.onPrimary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppThemeData.radiusMd),
+                ),
+              ),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                restoreActiveMatching(context, active);
+              },
+              child: Text(
+                l10n.bfViewActiveSearch,
+                style: theme.labelLarge.override(
+                  color: theme.onPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+      return true;
+    }
+    return false;
+  }
+
+  /// Restores live matching full screen from an active controller.
+  static void restoreActiveMatching(
+    BuildContext context,
+    BookingFlowController activeBooking,
+  ) {
+    activeBooking
+      ..setLastSheetExtent(0.45)
+      ..setMinimized(false);
+
+    Navigator.of(context, rootNavigator: true).push(
+      buildBookingFlowRoute(
+        ChangeNotifierProvider<BookingFlowController>.value(
+          value: activeBooking,
+          child: LiveMatchingScreen(
+            bookingDate: activeBooking.draft.scheduledDate ?? DateTime.now(),
+            serviceTitle: activeBooking.draft.serviceTitle,
+          ),
+        ),
+      ),
+    );
+  }
+
+  double _tipAmount = 0.0;
+  double get tipAmount => _tipAmount;
+
+  double lastSheetExtent = 0.45;
+  int liveMatchingSecondsRemaining = 180;
+  bool isMinimized = false;
+  bool isSubmittingTip = false;
+
+  void setLastSheetExtent(double extent) {
+    lastSheetExtent = extent;
+  }
+
+  void setMinimized(bool value) {
+    isMinimized = value;
+    notifyListeners();
+  }
+
+  void setLiveMatchingSecondsRemaining(int seconds) {
+    liveMatchingSecondsRemaining = seconds;
+  }
+
+  Future<bool> updateTip(double tip) async {
+    isSubmittingTip = true;
+    notifyListeners();
+    try {
+      _tipAmount = tip;
+      _draft = _draft.copyWith(tipAmount: tip);
+      final currentQuote = serverQuote;
+      if (currentQuote != null) {
+        final subtotal = currentQuote.total - currentQuote.tip;
+        serverQuote = BookingQuote(
+          basePrice: currentQuote.basePrice,
+          roomSubtotal: currentQuote.roomSubtotal,
+          cleaningTypeAdjustment: currentQuote.cleaningTypeAdjustment,
+          urgencyAdjustment: currentQuote.urgencyAdjustment,
+          timePremium: currentQuote.timePremium,
+          platformFee: currentQuote.platformFee,
+          vat: currentQuote.vat,
+          platformFeePercent: currentQuote.platformFeePercent,
+          vatPercent: currentQuote.vatPercent,
+          tip: tip,
+          total: subtotal + tip,
+        );
+      }
+      return true;
+    } finally {
+      isSubmittingTip = false;
+      notifyListeners();
+    }
+  }
 
   /// Real on-demand job id from POST /api/services/on-demand/ (null when the
   /// broadcast did not succeed / no category selected). Drives the live
@@ -117,8 +261,30 @@ class BookingFlowController extends ChangeNotifier {
     }
   }
 
+  void setDispatchMode(BookingDispatchMode mode) {
+    if (mode == BookingDispatchMode.onDemand) {
+      _draft = _draft.copyWith(
+        dispatchMode: BookingDispatchMode.onDemand,
+        urgency: BookingUrgency.rightNow,
+      );
+    } else {
+      _draft = _draft.copyWith(
+        dispatchMode: BookingDispatchMode.scheduled,
+        urgency: BookingUrgency.scheduled,
+      );
+    }
+    notifyListeners();
+    unawaited(refreshQuote());
+  }
+
   void setUrgency(BookingUrgency urgency) {
-    _draft = _draft.copyWith(urgency: urgency);
+    final mode = urgency == BookingUrgency.scheduled
+        ? BookingDispatchMode.scheduled
+        : BookingDispatchMode.onDemand;
+    _draft = _draft.copyWith(
+      urgency: urgency,
+      dispatchMode: mode,
+    );
     notifyListeners();
     unawaited(refreshQuote());
   }
@@ -187,6 +353,13 @@ class BookingFlowController extends ChangeNotifier {
 
   void setMatchingActive(bool value) {
     isMatchingActive = value;
+    if (value) {
+      BookingFlowController.activeInstance = this;
+      activeMatchingNotifier.value = this;
+    } else if (BookingFlowController.activeInstance == this) {
+      BookingFlowController.activeInstance = null;
+      activeMatchingNotifier.value = null;
+    }
     notifyListeners();
   }
 
@@ -200,10 +373,15 @@ class BookingFlowController extends ChangeNotifier {
     TimeOfDay? time,
     BookingUrgency? urgency,
   }) {
+    final resolvedUrgency = urgency ?? _draft.urgency;
+    final mode = resolvedUrgency == BookingUrgency.scheduled
+        ? BookingDispatchMode.scheduled
+        : BookingDispatchMode.onDemand;
     _draft = _draft.copyWith(
       scheduledDate: date ?? _draft.scheduledDate,
       scheduledTime: time ?? _draft.scheduledTime,
-      urgency: urgency ?? _draft.urgency,
+      urgency: resolvedUrgency,
+      dispatchMode: mode,
     );
     notifyListeners();
     unawaited(refreshQuote());
@@ -235,8 +413,32 @@ class BookingFlowController extends ChangeNotifier {
 
   bool get hasSelectedService => _draft.serviceListingId != null;
 
+  static BookingDraft _resolveInitialDraft(BookingDraft? initial) {
+    if (initial == null) {
+      return const BookingDraft(
+        urgency: BookingUrgency.rightNow,
+        rooms: 1,
+        cleaningType: ServiceType.standard,
+        paymentMethod: BookingPaymentMethod.gcash,
+        address: BookingAddress(
+          label: 'Home',
+          line1: '123 Example Street',
+          city: 'Metro Manila',
+        ),
+        latitude: 14.5995,
+        longitude: 120.9842,
+      );
+    }
+    if (initial.urgency == BookingUrgency.scheduled &&
+        initial.dispatchMode != BookingDispatchMode.scheduled) {
+      return initial.copyWith(dispatchMode: BookingDispatchMode.scheduled);
+    }
+    return initial;
+  }
+
   bool get hasValidSchedule =>
-      _draft.urgency != BookingUrgency.scheduled ||
+      (_draft.dispatchMode != BookingDispatchMode.scheduled &&
+          _draft.urgency != BookingUrgency.scheduled) ||
       (_draft.scheduledDate != null && _draft.scheduledTime != null);
 
   /// True when the draft carries a usable address for dispatch. Falls back to
@@ -288,6 +490,7 @@ class BookingFlowController extends ChangeNotifier {
       // be matched the repository surfaces a clear error to the user.
       activeReferenceId = await repository.broadcastLiveSearch(_draft);
       _draft = _draft.copyWith(liveSearchToken: activeReferenceId);
+      setMatchingActive(true);
       return true;
     } catch (e) {
       lastError = e.toString();

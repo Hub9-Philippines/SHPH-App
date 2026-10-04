@@ -29,6 +29,11 @@ void main() {
         longitude: 120.9842,
       );
 
+  setUp(() {
+    BookingFlowController.activeInstance = null;
+    BookingFlowController.activeMatchingNotifier.value = null;
+  });
+
   group('draft persistence', () {
     test('selecting a service populates the authoritative listing fields', () {
       final controller = BookingFlowController(
@@ -199,6 +204,112 @@ void main() {
       expect(second, isFalse);
       await first;
       expect(repository.reservationCalls, 1);
+    });
+  });
+
+  group('live matching & tip persistence', () {
+    test('updateTip updates draft, quote, and notifies listeners', () async {
+      final repository = _FakeBookingRepository();
+      final controller = BookingFlowController(
+        repository: repository,
+        initialDraft: defaultDraft(),
+      );
+      controller.setService(listing);
+      await controller.refreshQuote();
+      expect(controller.serverQuote, isNotNull);
+      final originalTotal = controller.serverQuote!.total;
+
+      await controller.updateTip(50.0);
+      expect(controller.tipAmount, 50.0);
+      expect(controller.draft.tipAmount, 50.0);
+      expect(controller.serverQuote!.tip, 50.0);
+      expect(controller.serverQuote!.total, originalTotal + 50.0);
+    });
+
+    test('activeInstance and activeMatchingNotifier manage lifecycle during matching', () {
+      final controller = BookingFlowController(
+        initialDraft: defaultDraft(),
+      );
+      expect(BookingFlowController.activeInstance, isNull);
+      expect(BookingFlowController.activeMatchingNotifier.value, isNull);
+
+      controller.setMatchingActive(true);
+      expect(controller.isMatchingActive, isTrue);
+      expect(BookingFlowController.activeInstance, controller);
+      expect(BookingFlowController.activeMatchingNotifier.value, controller);
+
+      controller.setLastSheetExtent(0.85);
+      expect(controller.lastSheetExtent, 0.85);
+
+      controller.setMinimized(true);
+      expect(controller.isMinimized, isTrue);
+
+      controller.setMatchingActive(false);
+      expect(controller.isMatchingActive, isFalse);
+      expect(BookingFlowController.activeInstance, isNull);
+      expect(BookingFlowController.activeMatchingNotifier.value, isNull);
+    });
+  });
+
+  group('dispatch mode & API routing', () {
+    test('setDispatchMode toggles between onDemand and scheduled', () {
+      final controller = BookingFlowController(
+        initialDraft: defaultDraft(),
+      );
+      expect(controller.draft.dispatchMode, BookingDispatchMode.onDemand);
+      expect(controller.draft.urgency, BookingUrgency.rightNow);
+      expect(controller.hasValidSchedule, isTrue);
+
+      controller.setDispatchMode(BookingDispatchMode.scheduled);
+      expect(controller.draft.dispatchMode, BookingDispatchMode.scheduled);
+      expect(controller.draft.urgency, BookingUrgency.scheduled);
+      expect(controller.hasValidSchedule, isFalse);
+
+      controller.setSchedule(
+        date: DateTime(2026, 8, 15),
+        time: const TimeOfDay(hour: 10, minute: 0),
+        urgency: BookingUrgency.scheduled,
+      );
+      expect(controller.hasValidSchedule, isTrue);
+
+      controller.setDispatchMode(BookingDispatchMode.onDemand);
+      expect(controller.draft.dispatchMode, BookingDispatchMode.onDemand);
+      expect(controller.draft.urgency, BookingUrgency.rightNow);
+      expect(controller.hasValidSchedule, isTrue);
+    });
+
+    test('attachLiveSearchToken calls broadcastLiveSearch', () async {
+      final repository = _FakeBookingRepository();
+      final controller = BookingFlowController(
+        repository: repository,
+        initialDraft: defaultDraft(),
+      );
+      controller.setService(listing);
+      controller.setDispatchMode(BookingDispatchMode.onDemand);
+
+      final success = await controller.attachLiveSearchToken(await _l10n());
+      expect(success, isTrue);
+      expect(repository.liveCalls, 1);
+      expect(repository.reservationCalls, 0);
+    });
+
+    test('attachReservationToken calls reserveScheduledSlot', () async {
+      final repository = _FakeBookingRepository();
+      final controller = BookingFlowController(
+        repository: repository,
+        initialDraft: defaultDraft(),
+      );
+      controller.setService(listing);
+      controller.setSchedule(
+        date: DateTime(2026, 8, 15),
+        time: const TimeOfDay(hour: 10, minute: 0),
+        urgency: BookingUrgency.scheduled,
+      );
+
+      final success = await controller.attachReservationToken(await _l10n());
+      expect(success, isTrue);
+      expect(repository.reservationCalls, 1);
+      expect(repository.liveCalls, 0);
     });
   });
 }

@@ -55,6 +55,7 @@ class BookingMapSheetHost extends StatefulWidget {
     this.includeTopSafeArea = true,
     this.maxExtentBuilder,
     this.onSheetContentHeightChanged,
+    this.onCameraPaddingChanged,
     this.removeBottomPaddingForDraggable = false,
     super.key,
   }) : assert(
@@ -143,6 +144,10 @@ class BookingMapSheetHost extends StatefulWidget {
   /// a route polyline). The host's own camera padding update happens regardless.
   final ValueChanged<double>? onSheetContentHeightChanged;
 
+  /// Called whenever the derived camera padding updates.
+  /// Use this to re-frame the map camera to keep pins or bounds centered.
+  final ValueChanged<EdgeInsets>? onCameraPaddingChanged;
+
   /// When true, the draggable sheet is wrapped in `MediaQuery.removePadding`
   /// with `removeBottom: true` so the keyboard inset doesn't push it around.
   final bool removeBottomPaddingForDraggable;
@@ -154,6 +159,7 @@ class BookingMapSheetHost extends StatefulWidget {
 class _BookingMapSheetHostState extends State<BookingMapSheetHost> {
   double? _sheetContentHeight;
   double _liveExtent = 0;
+  EdgeInsets? _lastReportedCameraPadding;
 
   @override
   void initState() {
@@ -250,10 +256,21 @@ class _BookingMapSheetHostState extends State<BookingMapSheetHost> {
           top: topInset + widget.topCameraPadding,
           bottom: viewportHeight * sheetFraction +
               bottomInset +
-              widget.bottomCameraPadding,
+              widget.bottomCameraPadding +
+              mediaQuery.viewInsets.bottom,
           left: widget.horizontalCameraPadding,
           right: widget.horizontalCameraPadding,
         );
+
+        if (widget.onCameraPaddingChanged != null &&
+            _lastReportedCameraPadding != cameraPadding) {
+          _lastReportedCameraPadding = cameraPadding;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              widget.onCameraPaddingChanged!(cameraPadding);
+            }
+          });
+        }
 
         return Stack(
           children: <Widget>[

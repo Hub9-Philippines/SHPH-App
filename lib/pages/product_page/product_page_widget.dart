@@ -13,6 +13,7 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
 import '/l10n/app_localizations.dart';
+import '/pages/booking_funnel/booking_controller.dart';
 import '/services/call_session_controller.dart';
 import '/services/chat_service.dart';
 import '/services/favorites_service.dart';
@@ -1046,10 +1047,10 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                 child: FFButtonWidget(
                   onPressed: _onContactPressed,
                   text: _l10n.ppContact,
-                  icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
                   options: FFButtonOptions(
                     width: double.infinity,
-                    height: 54,
+                    height: 52,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     color: const Color(0xFFF3F7FA),
                     textStyle: AppTheme.of(context).labelLarge.override(
                           font: GoogleFonts.plusJakartaSans(
@@ -1068,10 +1069,10 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
                 child: FFButtonWidget(
                   onPressed: _openBooking,
                   text: _l10n.ppBookNow,
-                  icon: const Icon(Icons.calendar_today_rounded, size: 18),
                   options: FFButtonOptions(
                     width: double.infinity,
-                    height: 54,
+                    height: 52,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     color: AppTheme.of(context).primary,
                     textStyle: AppTheme.of(context).labelLarge.override(
                           font: GoogleFonts.plusJakartaSans(
@@ -1287,7 +1288,11 @@ class _ProductPageWidgetState extends State<ProductPageWidget> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  void _openBooking() {
+  Future<void> _openBooking() async {
+    final guarded =
+        await BookingFlowController.checkAndGuardActiveMatching(context);
+    if (guarded || !mounted) return;
+
     context.pushNamed(
       BookingWidget.routeName,
       extra: <String, dynamic>{

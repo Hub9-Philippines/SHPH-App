@@ -1450,6 +1450,24 @@ abstract class AppLocalizations {
   /// **'Searching nearby providers'**
   String get bfSearchingNearbyProviders;
 
+  /// No description provided for @bfSearchInProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Search in Progress'**
+  String get bfSearchInProgressTitle;
+
+  /// No description provided for @bfSearchInProgressBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You already have an active provider search running. Please wait for a match or cancel your existing search before starting a new booking.'**
+  String get bfSearchInProgressBody;
+
+  /// No description provided for @bfViewActiveSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'View Active Search'**
+  String get bfViewActiveSearch;
+
   /// No description provided for @bfSelectATime.
   ///
   /// In en, this message translates to:
@@ -9399,6 +9417,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Microphone access is needed for calls. Please try again.'**
   String get csMediaDenied;
+
+  /// No description provided for @bfDispatchModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking Type'**
+  String get bfDispatchModeTitle;
+
+  /// No description provided for @bfOnDemandTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'On-Demand (Immediate)'**
+  String get bfOnDemandTitle;
+
+  /// No description provided for @bfOnDemandSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgent / Emergency broadcast to nearest available providers right now'**
+  String get bfOnDemandSubtitle;
+
+  /// No description provided for @bfStandardBookingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard Booking (Scheduled)'**
+  String get bfStandardBookingTitle;
+
+  /// No description provided for @bfStandardBookingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reserve a confirmed slot for an upcoming date and time'**
+  String get bfStandardBookingSubtitle;
+
+  /// No description provided for @bfPickDateTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick Date & Time'**
+  String get bfPickDateTime;
+
+  /// No description provided for @bfScheduleMandatoryError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a scheduled date and time before proceeding.'**
+  String get bfScheduleMandatoryError;
+
+  /// No description provided for @bfInstantDispatchBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Instant Dispatch: Nearest providers will be notified immediately upon checkout.'**
+  String get bfInstantDispatchBanner;
 }
 
 class _AppLocalizationsDelegate
