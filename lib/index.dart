@@ -45,6 +45,7 @@ export '/pages/settings/settings_widget.dart' show SettingsWidget;
 export '/pages/signin/signin_widget.dart' show SigninWidget;
 export '/pages/signup/signup_widget.dart' show SignupWidget;
 export '/pages/splash/splash_widget.dart' show SplashWidget;
+export '/pages/unified_auth/unified_auth_widget.dart' show UnifiedAuthWidget;
 export 'main/bookings/bookings_widget.dart' show BookingsWidget;
 export 'main/category/category_widget.dart' show CategoryWidget;
 export 'main/home/home_widget.dart' show HomeWidget;

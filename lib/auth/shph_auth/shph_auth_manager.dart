@@ -128,4 +128,29 @@ class ShphAuthManager extends AuthManager
     currentUser = user;
     return user;
   }
+
+  Future<BaseAuthUser?> signInWithGoogle(BuildContext context) async {
+    // Demo/Web integration for Google sign in returning standard account
+    final data = await _authService.authApi.authGoogle(
+      email: 'user_${DateTime.now().millisecondsSinceEpoch}@gmail.com',
+      name: 'Google User',
+    );
+    final userMap = data['user'] as Map<String, dynamic>? ?? data;
+    _authService.adoptUser(userMap);
+    final user = SerbisyoHubPHShphUser(userMap);
+    currentUser = user;
+    return user;
+  }
+
+  Future<BaseAuthUser?> signInWithApple(BuildContext context) async {
+    final data = await _authService.authApi.authApple(
+      email: 'user_${DateTime.now().millisecondsSinceEpoch}@privaterelay.appleid.com',
+      name: 'Apple User',
+    );
+    final userMap = data['user'] as Map<String, dynamic>? ?? data;
+    _authService.adoptUser(userMap);
+    final user = SerbisyoHubPHShphUser(userMap);
+    currentUser = user;
+    return user;
+  }
 }

@@ -13,6 +13,7 @@ import '/pages/provider_reviews/provider_reviews_widget.dart';
 import '/pages/booking_funnel/booking_models.dart';
 import '/pages/booking_funnel/booking_success_screen.dart';
 import '/pages/geographic_selection/geographic_selection_widget.dart';
+import '/pages/unified_auth/unified_auth_widget.dart';
 import '/services/client_kyc_service.dart';
 
 /// Client-only route gating. No provider routes exist in this app.
@@ -95,16 +96,19 @@ class AppRouter {
             builder: (context, state) => const SplashWidget(),
           ),
           GoRoute(
+            path: UnifiedAuthWidget.routePath,
+            name: UnifiedAuthWidget.routeName,
+            builder: (context, state) => const UnifiedAuthWidget(),
+          ),
+          GoRoute(
             path: SigninWidget.routePath,
             name: SigninWidget.routeName,
             builder: (context, state) => const SigninWidget(),
           ),
-          // Legacy welcome route (/signOptions) retired — alias to merged
-          // sign-in so stale deep links land on the auth entry screen.
           GoRoute(
             path: '/signOptions',
             name: 'SignOptions',
-            builder: (context, state) => const SigninWidget(),
+            builder: (context, state) => const UnifiedAuthWidget(),
           ),
           GoRoute(
             path: HomeWidget.routePath,

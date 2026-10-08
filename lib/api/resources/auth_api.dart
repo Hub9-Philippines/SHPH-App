@@ -54,6 +54,47 @@ class ShphAuthApi {
     return data;
   }
 
+  Future<Map<String, dynamic>> verifyOtp({
+    required String phoneNumber,
+    required String pin,
+  }) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/api/auth/verify-otp/',
+      data: {'phone_number': phoneNumber, 'pin': pin},
+    );
+    final data = response.data ?? {};
+    await _persistTokens(data);
+    return data;
+  }
+
+  Future<Map<String, dynamic>> authGoogle({
+    required String email,
+    String? name,
+    String role = 'client',
+  }) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/api/auth/google/',
+      data: {'email': email, 'name': name, 'role': role},
+    );
+    final data = response.data ?? {};
+    await _persistTokens(data);
+    return data;
+  }
+
+  Future<Map<String, dynamic>> authApple({
+    required String email,
+    String? name,
+    String role = 'client',
+  }) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/api/auth/apple/',
+      data: {'email': email, 'name': name, 'role': role},
+    );
+    final data = response.data ?? {};
+    await _persistTokens(data);
+    return data;
+  }
+
   Future<void> registerResend({required String phoneNumber}) async {
     await _client.post(
       '/api/auth/register/resend/',

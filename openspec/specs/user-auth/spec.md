@@ -5,6 +5,8 @@ in the correct shell (client or provider) after login/register/OTP, providers
 are walked through profile and KYC completion before reaching their dashboard,
 and role-gated routes enforce access — mirroring the web app.
 
+## Requirements
+
 ### Requirement: Sign-up captures the intended role
 The sign-up flow SHALL capture the role the user chooses before the form
 appears (client, provider, or both) and SHALL send that role to the backend on
