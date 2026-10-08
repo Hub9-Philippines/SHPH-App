@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import '/api/api_config.dart';
 import '/api/resources/users_api.dart';
 import '/services/logging_service.dart';
 
