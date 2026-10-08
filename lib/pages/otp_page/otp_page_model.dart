@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '/api/resources/auth_api.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/l10n/app_localizations.dart';
+import '/services/auth_service.dart';
 import 'otp_page_widget.dart' show OtpPageWidget;
 
 class OtpPageModel extends FlutterFlowModel<OtpPageWidget> {
@@ -27,8 +28,14 @@ class OtpPageModel extends FlutterFlowModel<OtpPageWidget> {
     loading = true;
     error = null;
     try {
-      await ShphAuthApi.instance
-          .sendOtpPin(phoneNumber: phone.trim());
+      final authService = AuthService.instance;
+      if (authService.pendingDeliveryMethod != null) {
+        await ShphAuthApi.instance
+            .registerResend(phoneNumber: phone.trim());
+      } else {
+        await ShphAuthApi.instance
+            .sendOtpPin(phoneNumber: phone.trim());
+      }
       codeSent = true;
       _startCooldown();
     } catch (e) {
@@ -46,8 +53,16 @@ class OtpPageModel extends FlutterFlowModel<OtpPageWidget> {
     loading = true;
     error = null;
     try {
-      await ShphAuthApi.instance
-          .verifyOtpPin(phoneNumber: phone.trim(), pin: code.trim());
+      final authService = AuthService.instance;
+      if (authService.pendingDeliveryMethod != null) {
+        await authService.registerVerify(
+          payload: {'phone_number': phone.trim(), 'pin': code.trim()},
+        );
+        authService.clearPendingRegistration();
+      } else {
+        await ShphAuthApi.instance
+            .verifyOtpPin(phoneNumber: phone.trim(), pin: code.trim());
+      }
       return true;
     } catch (e) {
       error = l10n.otpErrInvalidCode;
