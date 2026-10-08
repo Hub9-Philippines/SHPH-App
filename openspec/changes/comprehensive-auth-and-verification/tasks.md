@@ -19,4 +19,4 @@
 
 ## 4. Analysis & Verification (`shph-app`)
 - [x] 4.1 Run `flutter analyze` in `shph-app` and confirm 0 errors.
-- [ ] 4.2 Commit and push git changes in both `serbisyo-api` and `shph-app` repositories.
+- [x] 4.2 Commit and push git changes in both `serbisyo-api` and `shph-app` repositories.
