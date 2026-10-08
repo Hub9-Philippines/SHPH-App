@@ -5,9 +5,9 @@
 class ApiConfig {
   ApiConfig._();
 
-  /// Live deployed backend (web build's `VITE_API_URL=https://serbisyohubph.com/api`).
+  /// Live deployed Cloudflare Worker API.
   /// Overridable via `--dart-define=SHPH_API_BASE_URL=...`.
-  static const String _defaultBaseUrl = 'https://serbisyohubph.com';
+  static const String _defaultBaseUrl = 'https://api.serbisyo.workers.dev';
 
   static const String _baseUrlFromEnv = String.fromEnvironment(
     'SHPH_API_BASE_URL',
