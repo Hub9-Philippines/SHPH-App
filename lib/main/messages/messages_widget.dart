@@ -404,12 +404,16 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
-                            _l10n.msConversation,
+                            chatRoom.participantRole == 'provider'
+                                ? 'Service Provider'
+                                : 'Client',
                             style: theme.labelSmall.override(
                                   font: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.w700,
                                   ),
-                                  color: AppThemeData.statusCompleted,
+                                  color: chatRoom.participantRole == 'provider'
+                                      ? AppThemeData.statusCompleted
+                                      : AppThemeData.statusConfirmed,
                                 ),
                           ),
                         ),

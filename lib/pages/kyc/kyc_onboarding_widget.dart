@@ -84,20 +84,6 @@ class _KycOnboardingWidgetState extends State<KycOnboardingWidget> {
               preferredSize: const Size.fromHeight(44),
               child: CupertinoPageHeader(
                 title: l10n.kycIntroTitle,
-                actions: [
-                  CupertinoButton(
-                    padding: EdgeInsets.zero,
-                    onPressed: _skip,
-                    child: Text(
-                      l10n.skipForNow,
-                      style: TextStyle(
-                        color: theme.primary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
               ),
             ),
             Expanded(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '/api/resources/calls_api.dart';
 import '/app_state.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/services/chat_service.dart';
@@ -10,6 +11,7 @@ class ChatRoom {
     required this.id,
     required this.providerName,
     required this.providerPhoto,
+    this.participantRole = 'provider',
     this.lastMessage,
     this.lastMessageTime,
     this.unreadCount = 0,
@@ -18,6 +20,7 @@ class ChatRoom {
   final String id;
   final String providerName;
   final String providerPhoto;
+  final String participantRole;
   final String? lastMessage;
   final DateTime? lastMessageTime;
   final int unreadCount;
@@ -62,36 +65,52 @@ class MessagesModel extends FlutterFlowModel<MessagesWidget> {
   @override
   void initState(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadChatRooms();
+      _loadData();
     });
+  }
+
+  Future<void> _loadData() async {
+    isLoading = true;
+    onStateChanged?.call();
+    await Future.wait([
+      _loadChatRooms(),
+      _loadCallHistory(),
+    ]);
+    isLoading = false;
+    onStateChanged?.call();
   }
 
   Future<void> _loadChatRooms() async {
     try {
       final rooms = await ChatService.instance.getChatRooms();
       if (rooms.isEmpty) {
-        await Future.delayed(const Duration(milliseconds: 1500));
-        isLoading = false;
-        onStateChanged?.call();
+        chatRooms = const [];
+        _syncUnreadCount();
         return;
       }
 
       chatRooms = rooms.map((r) {
         final id = r['id']?.toString() ?? r['thread_id']?.toString() ?? '';
-        final providerName = r['provider_name'] ??
+        final participant = r['participant'] is Map ? r['participant'] as Map<String, dynamic> : null;
+        final providerName = participant?['name'] ??
+            r['provider_name'] ??
             r['customer']?['display_name'] ??
             r['title'] ??
+            'Serbisyo User';
+        final providerPhoto = participant?['avatar_url'] ??
+            r['provider_photo'] ??
+            r['customer']?['photo_url'] ??
             '';
-        final providerPhoto =
-            r['provider_photo'] ?? r['customer']?['photo_url'] ?? '';
+        final role = participant?['role']?.toString() ?? 'provider';
         final lastMessage = r['last_message'] is Map
-            ? (r['last_message']['content'] ??
-                r['last_message']['message_text'] ??
-                r['last_message']['text'])
+            ? (r['last_message']['text'] ??
+                r['last_message']['content'] ??
+                r['last_message']['message_text'])
             : r['last_message']?.toString();
 
         DateTime? lastMessageTime;
-        final lt = r['last_message_time'] ??
+        final lt = r['last_message']?['sent_at'] ??
+            r['last_message_time'] ??
             r['last_message']?['created_at'] ??
             r['updated_at'];
         if (lt != null) {
@@ -107,6 +126,7 @@ class MessagesModel extends FlutterFlowModel<MessagesWidget> {
           id: id,
           providerName: providerName.toString(),
           providerPhoto: providerPhoto.toString(),
+          participantRole: role,
           lastMessage: lastMessage?.toString(),
           lastMessageTime: lastMessageTime,
           unreadCount: unreadCount,
@@ -117,15 +137,42 @@ class MessagesModel extends FlutterFlowModel<MessagesWidget> {
     } catch (e) {
       chatRooms = const [];
       _syncUnreadCount();
-    } finally {
-      isLoading = false;
-      onStateChanged?.call();
+    }
+  }
+
+  Future<void> _loadCallHistory() async {
+    try {
+      final calls = await ShphCallsApi.instance.getCallHistory();
+      callHistory = calls.map((c) {
+        if (c is! Map<String, dynamic>) return null;
+        final id = c['id']?.toString() ?? '';
+        final participant = c['participant'] is Map ? c['participant'] as Map<String, dynamic> : null;
+        final providerName = participant?['name']?.toString() ?? 'Serbisyo User';
+        final providerPhoto = participant?['avatar_url']?.toString() ?? '';
+        final callType = c['call_type']?.toString() ?? 'video';
+        final callStatus = c['status']?.toString() ?? 'ended';
+        final durationSeconds = (c['duration_seconds'] as num?)?.toInt() ?? 0;
+        final createdAtStr = c['created_at']?.toString();
+        final createdAt = createdAtStr != null ? DateTime.tryParse(createdAtStr) : null;
+
+        return CallHistory(
+          id: id,
+          providerName: providerName,
+          providerPhoto: providerPhoto,
+          callType: callType,
+          callStatus: callStatus,
+          durationSeconds: durationSeconds,
+          createdAt: createdAt,
+        );
+      }).whereType<CallHistory>().toList();
+    } catch (_) {
+      callHistory = const [];
     }
   }
 
   Future<void> reload() {
     _syncUnreadCount();
-    return _loadChatRooms();
+    return _loadData();
   }
 
   void _syncUnreadCount() {
@@ -140,3 +187,4 @@ class MessagesModel extends FlutterFlowModel<MessagesWidget> {
     pageViewController?.dispose();
   }
 }
+
