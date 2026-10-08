@@ -55,7 +55,8 @@ class PushNotificationService {
   }) async {
     try {
       final response = await http.post(
-        Uri.parse('https://api.serbisyohub.ph/api/notifications/send/'),
+        Uri.parse('${ApiConfig.baseUrl}/api/v1/notifications/device-token'),
+        headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'user_id': userId,
           'title': title,
