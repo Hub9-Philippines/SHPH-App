@@ -197,11 +197,6 @@ class AppRouter {
             },
           ),
           GoRoute(
-            path: SignupWidget.routePath,
-            name: SignupWidget.routeName,
-            builder: (context, state) => const SignupWidget(),
-          ),
-          GoRoute(
             path: PhoneVerifyUserWidget.routePath,
             name: PhoneVerifyUserWidget.routeName,
             builder: (context, state) => const PhoneVerifyUserWidget(),
