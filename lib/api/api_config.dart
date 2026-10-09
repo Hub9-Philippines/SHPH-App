@@ -36,6 +36,6 @@ class ApiConfig {
   /// Overridable via `--dart-define=GOOGLE_SERVER_CLIENT_ID=...`.
   static const String googleServerClientId = String.fromEnvironment(
     'GOOGLE_SERVER_CLIENT_ID',
-    defaultValue: '191564688667-drcjh8fg6dhncb37bgka4hu320mor1pp.apps.googleusercontent.com',
+    defaultValue: '191564688667-6aitm9mulmfe0fhqk9d9ee3bqk2squi7.apps.googleusercontent.com',
   );
 }
