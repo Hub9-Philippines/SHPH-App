@@ -31,4 +31,11 @@ class ApiConfig {
 
   /// The SHPH REST API is now the sole backend; Supabase has been removed.
   static bool get preferShphApi => true;
+
+  /// Google OAuth Web Client ID for Android/Web serverClientId.
+  /// Overridable via `--dart-define=GOOGLE_SERVER_CLIENT_ID=...`.
+  static const String googleServerClientId = String.fromEnvironment(
+    'GOOGLE_SERVER_CLIENT_ID',
+    defaultValue: '',
+  );
 }

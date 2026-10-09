@@ -7,6 +7,7 @@ import '/auth/base_auth_user_provider.dart';
 
 import '/services/auth_service.dart';
 import '/api/resources/auth_api.dart';
+import '/api/api_config.dart';
 import 'shph_user_provider.dart';
 
 export '/auth/base_auth_user_provider.dart';
@@ -149,8 +150,17 @@ class ShphAuthManager extends AuthManager with EmailSignInManager, PhoneSignInMa
     return user;
   }
 
+  bool _isGoogleInitialized = false;
+
   Future<BaseAuthUser?> signInWithGoogle(BuildContext context) async {
     try {
+      if (!_isGoogleInitialized) {
+        final serverClientId = ApiConfig.googleServerClientId;
+        await GoogleSignIn.instance.initialize(
+          serverClientId: serverClientId.isNotEmpty ? serverClientId : null,
+        );
+        _isGoogleInitialized = true;
+      }
       final googleUser = await GoogleSignIn.instance.authenticate();
 
       final email = googleUser.email;
