@@ -133,9 +133,8 @@ class _SigninWidgetState extends State<SigninWidget>
               ),
             ),
           ),
-        ),
-      );
-    }
+        );
+      }
 
   Widget _buildHeader(AppThemeData theme) {
     return Column(
