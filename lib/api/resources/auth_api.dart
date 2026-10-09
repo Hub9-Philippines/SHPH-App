@@ -81,7 +81,7 @@ class ShphAuthApi {
     String role = 'client',
   }) async {
     final response = await _client.post<Map<String, dynamic>>(
-      '/api/auth/google/',
+      '/api/v1/auth/google',
       data: {'email': email, 'name': name, 'role': role},
     );
     final data = response.data ?? {};
@@ -95,7 +95,7 @@ class ShphAuthApi {
     String role = 'client',
   }) async {
     final response = await _client.post<Map<String, dynamic>>(
-      '/api/auth/apple/',
+      '/api/v1/auth/apple',
       data: {'email': email, 'name': name, 'role': role},
     );
     final data = response.data ?? {};
