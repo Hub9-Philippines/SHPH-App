@@ -16,6 +16,8 @@ class ShphAuthManager extends AuthManager with EmailSignInManager, PhoneSignInMa
 
   static final ShphAuthManager instance = ShphAuthManager._();
 
+  factory ShphAuthManager() => instance;
+
   final AuthService _authService = AuthService.instance;
 
   @override
