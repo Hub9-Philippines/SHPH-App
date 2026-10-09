@@ -12,6 +12,7 @@ import '/models/service_listing.dart';
 import '/pages/provider_reviews/provider_reviews_widget.dart';
 import '/pages/booking_funnel/booking_models.dart';
 import '/pages/booking_funnel/booking_success_screen.dart';
+import '/pages/email_verify/email_verify_widget.dart';
 import '/pages/geographic_selection/geographic_selection_widget.dart';
 import '/pages/unified_auth/unified_auth_widget.dart';
 import '/services/client_kyc_service.dart';
@@ -114,6 +115,15 @@ class AppRouter {
               email: state.uri.queryParameters['email'],
               phoneNumber: state.uri.queryParameters['phone'] ??
                   state.uri.queryParameters['phoneNumber'],
+              method: state.uri.queryParameters['method'],
+              name: state.uri.queryParameters['name'],
+            ),
+          ),
+          GoRoute(
+            path: EmailVerifyWidget.routePath,
+            name: EmailVerifyWidget.routeName,
+            builder: (context, state) => EmailVerifyWidget(
+              email: state.uri.queryParameters['email'],
             ),
           ),
           GoRoute(

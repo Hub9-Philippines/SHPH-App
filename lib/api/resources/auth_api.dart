@@ -130,6 +130,29 @@ class ShphAuthApi {
     return data;
   }
 
+  Future<void> sendEmailOtp({required String email}) async {
+    await _client.post(
+      '/api/v1/auth/otp/send-email',
+      data: {'email': email},
+    );
+  }
+
+  Future<Map<String, dynamic>> verifyEmailOtp({
+    required String email,
+    required String code,
+  }) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/api/v1/auth/otp/verify-email',
+      data: {'email': email, 'code': code},
+    );
+    final data = response.data ?? {};
+    final payload = (data['data'] is Map<String, dynamic>)
+        ? (data['data'] as Map<String, dynamic>)
+        : data;
+    await _persistTokens(payload);
+    return payload;
+  }
+
   Future<void> otpSend({required String phoneNumber}) async {
     await _client.post(
       '/api/auth/otp/send/',

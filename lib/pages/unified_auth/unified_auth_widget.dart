@@ -145,9 +145,16 @@ class _UnifiedAuthWidgetState extends State<UnifiedAuthWidget> {
               final user = await authManagerObj.signInWithGoogle(context);
               if (!context.mounted) return;
               if (user != null) {
-                final authService = AuthService.instance;
-                if (authService.currentUser?['phone_number'] == null) {
-                  await context.pushNamed(PhoneVerifyUserWidget.routeName);
+                final userData = user.userData;
+                if (userData?['pending_oauth'] == true) {
+                  await context.pushNamed(
+                    SignupWidget.routeName,
+                    queryParameters: {
+                      'email': userData?['email'] ?? '',
+                      'method': 'google',
+                      'name': userData?['name'] ?? 'Google User',
+                    },
+                  );
                 } else {
                   context.goNamed('Home');
                 }
@@ -178,9 +185,16 @@ class _UnifiedAuthWidgetState extends State<UnifiedAuthWidget> {
               final user = await authManagerObj.signInWithApple(context);
               if (!context.mounted) return;
               if (user != null) {
-                final authService = AuthService.instance;
-                if (authService.currentUser?['phone_number'] == null) {
-                  await context.pushNamed(PhoneVerifyUserWidget.routeName);
+                final userData = user.userData;
+                if (userData?['pending_oauth'] == true) {
+                  await context.pushNamed(
+                    SignupWidget.routeName,
+                    queryParameters: {
+                      'email': userData?['email'] ?? '',
+                      'method': 'apple',
+                      'name': userData?['name'] ?? 'Apple User',
+                    },
+                  );
                 } else {
                   context.goNamed('Home');
                 }

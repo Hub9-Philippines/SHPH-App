@@ -12,6 +12,9 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
 import '/l10n/app_localizations.dart';
+import '/pages/email_verify/email_verify_widget.dart';
+import '/pages/phone_verify_user/phone_verify_user_widget.dart';
+import '/services/auth_service.dart';
 import '/services/error_handler.dart';
 import '/theme/app_theme.dart';
 import '../../auth/shph_auth/shph_auth_manager.dart';
@@ -20,10 +23,18 @@ import 'signup_model.dart';
 export 'signup_model.dart';
 
 class SignupWidget extends StatefulWidget {
-  const SignupWidget({super.key, this.email, this.phoneNumber});
+  const SignupWidget({
+    super.key,
+    this.email,
+    this.phoneNumber,
+    this.method,
+    this.name,
+  });
 
   final String? email;
   final String? phoneNumber;
+  final String? method; // 'google', 'apple', 'email', 'mobile'
+  final String? name;
 
   static String routeName = 'Signup';
   static String routePath = '/signup';
@@ -66,6 +77,15 @@ class _SignupWidgetState extends State<SignupWidget> {
     }
     if (widget.phoneNumber != null && widget.phoneNumber!.isNotEmpty) {
       _model.phoneFieldTextController!.text = widget.phoneNumber!;
+    }
+    if (widget.name != null && widget.name!.isNotEmpty) {
+      final parts = widget.name!.trim().split(' ');
+      if (parts.length >= 2) {
+        _model.firstNameTextController!.text = parts.first;
+        _model.lastNameTextController!.text = parts.sublist(1).join(' ');
+      } else if (parts.length == 1) {
+        _model.firstNameTextController!.text = parts.first;
+      }
     }
   }
 
@@ -115,7 +135,7 @@ class _SignupWidgetState extends State<SignupWidget> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildHeader(theme),
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 32),
                     _buildForm(theme),
                   ],
                 ),
@@ -128,28 +148,44 @@ class _SignupWidgetState extends State<SignupWidget> {
   }
 
   Widget _buildHeader(AppThemeData theme) {
+    String badgeText = 'Step 2: Complete Your Account';
+    if (widget.method == 'google') {
+      badgeText = 'Google Account Sign Up (Step 2)';
+    } else if (widget.method == 'apple') {
+      badgeText = 'Apple Account Sign Up (Step 2)';
+    } else if (widget.phoneNumber != null && widget.phoneNumber!.isNotEmpty) {
+      badgeText = 'Mobile Sign Up (Step 2)';
+    } else {
+      badgeText = 'Email Sign Up (Step 2)';
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 56,
-          height: 56,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            color: theme.primary,
-            borderRadius: BorderRadius.circular(16),
+            color: theme.primary.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(Icons.person_add_rounded, color: theme.onPrimary, size: 28),
+          child: Text(
+            badgeText,
+            style: theme.bodySmall.copyWith(
+              color: theme.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         Text(
-          _l10n.suTitle,
+          'Personal Information',
           style: theme.headlineLarge.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         Text(
-          _l10n.suSubtitle,
+          'Please fill in your first and last name to proceed to verification.',
           style: theme.bodyMedium.copyWith(
-            color: AppTheme.of(context).secondaryText,
+            color: theme.secondaryText,
             fontSize: 15,
           ),
         ),
@@ -158,243 +194,168 @@ class _SignupWidgetState extends State<SignupWidget> {
   }
 
   Widget _buildForm(AppThemeData theme) {
+    final isOAuth = widget.method == 'google' || widget.method == 'apple';
+    final isMobile = widget.phoneNumber != null && widget.phoneNumber!.isNotEmpty;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _fieldLabel(theme, _l10n.suFirstName),
+        _fieldLabel(theme, 'First Name'),
         const SizedBox(height: 8),
         _inputField(
           theme,
           controller: _model.firstNameTextController!,
           focusNode: _model.firstNameFocusNode,
-          hint: _l10n.suFirstNameHint,
+          hint: 'Enter your first name',
           textInputAction: TextInputAction.next,
         ),
         const SizedBox(height: 16),
-        _fieldLabel(theme, _l10n.suMiddleName),
-        const SizedBox(height: 8),
-        _inputField(
-          theme,
-          controller: _model.middleNameTextController!,
-          focusNode: _model.middleNameFocusNode,
-          hint: _l10n.suMiddleNameHint,
-          textInputAction: TextInputAction.next,
-        ),
-        const SizedBox(height: 16),
-        _fieldLabel(theme, _l10n.suLastName),
+        _fieldLabel(theme, 'Last Name'),
         const SizedBox(height: 8),
         _inputField(
           theme,
           controller: _model.lastNameTextController!,
           focusNode: _model.lastNameFocusNode,
-          hint: _l10n.suLastNameHint,
+          hint: 'Enter your last name',
           textInputAction: TextInputAction.next,
         ),
         const SizedBox(height: 16),
-        _fieldLabel(theme, _l10n.suEmail),
-        const SizedBox(height: 8),
-        _inputField(
-          theme,
-          controller: _model.emailTextController!,
-          focusNode: _model.emailFocusNode,
-          hint: _l10n.suEmailHint,
-          textInputAction: TextInputAction.next,
-          keyboardType: TextInputType.emailAddress,
-        ),
-        const SizedBox(height: 16),
-        _fieldLabel(theme, _l10n.suMobileNumber),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: _model.phoneFieldTextController,
-          focusNode: _model.phoneFieldFocusNode,
-          onChanged: (_) => EasyDebounce.debounce(
-            '_model.phoneFieldTextController',
-            const Duration(milliseconds: 100),
-            () {
-              _model.isPhoneValid =
-                  _model.phoneFieldTextController.text.length == 13;
-              safeSetState(() {});
-            },
+        if (!isMobile) ...[
+          _fieldLabel(theme, 'Email Address'),
+          const SizedBox(height: 8),
+          AppTextField(
+            controller: _model.emailTextController!,
+            focusNode: _model.emailFocusNode,
+            readOnly: isOAuth,
+            placeholder: 'user@email.com',
+            placeholderStyle: theme.labelMedium.copyWith(color: theme.secondaryText),
+            fillColor: isOAuth ? theme.alternate.withOpacity(0.3) : theme.secondaryBackground,
+            radius: 12,
+            style: theme.bodyMedium.copyWith(fontSize: 16),
           ),
-          autofocus: false,
-          textInputAction: TextInputAction.next,
-          obscureText: false,
-          decoration: InputDecoration(
-            labelText: _l10n.suPhonePrefix,
-            labelStyle: theme.labelMedium.copyWith(fontSize: 16),
-            hintText: _l10n.suPhoneHint,
-            hintStyle: theme.labelMedium.copyWith(
-              fontSize: 16,
-              color: theme.secondaryText,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(
-                color:
-                    _model.isPhoneValid ? theme.secondaryText : theme.error,
-                width: 1,
-              ),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(
-                color:
-                    _model.isPhoneValid ? theme.secondaryText : theme.error,
-                width: 1.5,
-              ),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: theme.error, width: 1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: theme.error, width: 1.5),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            filled: true,
-            fillColor: theme.secondaryBackground,
+          const SizedBox(height: 16),
+        ],
+        if (isMobile) ...[
+          _fieldLabel(theme, 'Mobile Number'),
+          const SizedBox(height: 8),
+          AppTextField(
+            controller: _model.phoneFieldTextController!,
+            focusNode: _model.phoneFieldFocusNode,
+            readOnly: true,
+            placeholder: '+639XXXXXXXXX',
+            placeholderStyle: theme.labelMedium.copyWith(color: theme.secondaryText),
+            fillColor: theme.alternate.withOpacity(0.3),
+            radius: 12,
+            style: theme.bodyMedium.copyWith(fontSize: 16),
           ),
-          style: theme.bodyMedium.copyWith(fontSize: 16),
-          textAlign: TextAlign.start,
-          maxLength: 13,
-          maxLengthEnforcement: MaxLengthEnforcement.enforced,
-          buildCounter: (context,
-                  {required currentLength,
-                  required isFocused,
-                  maxLength}) =>
-              null,
-          keyboardType: TextInputType.phone,
-          cursorColor: theme.primaryText,
-          enableInteractiveSelection: true,
-          validator:
-              _model.phoneFieldTextControllerValidator.asValidator(context),
-          inputFormatters: [_model.phoneFieldMask],
-        ),
-        const SizedBox(height: 16),
-        _fieldLabel(theme, _l10n.suPassword),
-        const SizedBox(height: 8),
-        _inputField(
-          theme,
-          controller: _model.passwordTextController!,
-          focusNode: _model.passwordFocusNode,
-          hint: _l10n.suPasswordHint,
-          textInputAction: TextInputAction.next,
-          obscure: true,
-        ),
-        const SizedBox(height: 16),
-        _fieldLabel(theme, _l10n.suConfirmPassword),
-        const SizedBox(height: 8),
-        _inputField(
-          theme,
-          controller: _model.confirmPasswordTextController!,
-          focusNode: _model.confirmPasswordFocusNode,
-          hint: _l10n.suConfirmPasswordHint,
-          textInputAction: TextInputAction.done,
-          obscure: true,
-        ),
+          const SizedBox(height: 16),
+        ],
+        if (!isOAuth) ...[
+          _fieldLabel(theme, 'Password'),
+          const SizedBox(height: 8),
+          _inputField(
+            theme,
+            controller: _model.passwordTextController!,
+            focusNode: _model.passwordFocusNode,
+            hint: 'Create a password',
+            textInputAction: TextInputAction.next,
+            obscure: true,
+          ),
+          const SizedBox(height: 16),
+          _fieldLabel(theme, 'Confirm Password'),
+          const SizedBox(height: 8),
+          _inputField(
+            theme,
+            controller: _model.confirmPasswordTextController!,
+            focusNode: _model.confirmPasswordFocusNode,
+            hint: 'Confirm your password',
+            textInputAction: TextInputAction.done,
+            obscure: true,
+          ),
+          const SizedBox(height: 16),
+        ],
         if (_model.errorMessage != null)
           Padding(
-            padding: const EdgeInsets.only(top: 8),
+            padding: const EdgeInsets.only(bottom: 16),
             child: Text(
               _model.errorMessage!,
               style: theme.bodySmall.copyWith(color: theme.error),
             ),
           ),
-        const SizedBox(height: 24),
         FFButtonWidget(
           onPressed: _model.isLoading
               ? null
               : () async {
                   _model.errorMessage = null;
+
+                  final firstName = _model.firstNameTextController!.text.trim();
+                  final lastName = _model.lastNameTextController!.text.trim();
+
+                  if (firstName.isEmpty || lastName.isEmpty) {
+                    _model.errorMessage = 'Please enter your first and last name.';
+                    safeSetState(() {});
+                    return;
+                  }
+
+                  if (!isOAuth) {
+                    final pwd = _model.passwordTextController!.text;
+                    final confirmPwd = _model.confirmPasswordTextController!.text;
+                    if (pwd.isEmpty || pwd != confirmPwd) {
+                      _model.errorMessage = 'Passwords do not match or are empty.';
+                      safeSetState(() {});
+                      return;
+                    }
+                  }
+
                   _model.isLoading = true;
                   safeSetState(() {});
 
-                  final rawPhone = _model.phoneFieldTextController.text.trim();
-                  var phoneNumberVal = rawPhone.replaceAll(' ', '').replaceAll('-', '');
-                  if (phoneNumberVal.startsWith('09')) {
-                    phoneNumberVal = '+639${phoneNumberVal.substring(2)}';
-                  } else if (phoneNumberVal.startsWith('639')) {
-                    phoneNumberVal = '+$phoneNumberVal';
-                  }
-
-                  if (phoneNumberVal.isEmpty ||
-                      !phoneNumberVal.startsWith('+639') ||
-                      phoneNumberVal.length != 13) {
-                    _model.isLoading = false;
-                    _model.errorMessage = _l10n.suPhoneRequired;
-                    safeSetState(() {});
-                    return;
-                  }
-                  if (_model.passwordTextController.text !=
-                      _model.confirmPasswordTextController.text) {
-                    _model.isLoading = false;
-                    _model.errorMessage = _l10n.passwordsDoNotMatch;
-                    safeSetState(() {});
-                    return;
-                  }
                   try {
-                    FFAppState().phone = phoneNumberVal;
-                    await (authManager as ShphAuthManager)
-                        .createAccountWithEmail(
-                      context,
-                      email: _model.emailTextController.text.trim(),
-                      password: _model.passwordTextController.text,
-                      firstName: _model.firstNameTextController.text.trim(),
-                      middleName:
-                          _model.middleNameTextController.text.trim(),
-                      lastName: _model.lastNameTextController.text.trim(),
-                      phoneNumber: phoneNumberVal,
-                      role: 'client',
-                    );
-                    _model.isLoading = false;
-                    safeSetState(() {});
-                    if (!context.mounted) return;
-                    await context.pushNamed(
-                      PhoneVerifyUserWidget.routeName,
-                    );
+                    if (isMobile) {
+                      // Step 3 Mobile SMS Verification
+                      final phone = _model.phoneFieldTextController!.text.trim();
+                      FFAppState().phone = phone;
+                      await AuthService.instance.authApi.sendOtpPin(phoneNumber: phone);
+                      _model.isLoading = false;
+                      safeSetState(() {});
+                      if (!context.mounted) return;
+                      await context.pushNamed(
+                        PhoneVerifyUserWidget.routeName,
+                        queryParameters: {'phone': phone},
+                      );
+                    } else {
+                      // Step 3 Email Verification (for Email, Google, Apple)
+                      final email = _model.emailTextController!.text.trim();
+                      FFAppState().email = email;
+                      await AuthService.instance.authApi.sendEmailOtp(email: email);
+                      _model.isLoading = false;
+                      safeSetState(() {});
+                      if (!context.mounted) return;
+                      await context.pushNamed(
+                        EmailVerifyWidget.routeName,
+                        queryParameters: {'email': email},
+                      );
+                    }
                   } catch (e) {
                     _model.isLoading = false;
                     final message = ErrorHandler.describeError(e, _l10n);
                     _model.errorMessage = message;
                     safeSetState(() {});
-                    if (!context.mounted) return;
-                    ErrorHandler.showError(message);
                   }
-                  safeSetState(() {});
                 },
-          text: _model.isLoading ? _l10n.suSigningUp : _l10n.siSignUp,
+          text: 'Continue to Step 3 Verification',
           options: FFButtonOptions(
             width: double.infinity,
             height: 52,
-            color: _model.isLoading ? theme.alternate : theme.primary,
+            color: theme.primary,
             textStyle: theme.titleMedium.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
+              color: theme.onPrimary,
+              fontWeight: FontWeight.bold,
             ),
-            elevation: 0,
+            elevation: 2,
             borderRadius: BorderRadius.circular(12),
-            disabledColor: theme.alternate,
+            disabledColor: theme.secondaryText.withOpacity(0.3),
           ),
-        ),
-        const SizedBox(height: 24),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              _l10n.suAlreadyHaveAccount,
-              style: theme.bodyMedium.copyWith(color: theme.secondaryText),
-            ),
-            GestureDetector(
-              onTap: () => context.pushNamed(SigninWidget.routeName),
-              child: Text(
-                _l10n.siSignIn,
-                style: theme.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: theme.primary,
-                ),
-              ),
-            ),
-          ],
         ),
       ],
     );
@@ -404,7 +365,7 @@ class _SignupWidgetState extends State<SignupWidget> {
     return Text(
       text,
       style: theme.bodyMedium.copyWith(
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w600,
         color: theme.primaryText,
       ),
     );
@@ -426,8 +387,7 @@ class _SignupWidgetState extends State<SignupWidget> {
       obscureText: obscure,
       keyboardType: keyboardType,
       placeholder: hint,
-      placeholderStyle:
-          theme.labelMedium.copyWith(color: theme.secondaryText),
+      placeholderStyle: theme.labelMedium.copyWith(color: theme.secondaryText),
       fillColor: theme.secondaryBackground,
       radius: 12,
       style: theme.bodyMedium.copyWith(fontSize: 16),

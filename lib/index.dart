@@ -17,6 +17,7 @@ export '/pages/contact_provider/contact_provider_widget.dart'
 export '/pages/create_profile/create_profile_widget.dart'
     show CreateProfileWidget;
 export '/pages/edit_profile/edit_profile_widget.dart' show EditProfileWidget;
+export '/pages/email_verify/email_verify_widget.dart' show EmailVerifyWidget;
 export '/pages/favorites/favorites_widget.dart' show FavoritesWidget;
 export '/pages/forgot_password/forgot_password_widget.dart'
     show ForgotPasswordWidget;

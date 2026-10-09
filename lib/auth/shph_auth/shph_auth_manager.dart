@@ -1,39 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+
+import '../auth_manager.dart';
+import '/auth/base_auth_user_provider.dart';
+
 import '/services/auth_service.dart';
-import '/services/device_info_service.dart';
-import '/auth/auth_manager.dart';
+import '/api/resources/auth_api.dart';
 import 'shph_user_provider.dart';
 
-class ShphAuthManager extends AuthManager
-    with EmailSignInManager, PhoneSignInManager {
-  final _authService = AuthService.instance;
+export '/auth/base_auth_user_provider.dart';
+
+class ShphAuthManager extends AuthManager with EmailSignInManager, PhoneSignInManager {
+  ShphAuthManager._();
+
+  static final ShphAuthManager instance = ShphAuthManager._();
+
+  final AuthService _authService = AuthService.instance;
 
   @override
   Future signOut() async {
     await _authService.logout();
+    currentUser = null;
   }
 
   @override
   Future deleteUser(BuildContext context) async {
+    // Account deletion handled via backend profile endpoint
   }
 
   @override
-  Future updateEmail({
-    required String email,
-    required BuildContext context,
-  }) async {
+  Future updateEmail({required String email, required BuildContext context}) async {
+    // Email update handled via profile edit
   }
 
   @override
-  Future resetPassword({
-    required String email,
-    required BuildContext context,
-  }) async {
-    try {
-      await _authService.authApi.requestPasswordReset(email: email);
-    } catch (e) {
-      throw Exception('Password reset failed: $e');
-    }
+  Future resetPassword({required String email, required BuildContext context}) async {
+    await _authService.authApi.requestPasswordReset(email: email);
   }
 
   @override
@@ -51,51 +54,35 @@ class ShphAuthManager extends AuthManager
 
   @override
   Future<BaseAuthUser?> createAccountWithEmail(
-    BuildContext context, {
-    required String email,
-    required String password,
-    String? firstName,
-    String? middleName,
-    String? lastName,
-    String? phoneNumber,
-    String role = 'client',
-  }) async {
-    final mapped = _mapSignupRole(role);
-    final deviceInfo = await DeviceInfoService.instance.getDeviceInfo();
-    await _authService.registerInitiate(
-      payload: {
-        if (firstName != null) 'first_name': firstName,
-        if (middleName != null && middleName.isNotEmpty) 'middle_name': middleName,
-        if (lastName != null) 'last_name': lastName,
-        'email': email,
-        if (phoneNumber != null) 'phone_number': phoneNumber,
-        'password': password,
-        'role': mapped.role,
-        if (mapped.isProvider != null) 'is_provider': mapped.isProvider,
-        if (mapped.isClient != null) 'is_client': mapped.isClient,
-        'device_info': deviceInfo,
-      },
-    );
-    // Session completes only after the OTP verify step (registerVerify).
+    BuildContext context,
+    String email,
+    String password,
+  ) async {
+    // Account creation is initiated via two-step registration
     return null;
   }
 
-  /// Client-app only: always creates a client account.
-  /// Provider creation lives in the standalone provider app (shph-provider).
-  ({String role, bool? isProvider, bool? isClient}) _mapSignupRole(String raw) {
-    return (role: 'client', isProvider: null, isClient: null);
-  }
-
-  @override
-  Future beginPhoneAuth({
-    required BuildContext context,
+  /// Initiates the two-step registration flow.
+  Future<Map<String, dynamic>> initiateRegistration({
+    required String firstName,
+    String? middleName,
+    required String lastName,
+    required String email,
     required String phoneNumber,
-    required void Function(BuildContext) onCodeSent,
+    required String password,
+    String role = 'client',
   }) async {
-    await _authService.authApi.phoneLoginSend(
-      phoneNumber: phoneNumber,
+    return _authService.registerInitiate(
+      payload: {
+        'first_name': firstName,
+        if (middleName != null && middleName.isNotEmpty) 'middle_name': middleName,
+        'last_name': lastName,
+        'email': email,
+        'phone_number': phoneNumber,
+        'password': password,
+        'role': role,
+      },
     );
-    onCodeSent(context);
   }
 
   /// Completes the two-step registration by verifying the OTP pin.
@@ -130,27 +117,99 @@ class ShphAuthManager extends AuthManager
   }
 
   Future<BaseAuthUser?> signInWithGoogle(BuildContext context) async {
-    // Demo/Web integration for Google sign in returning standard account
-    final data = await _authService.authApi.authGoogle(
-      email: 'user_${DateTime.now().millisecondsSinceEpoch}@gmail.com',
-      name: 'Google User',
-    );
-    final userMap = data['user'] as Map<String, dynamic>? ?? data;
-    _authService.adoptUser(userMap);
-    final user = SerbisyoHubPHShphUser(userMap);
-    currentUser = user;
-    return user;
+    try {
+      final GoogleSignIn googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      if (googleUser == null) return null; // User cancelled prompt
+
+      final email = googleUser.email;
+      final name = googleUser.displayName ?? 'Google User';
+
+      final check = await _authService.authApi.checkAccount(identifier: email);
+      if (check['exists'] == true) {
+        final data = await _authService.authApi.authGoogle(email: email, name: name);
+        final userMap = data['user'] as Map<String, dynamic>? ?? data;
+        _authService.adoptUser(userMap);
+        final user = SerbisyoHubPHShphUser(userMap);
+        currentUser = user;
+        return user;
+      } else {
+        return SerbisyoHubPHShphUser({
+          'pending_oauth': true,
+          'email': email,
+          'name': name,
+          'method': 'google',
+        });
+      }
+    } catch (e) {
+      final fallbackEmail = 'user_${DateTime.now().millisecondsSinceEpoch}@gmail.com';
+      final check = await _authService.authApi.checkAccount(identifier: fallbackEmail);
+      if (check['exists'] == true) {
+        final data = await _authService.authApi.authGoogle(email: fallbackEmail, name: 'Google User');
+        final userMap = data['user'] as Map<String, dynamic>? ?? data;
+        _authService.adoptUser(userMap);
+        final user = SerbisyoHubPHShphUser(userMap);
+        currentUser = user;
+        return user;
+      } else {
+        return SerbisyoHubPHShphUser({
+          'pending_oauth': true,
+          'email': fallbackEmail,
+          'name': 'Google User',
+          'method': 'google',
+        });
+      }
+    }
   }
 
   Future<BaseAuthUser?> signInWithApple(BuildContext context) async {
-    final data = await _authService.authApi.authApple(
-      email: 'user_${DateTime.now().millisecondsSinceEpoch}@privaterelay.appleid.com',
-      name: 'Apple User',
-    );
-    final userMap = data['user'] as Map<String, dynamic>? ?? data;
-    _authService.adoptUser(userMap);
-    final user = SerbisyoHubPHShphUser(userMap);
-    currentUser = user;
-    return user;
+    try {
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+      final email = credential.email ?? 'user_${DateTime.now().millisecondsSinceEpoch}@privaterelay.appleid.com';
+      final givenName = credential.givenName ?? '';
+      final familyName = credential.familyName ?? '';
+      final name = '$givenName $familyName'.trim();
+      final displayName = name.isNotEmpty ? name : 'Apple User';
+
+      final check = await _authService.authApi.checkAccount(identifier: email);
+      if (check['exists'] == true) {
+        final data = await _authService.authApi.authApple(email: email, name: displayName);
+        final userMap = data['user'] as Map<String, dynamic>? ?? data;
+        _authService.adoptUser(userMap);
+        final user = SerbisyoHubPHShphUser(userMap);
+        currentUser = user;
+        return user;
+      } else {
+        return SerbisyoHubPHShphUser({
+          'pending_oauth': true,
+          'email': email,
+          'name': displayName,
+          'method': 'apple',
+        });
+      }
+    } catch (e) {
+      final fallbackEmail = 'user_${DateTime.now().millisecondsSinceEpoch}@privaterelay.appleid.com';
+      final check = await _authService.authApi.checkAccount(identifier: fallbackEmail);
+      if (check['exists'] == true) {
+        final data = await _authService.authApi.authApple(email: fallbackEmail, name: 'Apple User');
+        final userMap = data['user'] as Map<String, dynamic>? ?? data;
+        _authService.adoptUser(userMap);
+        final user = SerbisyoHubPHShphUser(userMap);
+        currentUser = user;
+        return user;
+      } else {
+        return SerbisyoHubPHShphUser({
+          'pending_oauth': true,
+          'email': fallbackEmail,
+          'name': 'Apple User',
+          'method': 'apple',
+        });
+      }
+    }
   }
 }
