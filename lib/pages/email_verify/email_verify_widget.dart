@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:pin_code_fields/pin_code_fields.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '/auth/auth_util.dart';
 import '/auth/base_auth_user_provider.dart';
 import '/auth/post_auth_navigation_flow.dart';
+import '/components/cupertino_ui/app_text_field.dart';
 import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -41,6 +42,8 @@ class _EmailVerifyWidgetState extends State<EmailVerifyWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, EmailVerifyModel.new);
+    _model.pinCodeController ??= TextEditingController();
+    _model.pinCodeFocusNode ??= FocusNode();
   }
 
   @override
@@ -99,30 +102,24 @@ class _EmailVerifyWidgetState extends State<EmailVerifyWidget> {
                   style: theme.bodyMedium.copyWith(color: theme.secondaryText),
                 ),
                 const SizedBox(height: 32),
-                PinCodeTextField(
-                  autoDisposeControllers: false,
-                  appContext: context,
-                  length: 6,
-                  textStyle: theme.titleLarge.copyWith(color: theme.primaryText),
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  enableActiveFill: false,
-                  autoFocus: true,
+                AppTextField(
+                  controller: _model.pinCodeController!,
                   focusNode: _model.pinCodeFocusNode,
-                  controller: _model.pinCodeController,
-                  onChanged: (_) => safeSetState(() {}),
-                  pinTheme: PinTheme(
-                    fieldHeight: 52,
-                    fieldWidth: 44,
-                    borderWidth: 1.5,
-                    borderRadius: BorderRadius.circular(10),
-                    shape: PinCodeFieldShape.box,
-                    activeColor: theme.primary,
-                    inactiveColor: theme.alternate,
-                    selectedColor: theme.primary,
-                    activeFillColor: theme.secondaryBackground,
-                    inactiveFillColor: theme.secondaryBackground,
-                    selectedFillColor: theme.secondaryBackground,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  placeholder: 'Enter 6-digit code',
+                  placeholderStyle: theme.titleMedium.copyWith(
+                    color: theme.secondaryText,
+                    letterSpacing: 2,
                   ),
+                  fillColor: theme.secondaryBackground,
+                  radius: 12,
+                  style: theme.titleLarge.copyWith(
+                    fontSize: 24,
+                    letterSpacing: 8,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  onChanged: (_) => safeSetState(() {}),
                 ),
                 if (_model.errorMessage != null)
                   Padding(
@@ -158,7 +155,7 @@ class _EmailVerifyWidgetState extends State<EmailVerifyWidget> {
                             if (!context.mounted) return;
                             await PostAuthNavigationFlow().handlePostAuthNavigation(
                               context: context,
-                              userId: user.uid,
+                              userId: user.uid ?? '',
                             );
                           } catch (e) {
                             _model.isVerifying = false;

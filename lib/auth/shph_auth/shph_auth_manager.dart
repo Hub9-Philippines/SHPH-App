@@ -151,7 +151,7 @@ class ShphAuthManager extends AuthManager with EmailSignInManager, PhoneSignInMa
 
   Future<BaseAuthUser?> signInWithGoogle(BuildContext context) async {
     try {
-      final googleSignIn = GoogleSignIn();
+      final googleSignIn = GoogleSignIn.standard();
       final googleUser = await googleSignIn.signIn();
       if (googleUser == null) return null; // User cancelled prompt
 
