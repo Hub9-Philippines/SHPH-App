@@ -28,21 +28,24 @@ class UnifiedAuthModel extends FlutterFlowModel<UnifiedAuthWidget> {
     final trimmed = raw.trim();
     errorMessage = null;
 
-    if (_emailRegex.hasMatch(trimmed)) {
+    if (trimmed.contains('@') && trimmed.contains('.')) {
       inputMode = AuthInputMode.email;
       sanitizedPhone = '';
     } else {
-      // Check phone number format
-      final cleanDigits = trimmed.replaceAll(RegExp(r'[\s\-()]'), '');
-      if (_phPhoneRegex.hasMatch(cleanDigits)) {
+      // Clean non-digits except initial '+'
+      var cleanDigits = trimmed.replaceAll(RegExp(r'[^\d+]'), '');
+      if (cleanDigits.startsWith('+63')) {
+        cleanDigits = cleanDigits.substring(1); // '639...'
+      }
+      if (cleanDigits.startsWith('09') && cleanDigits.length == 11) {
         inputMode = AuthInputMode.phone;
-        if (cleanDigits.startsWith('09')) {
-          sanitizedPhone = '+63${cleanDigits.substring(1)}';
-        } else if (cleanDigits.startsWith('639')) {
-          sanitizedPhone = '+$cleanDigits';
-        } else {
-          sanitizedPhone = cleanDigits;
-        }
+        sanitizedPhone = '+63${cleanDigits.substring(1)}';
+      } else if (cleanDigits.startsWith('639') && cleanDigits.length == 12) {
+        inputMode = AuthInputMode.phone;
+        sanitizedPhone = '+$cleanDigits';
+      } else if (cleanDigits.startsWith('9') && cleanDigits.length == 10) {
+        inputMode = AuthInputMode.phone;
+        sanitizedPhone = '+63$cleanDigits';
       } else {
         inputMode = AuthInputMode.none;
         sanitizedPhone = '';

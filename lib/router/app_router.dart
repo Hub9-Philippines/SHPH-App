@@ -108,6 +108,15 @@ class AppRouter {
             ),
           ),
           GoRoute(
+            path: SignupWidget.routePath,
+            name: SignupWidget.routeName,
+            builder: (context, state) => SignupWidget(
+              email: state.uri.queryParameters['email'],
+              phoneNumber: state.uri.queryParameters['phone'] ??
+                  state.uri.queryParameters['phoneNumber'],
+            ),
+          ),
+          GoRoute(
             path: '/signOptions',
             name: 'SignOptions',
             builder: (context, state) => const UnifiedAuthWidget(),

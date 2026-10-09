@@ -5,7 +5,6 @@ import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
 
 import '/auth/auth_util.dart';
-import '/components/animated_progress_stepper.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/components/cupertino_ui/app_text_field.dart';
 import '/components/cupertino_ui/cupertino_page_header.dart';
@@ -21,7 +20,10 @@ import 'signup_model.dart';
 export 'signup_model.dart';
 
 class SignupWidget extends StatefulWidget {
-  const SignupWidget({super.key});
+  const SignupWidget({super.key, this.email, this.phoneNumber});
+
+  final String? email;
+  final String? phoneNumber;
 
   static String routeName = 'Signup';
   static String routePath = '/signup';
@@ -58,6 +60,13 @@ class _SignupWidgetState extends State<SignupWidget> {
     _model.passwordFocusNode ??= FocusNode();
     _model.confirmPasswordTextController ??= TextEditingController();
     _model.confirmPasswordFocusNode ??= FocusNode();
+
+    if (widget.email != null && widget.email!.isNotEmpty) {
+      _model.emailTextController!.text = widget.email!;
+    }
+    if (widget.phoneNumber != null && widget.phoneNumber!.isNotEmpty) {
+      _model.phoneFieldTextController!.text = widget.phoneNumber!;
+    }
   }
 
   @override
@@ -105,8 +114,6 @@ class _SignupWidgetState extends State<SignupWidget> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const AnimatedProgressStepper(currentStep: 1, totalSteps: 2),
-                    const SizedBox(height: 20),
                     _buildHeader(theme),
                     const SizedBox(height: 40),
                     _buildForm(theme),

@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 
 import '/auth/auth_util.dart';
 import '/auth/post_auth_navigation_flow.dart';
-import '/components/animated_progress_stepper.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/components/cupertino_ui/app_button.dart';
 import '/components/cupertino_ui/cupertino_page_header.dart';
@@ -108,15 +107,12 @@ class _SigninWidgetState extends State<SigninWidget>
           body: SafeArea(
             top: true,
             child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  const AnimatedProgressStepper(currentStep: 1, totalSteps: 2),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildHeader(theme),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(theme),
                         const SizedBox(height: 32),
                         _buildTabBar(theme),
                         const SizedBox(height: 24),
@@ -133,7 +129,7 @@ class _SigninWidgetState extends State<SigninWidget>
                       ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ),

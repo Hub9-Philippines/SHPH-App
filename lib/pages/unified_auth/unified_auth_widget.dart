@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '/auth/auth_util.dart';
-import '/components/animated_progress_stepper.dart';
 import '/components/cupertino_ui/app_text_field.dart';
-import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/l10n/app_localizations.dart';
@@ -62,38 +60,25 @@ class _UnifiedAuthWidgetState extends State<UnifiedAuthWidget> {
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: theme.primaryBackground,
-        appBar: const PreferredSize(
-          preferredSize: Size.fromHeight(56),
-          child: CupertinoPageHeader(
-            title: '',
-            backgroundColor: Colors.transparent,
-          ),
-        ),
         body: SafeArea(
           top: true,
           child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const AnimatedProgressStepper(currentStep: 1, totalSteps: 2),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildHeader(theme),
-                      const SizedBox(height: 32),
-                      _buildSocialSection(theme),
-                      const SizedBox(height: 24),
-                      _buildDivider(theme),
-                      const SizedBox(height: 24),
-                      _buildInputSection(theme),
-                      const SizedBox(height: 24),
-                      _buildContinueButton(theme),
-                    ],
-                  ),
-                ),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(theme),
+                  const SizedBox(height: 32),
+                  _buildSocialSection(theme),
+                  const SizedBox(height: 24),
+                  _buildDivider(theme),
+                  const SizedBox(height: 24),
+                  _buildInputSection(theme),
+                  const SizedBox(height: 24),
+                  _buildContinueButton(theme),
+                ],
+              ),
             ),
           ),
         ),
