@@ -83,7 +83,9 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
         ),
         body: SafeArea(
           top: true,
-          child: Column(
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
             mainAxisSize: MainAxisSize.max,
             children: [
               Padding(
