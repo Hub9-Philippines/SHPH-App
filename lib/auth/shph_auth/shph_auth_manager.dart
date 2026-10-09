@@ -6,7 +6,6 @@ import '../auth_manager.dart';
 import '/auth/base_auth_user_provider.dart';
 
 import '/services/auth_service.dart';
-import '/api/resources/auth_api.dart';
 import '/api/api_config.dart';
 import 'shph_user_provider.dart';
 
