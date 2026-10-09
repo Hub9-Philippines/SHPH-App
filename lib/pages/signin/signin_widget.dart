@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '/auth/auth_util.dart';
 import '/auth/post_auth_navigation_flow.dart';
+import '/components/animated_progress_stepper.dart';
 import '/components/back_button/back_button_widget.dart';
 import '/components/cupertino_ui/app_button.dart';
 import '/components/cupertino_ui/cupertino_page_header.dart';
@@ -22,7 +23,9 @@ import 'signin_model.dart';
 export 'signin_model.dart';
 
 class SigninWidget extends StatefulWidget {
-  const SigninWidget({super.key});
+  const SigninWidget({super.key, this.email});
+
+  final String? email;
 
   static String routeName = 'Signin';
   static String routePath = '/signin';
@@ -44,16 +47,20 @@ class _SigninWidgetState extends State<SigninWidget>
     super.initState();
     _model = createModel(context, SigninModel.new);
 
+    final initialTab = (widget.email != null && widget.email!.isNotEmpty) ? 1 : 0;
     _model.tabBarController = TabController(
       vsync: this,
       length: 2,
-      initialIndex: 0,
+      initialIndex: initialTab,
     )..addListener(() => safeSetState(() {}));
 
     _model.phoneFieldTextController ??= TextEditingController();
     _model.phoneFieldFocusNode ??= FocusNode();
     _model.phoneFieldMask = MaskTextInputFormatter(mask: '+63##########');
     _model.emailTextFieldTextController ??= TextEditingController();
+    if (widget.email != null && widget.email!.isNotEmpty) {
+      _model.emailTextFieldTextController!.text = widget.email!;
+    }
     _model.emailTextFieldFocusNode ??= FocusNode();
     _model.passwordTextFieldTextController ??= TextEditingController();
     _model.passwordTextFieldFocusNode ??= FocusNode();
@@ -100,27 +107,31 @@ class _SigninWidgetState extends State<SigninWidget>
           body: SafeArea(
             top: true,
             child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeader(theme),
-                    const SizedBox(height: 32),
-                    _buildTabBar(theme),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      height: 520,
-                      child: TabBarView(
-                        controller: _model.tabBarController,
-                        children: [
-                          _buildPhoneTab(theme),
-                          _buildEmailTab(theme),
-                        ],
-                      ),
+              child: Column(
+                children: [
+                  const AnimatedProgressStepper(currentStep: 1, totalSteps: 2),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeader(theme),
+                        const SizedBox(height: 32),
+                        _buildTabBar(theme),
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          height: 520,
+                          child: TabBarView(
+                            controller: _model.tabBarController,
+                            children: [
+                              _buildPhoneTab(theme),
+                              _buildEmailTab(theme),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                ],
               ),
             ),
           ),
@@ -391,20 +402,42 @@ class _SigninWidgetState extends State<SigninWidget>
         _SocialButton(
           icon: Icons.g_mobiledata_rounded,
           label: _l10n.siContinueWithGoogle,
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(_l10n.siGoogleComingSoon)),
-            );
+          onTap: () async {
+            try {
+              final user = await (authManager as ShphAuthManager).signInWithGoogle(context);
+              if (!context.mounted) return;
+              if (user != null) {
+                final authService = AuthService.instance;
+                if (authService.currentUser?['phone_number'] == null) {
+                  await context.pushNamed(PhoneVerifyUserWidget.routeName);
+                } else {
+                  context.goNamed('Home');
+                }
+              }
+            } catch (e) {
+              ErrorHandler.showError(ErrorHandler.describeError(e, _l10n));
+            }
           },
         ),
         const SizedBox(height: 10),
         _SocialButton(
           icon: Icons.apple_rounded,
           label: _l10n.siContinueWithApple,
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(_l10n.siAppleComingSoon)),
-            );
+          onTap: () async {
+            try {
+              final user = await (authManager as ShphAuthManager).signInWithApple(context);
+              if (!context.mounted) return;
+              if (user != null) {
+                final authService = AuthService.instance;
+                if (authService.currentUser?['phone_number'] == null) {
+                  await context.pushNamed(PhoneVerifyUserWidget.routeName);
+                } else {
+                  context.goNamed('Home');
+                }
+              }
+            } catch (e) {
+              ErrorHandler.showError(ErrorHandler.describeError(e, _l10n));
+            }
           },
         ),
         const SizedBox(height: 12),

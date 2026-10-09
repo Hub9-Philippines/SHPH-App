@@ -103,7 +103,9 @@ class AppRouter {
           GoRoute(
             path: SigninWidget.routePath,
             name: SigninWidget.routeName,
-            builder: (context, state) => const SigninWidget(),
+            builder: (context, state) => SigninWidget(
+              email: state.uri.queryParameters['email'],
+            ),
           ),
           GoRoute(
             path: '/signOptions',
