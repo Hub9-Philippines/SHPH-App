@@ -184,6 +184,14 @@ class ShphAuthManager extends AuthManager with EmailSignInManager, PhoneSignInMa
       }
     } catch (e) {
       debugPrint('[GoogleSignIn] Error: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Google Sign-In failed: $e'),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
+      }
       return null;
     }
   }
