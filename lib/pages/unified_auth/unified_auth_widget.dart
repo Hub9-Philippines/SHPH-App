@@ -6,8 +6,9 @@ import '/components/cupertino_ui/app_text_field.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/l10n/app_localizations.dart';
+import '/pages/forgot_password/forgot_password_widget.dart';
 import '/pages/phone_verify_user/phone_verify_user_widget.dart';
-import '/pages/signin/signin_widget.dart';
+import '/pages/signup/signup_widget.dart';
 import '/services/auth_service.dart';
 import '/services/error_handler.dart';
 import '/theme/app_theme.dart';
@@ -17,7 +18,9 @@ import 'unified_auth_model.dart';
 export 'unified_auth_model.dart';
 
 class UnifiedAuthWidget extends StatefulWidget {
-  const UnifiedAuthWidget({super.key});
+  const UnifiedAuthWidget({super.key, this.initialInput});
+
+  final String? initialInput;
 
   static String routeName = 'UnifiedAuth';
   static String routePath = '/unifiedAuth';
@@ -39,6 +42,13 @@ class _UnifiedAuthWidgetState extends State<UnifiedAuthWidget> {
     _model = createModel(context, UnifiedAuthModel.new);
     _model.inputTextController ??= TextEditingController();
     _model.inputFocusNode ??= FocusNode();
+    _model.passwordTextController ??= TextEditingController();
+    _model.passwordFocusNode ??= FocusNode();
+
+    if (widget.initialInput != null && widget.initialInput!.isNotEmpty) {
+      _model.inputTextController!.text = widget.initialInput!;
+      _model.updateInput(widget.initialInput!);
+    }
   }
 
   @override
@@ -64,9 +74,9 @@ class _UnifiedAuthWidgetState extends State<UnifiedAuthWidget> {
           top: true,
           child: SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+              padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _buildHeader(theme),
                   const SizedBox(height: 32),
@@ -88,34 +98,34 @@ class _UnifiedAuthWidgetState extends State<UnifiedAuthWidget> {
 
   Widget _buildHeader(AppThemeData theme) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Center(
-          child: Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: theme.primary,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: theme.primary.withOpacity(0.2),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+          child: Image.asset(
+            'assets/images/shph-logo.png',
+            width: 100,
+            height: 100,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) => Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: theme.primary,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(Icons.handyman_rounded, color: theme.onPrimary, size: 40),
             ),
-            child: Icon(Icons.handyman_rounded, color: theme.onPrimary, size: 38),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 20),
         Text(
           'Welcome to Serbisyo',
+          textAlign: TextAlign.center,
           style: theme.headlineLarge.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         Text(
-          'Sign in or enter your details to continue',
+          'Sign in or create an account to get started',
+          textAlign: TextAlign.center,
           style: theme.bodyMedium.copyWith(
             color: theme.secondaryText,
             fontSize: 15,
@@ -131,14 +141,12 @@ class _UnifiedAuthWidgetState extends State<UnifiedAuthWidget> {
         FFButtonWidget(
           onPressed: () async {
             try {
-              // Social Google sign-in
               final authManagerObj = authManager as ShphAuthManager;
               final user = await authManagerObj.signInWithGoogle(context);
               if (!context.mounted) return;
               if (user != null) {
                 final authService = AuthService.instance;
                 if (authService.currentUser?['phone_number'] == null) {
-                  // Direct to Step 2 phone collection
                   await context.pushNamed(PhoneVerifyUserWidget.routeName);
                 } else {
                   context.goNamed('Home');
@@ -149,7 +157,7 @@ class _UnifiedAuthWidgetState extends State<UnifiedAuthWidget> {
             }
           },
           text: 'Continue with Google',
-          icon: const Icon(Icons.g_mobiledata_rounded, size: 24),
+          icon: const Icon(Icons.g_mobiledata_rounded, size: 28),
           options: FFButtonOptions(
             width: double.infinity,
             height: 52,
@@ -182,7 +190,7 @@ class _UnifiedAuthWidgetState extends State<UnifiedAuthWidget> {
             }
           },
           text: 'Continue with Apple',
-          icon: const Icon(Icons.apple_rounded, size: 22),
+          icon: const Icon(Icons.apple_rounded, size: 24),
           options: FFButtonOptions(
             width: double.infinity,
             height: 52,
@@ -210,6 +218,7 @@ class _UnifiedAuthWidgetState extends State<UnifiedAuthWidget> {
             style: theme.labelMedium.copyWith(
               color: theme.secondaryText,
               fontWeight: FontWeight.w600,
+              letterSpacing: 1.2,
             ),
           ),
         ),
@@ -222,12 +231,47 @@ class _UnifiedAuthWidgetState extends State<UnifiedAuthWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Email or Mobile Number',
-          style: theme.bodyMedium.copyWith(
-            fontWeight: FontWeight.w500,
-            color: theme.primaryText,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Email or Mobile Number',
+              style: theme.bodyMedium.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.primaryText,
+              ),
+            ),
+            if (_model.inputMode == AuthInputMode.email)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: theme.primary.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'Email',
+                  style: theme.bodySmall.copyWith(
+                    color: theme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              )
+            else if (_model.inputMode == AuthInputMode.phone)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: theme.secondary.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'Mobile (+63)',
+                  style: theme.bodySmall.copyWith(
+                    color: theme.secondary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+          ],
         ),
         const SizedBox(height: 8),
         AppTextField(
@@ -251,9 +295,63 @@ class _UnifiedAuthWidgetState extends State<UnifiedAuthWidget> {
               style: theme.bodySmall.copyWith(color: theme.primary),
             ),
           ),
+
+        // Inline Password Entry (shown if email user exists)
+        if (_model.showPasswordField) ...[
+          const SizedBox(height: 16),
+          Text(
+            'Password',
+            style: theme.bodyMedium.copyWith(
+              fontWeight: FontWeight.w600,
+              color: theme.primaryText,
+            ),
+          ),
+          const SizedBox(height: 8),
+          AppTextField(
+            controller: _model.passwordTextController!,
+            focusNode: _model.passwordFocusNode,
+            placeholder: 'Enter your password',
+            obscureText: !_model.isPasswordVisible,
+            placeholderStyle: theme.labelMedium.copyWith(color: theme.secondaryText),
+            fillColor: theme.secondaryBackground,
+            radius: 12,
+            style: theme.bodyMedium.copyWith(fontSize: 16),
+            suffix: IconButton(
+              icon: Icon(
+                _model.isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                color: theme.secondaryText,
+                size: 20,
+              ),
+              onPressed: () {
+                _model.isPasswordVisible = !_model.isPasswordVisible;
+                safeSetState(() {});
+              },
+            ),
+            onChanged: (val) => safeSetState(() {}),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () => context.pushNamed(ForgotPasswordWidget.routeName),
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+                minimumSize: const Size(50, 30),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text(
+                'Forgot Password?',
+                style: theme.bodySmall.copyWith(
+                  color: theme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
+
         if (_model.errorMessage != null)
           Padding(
-            padding: const EdgeInsets.only(top: 6),
+            padding: const EdgeInsets.only(top: 8),
             child: Text(
               _model.errorMessage!,
               style: theme.bodySmall.copyWith(color: theme.error),
@@ -264,33 +362,69 @@ class _UnifiedAuthWidgetState extends State<UnifiedAuthWidget> {
   }
 
   Widget _buildContinueButton(AppThemeData theme) {
+    final buttonText = _model.showPasswordField ? 'Sign In' : 'Continue';
+
     return FFButtonWidget(
       onPressed: (!_model.isValid || _model.isLoading)
           ? null
           : () async {
               _model.isLoading = true;
+              _model.errorMessage = null;
               safeSetState(() {});
 
               try {
                 if (_model.inputMode == AuthInputMode.email) {
-                  // Navigate to Sign In / Password prompt
-                  _model.isLoading = false;
-                  safeSetState(() {});
-                  await context.pushNamed(
-                    SigninWidget.routeName,
-                    queryParameters: {
-                      'email': _model.inputTextController!.text.trim(),
-                    },
-                  );
+                  final email = _model.inputTextController!.text.trim();
+
+                  if (!_model.showPasswordField) {
+                    // Step 1: Check account availability
+                    final res = await AuthService.instance.authApi.checkAccount(
+                      identifier: email,
+                    );
+
+                    _model.isLoading = false;
+                    final exists = res['exists'] == true || res['hasPassword'] == true;
+
+                    if (exists) {
+                      _model.showPasswordField = true;
+                      safeSetState(() {});
+                      _model.passwordFocusNode?.requestFocus();
+                    } else {
+                      safeSetState(() {});
+                      if (!context.mounted) return;
+                      await context.pushNamed(
+                        SignupWidget.routeName,
+                        queryParameters: {'email': email},
+                      );
+                    }
+                  } else {
+                    // Step 2: Perform email + password login
+                    final password = _model.passwordTextController!.text.trim();
+                    final authManagerObj = authManager as ShphAuthManager;
+                    final user = await authManagerObj.signInWithEmail(
+                      context,
+                      email,
+                      password,
+                    );
+                    _model.isLoading = false;
+                    safeSetState(() {});
+                    if (!context.mounted) return;
+                    if (user != null) {
+                      context.goNamed('Home');
+                    }
+                  }
                 } else if (_model.inputMode == AuthInputMode.phone) {
-                  // Trigger Phone OTP flow
+                  // Trigger Mobile OTP flow
                   final phone = _model.sanitizedPhone;
                   FFAppState().phone = phone;
                   await AuthService.instance.authApi.sendOtpPin(phoneNumber: phone);
                   _model.isLoading = false;
                   safeSetState(() {});
                   if (!context.mounted) return;
-                  await context.pushNamed(PhoneVerifyUserWidget.routeName);
+                  await context.pushNamed(
+                    PhoneVerifyUserWidget.routeName,
+                    queryParameters: {'phone': phone},
+                  );
                 }
               } catch (e) {
                 _model.isLoading = false;
@@ -299,18 +433,19 @@ class _UnifiedAuthWidgetState extends State<UnifiedAuthWidget> {
                 safeSetState(() {});
               }
             },
-      text: _model.isLoading ? 'Processing...' : 'Continue',
+      text: buttonText,
       options: FFButtonOptions(
         width: double.infinity,
         height: 52,
-        color: _model.isValid ? theme.primary : theme.alternate,
+        color: theme.primary,
         textStyle: theme.titleMedium.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
+          color: theme.onPrimary,
+          fontWeight: FontWeight.bold,
         ),
-        elevation: 0,
+        elevation: 2,
         borderRadius: BorderRadius.circular(12),
-        disabledColor: theme.alternate,
+        disabledColor: theme.secondaryText.withOpacity(0.3),
+        disabledTextColor: theme.primaryBackground,
       ),
     );
   }
