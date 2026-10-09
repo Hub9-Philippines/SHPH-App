@@ -173,26 +173,8 @@ class ShphAuthManager extends AuthManager with EmailSignInManager, PhoneSignInMa
         });
       }
     } catch (e) {
-      if (e is GoogleSignInException && e.code == GoogleSignInExceptionCode.canceled) {
-        return null;
-      }
-      final fallbackEmail = 'user_${DateTime.now().millisecondsSinceEpoch}@gmail.com';
-      final check = await _authService.authApi.checkAccount(identifier: fallbackEmail);
-      if (check['exists'] == true) {
-        final data = await _authService.authApi.authGoogle(email: fallbackEmail, name: 'Google User');
-        final userMap = data['user'] as Map<String, dynamic>? ?? data;
-        _authService.adoptUser(userMap);
-        final user = SerbisyoHubPHShphUser(userMap);
-        currentUser = user;
-        return user;
-      } else {
-        return SerbisyoHubPHShphUser({
-          'pending_oauth': true,
-          'email': fallbackEmail,
-          'name': 'Google User',
-          'method': 'google',
-        });
-      }
+      debugPrint('[GoogleSignIn] Error: $e');
+      return null;
     }
   }
 
@@ -227,23 +209,8 @@ class ShphAuthManager extends AuthManager with EmailSignInManager, PhoneSignInMa
         });
       }
     } catch (e) {
-      final fallbackEmail = 'user_${DateTime.now().millisecondsSinceEpoch}@privaterelay.appleid.com';
-      final check = await _authService.authApi.checkAccount(identifier: fallbackEmail);
-      if (check['exists'] == true) {
-        final data = await _authService.authApi.authApple(email: fallbackEmail, name: 'Apple User');
-        final userMap = data['user'] as Map<String, dynamic>? ?? data;
-        _authService.adoptUser(userMap);
-        final user = SerbisyoHubPHShphUser(userMap);
-        currentUser = user;
-        return user;
-      } else {
-        return SerbisyoHubPHShphUser({
-          'pending_oauth': true,
-          'email': fallbackEmail,
-          'name': 'Apple User',
-          'method': 'apple',
-        });
-      }
+      debugPrint('[AppleSignIn] Error: $e');
+      return null;
     }
   }
 }
