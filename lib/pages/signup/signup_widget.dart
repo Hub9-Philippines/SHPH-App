@@ -79,10 +79,10 @@ class _SignupWidgetState extends State<SignupWidget> {
       _model.phoneFieldTextController!.text = widget.phoneNumber!;
     }
     if (widget.name != null && widget.name!.isNotEmpty) {
-      final parts = widget.name!.trim().split(' ');
+      final parts = widget.name!.trim().split(RegExp(r'\s+'));
       if (parts.length >= 2) {
-        _model.firstNameTextController!.text = parts.first;
-        _model.lastNameTextController!.text = parts.sublist(1).join(' ');
+        _model.firstNameTextController!.text = parts.sublist(0, parts.length - 1).join(' ');
+        _model.lastNameTextController!.text = parts.last;
       } else if (parts.length == 1) {
         _model.firstNameTextController!.text = parts.first;
       }
@@ -200,6 +200,31 @@ class _SignupWidgetState extends State<SignupWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: theme.primary.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: theme.primary.withOpacity(0.2)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.info_outline_rounded, color: theme.primary, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Please ensure your First Name and Last Name match your legal name as shown on your government ID.',
+                  style: theme.bodySmall.copyWith(
+                    color: theme.primaryText,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
         _fieldLabel(theme, 'First Name'),
         const SizedBox(height: 8),
         _inputField(
