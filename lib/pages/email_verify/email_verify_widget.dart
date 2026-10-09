@@ -204,6 +204,7 @@ class _EmailVerifyWidgetState extends State<EmailVerifyWidget> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

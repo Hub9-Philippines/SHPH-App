@@ -436,6 +436,7 @@ class _PhoneVerifyUserWidgetState extends State<PhoneVerifyUserWidget> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
