@@ -28,7 +28,7 @@ class ShphAuthManager extends AuthManager with EmailSignInManager, PhoneSignInMa
 
   @override
   Future deleteUser(BuildContext context) async {
-    // Account deletion handled via backend profile endpoint
+    // Account deletion handled via profile endpoint
   }
 
   @override
@@ -56,11 +56,30 @@ class ShphAuthManager extends AuthManager with EmailSignInManager, PhoneSignInMa
 
   @override
   Future<BaseAuthUser?> createAccountWithEmail(
-    BuildContext context,
-    String email,
-    String password,
-  ) async {
-    // Account creation is initiated via two-step registration
+    BuildContext context, {
+    required String email,
+    required String password,
+    String? firstName,
+    String? middleName,
+    String? lastName,
+    String? phoneNumber,
+    String role = 'client',
+  }) async {
+    final res = await initiateRegistration(
+      firstName: firstName ?? '',
+      middleName: middleName,
+      lastName: lastName ?? '',
+      email: email,
+      phoneNumber: phoneNumber ?? '',
+      password: password,
+      role: role,
+    );
+    final userMap = res['user'] as Map<String, dynamic>? ?? res;
+    if (res['token'] != null || res['access'] != null) {
+      final user = SerbisyoHubPHShphUser(userMap);
+      currentUser = user;
+      return user;
+    }
     return null;
   }
 
@@ -102,6 +121,18 @@ class ShphAuthManager extends AuthManager with EmailSignInManager, PhoneSignInMa
   }
 
   @override
+  Future beginPhoneAuth({
+    required BuildContext context,
+    required String phoneNumber,
+    required void Function(BuildContext) onCodeSent,
+  }) async {
+    await _authService.authApi.sendOtpPin(phoneNumber: phoneNumber);
+    if (context.mounted) {
+      onCodeSent(context);
+    }
+  }
+
+  @override
   Future verifySmsCode({
     required BuildContext context,
     required String smsCode,
@@ -120,8 +151,8 @@ class ShphAuthManager extends AuthManager with EmailSignInManager, PhoneSignInMa
 
   Future<BaseAuthUser?> signInWithGoogle(BuildContext context) async {
     try {
-      final GoogleSignIn googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      final googleSignIn = GoogleSignIn();
+      final googleUser = await googleSignIn.signIn();
       if (googleUser == null) return null; // User cancelled prompt
 
       final email = googleUser.email;

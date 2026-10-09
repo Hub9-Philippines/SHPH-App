@@ -17,6 +17,7 @@ class AuthUserInfo {
 abstract class BaseAuthUser {
   bool get loggedIn;
   bool get emailVerified;
+  Map<String, dynamic>? get userData => null;
 
   AuthUserInfo get authUserInfo;
 

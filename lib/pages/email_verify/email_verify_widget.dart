@@ -3,6 +3,7 @@ import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:provider/provider.dart';
 
 import '/auth/auth_util.dart';
+import '/auth/base_auth_user_provider.dart';
 import '/auth/post_auth_navigation_flow.dart';
 import '/components/cupertino_ui/cupertino_page_header.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -12,12 +13,13 @@ import '/services/auth_service.dart';
 import '/services/error_handler.dart';
 import '/theme/app_theme.dart';
 import '../../auth/shph_auth/shph_auth_manager.dart';
+import '../../auth/shph_auth/shph_user_provider.dart';
 import 'email_verify_model.dart';
 
 export 'email_verify_model.dart';
 
 class EmailVerifyWidget extends StatefulWidget {
-  const EmailVerifyWidget({super, this.email});
+  const EmailVerifyWidget({super.key, this.email});
 
   final String? email;
 
@@ -148,13 +150,16 @@ class _EmailVerifyWidgetState extends State<EmailVerifyWidget> {
 
                             final userMap = res['user'] as Map<String, dynamic>? ?? res;
                             AuthService.instance.adoptUser(userMap);
-                            (authManager as ShphAuthManager).currentUser =
-                                SerbisyoHubPHShphUser(userMap);
+                            final user = SerbisyoHubPHShphUser(userMap);
+                            currentUser = user;
 
                             _model.isVerifying = false;
                             safeSetState(() {});
                             if (!context.mounted) return;
-                            await postAuthNavigationFlow(context);
+                            await PostAuthNavigationFlow().handlePostAuthNavigation(
+                              context: context,
+                              userId: user.uid,
+                            );
                           } catch (e) {
                             _model.isVerifying = false;
                             _model.errorMessage = ErrorHandler.describeError(e, _l10n);
