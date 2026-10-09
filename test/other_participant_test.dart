@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:serbisyohubph/auth/shph_auth/shph_user_provider.dart';
-import 'package:serbisyohubph/flutter_flow/flutter_flow_util.dart';
 import 'package:serbisyohubph/pages/chat_page/chat_page_model.dart';
 
 void main() {
