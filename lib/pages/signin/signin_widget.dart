@@ -15,6 +15,7 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
 import '/l10n/app_localizations.dart';
+import '/services/auth_service.dart';
 import '/services/error_handler.dart';
 import '/theme/app_theme.dart';
 import '../../auth/shph_auth/shph_auth_manager.dart';
@@ -131,6 +132,7 @@ class _SigninWidgetState extends State<SigninWidget>
                         ),
                       ],
                     ),
+                  ),
                 ],
               ),
             ),
