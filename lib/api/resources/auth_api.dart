@@ -12,6 +12,14 @@ class ShphAuthApi {
   static final ShphAuthApi instance = ShphAuthApi._();
   final _client = ShphApiClient.instance;
 
+  Future<Map<String, dynamic>> checkAccount({required String identifier}) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/api/v1/auth/check-account',
+      data: {'identifier': identifier},
+    );
+    return response.data ?? {};
+  }
+
   Future<Map<String, dynamic>> login({
     required String email,
     required String password,
