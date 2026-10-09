@@ -40,6 +40,7 @@ class AppTextField extends FormField<String> {
     this.radius,
     this.fillColor,
 this.autofillHints,
+    this.inputFormatters,
     super.validator,
     super.onSaved,
     this.errorText,
@@ -78,6 +79,7 @@ this.autofillHints,
   final double? radius;
   final Color? fillColor;
   final Iterable<String>? autofillHints;
+  final List<TextInputFormatter>? inputFormatters;
   final String? errorText;
 
   static Widget _defaultBuilder(FormFieldState<String> state) {
@@ -110,6 +112,7 @@ this.autofillHints,
       textAlign: field.textAlign,
       autofocus: field.autofocus,
       autofillHints: field.autofillHints,
+      inputFormatters: field.inputFormatters,
       placeholder: field.placeholder,
       placeholderStyle: field.placeholderStyle ??
           TextStyle(color: data.secondaryText.withValues(alpha: 0.8)),

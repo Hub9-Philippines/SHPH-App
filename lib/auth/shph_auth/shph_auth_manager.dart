@@ -151,9 +151,7 @@ class ShphAuthManager extends AuthManager with EmailSignInManager, PhoneSignInMa
 
   Future<BaseAuthUser?> signInWithGoogle(BuildContext context) async {
     try {
-      final googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
-      final googleUser = await googleSignIn.signIn();
-      if (googleUser == null) return null; // User cancelled prompt
+      final googleUser = await GoogleSignIn.instance.authenticate();
 
       final email = googleUser.email;
       final name = googleUser.displayName ?? 'Google User';
@@ -175,6 +173,9 @@ class ShphAuthManager extends AuthManager with EmailSignInManager, PhoneSignInMa
         });
       }
     } catch (e) {
+      if (e is GoogleSignInException && e.code == GoogleSignInExceptionCode.canceled) {
+        return null;
+      }
       final fallbackEmail = 'user_${DateTime.now().millisecondsSinceEpoch}@gmail.com';
       final check = await _authService.authApi.checkAccount(identifier: fallbackEmail);
       if (check['exists'] == true) {
