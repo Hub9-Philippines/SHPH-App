@@ -130,10 +130,18 @@ class ShphAuthApi {
     return data;
   }
 
-  Future<void> sendEmailOtp({required String email}) async {
+  Future<void> sendEmailOtp({
+    required String email,
+    String? firstName,
+    String? lastName,
+  }) async {
     await _client.post(
       '/api/v1/auth/otp/send-email',
-      data: {'email': email},
+      data: {
+        'email': email,
+        if (firstName != null) 'first_name': firstName,
+        if (lastName != null) 'last_name': lastName,
+      },
     );
   }
 

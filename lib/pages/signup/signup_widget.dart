@@ -351,8 +351,14 @@ class _SignupWidgetState extends State<SignupWidget> {
                     } else {
                       // Step 3 Email Verification (for Email, Google, Apple)
                       final email = _model.emailTextController!.text.trim();
+                      final firstName = _model.firstNameTextController!.text.trim();
+                      final lastName = _model.lastNameTextController!.text.trim();
                       FFAppState().email = email;
-                      await AuthService.instance.authApi.sendEmailOtp(email: email);
+                      await AuthService.instance.authApi.sendEmailOtp(
+                        email: email,
+                        firstName: firstName,
+                        lastName: lastName,
+                      );
                       _model.isLoading = false;
                       safeSetState(() {});
                       if (!context.mounted) return;
