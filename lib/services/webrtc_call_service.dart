@@ -38,7 +38,6 @@ class ShphWebRTCCallService {
   bool _makingOffer = false;
   String? _threadId;
   String? _targetUserId;
-  String? _callerUserId;
   String? _currentCallId;
   CallMediaType _currentMediaType = CallMediaType.video;
   bool _ignoreOffer = false;
@@ -495,7 +494,7 @@ class ShphWebRTCCallService {
       _pendingCandidates.add(candidate);
       return;
     }
-    final remoteDescSet = pc.getRemoteDescription() != null;
+    final remoteDescSet = (await pc.getRemoteDescription()) != null;
     if (!remoteDescSet) {
       _pendingCandidates.add(candidate);
       return;

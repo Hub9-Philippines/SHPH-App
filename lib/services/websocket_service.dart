@@ -31,7 +31,6 @@ class ShphWebSocketService {
   static const Duration _stableConnection = Duration(seconds: 15);
   static const Duration _heartbeatInterval = Duration(seconds: 30);
   static const Duration _pongTimeout = Duration(seconds: 45);
-  static const Duration _connectTimeout = Duration(seconds: 15);
 
   WebSocketChannel? _channel;
   StreamSubscription<dynamic>? _subscription;
