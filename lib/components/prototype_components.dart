@@ -205,64 +205,71 @@ class PrototypeAppHeader extends StatelessWidget {
             // Expanded Header View (Greeting + Notification + Profile + Full Search Bar)
             if (expandedOpacity > 0)
               Positioned.fill(
-                child: Opacity(
-                  opacity: expandedOpacity,
-                  child: IgnorePointer(
-                    ignoring: expandedOpacity < 0.5,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
+                child: ClipRect(
+                  child: OverflowBox(
+                    alignment: Alignment.topCenter,
+                    minHeight: 0,
+                    maxHeight: 180,
+                    child: Opacity(
+                      opacity: expandedOpacity,
+                      child: IgnorePointer(
+                        ignoring: expandedOpacity < 0.5,
+                        child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'YOUR HOME, MADE EASY',
-                                    style: AppDesignTokens.eyebrow(),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    'Good morning, $userName 👋',
-                                    style: AppDesignTokens.titleMedium(),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    "Tell us what needs fixing. We'll find the right pro.",
-                                    style: AppDesignTokens.bodyMedium(),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 12),
                             Row(
-                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                _HeaderIconButton(
-                                  icon: Icons.notifications_none_rounded,
-                                  hasBadge: hasUnreadNotifications,
-                                  onTap: onNotificationTap,
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'YOUR HOME, MADE EASY',
+                                        style: AppDesignTokens.eyebrow(),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'Good morning, $userName 👋',
+                                        style: AppDesignTokens.titleMedium(),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        "Tell us what needs fixing. We'll find the right pro.",
+                                        style: AppDesignTokens.bodyMedium(),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                                const SizedBox(width: 8),
-                                _AvatarButton(
-                                  avatarUrl: avatarUrl,
-                                  onTap: onAvatarTap,
+                                const SizedBox(width: 12),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    _HeaderIconButton(
+                                      icon: Icons.notifications_none_rounded,
+                                      hasBadge: hasUnreadNotifications,
+                                      onTap: onNotificationTap,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    _AvatarButton(
+                                      avatarUrl: avatarUrl,
+                                      onTap: onAvatarTap,
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
+                            _SearchTriggerBar(
+                              onTap: onSearchTap,
+                              onMicTap: onMicTap,
+                              height: 48,
+                              horizontalPadding: 16,
+                            ),
                           ],
                         ),
-                        _SearchTriggerBar(
-                          onTap: onSearchTap,
-                          onMicTap: onMicTap,
-                          height: 48,
-                          horizontalPadding: 16,
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -271,27 +278,29 @@ class PrototypeAppHeader extends StatelessWidget {
             // Compact Header View (Inline Search Bar + Profile Button, NO Notification Button)
             if (compactOpacity > 0)
               Positioned.fill(
-                child: Opacity(
-                  opacity: compactOpacity,
-                  child: IgnorePointer(
-                    ignoring: compactOpacity < 0.5,
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: _SearchTriggerBar(
-                            onTap: onSearchTap,
-                            onMicTap: onMicTap,
-                            height: 40,
-                            horizontalPadding: 14,
+                child: ClipRect(
+                  child: Opacity(
+                    opacity: compactOpacity,
+                    child: IgnorePointer(
+                      ignoring: compactOpacity < 0.5,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: _SearchTriggerBar(
+                              onTap: onSearchTap,
+                              onMicTap: onMicTap,
+                              height: 40,
+                              horizontalPadding: 14,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        _AvatarButton(
-                          avatarUrl: avatarUrl,
-                          onTap: onAvatarTap,
-                        ),
-                      ],
+                          const SizedBox(width: 10),
+                          _AvatarButton(
+                            avatarUrl: avatarUrl,
+                            onTap: onAvatarTap,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
