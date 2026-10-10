@@ -23,11 +23,13 @@ mixin RefreshablePage<T extends StatefulWidget> on State<T> {
     Key? scrollKey,
     ScrollController? controller,
     double? displacement,
+    double? edgeOffset,
   }) {
     final theme = AppTheme.of(context);
     return RefreshIndicator(
       color: const Color(0xFF14B8A6),
       backgroundColor: theme.primaryBackground,
+      edgeOffset: edgeOffset ?? 0.0,
       displacement: displacement ?? 40.0,
       onRefresh: onRefresh,
       child: CustomScrollView(

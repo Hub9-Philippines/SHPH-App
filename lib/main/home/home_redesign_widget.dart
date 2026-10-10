@@ -343,7 +343,8 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
                   ),
                   child: wrapWithRefresh(
                     controller: _scrollController,
-                    displacement: _isHeaderCompact ? 64 : 176,
+                    edgeOffset: 176.0,
+                    displacement: 30.0,
                     slivers: [
                       // Top spacer that reserves room for the pinned header
                       // while it is fully expanded (greeting view) at the top

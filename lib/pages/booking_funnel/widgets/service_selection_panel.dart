@@ -135,7 +135,7 @@ class _ServiceSelectionPanelState extends State<ServiceSelectionPanel> {
             crossAxisCount: 3,
             mainAxisSpacing: 10,
             crossAxisSpacing: 10,
-            childAspectRatio: 0.92,
+            childAspectRatio: 0.78,
           ),
           itemBuilder: (context, index) => DecoratedBox(
             decoration: BoxDecoration(
@@ -158,7 +158,7 @@ class _ServiceSelectionPanelState extends State<ServiceSelectionPanel> {
           crossAxisCount: 3,
           mainAxisSpacing: 10,
           crossAxisSpacing: 10,
-          childAspectRatio: 0.92,
+          childAspectRatio: 0.78,
         ),
         itemBuilder: (context, index) {
           final service = services[index];
@@ -216,7 +216,7 @@ class _ServicePickerTile extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
         decoration: BoxDecoration(
           color: theme.secondaryBackground,
           borderRadius: BorderRadius.circular(16),
@@ -224,34 +224,41 @@ class _ServicePickerTile extends StatelessWidget {
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 40,
-              height: 40,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
                 color: theme.primary.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
                 icon,
                 color: theme.primary,
-                size: 22,
+                size: 20,
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              service.title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: theme.bodySmall.override(
-                fontWeight: FontWeight.w600,
+            const SizedBox(height: 6),
+            Flexible(
+              child: Text(
+                service.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: theme.bodySmall.override(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
             const SizedBox(height: 2),
             Text(
               service.formattedPrice,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: theme.labelSmall.override(
+                fontSize: 10,
                 color: theme.primary,
                 fontWeight: FontWeight.w700,
               ),
