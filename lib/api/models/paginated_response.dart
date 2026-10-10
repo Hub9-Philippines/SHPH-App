@@ -12,20 +12,34 @@ class PaginatedResponse<T> {
   final String? previous;
 
   factory PaginatedResponse.fromJson(
-    Map<String, dynamic> json,
+    dynamic data,
     T Function(Map<String, dynamic>) fromJsonT,
   ) {
-    final rawResults = json['results'];
-    return PaginatedResponse(
-      count: json['count'] as int? ?? 0,
-      next: json['next'] as String?,
-      previous: json['previous'] as String?,
-      results: rawResults is List
+    if (data is List) {
+      final items = data
+          .whereType<Map<String, dynamic>>()
+          .map(fromJsonT)
+          .toList();
+      return PaginatedResponse(
+        count: items.length,
+        results: items,
+      );
+    }
+    if (data is Map<String, dynamic>) {
+      final rawResults = data['results'];
+      final items = rawResults is List
           ? rawResults
               .whereType<Map<String, dynamic>>()
               .map(fromJsonT)
               .toList()
-          : const [],
-    );
+          : <T>[];
+      return PaginatedResponse(
+        count: data['count'] as int? ?? items.length,
+        next: data['next'] as String?,
+        previous: data['previous'] as String?,
+        results: items,
+      );
+    }
+    return const PaginatedResponse(count: 0, results: []);
   }
 }

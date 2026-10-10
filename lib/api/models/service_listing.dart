@@ -54,23 +54,67 @@ class ShphServiceListing {
   final bool isTimeMaterial;
 
   factory ShphServiceListing.fromJson(Map<String, dynamic> json) {
+    final rawId = json['id'];
+    int idInt = 0;
+    if (rawId is int) {
+      idInt = rawId;
+    } else if (rawId != null) {
+      idInt = int.tryParse(rawId.toString()) ?? rawId.toString().hashCode.abs();
+    }
+
+    final rawCat = json['category'] ?? json['category_id'];
+    int? catInt;
+    if (rawCat is int) {
+      catInt = rawCat;
+    } else if (rawCat != null) {
+      catInt = int.tryParse(rawCat.toString()) ?? rawCat.toString().hashCode.abs();
+    }
+
+    final rawProv = json['provider'] ?? json['provider_id'];
+    int? provInt;
+    if (rawProv is int) {
+      provInt = rawProv;
+    } else if (rawProv != null) {
+      provInt = int.tryParse(rawProv.toString()) ?? rawProv.toString().hashCode.abs();
+    }
+
+    double? basePrice;
+    if (json['base_price'] != null) {
+      basePrice = _toDouble(json['base_price']);
+    } else if (json['base_price_cents'] != null) {
+      final cents = _toDouble(json['base_price_cents']);
+      basePrice = cents != null ? cents / 100.0 : null;
+    }
+
+    String? createdAtStr;
+    if (json['created_at'] != null) {
+      final rawCreated = json['created_at'];
+      if (rawCreated is String) {
+        createdAtStr = rawCreated;
+      } else if (rawCreated is int) {
+        createdAtStr = DateTime.fromMillisecondsSinceEpoch(
+          rawCreated > 10000000000 ? rawCreated : rawCreated * 1000,
+        ).toIso8601String();
+      }
+    }
+
     return ShphServiceListing(
-      id: json['id'] as int? ?? 0,
-      title: json['title'] as String? ?? '',
-      category: json['category'] as int?,
+      id: idInt,
+      title: json['title'] as String? ?? json['name'] as String? ?? '',
+      category: catInt,
       categoryName: json['category_name'] as String?,
-      provider: json['provider'] as int? ?? json['provider_id'] as int?,
+      provider: provInt,
       providerName: json['provider_name'] as String?,
       providerPhoto: json['provider_photo'] as String?,
       description: json['description'] as String?,
-      basePrice: _toDouble(json['base_price']),
+      basePrice: basePrice,
       priceUnit: json['price_unit'] as String?,
-      status: json['status'] as String?,
+      status: json['status'] as String? ?? 'active',
       isAvailable: json['is_available']?.toString(),
       rating: json['rating']?.toString(),
       thumbnail: json['thumbnail'] as String?,
-      reviewCount: json['review_count'] as int?,
-      createdAt: json['created_at'] as String?,
+      reviewCount: json['review_count'] is int ? json['review_count'] as int : null,
+      createdAt: createdAtStr,
       city: json['city'] as String?,
       province: json['province'] as String?,
       latitude: _toDouble(json['latitude']),

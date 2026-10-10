@@ -13,12 +13,12 @@ class ShphServicesApi {
   final _client = ShphApiClient.instance;
 
   Future<PaginatedResponse<ShphCategory>> listCategories({int? page}) async {
-    final response = await _client.get<Map<String, dynamic>>(
+    final response = await _client.get<dynamic>(
       '/api/services/categories/',
       queryParameters: {if (page != null) 'page': page},
     );
     return PaginatedResponse.fromJson(
-      response.data ?? {},
+      response.data,
       ShphCategory.fromJson,
     );
   }
@@ -31,7 +31,7 @@ class ShphServicesApi {
     double? latitude,
     double? longitude,
   }) async {
-    final response = await _client.get<Map<String, dynamic>>(
+    final response = await _client.get<dynamic>(
       '/api/services/listings/',
       queryParameters: {
         if (search != null && search.isNotEmpty) 'search': search,
@@ -44,7 +44,7 @@ class ShphServicesApi {
       },
     );
     return PaginatedResponse.fromJson(
-      response.data ?? {},
+      response.data,
       ShphServiceListing.fromJson,
     );
   }

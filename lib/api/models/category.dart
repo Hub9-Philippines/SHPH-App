@@ -16,8 +16,15 @@ class ShphCategory {
   final String? description;
 
   factory ShphCategory.fromJson(Map<String, dynamic> json) {
+    final rawId = json['id'];
+    int idInt = 0;
+    if (rawId is int) {
+      idInt = rawId;
+    } else if (rawId != null) {
+      idInt = int.tryParse(rawId.toString()) ?? rawId.toString().hashCode.abs();
+    }
     return ShphCategory(
-      id: json['id'] as int? ?? 0,
+      id: idInt,
       name: json['name'] as String? ?? '',
       slug: json['slug'] as String?,
       icon: json['icon'] as String?,

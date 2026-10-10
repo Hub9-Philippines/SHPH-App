@@ -56,31 +56,61 @@ class ShphBooking {
   final Map<String, dynamic>? clientProfile;
 
   factory ShphBooking.fromJson(Map<String, dynamic> json) {
+    final rawListing = json['listing'] ?? json['service_id'];
+    int listingInt = 0;
+    if (rawListing is int) {
+      listingInt = rawListing;
+    } else if (rawListing != null) {
+      listingInt = int.tryParse(rawListing.toString()) ?? rawListing.toString().hashCode.abs();
+    }
+
+    final rawClient = json['client_id'] ?? json['client'];
+    int? clientInt;
+    if (rawClient is int) {
+      clientInt = rawClient;
+    } else if (rawClient != null) {
+      clientInt = int.tryParse(rawClient.toString()) ?? rawClient.toString().hashCode.abs();
+    }
+
+    final rawProv = json['provider_id'] ?? json['provider'];
+    int? provInt;
+    if (rawProv is int) {
+      provInt = rawProv;
+    } else if (rawProv != null) {
+      provInt = int.tryParse(rawProv.toString()) ?? rawProv.toString().hashCode.abs();
+    }
+
     return ShphBooking(
       id: json['id']?.toString() ?? '',
-      listing: json['listing'] as int? ?? 0,
+      listing: listingInt,
       status: json['status'] as String? ?? 'pending',
       listingTitle: json['listing_title'] as String?,
       providerName: json['provider_name'] as String?,
       providerPhoto: json['provider_photo'] as String?,
-      clientId: json['client_id'] as int? ?? json['client'] as int?,
-      providerId: json['provider_id'] as int?,
+      clientId: clientInt,
+      providerId: provInt,
       scheduledDate: json['scheduled_date'] as String?,
       scheduledTime: json['scheduled_time'] as String?,
       scheduledAt: json['scheduled_at'] as String?,
       notes: json['notes'] as String?,
       agreedPrice: _toDouble(json['agreed_price']),
       totalPrice: _toDouble(json['total_price']),
-      createdAt: json['created_at'] as String?,
-      arrivedAt: json['arrived_at'] as String?,
-      startedAt: json['started_at'] as String?,
+      createdAt: json['created_at']?.toString(),
+      arrivedAt: json['arrived_at']?.toString(),
+      startedAt: json['started_at']?.toString(),
       clientAddress: json['client_address'] as String?,
       serviceLat: _toDouble(json['service_lat']),
       serviceLng: _toDouble(json['service_lng']),
-      serviceListing: json['service_listings'] as Map<String, dynamic>? ??
-          json['service_listing'] as Map<String, dynamic>?,
-      clientProfile: json['profiles'] as Map<String, dynamic>? ??
-          json['client_profile'] as Map<String, dynamic>?,
+      serviceListing: json['service_listings'] is Map<String, dynamic>
+          ? json['service_listings'] as Map<String, dynamic>
+          : json['service_listing'] is Map<String, dynamic>
+              ? json['service_listing'] as Map<String, dynamic>
+              : null,
+      clientProfile: json['profiles'] is Map<String, dynamic>
+          ? json['profiles'] as Map<String, dynamic>
+          : json['client_profile'] is Map<String, dynamic>
+              ? json['client_profile'] as Map<String, dynamic>
+              : null,
     );
   }
 
