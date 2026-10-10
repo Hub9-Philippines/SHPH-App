@@ -276,7 +276,7 @@ class PrototypeAppHeader extends StatelessWidget {
                   child: IgnorePointer(
                     ignoring: compactOpacity < 0.5,
                     child: Row(
-                      crossAxisAlignment: Alignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Expanded(
                           child: _SearchTriggerBar(
