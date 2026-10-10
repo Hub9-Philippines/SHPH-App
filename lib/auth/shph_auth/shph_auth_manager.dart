@@ -165,22 +165,16 @@ class ShphAuthManager extends AuthManager with EmailSignInManager, PhoneSignInMa
       final email = googleUser.email;
       final name = googleUser.displayName ?? 'Google User';
 
-      final check = await _authService.authApi.checkAccount(identifier: email);
-      if (check['exists'] == true) {
-        final data = await _authService.authApi.authGoogle(email: email, name: name);
-        final userMap = data['user'] as Map<String, dynamic>? ?? data;
-        _authService.adoptUser(userMap);
-        final user = SerbisyoHubPHShphUser(userMap);
-        currentUser = user;
-        return user;
-      } else {
-        return SerbisyoHubPHShphUser({
-          'pending_oauth': true,
-          'email': email,
-          'name': name,
-          'method': 'google',
-        });
-      }
+      final data = await _authService.authApi.authGoogle(email: email, name: name);
+      final rawUser = (data['user'] is Map<String, dynamic>)
+          ? data['user'] as Map<String, dynamic>
+          : (data['data'] is Map && (data['data'] as Map)['user'] is Map<String, dynamic>)
+              ? (data['data'] as Map)['user'] as Map<String, dynamic>
+              : data;
+      _authService.adoptUser(rawUser);
+      final user = SerbisyoHubPHShphUser(rawUser);
+      currentUser = user;
+      return user;
     } catch (e) {
       debugPrint('[GoogleSignIn] Error: $e');
       if (context.mounted) {
@@ -209,22 +203,16 @@ class ShphAuthManager extends AuthManager with EmailSignInManager, PhoneSignInMa
       final name = '$givenName $familyName'.trim();
       final displayName = name.isNotEmpty ? name : 'Apple User';
 
-      final check = await _authService.authApi.checkAccount(identifier: email);
-      if (check['exists'] == true) {
-        final data = await _authService.authApi.authApple(email: email, name: displayName);
-        final userMap = data['user'] as Map<String, dynamic>? ?? data;
-        _authService.adoptUser(userMap);
-        final user = SerbisyoHubPHShphUser(userMap);
-        currentUser = user;
-        return user;
-      } else {
-        return SerbisyoHubPHShphUser({
-          'pending_oauth': true,
-          'email': email,
-          'name': displayName,
-          'method': 'apple',
-        });
-      }
+      final data = await _authService.authApi.authApple(email: email, name: displayName);
+      final rawUser = (data['user'] is Map<String, dynamic>)
+          ? data['user'] as Map<String, dynamic>
+          : (data['data'] is Map && (data['data'] as Map)['user'] is Map<String, dynamic>)
+              ? (data['data'] as Map)['user'] as Map<String, dynamic>
+              : data;
+      _authService.adoptUser(rawUser);
+      final user = SerbisyoHubPHShphUser(rawUser);
+      currentUser = user;
+      return user;
     } catch (e) {
       debugPrint('[AppleSignIn] Error: $e');
       return null;

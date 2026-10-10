@@ -17,7 +17,11 @@ class ShphAuthApi {
       '/api/v1/auth/check-account',
       data: {'identifier': identifier},
     );
-    return response.data ?? {};
+    final data = response.data ?? {};
+    if (data['data'] is Map<String, dynamic>) {
+      return data['data'] as Map<String, dynamic>;
+    }
+    return data;
   }
 
   Future<Map<String, dynamic>> login({
@@ -235,9 +239,12 @@ class ShphAuthApi {
   }
 
   Future<void> _persistTokens(Map<String, dynamic> data) async {
-    final access = data['access'] as String? ?? data['token'] as String?;
-    final refresh = data['refresh'] as String?;
-    final sessionId = data['session_id'] as String?;
+    final payload = (data['data'] is Map<String, dynamic>)
+        ? (data['data'] as Map<String, dynamic>)
+        : data;
+    final access = payload['access'] as String? ?? payload['token'] as String?;
+    final refresh = payload['refresh'] as String?;
+    final sessionId = payload['session_id'] as String?;
     if (access != null) {
       await ShphTokenStorage.saveTokens(
         accessToken: access,
