@@ -701,9 +701,12 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
       return nearby
           .map((r) {
             final listing = r.listing;
+            final name = (listing.providerName != null && listing.providerName!.isNotEmpty)
+                ? listing.providerName!
+                : (listing.title.isNotEmpty ? listing.title : 'Serbisyo Pro');
             return _TrendingProviderData(
-              providerId: listing.provider?.toString() ?? '',
-              name: listing.providerName ?? '',
+              providerId: listing.provider?.toString() ?? '${listing.id}',
+              name: name,
               category: listing.categoryName ?? 'Service',
               avatarUrl: listing.providerPhoto ?? '',
               rating: double.tryParse(listing.rating ?? '0') ?? 0,
@@ -712,7 +715,7 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
               startingPrice: (listing.basePrice ?? 0).round(),
             );
           })
-          .where((p) => p.name.isNotEmpty && p.providerId.isNotEmpty)
+          .where((p) => p.name.isNotEmpty)
           .toList();
     } catch (e, s) {
       LoggingService.error(
@@ -734,9 +737,12 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
       return items
           .map((RecommendationItem r) {
             final listing = r.listing;
+            final name = (listing.providerName != null && listing.providerName!.isNotEmpty)
+                ? listing.providerName!
+                : (listing.title.isNotEmpty ? listing.title : 'Serbisyo Pro');
             return _TrendingProviderData(
-              providerId: listing.provider?.toString() ?? '',
-              name: listing.providerName ?? '',
+              providerId: listing.provider?.toString() ?? '${listing.id}',
+              name: name,
               category: listing.categoryName ?? 'Service',
               avatarUrl: listing.providerPhoto ?? '',
               rating: double.tryParse(listing.rating ?? '0') ?? 0,
@@ -745,7 +751,7 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
               startingPrice: (listing.basePrice ?? 0).round(),
             );
           })
-          .where((p) => p.name.isNotEmpty && p.providerId.isNotEmpty)
+          .where((p) => p.name.isNotEmpty)
           .toList();
     } catch (e, s) {
       LoggingService.error(
@@ -768,9 +774,12 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
 
   static _TrendingProviderData _fromListing(ShphServiceListing listing) {
     final rating = double.tryParse(listing.rating ?? '0') ?? 0;
+    final name = (listing.providerName != null && listing.providerName!.isNotEmpty)
+        ? listing.providerName!
+        : (listing.title.isNotEmpty ? listing.title : 'Serbisyo Pro');
     return _TrendingProviderData(
       providerId: listing.provider?.toString() ?? '${listing.id}',
-      name: listing.providerName ?? '',
+      name: name,
       category: listing.categoryName ?? 'Service',
       avatarUrl: listing.providerPhoto ?? '',
       rating: rating,
