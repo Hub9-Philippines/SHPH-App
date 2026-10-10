@@ -158,8 +158,8 @@ class PrototypeAppHeader extends StatelessWidget {
     final paddingBottom = lerpDouble(16.0, 8.0, t)!;
     final headerHeight = lerpDouble(176.0, 56.0, t)!;
 
-    final expandedOpacity = (1.0 - t * 1.25).clamp(0.0, 1.0);
-    final compactOpacity = ((t - 0.2) / 0.8).clamp(0.0, 1.0);
+    final expandedOpacity = (1.0 - t * 1.5).clamp(0.0, 1.0);
+    final compactOpacity = ((t - 0.25) / 0.75).clamp(0.0, 1.0);
 
     return AnimatedContainer(
       duration: collapseProgress == null
@@ -209,14 +209,14 @@ class PrototypeAppHeader extends StatelessWidget {
                   child: OverflowBox(
                     alignment: Alignment.topCenter,
                     minHeight: 0,
-                    maxHeight: 180,
+                    maxHeight: 160,
                     child: Opacity(
                       opacity: expandedOpacity,
                       child: IgnorePointer(
                         ignoring: expandedOpacity < 0.5,
                         child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -261,6 +261,7 @@ class PrototypeAppHeader extends StatelessWidget {
                                 ),
                               ],
                             ),
+                            const SizedBox(height: 12),
                             _SearchTriggerBar(
                               onTap: onSearchTap,
                               onMicTap: onMicTap,
