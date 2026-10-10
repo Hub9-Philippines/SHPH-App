@@ -357,19 +357,32 @@ class ServicesModel extends FlutterFlowModel<ServicesScreen> {
     switch (category) {
       case 'clean':
       case 'cleaning':
+      case 'homecleaning':
+      case 'catcleaning':
       case 'cleaningservice':
       case 'cleaningservices':
         return 'cleaning';
       case 'plumb':
       case 'plumbing':
+      case 'catplumbing':
       case 'plumbingservice':
       case 'plumbingservices':
         return 'plumbing';
       case 'electric':
       case 'electrical':
+      case 'catelectrical':
       case 'electricalservice':
       case 'electricalservices':
         return 'electrical';
+      case 'aircon':
+      case 'airconditioning':
+      case 'cataircon':
+        return 'airconditioning';
+      case 'carpentry':
+      case 'carpentryhandyman':
+      case 'carpentryandhandyman':
+      case 'catcarpentry':
+        return 'carpentry';
       case 'paint':
       case 'painting':
       case 'paintingdecorating':

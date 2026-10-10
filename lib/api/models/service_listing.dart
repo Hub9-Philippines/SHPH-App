@@ -98,11 +98,13 @@ class ShphServiceListing {
       }
     }
 
+    final categoryName = json['category_name'] as String? ?? _mapCategoryIdToName(json['category_id']?.toString() ?? json['category']?.toString());
+
     return ShphServiceListing(
       id: idInt,
       title: json['title'] as String? ?? json['name'] as String? ?? '',
       category: catInt,
-      categoryName: json['category_name'] as String?,
+      categoryName: categoryName,
       provider: provInt,
       providerName: json['provider_name'] as String?,
       providerPhoto: json['provider_photo'] as String?,
@@ -122,6 +124,31 @@ class ShphServiceListing {
       distanceKm: _toDouble(json['distance_km']),
       isTimeMaterial: json['is_time_material'] as bool? ?? false,
     );
+  }
+
+  static String? _mapCategoryIdToName(String? id) {
+    if (id == null || id.isEmpty) return null;
+    switch (id.toLowerCase()) {
+      case 'cat_plumbing':
+      case 'plumbing':
+        return 'Plumbing';
+      case 'cat_electrical':
+      case 'electrical':
+        return 'Electrical';
+      case 'cat_aircon':
+      case 'aircon':
+      case 'air-conditioning':
+        return 'Air Conditioning';
+      case 'cat_cleaning':
+      case 'cleaning':
+      case 'home-cleaning':
+        return 'Home Cleaning';
+      case 'cat_carpentry':
+      case 'carpentry':
+        return 'Carpentry & Handyman';
+      default:
+        return id;
+    }
   }
 
   Map<String, dynamic> toJson() => {

@@ -12,7 +12,7 @@ class CategoryDetailModel extends FlutterFlowModel<CategoryDetailWidget> {
   @override
   void initState(BuildContext context) {}
 
-  Future<void> loadCategory(int categoryId, String name) async {
+  Future<void> loadCategory(dynamic categoryId, String name) async {
     categoryName = name;
     isLoading = true;
     try {
@@ -20,17 +20,24 @@ class CategoryDetailModel extends FlutterFlowModel<CategoryDetailWidget> {
           await ServiceListingService.instance.fetchServiceListings(
         pageSize: 50,
       );
+      final normName = name.toLowerCase().replaceAll('&', 'and').replaceAll(RegExp(r'[^a-z0-9]'), '');
       listings = services
-          .where((s) => s.category == categoryId)
+          .where((s) {
+            final catName = (s.categoryName ?? '').toLowerCase().replaceAll('&', 'and').replaceAll(RegExp(r'[^a-z0-9]'), '');
+            if (catName.isNotEmpty && (catName.contains(normName) || normName.contains(catName))) {
+              return true;
+            }
+            return '${s.category}' == '$categoryId';
+          })
           .map((s) => {
                 'id': s.id,
-                'title': s.title,
+                'title': s.title.isNotEmpty ? s.title : 'Service Listing',
                 'thumbnail': s.thumbnail,
                 'basePrice': s.basePrice,
                 'priceUnit': s.priceUnit,
                 'rating': s.rating,
                 'reviewCount': s.reviewCount,
-                'providerName': s.providerName,
+                'providerName': s.providerName ?? 'Serbisyo Verified Pro',
               })
           .toList();
     } finally {
