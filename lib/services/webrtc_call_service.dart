@@ -38,7 +38,10 @@ class ShphWebRTCCallService {
   bool _makingOffer = false;
   String? _threadId;
   String? _targetUserId;
+  String? _callerUserId;
   String? _currentCallId;
+
+  String? get callerUserId => _callerUserId;
   CallMediaType _currentMediaType = CallMediaType.video;
   bool _ignoreOffer = false;
 
