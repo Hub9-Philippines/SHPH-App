@@ -152,56 +152,14 @@ class PrototypeAppHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasAvatar = avatarUrl.trim().isNotEmpty;
-    final t = (collapseProgress ?? (isCompact ? 1.0 : 0.0))
-        .clamp(0.0, 1.0);
-    final actions = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _HeaderIconButton(
-          icon: Icons.notifications_none_rounded,
-          hasBadge: hasUnreadNotifications,
-          onTap: onNotificationTap,
-        ),
-        const SizedBox(width: 8),
-        GestureDetector(
-          onTap: onAvatarTap,
-          child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppDesignTokens.radiusMd),
-              border: Border.all(color: Colors.white, width: 2),
-              boxShadow: const [
-                BoxShadow(
-                    color: Color(0x0D0F172A),
-                    blurRadius: 4,
-                    offset: Offset(0, 1))
-              ],
-              image: hasAvatar
-                  ? DecorationImage(
-                      image: NetworkImage(avatarUrl),
-                      fit: BoxFit.cover,
-                    )
-                  : null,
-            ),
-            child: hasAvatar
-                ? null
-                : const Icon(
-                    Icons.person_rounded,
-                    color: AppDesignTokens.inkMuted,
-                    size: 20,
-                  ),
-          ),
-        ),
-      ],
-    );
+    final t = (collapseProgress ?? (isCompact ? 1.0 : 0.0)).clamp(0.0, 1.0);
 
-    // Continuous interpolation between the two states.
-    final paddingTop = lerpDouble(12, 8, t)!;
-    final paddingBottom = lerpDouble(16, 8, t)!;
-    final greetingOpacity = 1.0 - t;
-    final searchBarHeight = lerpDouble(48.0, 40.0, t)!;
+    final paddingTop = lerpDouble(12.0, 8.0, t)!;
+    final paddingBottom = lerpDouble(16.0, 8.0, t)!;
+    final headerHeight = lerpDouble(176.0, 56.0, t)!;
+
+    final expandedOpacity = (1.0 - t * 1.25).clamp(0.0, 1.0);
+    final compactOpacity = ((t - 0.2) / 0.8).clamp(0.0, 1.0);
 
     return AnimatedContainer(
       duration: collapseProgress == null
@@ -229,59 +187,117 @@ class PrototypeAppHeader extends StatelessWidget {
                 ],
               )
             : null,
+        boxShadow: t > 0.5
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06 * t),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: ClipRect(
-                  child: Align(
-                    alignment: Alignment.topLeft,
-                    heightFactor: t < 1.0
-                        ? lerpDouble(1.0, 0.08, t)!.clamp(0.08, 1.0)
-                        : 0.08,
-                    child: Opacity(
-                      opacity: greetingOpacity,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('YOUR HOME, MADE EASY',
-                              style: AppDesignTokens.eyebrow()),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Good morning, $userName 👋',
-                            style: AppDesignTokens.titleMedium(),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "Tell us what needs fixing. We'll find the right pro.",
-                            style: AppDesignTokens.bodyMedium(),
-                          ),
-                        ],
-                      ),
+      child: SizedBox(
+        height: (headerHeight - (paddingTop + paddingBottom)).clamp(0.0, 200.0),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Expanded Header View (Greeting + Notification + Profile + Full Search Bar)
+            if (expandedOpacity > 0)
+              Positioned.fill(
+                child: Opacity(
+                  opacity: expandedOpacity,
+                  child: IgnorePointer(
+                    ignoring: expandedOpacity < 0.5,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'YOUR HOME, MADE EASY',
+                                    style: AppDesignTokens.eyebrow(),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Good morning, $userName 👋',
+                                    style: AppDesignTokens.titleMedium(),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    "Tell us what needs fixing. We'll find the right pro.",
+                                    style: AppDesignTokens.bodyMedium(),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _HeaderIconButton(
+                                  icon: Icons.notifications_none_rounded,
+                                  hasBadge: hasUnreadNotifications,
+                                  onTap: onNotificationTap,
+                                ),
+                                const SizedBox(width: 8),
+                                _AvatarButton(
+                                  avatarUrl: avatarUrl,
+                                  onTap: onAvatarTap,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        _SearchTriggerBar(
+                          onTap: onSearchTap,
+                          onMicTap: onMicTap,
+                          height: 48,
+                          horizontalPadding: 16,
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-              actions,
-            ],
-          ),
-          SizedBox(height: lerpDouble(16.0, 0.0, t)),
-          // The search bar is shared by both states — it only compresses
-          // (height + horizontal padding) as the header collapses.
-          _SearchTriggerBar(
-            onTap: onSearchTap,
-            onMicTap: onMicTap,
-            height: searchBarHeight,
-            horizontalPadding: lerpDouble(16.0, 14.0, t)!,
-          ),
-        ],
+
+            // Compact Header View (Inline Search Bar + Profile Button, NO Notification Button)
+            if (compactOpacity > 0)
+              Positioned.fill(
+                child: Opacity(
+                  opacity: compactOpacity,
+                  child: IgnorePointer(
+                    ignoring: compactOpacity < 0.5,
+                    child: Row(
+                      crossAxisAlignment: Alignment.center,
+                      children: [
+                        Expanded(
+                          child: _SearchTriggerBar(
+                            onTap: onSearchTap,
+                            onMicTap: onMicTap,
+                            height: 40,
+                            horizontalPadding: 14,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        _AvatarButton(
+                          avatarUrl: avatarUrl,
+                          onTap: onAvatarTap,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -333,6 +349,52 @@ class _HeaderIconButton extends StatelessWidget {
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _AvatarButton extends StatelessWidget {
+  const _AvatarButton({
+    required this.avatarUrl,
+    required this.onTap,
+  });
+
+  final String avatarUrl;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasAvatar = avatarUrl.trim().isNotEmpty;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppDesignTokens.radiusMd),
+          border: Border.all(color: Colors.white, width: 2),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0D0F172A),
+              blurRadius: 4,
+              offset: Offset(0, 1),
+            ),
+          ],
+          image: hasAvatar
+              ? DecorationImage(
+                  image: NetworkImage(avatarUrl),
+                  fit: BoxFit.cover,
+                )
+              : null,
+        ),
+        child: hasAvatar
+            ? null
+            : const Icon(
+                Icons.person_rounded,
+                color: AppDesignTokens.inkMuted,
+                size: 20,
+              ),
       ),
     );
   }

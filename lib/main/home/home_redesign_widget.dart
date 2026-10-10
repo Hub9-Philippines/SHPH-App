@@ -49,7 +49,7 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
   double _headerCollapseProgress = 0.0;
 
   /// Scroll offset (px) at which the header is fully collapsed.
-  static const double _headerCollapseRange = 96;
+  static const double _headerCollapseRange = 120;
 
   List<_HomeBookingData> _bookings = const [];
   List<_HomeCategoryData> _categories = const [];
@@ -343,15 +343,13 @@ class _HomeRedesignWidgetState extends State<HomeRedesignWidget>
                   ),
                   child: wrapWithRefresh(
                     controller: _scrollController,
-                    displacement: _isHeaderCompact ? 64 : 150,
+                    displacement: _isHeaderCompact ? 64 : 176,
                     slivers: [
                       // Top spacer that reserves room for the pinned header
                       // while it is fully expanded (greeting view) at the top
-                      // of the list. Kept at/under the header's expanded height
-                      // so no gap shows; if the header grows slightly taller,
-                      // the (opaque) header simply overlaps it invisibly.
+                      // of the list.
                       const SliverToBoxAdapter(
-                        child: SizedBox(height: 150),
+                        child: SizedBox(height: 176),
                       ),
                       SliverPadding(
                         padding: const EdgeInsets.fromLTRB(20, 5, 20, 28),
